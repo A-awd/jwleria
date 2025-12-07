@@ -11,17 +11,17 @@ const OneThirdTwoThirdsSection = () => {
             <div className="w-full h-[500px] lg:h-[800px] mb-3 overflow-hidden">
               <img 
                 src={organicEarring} 
-                alt="مجوهرات حرفية" 
+                alt="Artisan crafted jewelry" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-medium text-foreground mb-1">
-              إبداع حرفي
+            <h3 className="text-sm font-normal text-foreground mb-1">
+              Artisan Craft
             </h3>
-            <p className="text-sm font-normal text-foreground">
-              قطع مصنوعة يدوياً باهتمام دقيق بالتفاصيل
+            <p className="text-sm font-light text-foreground">
+              Handcrafted pieces with meticulous attention to detail
             </p>
           </div>
         </div>
@@ -31,17 +31,17 @@ const OneThirdTwoThirdsSection = () => {
             <div className="w-full h-[500px] lg:h-[800px] mb-3 overflow-hidden">
               <img 
                 src={circularCollection} 
-                alt="مجموعة الدوائر" 
+                alt="Circular jewelry collection" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-medium text-foreground mb-1">
-              عناصر دائرية
+            <h3 className="text-sm font-normal text-foreground mb-1">
+              Circular Elements
             </h3>
-            <p className="text-sm font-normal text-foreground">
-              الكمال الهندسي يلتقي بالبساطة المعاصرة
+            <p className="text-sm font-light text-foreground">
+              Geometric perfection meets contemporary minimalism
             </p>
           </div>
         </div>

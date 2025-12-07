@@ -11,17 +11,17 @@ const FiftyFiftySection = () => {
             <div className="w-full aspect-square mb-3 overflow-hidden">
               <img 
                 src={earringsCollection} 
-                alt="مجموعة الأقراط" 
+                alt="Earrings collection" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-medium text-foreground mb-1">
-              تصاميم طبيعية
+            <h3 className="text-sm font-normal text-foreground mb-1">
+              Organic Forms
             </h3>
-            <p className="text-sm font-normal text-foreground">
-              قطع مستوحاة من الطبيعة بتفاصيل نحتية انسيابية
+            <p className="text-sm font-light text-foreground">
+              Nature-inspired pieces with fluid, sculptural details
             </p>
           </div>
         </div>
@@ -31,17 +31,17 @@ const FiftyFiftySection = () => {
             <div className="w-full aspect-square mb-3 overflow-hidden">
               <img 
                 src={linkBracelet} 
-                alt="سوار سلسلة" 
+                alt="Chain link bracelet" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-medium text-foreground mb-1">
-              مجموعة السلاسل
+            <h3 className="text-sm font-normal text-foreground mb-1">
+              Chain Collection
             </h3>
-            <p className="text-sm font-normal text-foreground">
-              حلقات راقية من المعادن الثمينة
+            <p className="text-sm font-light text-foreground">
+              Refined links and connections in precious metals
             </p>
           </div>
         </div>

@@ -25,44 +25,44 @@ interface Product {
 const products: Product[] = [
   {
     id: 1,
-    name: "بانثيون",
-    category: "أقراط",
-    price: "٢،٨٥٠ ر.س",
+    name: "Pantheon",
+    category: "Earrings",
+    price: "€2,850",
     image: pantheonImage,
   },
   {
     id: 2,
-    name: "إكليبس",
-    category: "أساور",
-    price: "٣،٢٠٠ ر.س",
+    name: "Eclipse",
+    category: "Bracelets",
+    price: "€3,200",
     image: eclipseImage,
   },
   {
     id: 3,
-    name: "هالو",
-    category: "أقراط",
-    price: "١،٩٥٠ ر.س",
+    name: "Halo",
+    category: "Earrings",
+    price: "€1,950",
     image: haloImage,
   },
   {
     id: 4,
-    name: "أوبليك",
-    category: "أقراط",
-    price: "١،٦٥٠ ر.س",
+    name: "Oblique",
+    category: "Earrings",
+    price: "€1,650",
     image: obliqueImage,
   },
   {
     id: 5,
-    name: "لينتل",
-    category: "أقراط",
-    price: "٢،٢٥٠ ر.س",
+    name: "Lintel",
+    category: "Earrings",
+    price: "€2,250",
     image: lintelImage,
   },
   {
     id: 6,
-    name: "شادولاين",
-    category: "أساور",
-    price: "٣،٩٥٠ ر.س",
+    name: "Shadowline",
+    category: "Bracelets",
+    price: "€3,950",
     image: shadowlineImage,
   },
 ];
@@ -74,7 +74,6 @@ const ProductCarousel = () => {
           opts={{
             align: "start",
             loop: false,
-            direction: "rtl",
           }}
           className="w-full"
         >
@@ -82,7 +81,7 @@ const ProductCarousel = () => {
             {products.map((product) => (
                <CarouselItem
                  key={product.id}
-                 className="basis-1/2 md:basis-1/3 lg:basis-1/4 pl-2 md:pl-4"
+                 className="basis-1/2 md:basis-1/3 lg:basis-1/4 pr-2 md:pr-4"
                >
                  <Link to={`/product/${product.id}`}>
                   <Card className="border-none shadow-none bg-transparent group">
@@ -94,26 +93,26 @@ const ProductCarousel = () => {
                           className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0"
                         />
                         <img
-                          src={product.category === "أقراط" ? organicEarring : linkBracelet}
-                          alt={`${product.name} صورة إضافية`}
+                          src={product.category === "Earrings" ? organicEarring : linkBracelet}
+                          alt={`${product.name} lifestyle`}
                           className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
                         />
                         <div className="absolute inset-0 bg-black/[0.03]"></div>
                         {(product.id === 1 || product.id === 3) && (
-                          <div className="absolute top-2 right-2 px-2 py-1 text-xs font-medium text-black">
-                            جديد
+                          <div className="absolute top-2 left-2 px-2 py-1 text-xs font-medium text-black">
+                            NEW
                           </div>
                         )}
                       </div>
                      <div className="space-y-1">
-                       <p className="text-sm font-normal text-foreground">
+                       <p className="text-sm font-light text-foreground">
                          {product.category}
                        </p>
                        <div className="flex justify-between items-center">
                          <h3 className="text-sm font-medium text-foreground">
                            {product.name}
                          </h3>
-                         <p className="text-sm font-normal text-foreground">
+                         <p className="text-sm font-light text-foreground">
                            {product.price}
                          </p>
                        </div>

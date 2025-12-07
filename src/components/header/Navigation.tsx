@@ -1,4 +1,4 @@
-import { ArrowLeft, X, Minus, Plus } from "lucide-react";
+import { ArrowRight, X, Minus, Plus } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -28,27 +28,27 @@ const Navigation = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: 1,
-      name: "بانثيون",
-      price: "٢،٨٥٠ ر.س",
+      name: "Pantheon",
+      price: "€2,850",
       image: pantheonImage,
       quantity: 1,
-      category: "أقراط"
+      category: "Earrings"
     },
     {
       id: 2,
-      name: "إكليبس",
-      price: "٣،٢٠٠ ر.س", 
+      name: "Eclipse",
+      price: "€3,200", 
       image: eclipseImage,
       quantity: 1,
-      category: "أساور"
+      category: "Bracelets"
     },
     {
       id: 3,
-      name: "هالو",
-      price: "١،٩٥٠ ر.س",
+      name: "Halo",
+      price: "€1,950",
       image: haloImage, 
       quantity: 1,
-      category: "أقراط"
+      category: "Earrings"
     }
   ]);
 
@@ -83,57 +83,57 @@ const Navigation = () => {
   }, []);
 
   const popularSearches = [
-    "خواتم ذهب",
-    "قلادات فضية", 
-    "أقراط لؤلؤ",
-    "أساور مصممة",
-    "خواتم زفاف",
-    "المجموعة الكلاسيكية"
+    "Gold Rings",
+    "Silver Necklaces", 
+    "Pearl Earrings",
+    "Designer Bracelets",
+    "Wedding Rings",
+    "Vintage Collection"
   ];
   
   const navItems = [
     { 
-      name: "تسوق", 
+      name: "Shop", 
       href: "/category/shop",
       submenuItems: [
-        "خواتم",
-        "قلادات", 
-        "أقراط",
-        "أساور",
-        "ساعات"
+        "Rings",
+        "Necklaces", 
+        "Earrings",
+        "Bracelets",
+        "Watches"
       ],
       images: [
-        { src: "/rings-collection.png", alt: "مجموعة الخواتم", label: "خواتم" },
-        { src: "/earrings-collection.png", alt: "مجموعة الأقراط", label: "أقراط" }
+        { src: "/rings-collection.png", alt: "Rings Collection", label: "Rings" },
+        { src: "/earrings-collection.png", alt: "Earrings Collection", label: "Earrings" }
       ]
     },
     { 
-      name: "جديدنا", 
+      name: "New in", 
       href: "/category/new-in",
       submenuItems: [
-        "وصل هذا الأسبوع",
-        "مجموعة الربيع",
-        "مصممون مميزون",
-        "إصدار محدود",
-        "الطلبات المسبقة"
+        "This Week's Arrivals",
+        "Spring Collection",
+        "Featured Designers",
+        "Limited Edition",
+        "Pre-Orders"
       ],
       images: [
-        { src: "/arcus-bracelet.png", alt: "سوار آركوس", label: "سوار آركوس" },
-        { src: "/span-bracelet.png", alt: "سوار سبان", label: "سوار سبان" }
+        { src: "/arcus-bracelet.png", alt: "Arcus Bracelet", label: "Arcus Bracelet" },
+        { src: "/span-bracelet.png", alt: "Span Bracelet", label: "Span Bracelet" }
       ]
     },
     { 
-      name: "عنا", 
+      name: "About", 
       href: "/about/our-story",
       submenuItems: [
-        "قصتنا",
-        "الاستدامة",
-        "دليل المقاسات",
-        "خدمة العملاء",
-        "فروعنا"
+        "Our Story",
+        "Sustainability",
+        "Size Guide",
+        "Customer Care",
+        "Store Locator"
       ],
       images: [
-        { src: "/founders.png", alt: "المؤسسون", label: "اقرأ قصتنا" }
+        { src: "/founders.png", alt: "Company Founders", label: "Read our story" }
       ]
     }
   ];
@@ -151,7 +151,7 @@ const Navigation = () => {
         <button
           className="lg:hidden p-2 mt-0.5 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          aria-label="فتح القائمة"
+          aria-label="Toggle menu"
         >
           <div className="w-5 h-5 relative">
             <span className={`absolute block w-5 h-px bg-current transform transition-all duration-300 ${
@@ -166,8 +166,8 @@ const Navigation = () => {
           </div>
         </button>
 
-        {/* Right navigation - Hidden on tablets and mobile */}
-        <div className="hidden lg:flex space-x-8 space-x-reverse">
+        {/* Left navigation - Hidden on tablets and mobile */}
+        <div className="hidden lg:flex space-x-8">
           {navItems.map((item) => (
             <div
               key={item.name}
@@ -177,7 +177,7 @@ const Navigation = () => {
             >
               <Link
                 to={item.href}
-                className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-normal py-6 block"
+                className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-light py-6 block"
               >
                 {item.name}
               </Link>
@@ -188,15 +188,15 @@ const Navigation = () => {
         {/* Center logo */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <Link to="/" className="block">
-            <span className="text-xl font-bold tracking-widest text-nav-foreground">jWleria</span>
+            <span className="text-xl font-light tracking-widest text-nav-foreground">jWleria</span>
           </Link>
         </div>
 
-        {/* Left icons */}
-        <div className="flex items-center space-x-2 space-x-reverse">
+        {/* Right icons */}
+        <div className="flex items-center space-x-2">
           <button 
             className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
-            aria-label="بحث"
+            aria-label="Search"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -205,7 +205,7 @@ const Navigation = () => {
           </button>
           <button 
             className="hidden lg:block p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
-            aria-label="المفضلة"
+            aria-label="Favorites"
             onClick={() => setOffCanvasType('favorites')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -214,7 +214,7 @@ const Navigation = () => {
           </button>
           <button 
             className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative"
-            aria-label="حقيبة التسوق"
+            aria-label="Shopping bag"
             onClick={() => setIsShoppingBagOpen(true)}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -238,7 +238,7 @@ const Navigation = () => {
         >
           <div className="px-6 py-8">
             <div className="flex justify-between w-full">
-              {/* Right side - Menu items */}
+              {/* Left side - Menu items */}
               <div className="flex-1">
                 <ul className="space-y-2">
                    {navItems
@@ -246,8 +246,8 @@ const Navigation = () => {
                      ?.submenuItems.map((subItem, index) => (
                       <li key={index}>
                         <Link 
-                          to={activeDropdown === "عنا" ? `/about/${subItem === "قصتنا" ? "our-story" : subItem === "الاستدامة" ? "sustainability" : subItem === "دليل المقاسات" ? "size-guide" : subItem === "خدمة العملاء" ? "customer-care" : "store-locator"}` : `/category/${subItem.toLowerCase()}`}
-                          className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-normal block py-2"
+                          to={activeDropdown === "About" ? `/about/${subItem.toLowerCase().replace(/\s+/g, '-')}` : `/category/${subItem.toLowerCase()}`}
+                          className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-light block py-2"
                         >
                           {subItem}
                         </Link>
@@ -256,20 +256,20 @@ const Navigation = () => {
                 </ul>
               </div>
 
-              {/* Left side - Images */}
-              <div className="flex space-x-6 space-x-reverse">
+              {/* Right side - Images */}
+              <div className="flex space-x-6">
                 {navItems
                   .find(item => item.name === activeDropdown)
                   ?.images.map((image, index) => {
                     // Determine the link destination based on dropdown and image
                     let linkTo = "/";
-                    if (activeDropdown === "تسوق") {
-                      if (image.label === "خواتم") linkTo = "/category/rings";
-                      else if (image.label === "أقراط") linkTo = "/category/earrings";
-                    } else if (activeDropdown === "جديدنا") {
-                      if (image.label === "سوار آركوس") linkTo = "/product/arcus-bracelet";
-                      else if (image.label === "سوار سبان") linkTo = "/product/span-bracelet";
-                    } else if (activeDropdown === "عنا") {
+                    if (activeDropdown === "Shop") {
+                      if (image.label === "Rings") linkTo = "/category/rings";
+                      else if (image.label === "Earrings") linkTo = "/category/earrings";
+                    } else if (activeDropdown === "New in") {
+                      if (image.label === "Arcus Bracelet") linkTo = "/product/arcus-bracelet";
+                      else if (image.label === "Span Bracelet") linkTo = "/product/span-bracelet";
+                    } else if (activeDropdown === "About") {
                       linkTo = "/about/our-story";
                     }
                     
@@ -280,10 +280,10 @@ const Navigation = () => {
                           alt={image.alt}
                           className="w-full h-full object-cover transition-opacity duration-200 group-hover:opacity-90"
                         />
-                        {(activeDropdown === "تسوق" || activeDropdown === "جديدنا" || activeDropdown === "عنا") && (
-                          <div className="absolute bottom-2 right-2 text-white text-xs font-normal flex items-center gap-1">
+                        {(activeDropdown === "Shop" || activeDropdown === "New in" || activeDropdown === "About") && (
+                          <div className="absolute bottom-2 left-2 text-white text-xs font-light flex items-center gap-1">
                             <span>{image.label}</span>
-                            <ArrowLeft size={12} />
+                            <ArrowRight size={12} />
                           </div>
                         )}
                       </Link>
@@ -305,13 +305,13 @@ const Navigation = () => {
               {/* Search input */}
               <div className="relative mb-8">
                 <div className="flex items-center border-b border-border pb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-nav-foreground ml-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5 text-nav-foreground mr-3">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
                   <input
                     type="text"
-                    placeholder="ابحث عن المجوهرات..."
-                    className="flex-1 bg-transparent text-nav-foreground placeholder:text-nav-foreground/60 outline-none text-lg text-right"
+                    placeholder="Search for jewelry..."
+                    className="flex-1 bg-transparent text-nav-foreground placeholder:text-nav-foreground/60 outline-none text-lg"
                     autoFocus
                   />
                 </div>
@@ -319,12 +319,12 @@ const Navigation = () => {
 
               {/* Popular searches */}
               <div>
-                <h3 className="text-nav-foreground text-sm font-normal mb-4">عمليات البحث الشائعة</h3>
+                <h3 className="text-nav-foreground text-sm font-light mb-4">Popular Searches</h3>
                 <div className="flex flex-wrap gap-3">
                   {popularSearches.map((search, index) => (
                     <button
                       key={index}
-                      className="text-nav-foreground hover:text-nav-hover text-sm font-normal py-2 px-4 border border-border rounded-full transition-colors duration-200 hover:border-nav-hover"
+                      className="text-nav-foreground hover:text-nav-hover text-sm font-light py-2 px-4 border border-border rounded-full transition-colors duration-200 hover:border-nav-hover"
                     >
                       {search}
                     </button>
@@ -345,17 +345,17 @@ const Navigation = () => {
                 <div key={item.name}>
                   <Link
                     to={item.href}
-                    className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-lg font-normal block py-2"
+                    className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-lg font-light block py-2"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
-                   <div className="mt-3 pr-4 space-y-2">
+                   <div className="mt-3 pl-4 space-y-2">
                      {item.submenuItems.map((subItem, subIndex) => (
                        <Link
                          key={subIndex}
-                         to={item.name === "عنا" ? `/about/${subItem === "قصتنا" ? "our-story" : subItem === "الاستدامة" ? "sustainability" : subItem === "دليل المقاسات" ? "size-guide" : subItem === "خدمة العملاء" ? "customer-care" : "store-locator"}` : `/category/${subItem.toLowerCase()}`}
-                         className="text-nav-foreground/70 hover:text-nav-hover text-sm font-normal block py-1"
+                         to={item.name === "About" ? `/about/${subItem.toLowerCase().replace(/\s+/g, '-')}` : `/category/${subItem.toLowerCase()}`}
+                         className="text-nav-foreground/70 hover:text-nav-hover text-sm font-light block py-1"
                          onClick={() => setIsMobileMenuOpen(false)}
                        >
                          {subItem}
@@ -391,14 +391,14 @@ const Navigation = () => {
           />
           
           {/* Off-canvas panel */}
-          <div className="absolute left-0 top-0 h-screen w-96 bg-background border-l border-border animate-slide-in flex flex-col">
+          <div className="absolute right-0 top-0 h-screen w-96 bg-background border-l border-border animate-slide-in-right flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-lg font-normal text-foreground">المفضلة</h2>
+              <h2 className="text-lg font-light text-foreground">Your Favorites</h2>
               <button
                 onClick={() => setOffCanvasType(null)}
                 className="p-2 text-foreground hover:text-muted-foreground transition-colors"
-                aria-label="إغلاق"
+                aria-label="Close"
               >
                 <X size={20} />
               </button>
@@ -407,7 +407,7 @@ const Navigation = () => {
             {/* Content */}
             <div className="p-6">
               <p className="text-muted-foreground text-sm mb-6">
-                لم تضف أي منتجات للمفضلة بعد. تصفح مجموعتنا واضغط على أيقونة القلب لحفظ المنتجات التي تعجبك.
+                You haven't added any favorites yet. Browse our collection and click the heart icon to save items you love.
               </p>
             </div>
           </div>
