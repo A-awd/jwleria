@@ -95,7 +95,9 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  // Load rates on mount
+  const REFRESH_INTERVAL = 30 * 60 * 1000; // 30 minutes
+
+  // Load rates on mount and set up auto-refresh
   useEffect(() => {
     const initializeRates = async () => {
       // First try to load from cache
@@ -117,6 +119,13 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
     };
 
     initializeRates();
+
+    // Set up auto-refresh every 30 minutes
+    const intervalId = setInterval(() => {
+      refreshRates();
+    }, REFRESH_INTERVAL);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const setCurrency = (curr: Currency) => {
