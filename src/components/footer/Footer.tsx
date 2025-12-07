@@ -60,8 +60,7 @@ const Footer = () => {
               <h4 className="text-sm font-normal mb-4">{t("connect")}</h4>
               <ul className="space-y-2">
                 <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("instagram")}</a></li>
-                <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("pinterest")}</a></li>
-                <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("newsletter")}</a></li>
+                <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">TikTok</a></li>
               </ul>
             </div>
           </div>
