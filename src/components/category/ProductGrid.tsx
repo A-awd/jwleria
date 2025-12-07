@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/i18n/CurrencyContext";
 import Pagination from "./Pagination";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
@@ -14,7 +15,7 @@ interface Product {
   id: number;
   name: string;
   category: string;
-  price: string;
+  priceEUR: number;
   image: string;
   isNew?: boolean;
 }
@@ -25,7 +26,7 @@ const products: Product[] = [
     id: 1,
     name: "Pantheon",
     category: "Earrings",
-    price: "€2,850",
+    priceEUR: 2850,
     image: pantheonImage,
     isNew: true,
   },
@@ -33,14 +34,14 @@ const products: Product[] = [
     id: 2,
     name: "Eclipse",
     category: "Bracelets",
-    price: "€3,200",
+    priceEUR: 3200,
     image: eclipseImage,
   },
   {
     id: 3,
     name: "Halo",
     category: "Earrings",
-    price: "€1,950",
+    priceEUR: 1950,
     image: haloImage,
     isNew: true,
   },
@@ -48,152 +49,154 @@ const products: Product[] = [
     id: 4,
     name: "Oblique",
     category: "Earrings",
-    price: "€1,650",
+    priceEUR: 1650,
     image: obliqueImage,
   },
   {
     id: 5,
     name: "Lintel",
     category: "Earrings",
-    price: "€2,250",
+    priceEUR: 2250,
     image: lintelImage,
   },
   {
     id: 6,
     name: "Shadowline",
     category: "Bracelets",
-    price: "€3,950",
+    priceEUR: 3950,
     image: shadowlineImage,
   },
   {
     id: 7,
     name: "Meridian",
     category: "Earrings",
-    price: "€2,450",
+    priceEUR: 2450,
     image: pantheonImage,
   },
   {
     id: 8,
     name: "Vertex",
     category: "Bracelets",
-    price: "€2,800",
+    priceEUR: 2800,
     image: eclipseImage,
   },
   {
     id: 9,
     name: "Apex",
     category: "Earrings",
-    price: "€1,550",
+    priceEUR: 1550,
     image: haloImage,
   },
   {
     id: 10,
     name: "Zenith",
     category: "Earrings",
-    price: "€1,850",
+    priceEUR: 1850,
     image: obliqueImage,
   },
   {
     id: 11,
     name: "Prism",
     category: "Earrings",
-    price: "€2,050",
+    priceEUR: 2050,
     image: lintelImage,
   },
   {
     id: 12,
     name: "Radiant",
     category: "Bracelets",
-    price: "€3,650",
+    priceEUR: 3650,
     image: shadowlineImage,
   },
   {
     id: 13,
     name: "Stellar",
     category: "Earrings",
-    price: "€2,150",
+    priceEUR: 2150,
     image: pantheonImage,
   },
   {
     id: 14,
     name: "Cosmos",
     category: "Bracelets",
-    price: "€2,950",
+    priceEUR: 2950,
     image: eclipseImage,
   },
   {
     id: 15,
     name: "Aurora",
     category: "Earrings",
-    price: "€1,750",
+    priceEUR: 1750,
     image: haloImage,
   },
   {
     id: 16,
     name: "Nebula",
     category: "Earrings",
-    price: "€1,850",
+    priceEUR: 1850,
     image: obliqueImage,
   },
   {
     id: 17,
     name: "Orbit",
     category: "Earrings",
-    price: "€2,350",
+    priceEUR: 2350,
     image: lintelImage,
   },
   {
     id: 18,
     name: "Galaxy",
     category: "Bracelets",
-    price: "€3,450",
+    priceEUR: 3450,
     image: shadowlineImage,
   },
   {
     id: 19,
     name: "Lunar",
     category: "Earrings",
-    price: "€2,050",
+    priceEUR: 2050,
     image: pantheonImage,
   },
   {
     id: 20,
     name: "Solar",
     category: "Bracelets",
-    price: "€3,150",
+    priceEUR: 3150,
     image: eclipseImage,
   },
   {
     id: 21,
     name: "Astral",
     category: "Earrings",
-    price: "€1,650",
+    priceEUR: 1650,
     image: haloImage,
   },
   {
     id: 22,
     name: "Cosmic",
     category: "Earrings",
-    price: "€1,950",
+    priceEUR: 1950,
     image: obliqueImage,
   },
   {
     id: 23,
     name: "Celestial",
     category: "Earrings",
-    price: "€2,250",
+    priceEUR: 2250,
     image: lintelImage,
   },
   {
     id: 24,
     name: "Ethereal",
     category: "Bracelets",
-    price: "€3,750",
+    priceEUR: 3750,
     image: shadowlineImage,
   },
 ];
 
 const ProductGrid = () => {
+  const { convertPrice } = useCurrency();
+
   return (
     <section className="w-full px-6 mb-16">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -230,7 +233,7 @@ const ProductGrid = () => {
                         {product.name}
                       </h3>
                       <p className="text-sm font-light text-foreground">
-                        {product.price}
+                        {convertPrice(product.priceEUR)}
                       </p>
                     </div>
                   </div>

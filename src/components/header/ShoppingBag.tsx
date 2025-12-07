@@ -1,11 +1,13 @@
 import { X, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/i18n/CurrencyContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface CartItem {
   id: number;
   name: string;
-  price: string;
+  priceEUR: number;
   image: string;
   quantity: number;
   category: string;
@@ -20,11 +22,13 @@ interface ShoppingBagProps {
 }
 
 const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorites }: ShoppingBagProps) => {
+  const { convertPrice } = useCurrency();
+  const { t, direction } = useLanguage();
+  
   if (!isOpen) return null;
 
-  const subtotal = cartItems.reduce((sum, item) => {
-    const price = parseFloat(item.price.replace('€', '').replace(',', ''));
-    return sum + (price * item.quantity);
+  const subtotalEUR = cartItems.reduce((sum, item) => {
+    return sum + (item.priceEUR * item.quantity);
   }, 0);
 
   return (
@@ -36,10 +40,10 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
       />
       
       {/* Off-canvas panel */}
-      <div className="absolute right-0 top-0 h-screen w-96 bg-background border-l border-border animate-slide-in-right flex flex-col">
+      <div className={`absolute ${direction === 'rtl' ? 'left-0' : 'right-0'} top-0 h-screen w-96 bg-background border-${direction === 'rtl' ? 'r' : 'l'} border-border animate-slide-in-right flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-lg font-light text-foreground">Shopping Bag</h2>
+          <h2 className="text-lg font-light text-foreground">{t("shoppingBag")}</h2>
           <button
             onClick={onClose}
             className="p-2 text-foreground hover:text-muted-foreground transition-colors"
@@ -61,7 +65,7 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
-                <span className="text-sm font-light">View Favorites</span>
+                <span className="text-sm font-light">{t("yourFavorites")}</span>
               </button>
             </div>
           )}
@@ -69,8 +73,7 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
           {cartItems.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
               <p className="text-muted-foreground text-sm text-center">
-                Your shopping bag is empty.<br />
-                Continue shopping to add items to your bag.
+                {t("emptyBag")}
               </p>
             </div>
           ) : (
@@ -78,7 +81,7 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
               {/* Cart items */}
               <div className="flex-1 overflow-y-auto space-y-6 mb-6">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex gap-4">
+                  <div key={item.id} className={`flex gap-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                     <div className="w-20 h-20 bg-muted/10 rounded-lg overflow-hidden">
                       <img 
                         src={item.image} 
@@ -87,12 +90,12 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
                       />
                     </div>
                     <div className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
+                      <div className={`flex justify-between items-start mb-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div>
                           <p className="text-sm font-light text-muted-foreground">{item.category}</p>
                           <h3 className="text-sm font-medium text-foreground">{item.name}</h3>
                         </div>
-                        <p className="text-sm font-light text-foreground">{item.price}</p>
+                        <p className="text-sm font-light text-foreground">{convertPrice(item.priceEUR)}</p>
                       </div>
                       <div className="flex items-center gap-2 mt-3">
                         <div className="flex items-center border border-border">
@@ -122,9 +125,9 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
               
               {/* Subtotal and checkout */}
               <div className="border-t border-border pt-6 space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-light text-foreground">Subtotal</span>
-                  <span className="text-sm font-medium text-foreground">€{subtotal.toLocaleString('en-EU', { minimumFractionDigits: 2 })}</span>
+                <div className={`flex justify-between items-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                  <span className="text-sm font-light text-foreground">{t("subtotal")}</span>
+                  <span className="text-sm font-medium text-foreground">{convertPrice(subtotalEUR)}</span>
                 </div>
                 
                 <p className="text-xs text-muted-foreground">
@@ -138,7 +141,7 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
                   onClick={onClose}
                 >
                   <Link to="/checkout">
-                    Proceed to Checkout
+                    {t("checkout")}
                   </Link>
                 </Button>
                 
@@ -150,7 +153,7 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
                   asChild
                 >
                   <Link to="/category/shop">
-                    Continue Shopping
+                    {t("continueShopping")}
                   </Link>
                 </Button>
               </div>
