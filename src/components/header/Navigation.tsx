@@ -168,10 +168,10 @@ const Navigation = () => {
       }}
       dir={direction}
     >
-      <div className="flex items-center justify-between h-16 px-6">
+      <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
         {/* Mobile hamburger button */}
         <button
-          className="lg:hidden p-2 mt-0.5 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
+          className="lg:hidden p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           aria-label="Toggle menu"
         >
@@ -207,19 +207,25 @@ const Navigation = () => {
           ))}
         </div>
 
-        {/* Center logo */}
-        <div className="absolute left-1/2 transform -translate-x-1/2">
+        {/* Center logo - NOT absolute on mobile */}
+        <div className="lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
           <Link to="/" className="block">
-            <span className="text-xl font-light tracking-widest text-nav-foreground">jWleria</span>
+            <span className="text-lg md:text-xl font-light tracking-widest text-nav-foreground">jWleria</span>
           </Link>
         </div>
 
         {/* Right icons */}
-        <div className={`flex items-center ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-2`}>
-          <CurrencySwitcher />
-          <LanguageSwitcher />
+        <div className={`flex items-center ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-0.5 md:space-x-2`}>
+          {/* Currency - hidden on small mobile */}
+          <div className="hidden sm:block">
+            <CurrencySwitcher />
+          </div>
+          {/* Language - hidden on small mobile */}
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <button 
-            className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
+            className="p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
             aria-label={t("search")}
             onClick={() => setIsSearchOpen(!isSearchOpen)}
           >
@@ -237,7 +243,7 @@ const Navigation = () => {
             </svg>
           </button>
           <button 
-            className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative"
+            className="p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative"
             aria-label={t("shoppingBag")}
             onClick={() => setIsShoppingBagOpen(true)}
           >
