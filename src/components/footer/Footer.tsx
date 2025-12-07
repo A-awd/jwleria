@@ -22,8 +22,64 @@ const Footer = () => {
   const { t, direction } = useLanguage();
   
   return (
-    <footer className="w-full bg-white text-black pt-8 pb-2 px-6 border-t border-[#e5e5e5] mt-48" dir={direction}>
-      <div className="">
+    <footer className="w-full bg-white text-black pt-8 pb-2 px-4 md:px-6 border-t border-[#e5e5e5] mt-48" dir={direction}>
+      {/* Mobile Layout */}
+      <div className="md:hidden">
+        {/* Brand & Social */}
+        <div className="text-center mb-6">
+          <span className="text-xl font-light tracking-widest text-black mb-3 block">jWleria</span>
+          <p className="text-xs font-light text-black/70 leading-relaxed mb-4 px-4">
+            {t("minimalistJewelry")}
+          </p>
+          
+          {/* Social Icons */}
+          <div className="flex justify-center space-x-6 mb-6">
+            <a href="#" className="text-black/70 hover:text-black transition-colors" aria-label="Instagram">
+              <Instagram size={22} />
+            </a>
+            <a href="#" className="text-black/70 hover:text-black transition-colors" aria-label="TikTok">
+              <TikTokIcon size={22} />
+            </a>
+          </div>
+        </div>
+
+        {/* Contact Info */}
+        <div className="text-center mb-6 text-sm font-light text-black/70">
+          <p className="font-normal text-black mb-1">{t("contactUs")}</p>
+          <p>+1 (212) 555-0123</p>
+          <p>hello@jwleria.com</p>
+        </div>
+
+        {/* Links - 2 columns */}
+        <div className="grid grid-cols-2 gap-6 mb-6 text-center">
+          {/* Shop */}
+          <div>
+            <h4 className="text-xs font-medium mb-3 uppercase tracking-wide">{t("shop")}</h4>
+            <ul className="space-y-2">
+              <li><a href="/category/new-in" className="text-xs font-light text-black/70">{t("newIn")}</a></li>
+              <li><a href="/category/rings" className="text-xs font-light text-black/70">{t("rings")}</a></li>
+              <li><a href="/category/earrings" className="text-xs font-light text-black/70">{t("earrings")}</a></li>
+              <li><a href="/category/bracelets" className="text-xs font-light text-black/70">{t("bracelets")}</a></li>
+              <li><a href="/category/necklaces" className="text-xs font-light text-black/70">{t("necklaces")}</a></li>
+            </ul>
+          </div>
+
+          {/* Support */}
+          <div>
+            <h4 className="text-xs font-medium mb-3 uppercase tracking-wide">{t("footerSupport")}</h4>
+            <ul className="space-y-2">
+              <li><a href="/about/size-guide" className="text-xs font-light text-black/70">{t("sizeGuide")}</a></li>
+              <li><a href="#" className="text-xs font-light text-black/70">{t("careInstructions")}</a></li>
+              <li><a href="#" className="text-xs font-light text-black/70">{t("returns")}</a></li>
+              <li><a href="#" className="text-xs font-light text-black/70">{t("shipping")}</a></li>
+              <li><a href="/about/customer-care" className="text-xs font-light text-black/70">{t("contactUs")}</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout */}
+      <div className="hidden md:block">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-8">
           {/* Brand - Left side */}
           <div>
@@ -35,12 +91,7 @@ const Footer = () => {
             {/* Contact Information */}
             <div className="space-y-2 text-sm font-light text-black/70">
               <div>
-                <p className="font-normal text-black mb-1">{t("visitUs")}</p>
-                <p>123 Madison Avenue</p>
-                <p>New York, NY 10016</p>
-              </div>
-              <div>
-                <p className="font-normal text-black mb-1 mt-3">{t("contactUs")}</p>
+                <p className="font-normal text-black mb-1">{t("contactUs")}</p>
                 <p>+1 (212) 555-0123</p>
                 <p>hello@jwleria.com</p>
               </div>
@@ -90,16 +141,16 @@ const Footer = () => {
       </div>
 
       {/* Bottom section - edge to edge separator */}
-      <div className="border-t border-[#e5e5e5] -mx-6 px-6 pt-2">
-        <div className="flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm font-light text-black mb-1 md:mb-0">
+      <div className="border-t border-[#e5e5e5] -mx-4 md:-mx-6 px-4 md:px-6 pt-2">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-2">
+          <p className="text-xs md:text-sm font-light text-black">
             © 2024 jWleria. {t("allRightsReserved")}
           </p>
-          <div className={`flex ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-6`}>
-            <a href="/privacy-policy" className="text-sm font-light text-black hover:text-black/70 transition-colors">
+          <div className={`flex ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-4 md:space-x-6`}>
+            <a href="/privacy-policy" className="text-xs md:text-sm font-light text-black hover:text-black/70 transition-colors">
               {t("privacyPolicy")}
             </a>
-            <a href="/terms-of-service" className="text-sm font-light text-black hover:text-black/70 transition-colors">
+            <a href="/terms-of-service" className="text-xs md:text-sm font-light text-black hover:text-black/70 transition-colors">
               {t("termsOfService")}
             </a>
           </div>
