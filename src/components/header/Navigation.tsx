@@ -188,11 +188,7 @@ const Navigation = () => {
         {/* Center logo */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <Link to="/" className="block">
-            <img 
-              src="/LINEA-1.svg" 
-              alt="LINEA" 
-              className="h-6 w-auto"
-            />
+            <span className="text-xl font-light tracking-widest text-nav-foreground">jWleria</span>
           </Link>
         </div>
 
