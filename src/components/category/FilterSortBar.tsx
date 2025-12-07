@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Sheet,
   SheetContent,
@@ -26,9 +27,16 @@ interface FilterSortBarProps {
 }
 
 const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBarProps) => {
+  const { t } = useLanguage();
   const [sortBy, setSortBy] = useState("featured");
 
-  const categories = ["Earrings", "Bracelets", "Rings", "Necklaces"];
+  const categories = [
+    { key: "earrings", label: t("earrings") },
+    { key: "bracelets", label: t("bracelets") },
+    { key: "rings", label: t("rings") },
+    { key: "necklaces", label: t("necklaces") },
+  ];
+  
   const priceRanges = ["Under €1,000", "€1,000 - €2,000", "€2,000 - €3,000", "Over €3,000"];
   const materials = ["Gold", "Silver", "Rose Gold", "Platinum"];
 
@@ -37,7 +45,7 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
       <section className="w-full px-6 mb-8 border-b border-border pb-4">
         <div className="flex justify-between items-center">
           <p className="text-sm font-light text-muted-foreground">
-            {itemCount} items
+            {itemCount} {t("products")}
           </p>
           
           <div className="flex items-center gap-4">
@@ -48,24 +56,24 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                   size="sm"
                   className="font-light hover:bg-transparent"
                 >
-                  Filters
+                  {t("filters")}
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-80 bg-background border-none shadow-none">
                 <SheetHeader className="mb-6 border-b border-border pb-4">
-                  <SheetTitle className="text-lg font-light">Filters</SheetTitle>
+                  <SheetTitle className="text-lg font-light">{t("filters")}</SheetTitle>
                 </SheetHeader>
                 
                 <div className="space-y-8">
                   {/* Category Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">Category</h3>
+                    <h3 className="text-sm font-light mb-4 text-foreground">{t("shop")}</h3>
                     <div className="space-y-3">
                       {categories.map((category) => (
-                        <div key={category} className="flex items-center space-x-3">
-                          <Checkbox id={category} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
-                          <Label htmlFor={category} className="text-sm font-light text-foreground cursor-pointer">
-                            {category}
+                        <div key={category.key} className="flex items-center space-x-3">
+                          <Checkbox id={category.key} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                          <Label htmlFor={category.key} className="text-sm font-light text-foreground cursor-pointer">
+                            {category.label}
                           </Label>
                         </div>
                       ))}
@@ -76,7 +84,7 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
 
                   {/* Price Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">Price</h3>
+                    <h3 className="text-sm font-light mb-4 text-foreground">{t("subtotal")}</h3>
                     <div className="space-y-3">
                       {priceRanges.map((range) => (
                         <div key={range} className="flex items-center space-x-3">
@@ -93,7 +101,7 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
 
                   {/* Material Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">Material</h3>
+                    <h3 className="text-sm font-light mb-4 text-foreground">{t("material")}</h3>
                     <div className="space-y-3">
                       {materials.map((material) => (
                         <div key={material} className="flex items-center space-x-3">
@@ -110,10 +118,7 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
 
                   <div className="flex flex-col gap-2 pt-4">
                     <Button variant="ghost" size="sm" className="w-full border-none hover:bg-transparent hover:underline font-normal text-left justify-start">
-                      Apply Filters
-                    </Button>
-                    <Button variant="ghost" size="sm" className="w-full border-none hover:bg-transparent hover:underline font-light text-left justify-start">
-                      Clear All
+                      {t("apply")}
                     </Button>
                   </div>
                 </div>
@@ -125,11 +130,10 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="shadow-none border-none rounded-none bg-background">
-                <SelectItem value="featured" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">Featured</SelectItem>
-                <SelectItem value="price-low" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">Price: Low to High</SelectItem>
-                <SelectItem value="price-high" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">Price: High to Low</SelectItem>
-                <SelectItem value="newest" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">Newest</SelectItem>
-                <SelectItem value="name" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">Name A-Z</SelectItem>
+                <SelectItem value="featured" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("featured")}</SelectItem>
+                <SelectItem value="price-low" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("priceLowHigh")}</SelectItem>
+                <SelectItem value="price-high" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("priceHighLow")}</SelectItem>
+                <SelectItem value="newest" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("newest")}</SelectItem>
               </SelectContent>
             </Select>
           </div>

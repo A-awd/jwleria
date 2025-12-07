@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,7 +14,23 @@ interface CategoryHeaderProps {
 }
 
 const CategoryHeader = ({ category }: CategoryHeaderProps) => {
-  const capitalizedCategory = category.charAt(0).toUpperCase() + category.slice(1);
+  const { t } = useLanguage();
+  
+  // Map URL slugs to translation keys
+  const getCategoryName = (slug: string) => {
+    const categoryMap: Record<string, string> = {
+      'rings': t('rings'),
+      'necklaces': t('necklaces'),
+      'earrings': t('earrings'),
+      'bracelets': t('bracelets'),
+      'watches': t('watches'),
+      'new-in': t('newIn'),
+      'shop': t('shop'),
+    };
+    return categoryMap[slug.toLowerCase()] || slug.charAt(0).toUpperCase() + slug.slice(1);
+  };
+
+  const categoryName = getCategoryName(category);
   
   return (
     <section className="w-full px-6 mb-8">
@@ -22,12 +39,12 @@ const CategoryHeader = ({ category }: CategoryHeaderProps) => {
             <BreadcrumbList>
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link to="/">Home</Link>
+                  <Link to="/">{t('home')}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                <BreadcrumbPage>{capitalizedCategory}</BreadcrumbPage>
+                <BreadcrumbPage>{categoryName}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
@@ -35,7 +52,7 @@ const CategoryHeader = ({ category }: CategoryHeaderProps) => {
         
         <div>
           <h1 className="text-3xl md:text-4xl font-light text-foreground">
-            {capitalizedCategory}
+            {categoryName}
           </h1>
         </div>
     </section>

@@ -1,19 +1,24 @@
 import founders from "@/assets/founders.png";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
+
 const EditorialSection = () => {
-  return <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
+  const { t, direction } = useLanguage();
+  
+  return (
+    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center">
         <div className="space-y-3 md:space-y-4 max-w-[630px] order-last md:order-first">
           <h2 className="text-lg md:text-2xl font-normal text-foreground leading-tight">
-            Jewelry Drawn From Shadows and Lines
+            {t("jewelryDrawnFrom")}
           </h2>
           <p className="text-xs md:text-sm font-light text-foreground/80 leading-relaxed">
-            Linea was born from the meeting of two minds who saw beauty not just in ornament, but in structure. With backgrounds spanning architecture and fine arts, the founders believed that jewelry could be more than decoration.
+            {t("lineaStoryDesc")}
           </p>
           <Link to="/about/our-story" className="inline-flex items-center gap-1 text-xs md:text-sm font-light text-foreground hover:text-foreground/80 transition-colors duration-200">
-            <span>Read our full story</span>
-            <ArrowRight size={12} />
+            <span>{t("readFullStory")}</span>
+            <ArrowRight size={12} className={direction === 'rtl' ? 'rotate-180' : ''} />
           </Link>
         </div>
         
@@ -23,6 +28,8 @@ const EditorialSection = () => {
           </div>
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default EditorialSection;
