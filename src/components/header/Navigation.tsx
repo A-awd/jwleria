@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import ShoppingBag from "./ShoppingBag";
 import LanguageSwitcher from "./LanguageSwitcher";
 import CurrencySwitcher from "./CurrencySwitcher";
+import FloatingCartButton from "./FloatingCartButton";
 import { useLanguage } from "@/i18n/LanguageContext";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
@@ -476,6 +477,12 @@ const Navigation = () => {
           </div>
         </div>
       )}
+      
+      {/* Floating Cart Button for Mobile */}
+      <FloatingCartButton 
+        itemCount={totalItems}
+        onClick={() => setIsShoppingBagOpen(true)}
+      />
     </nav>
   );
 };
