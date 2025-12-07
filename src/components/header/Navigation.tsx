@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import ShoppingBag from "./ShoppingBag";
 import LanguageSwitcher from "./LanguageSwitcher";
+import CurrencySwitcher from "./CurrencySwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
@@ -215,6 +216,7 @@ const Navigation = () => {
 
         {/* Right icons */}
         <div className={`flex items-center ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-2`}>
+          <CurrencySwitcher />
           <LanguageSwitcher />
           <button 
             className="p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
