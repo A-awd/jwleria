@@ -1,4 +1,22 @@
 import { useLanguage } from "@/i18n/LanguageContext";
+import { Instagram } from "lucide-react";
+
+// Custom TikTok icon since Lucide doesn't have one
+const TikTokIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round"
+    className={className}
+  >
+    <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+  </svg>
+);
 
 const Footer = () => {
   const { t, direction } = useLanguage();
@@ -58,10 +76,14 @@ const Footer = () => {
             {/* Connect */}
             <div>
               <h4 className="text-sm font-normal mb-4">{t("connect")}</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("instagram")}</a></li>
-                <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">TikTok</a></li>
-              </ul>
+              <div className={`flex ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-4`}>
+                <a href="#" className="text-black/70 hover:text-black transition-colors" aria-label="Instagram">
+                  <Instagram size={20} />
+                </a>
+                <a href="#" className="text-black/70 hover:text-black transition-colors" aria-label="TikTok">
+                  <TikTokIcon size={20} />
+                </a>
+              </div>
             </div>
           </div>
         </div>
