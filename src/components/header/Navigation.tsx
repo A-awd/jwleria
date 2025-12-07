@@ -369,19 +369,35 @@ const Navigation = () => {
 
       {/* Mobile navigation menu */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-full left-0 right-0 bg-nav border-b border-border z-50">
-          <div className="px-6 py-8">
-            <div className="space-y-6">
+        <div className="lg:hidden absolute top-full left-0 right-0 bg-nav border-b border-border z-50 max-h-[80vh] overflow-y-auto">
+          <div className="px-4 py-6">
+            {/* Currency & Language Switchers for Mobile */}
+            <div className="flex items-center gap-4 pb-4 mb-4 border-b border-border sm:hidden">
+              <div className="flex-1">
+                <span className="text-xs text-nav-foreground/60 block mb-1">
+                  {direction === 'rtl' ? 'العملة' : 'Currency'}
+                </span>
+                <CurrencySwitcher />
+              </div>
+              <div className="flex-1">
+                <span className="text-xs text-nav-foreground/60 block mb-1">
+                  {direction === 'rtl' ? 'اللغة' : 'Language'}
+                </span>
+                <LanguageSwitcher />
+              </div>
+            </div>
+            
+            <div className="space-y-4">
               {navItems.map((item, index) => (
                 <div key={item.key}>
                   <Link
                     to={item.href}
-                    className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-lg font-light block py-2"
+                    className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-base font-light block py-1.5"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
                   </Link>
-                   <div className={`mt-3 ${direction === 'rtl' ? 'pr-4' : 'pl-4'} space-y-2`}>
+                   <div className={`mt-2 ${direction === 'rtl' ? 'pr-4' : 'pl-4'} space-y-1.5`}>
                      {item.submenuItems.map((subItem, subIndex) => (
                        <Link
                          key={subIndex}
