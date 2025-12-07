@@ -1,8 +1,11 @@
 import earringsCollection from "@/assets/earrings-collection.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const FiftyFiftySection = () => {
+  const { t } = useLanguage();
+  
   return (
     <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
       <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6">
@@ -18,10 +21,10 @@ const FiftyFiftySection = () => {
           </Link>
           <div className="">
             <h3 className="text-xs md:text-sm font-normal text-foreground mb-0.5 md:mb-1">
-              Organic Forms
+              {t("organicForms")}
             </h3>
             <p className="text-xs md:text-sm font-light text-foreground/70 line-clamp-2">
-              Nature-inspired pieces with fluid details
+              {t("organicFormsDesc")}
             </p>
           </div>
         </div>
@@ -38,10 +41,10 @@ const FiftyFiftySection = () => {
           </Link>
           <div className="">
             <h3 className="text-xs md:text-sm font-normal text-foreground mb-0.5 md:mb-1">
-              Chain Collection
+              {t("chainCollection")}
             </h3>
             <p className="text-xs md:text-sm font-light text-foreground/70 line-clamp-2">
-              Refined links in precious metals
+              {t("chainCollectionDesc")}
             </p>
           </div>
         </div>

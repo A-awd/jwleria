@@ -1,8 +1,11 @@
 import circularCollection from "@/assets/circular-collection.png";
 import organicEarring from "@/assets/organic-earring.png";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const OneThirdTwoThirdsSection = () => {
+  const { t } = useLanguage();
+  
   return (
     <section className="w-full mb-16 px-6">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -18,10 +21,10 @@ const OneThirdTwoThirdsSection = () => {
           </Link>
           <div className="">
             <h3 className="text-sm font-normal text-foreground mb-1">
-              Artisan Craft
+              {t("artisanCraft")}
             </h3>
             <p className="text-sm font-light text-foreground">
-              Handcrafted pieces with meticulous attention to detail
+              {t("artisanCraftDesc")}
             </p>
           </div>
         </div>
@@ -38,10 +41,10 @@ const OneThirdTwoThirdsSection = () => {
           </Link>
           <div className="">
             <h3 className="text-sm font-normal text-foreground mb-1">
-              Circular Elements
+              {t("circularElements")}
             </h3>
             <p className="text-sm font-light text-foreground">
-              Geometric perfection meets contemporary minimalism
+              {t("circularElementsDesc")}
             </p>
           </div>
         </div>

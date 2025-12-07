@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useLanguage } from "@/i18n/LanguageContext";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
 
 const Checkout = () => {
+  const { t, direction } = useLanguage();
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
   const [customerDetails, setCustomerDetails] = useState({
@@ -129,7 +131,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" dir={direction}>
       <CheckoutHeader />
       
       <main className="pt-6 pb-12">
@@ -139,7 +141,7 @@ const Checkout = () => {
             {/* Order Summary - First on mobile, last on desktop */}
             <div className="lg:col-span-1 lg:order-2">
               <div className="bg-muted/20 p-8 rounded-none sticky top-6">
-                <h2 className="text-lg font-light text-foreground mb-6">Order Summary</h2>
+                <h2 className="text-lg font-light text-foreground mb-6">{t("orderSummary")}</h2>
                 
                 <div className="space-y-6">
                   {cartItems.map((item) => (
@@ -154,7 +156,7 @@ const Checkout = () => {
                       <div className="flex-1">
                         <h3 className="font-light text-foreground">{item.name}</h3>
                         {item.size && (
-                          <p className="text-sm text-muted-foreground">Size: {item.size}</p>
+                          <p className="text-sm text-muted-foreground">{t("size")}: {item.size}</p>
                         )}
                         
                         {/* Quantity controls */}
@@ -194,7 +196,7 @@ const Checkout = () => {
                       onClick={() => setShowDiscountInput(true)}
                       className="text-sm text-foreground underline hover:no-underline transition-all"
                     >
-                      Discount code
+                      {t("discountCode")}
                     </button>
                   ) : (
                     <div className="space-y-3">
@@ -203,14 +205,14 @@ const Checkout = () => {
                           type="text"
                           value={discountCode}
                           onChange={(e) => setDiscountCode(e.target.value)}
-                          placeholder="Enter discount code"
+                          placeholder={t("enterDiscountCode")}
                           className="flex-1 rounded-none"
                         />
                         <button 
                           onClick={handleDiscountSubmit}
                           className="text-sm text-foreground underline hover:no-underline transition-all px-2"
                         >
-                          Apply
+                          {t("apply")}
                         </button>
                       </div>
                     </div>
@@ -219,7 +221,7 @@ const Checkout = () => {
 
                 <div className="border-t border-muted-foreground/20 mt-4 pt-6">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Subtotal</span>
+                    <span className="text-muted-foreground">{t("subtotal")}</span>
                     <span className="text-foreground">€{subtotal.toLocaleString()}</span>
                   </div>
                 </div>
@@ -231,12 +233,12 @@ const Checkout = () => {
 
               {/* Customer Details Form */}
               <div className="bg-muted/20 p-8 rounded-none">
-                <h2 className="text-lg font-light text-foreground mb-6">Customer Details</h2>
+                <h2 className="text-lg font-light text-foreground mb-6">{t("customerDetails")}</h2>
                 
                 <div className="space-y-6">
                   <div>
                     <Label htmlFor="email" className="text-sm font-light text-foreground">
-                      Email Address *
+                      {t("emailAddress")} *
                     </Label>
                     <Input
                       id="email"
@@ -244,14 +246,14 @@ const Checkout = () => {
                       value={customerDetails.email}
                       onChange={(e) => handleCustomerDetailsChange("email", e.target.value)}
                       className="mt-2 rounded-none"
-                      placeholder="Enter your email"
+                      placeholder={t("enterEmail")}
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="firstName" className="text-sm font-light text-foreground">
-                        First Name *
+                        {t("firstName")} *
                       </Label>
                       <Input
                         id="firstName"
@@ -259,12 +261,12 @@ const Checkout = () => {
                         value={customerDetails.firstName}
                         onChange={(e) => handleCustomerDetailsChange("firstName", e.target.value)}
                         className="mt-2 rounded-none"
-                        placeholder="First name"
+                        placeholder={t("firstName")}
                       />
                     </div>
                     <div>
                       <Label htmlFor="lastName" className="text-sm font-light text-foreground">
-                        Last Name *
+                        {t("lastName")} *
                       </Label>
                       <Input
                         id="lastName"
@@ -272,14 +274,14 @@ const Checkout = () => {
                         value={customerDetails.lastName}
                         onChange={(e) => handleCustomerDetailsChange("lastName", e.target.value)}
                         className="mt-2 rounded-none"
-                        placeholder="Last name"
+                        placeholder={t("lastName")}
                       />
                     </div>
                   </div>
 
                   <div>
                     <Label htmlFor="phone" className="text-sm font-light text-foreground">
-                      Phone Number
+                      {t("phoneNumber")}
                     </Label>
                     <Input
                       id="phone"
@@ -287,18 +289,18 @@ const Checkout = () => {
                       value={customerDetails.phone}
                       onChange={(e) => handleCustomerDetailsChange("phone", e.target.value)}
                       className="mt-2 rounded-none"
-                      placeholder="Enter your phone number"
+                      placeholder={t("enterPhone")}
                     />
                   </div>
 
                   {/* Shipping Address */}
                   <div className="border-t border-muted-foreground/20 pt-6 mt-8">
-                    <h3 className="text-base font-light text-foreground mb-4">Shipping Address</h3>
+                    <h3 className="text-base font-light text-foreground mb-4">{t("shippingAddress")}</h3>
                     
                     <div className="space-y-4">
                       <div>
                         <Label htmlFor="shippingAddress" className="text-sm font-light text-foreground">
-                          Address *
+                          {t("address")} *
                         </Label>
                         <Input
                           id="shippingAddress"
@@ -306,14 +308,14 @@ const Checkout = () => {
                           value={shippingAddress.address}
                           onChange={(e) => handleShippingAddressChange("address", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Street address"
+                          placeholder={t("streetAddress")}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="shippingCity" className="text-sm font-light text-foreground">
-                            City *
+                            {t("city")} *
                           </Label>
                           <Input
                             id="shippingCity"
@@ -321,12 +323,12 @@ const Checkout = () => {
                             value={shippingAddress.city}
                             onChange={(e) => handleShippingAddressChange("city", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="City"
+                            placeholder={t("city")}
                           />
                         </div>
                         <div>
                           <Label htmlFor="shippingPostalCode" className="text-sm font-light text-foreground">
-                            Postal Code *
+                            {t("postalCode")} *
                           </Label>
                           <Input
                             id="shippingPostalCode"
@@ -334,14 +336,14 @@ const Checkout = () => {
                             value={shippingAddress.postalCode}
                             onChange={(e) => handleShippingAddressChange("postalCode", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="Postal code"
+                            placeholder={t("postalCode")}
                           />
                         </div>
                       </div>
 
                       <div>
                         <Label htmlFor="shippingCountry" className="text-sm font-light text-foreground">
-                          Country *
+                          {t("country")} *
                         </Label>
                         <Input
                           id="shippingCountry"
@@ -349,7 +351,7 @@ const Checkout = () => {
                           value={shippingAddress.country}
                           onChange={(e) => handleShippingAddressChange("country", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Country"
+                          placeholder={t("country")}
                         />
                       </div>
                     </div>
@@ -367,7 +369,7 @@ const Checkout = () => {
                         htmlFor="separateBilling" 
                         className="text-sm font-light text-foreground cursor-pointer"
                       >
-                        Other billing address
+                        {t("otherBillingAddress")}
                       </Label>
                     </div>
                   </div>
@@ -375,11 +377,11 @@ const Checkout = () => {
                   {/* Billing Details - shown when checkbox is checked */}
                   {hasSeparateBilling && (
                     <div className="space-y-6 pt-4">
-                      <h3 className="text-base font-light text-foreground">Billing Details</h3>
+                      <h3 className="text-base font-light text-foreground">{t("billingDetails")}</h3>
                       
                       <div>
                         <Label htmlFor="billingEmail" className="text-sm font-light text-foreground">
-                          Email Address *
+                          {t("emailAddress")} *
                         </Label>
                         <Input
                           id="billingEmail"
@@ -387,14 +389,14 @@ const Checkout = () => {
                           value={billingDetails.email}
                           onChange={(e) => handleBillingDetailsChange("email", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Enter billing email"
+                          placeholder={t("enterBillingEmail")}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="billingFirstName" className="text-sm font-light text-foreground">
-                            First Name *
+                            {t("firstName")} *
                           </Label>
                           <Input
                             id="billingFirstName"
@@ -402,12 +404,12 @@ const Checkout = () => {
                             value={billingDetails.firstName}
                             onChange={(e) => handleBillingDetailsChange("firstName", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="First name"
+                            placeholder={t("firstName")}
                           />
                         </div>
                         <div>
                           <Label htmlFor="billingLastName" className="text-sm font-light text-foreground">
-                            Last Name *
+                            {t("lastName")} *
                           </Label>
                           <Input
                             id="billingLastName"
@@ -415,14 +417,14 @@ const Checkout = () => {
                             value={billingDetails.lastName}
                             onChange={(e) => handleBillingDetailsChange("lastName", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="Last name"
+                            placeholder={t("lastName")}
                           />
                         </div>
                       </div>
 
                       <div>
                         <Label htmlFor="billingPhone" className="text-sm font-light text-foreground">
-                          Phone Number
+                          {t("phoneNumber")}
                         </Label>
                         <Input
                           id="billingPhone"
@@ -430,13 +432,13 @@ const Checkout = () => {
                           value={billingDetails.phone}
                           onChange={(e) => handleBillingDetailsChange("phone", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Enter billing phone number"
+                          placeholder={t("enterPhone")}
                         />
                       </div>
 
                       <div>
                         <Label htmlFor="billingAddress" className="text-sm font-light text-foreground">
-                          Address *
+                          {t("address")} *
                         </Label>
                         <Input
                           id="billingAddress"
@@ -444,14 +446,14 @@ const Checkout = () => {
                           value={billingDetails.address}
                           onChange={(e) => handleBillingDetailsChange("address", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Street address"
+                          placeholder={t("streetAddress")}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <Label htmlFor="billingCity" className="text-sm font-light text-foreground">
-                            City *
+                            {t("city")} *
                           </Label>
                           <Input
                             id="billingCity"
@@ -459,12 +461,12 @@ const Checkout = () => {
                             value={billingDetails.city}
                             onChange={(e) => handleBillingDetailsChange("city", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="City"
+                            placeholder={t("city")}
                           />
                         </div>
                         <div>
                           <Label htmlFor="billingPostalCode" className="text-sm font-light text-foreground">
-                            Postal Code *
+                            {t("postalCode")} *
                           </Label>
                           <Input
                             id="billingPostalCode"
@@ -472,14 +474,14 @@ const Checkout = () => {
                             value={billingDetails.postalCode}
                             onChange={(e) => handleBillingDetailsChange("postalCode", e.target.value)}
                             className="mt-2 rounded-none"
-                            placeholder="Postal code"
+                            placeholder={t("postalCode")}
                           />
                         </div>
                       </div>
 
                       <div>
                         <Label htmlFor="billingCountry" className="text-sm font-light text-foreground">
-                          Country *
+                          {t("country")} *
                         </Label>
                         <Input
                           id="billingCountry"
@@ -487,7 +489,7 @@ const Checkout = () => {
                           value={billingDetails.country}
                           onChange={(e) => handleBillingDetailsChange("country", e.target.value)}
                           className="mt-2 rounded-none"
-                          placeholder="Country"
+                          placeholder={t("country")}
                         />
                       </div>
                     </div>
@@ -497,7 +499,7 @@ const Checkout = () => {
 
             {/* Shipping Options */}
             <div className="bg-muted/20 p-8 rounded-none">
-              <h2 className="text-lg font-light text-foreground mb-6">Shipping Options</h2>
+              <h2 className="text-lg font-light text-foreground mb-6">{t("shippingMethod")}</h2>
               
               <RadioGroup 
                 value={shippingOption} 
@@ -508,11 +510,11 @@ const Checkout = () => {
                   <div className="flex items-center space-x-3">
                     <RadioGroupItem value="standard" id="standard" />
                     <Label htmlFor="standard" className="font-light text-foreground">
-                      Standard Shipping
+                      {t("standardShipping")}
                     </Label>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Free • 3-5 business days
+                    {t("standardShippingDesc")}
                   </div>
                 </div>
 
@@ -520,11 +522,11 @@ const Checkout = () => {
                   <div className="flex items-center space-x-3">
                     <RadioGroupItem value="express" id="express" />
                     <Label htmlFor="express" className="font-light text-foreground">
-                      Express Shipping
+                      {t("expressShipping")}
                     </Label>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    €15 • 1-2 business days
+                    {t("expressShippingDesc")}
                   </div>
                 </div>
 
@@ -532,11 +534,11 @@ const Checkout = () => {
                   <div className="flex items-center space-x-3">
                     <RadioGroupItem value="overnight" id="overnight" />
                     <Label htmlFor="overnight" className="font-light text-foreground">
-                      Overnight Delivery
+                      {t("overnightShipping")}
                     </Label>
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    €35 • Next business day
+                    {t("overnightShippingDesc")}
                   </div>
                 </div>
               </RadioGroup>
@@ -544,13 +546,13 @@ const Checkout = () => {
 
             {/* Payment Section */}
             <div className="bg-muted/20 p-8 rounded-none">
-              <h2 className="text-lg font-light text-foreground mb-6">Payment Details</h2>
+              <h2 className="text-lg font-light text-foreground mb-6">{t("paymentMethod")}</h2>
               
               {!paymentComplete ? (
                 <div className="space-y-6">
                   <div>
                     <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">
-                      Cardholder Name *
+                      {t("cardholderName")} *
                     </Label>
                     <Input
                       id="cardholderName"
@@ -558,13 +560,13 @@ const Checkout = () => {
                       value={paymentDetails.cardholderName}
                       onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)}
                       className="mt-2 rounded-none"
-                      placeholder="Name on card"
+                      placeholder={t("cardholderName")}
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">
-                      Card Number *
+                      {t("cardNumber")} *
                     </Label>
                     <div className="relative mt-2">
                       <Input
@@ -588,7 +590,7 @@ const Checkout = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">
-                        Expiry Date *
+                        {t("expiryDate")} *
                       </Label>
                       <Input
                         id="expiryDate"
@@ -607,7 +609,7 @@ const Checkout = () => {
                     </div>
                     <div>
                       <Label htmlFor="cvv" className="text-sm font-light text-foreground">
-                        CVV *
+                        {t("cvv")} *
                       </Label>
                       <Input
                         id="cvv"
@@ -629,17 +631,17 @@ const Checkout = () => {
                   {/* Order Total Summary */}
                   <div className="bg-muted/10 p-6 rounded-none border border-muted-foreground/20 space-y-3">
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="text-muted-foreground">{t("subtotal")}</span>
                       <span className="text-foreground">€{subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Shipping</span>
+                      <span className="text-muted-foreground">{t("shipping")}</span>
                       <span className="text-foreground">
-                        {shipping === 0 ? "Free" : `€${shipping}`}
+                        {shipping === 0 ? t("free") : `€${shipping}`}
                       </span>
                     </div>
                     <div className="flex justify-between text-lg font-medium border-t border-muted-foreground/20 pt-3">
-                      <span className="text-foreground">Total</span>
+                      <span className="text-foreground">{t("total")}</span>
                       <span className="text-foreground">€{total.toLocaleString()}</span>
                     </div>
                   </div>
@@ -649,7 +651,7 @@ const Checkout = () => {
                     disabled={isProcessing || !paymentDetails.cardNumber || !paymentDetails.expiryDate || !paymentDetails.cvv || !paymentDetails.cardholderName}
                     className="w-full rounded-none h-12 text-base"
                   >
-                    {isProcessing ? "Processing..." : `Complete Order • €${total.toLocaleString()}`}
+                    {isProcessing ? t("processing") : `${t("completeOrder")} • €${total.toLocaleString()}`}
                   </Button>
                 </div>
               ) : (
@@ -657,8 +659,8 @@ const Checkout = () => {
                   <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
                     <Check className="h-8 w-8 text-green-600" />
                   </div>
-                  <h3 className="text-xl font-light text-foreground mb-2">Order Complete!</h3>
-                  <p className="text-muted-foreground">Thank you for your purchase. Your order confirmation has been sent to your email.</p>
+                  <h3 className="text-xl font-light text-foreground mb-2">{t("orderComplete")}</h3>
+                  <p className="text-muted-foreground">{t("orderConfirmation")}</p>
                  </div>
                )}
              </div>

@@ -6,6 +6,7 @@ import ProductImageGallery from "../components/product/ProductImageGallery";
 import ProductInfo from "../components/product/ProductInfo";
 import ProductDescription from "../components/product/ProductDescription";
 import ProductCarousel from "../components/content/ProductCarousel";
+import { useLanguage } from "@/i18n/LanguageContext";
 import { 
   Breadcrumb, 
   BreadcrumbItem, 
@@ -17,6 +18,7 @@ import {
 
 const ProductDetail = () => {
   const { productId } = useParams();
+  const { t } = useLanguage();
 
   return (
     <div className="min-h-screen bg-background">
@@ -30,13 +32,13 @@ const ProductDetail = () => {
               <BreadcrumbList className="text-xs">
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/">Home</Link>
+                    <Link to="/">{t("home")}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to="/category/earrings">Earrings</Link>
+                    <Link to="/category/earrings">{t("earrings")}</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
@@ -59,14 +61,14 @@ const ProductDetail = () => {
         
         <section className="w-full mt-12 lg:mt-24">
           <div className="mb-3 md:mb-4 px-4 md:px-6">
-            <h2 className="text-xs md:text-sm font-light text-foreground">You might also like</h2>
+            <h2 className="text-xs md:text-sm font-light text-foreground">{t("youMightAlsoLike")}</h2>
           </div>
           <ProductCarousel />
         </section>
         
         <section className="w-full">
           <div className="mb-3 md:mb-4 px-4 md:px-6">
-            <h2 className="text-xs md:text-sm font-light text-foreground">Our other Earrings</h2>
+            <h2 className="text-xs md:text-sm font-light text-foreground">{t("ourOtherProducts")} {t("earrings")}</h2>
           </div>
           <ProductCarousel />
         </section>
