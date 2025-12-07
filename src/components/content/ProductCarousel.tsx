@@ -72,7 +72,7 @@ const ProductCarousel = () => {
   const { convertPrice } = useCurrency();
 
   return (
-    <section className="w-full mb-16 px-6">
+    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
       <Carousel
           opts={{
             align: "start",
@@ -84,12 +84,12 @@ const ProductCarousel = () => {
             {products.map((product) => (
                <CarouselItem
                  key={product.id}
-                 className="basis-1/2 md:basis-1/3 lg:basis-1/4 pr-2 md:pr-4"
+                 className="basis-[45%] md:basis-1/3 lg:basis-1/4 pr-2 md:pr-4"
                >
                  <Link to={`/product/${product.id}`}>
                   <Card className="border-none shadow-none bg-transparent group">
                     <CardContent className="p-0">
-                      <div className="aspect-square mb-3 overflow-hidden bg-muted/10 relative">
+                      <div className="aspect-square mb-2 md:mb-3 overflow-hidden bg-muted/10 relative">
                         <img
                           src={product.image}
                           alt={product.name}
@@ -102,20 +102,20 @@ const ProductCarousel = () => {
                         />
                         <div className="absolute inset-0 bg-black/[0.03]"></div>
                         {(product.id === 1 || product.id === 3) && (
-                          <div className="absolute top-2 left-2 px-2 py-1 text-xs font-medium text-black">
+                          <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-black">
                             NEW
                           </div>
                         )}
                       </div>
-                     <div className="space-y-1">
-                       <p className="text-sm font-light text-foreground">
+                     <div className="space-y-0.5 md:space-y-1">
+                       <p className="text-[10px] md:text-sm font-light text-foreground/70">
                          {product.category}
                        </p>
-                       <div className="flex justify-between items-center">
-                         <h3 className="text-sm font-medium text-foreground">
+                       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-0.5">
+                         <h3 className="text-xs md:text-sm font-medium text-foreground">
                            {product.name}
                          </h3>
-                         <p className="text-sm font-light text-foreground">
+                         <p className="text-xs md:text-sm font-light text-foreground">
                            {convertPrice(product.priceEUR)}
                          </p>
                        </div>
