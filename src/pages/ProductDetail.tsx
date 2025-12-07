@@ -22,12 +22,12 @@ const ProductDetail = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-6">
-        <section className="w-full px-6">
+      <main className="pt-4 md:pt-6">
+        <section className="w-full px-4 md:px-6">
           {/* Breadcrumb - Show above image on smaller screens */}
-          <div className="lg:hidden mb-6">
+          <div className="lg:hidden mb-4">
             <Breadcrumb>
-              <BreadcrumbList>
+              <BreadcrumbList className="text-xs">
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link to="/">Home</Link>
@@ -50,23 +50,23 @@ const ProductDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <ProductImageGallery />
             
-            <div className="lg:pl-12 mt-8 lg:mt-0 lg:sticky lg:top-6 lg:h-fit">
+            <div className="lg:pl-12 mt-6 lg:mt-0 lg:sticky lg:top-6 lg:h-fit">
               <ProductInfo />
               <ProductDescription />
             </div>
           </div>
         </section>
         
-        <section className="w-full mt-16 lg:mt-24">
-          <div className="mb-4 px-6">
-            <h2 className="text-sm font-light text-foreground">You might also like</h2>
+        <section className="w-full mt-12 lg:mt-24">
+          <div className="mb-3 md:mb-4 px-4 md:px-6">
+            <h2 className="text-xs md:text-sm font-light text-foreground">You might also like</h2>
           </div>
           <ProductCarousel />
         </section>
         
         <section className="w-full">
-          <div className="mb-4 px-6">
-            <h2 className="text-sm font-light text-foreground">Our other Earrings</h2>
+          <div className="mb-3 md:mb-4 px-4 md:px-6">
+            <h2 className="text-xs md:text-sm font-light text-foreground">Our other Earrings</h2>
           </div>
           <ProductCarousel />
         </section>

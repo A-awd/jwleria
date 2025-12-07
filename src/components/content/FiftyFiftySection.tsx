@@ -4,11 +4,11 @@ import { Link } from "react-router-dom";
 
 const FiftyFiftySection = () => {
   return (
-    <section className="w-full mb-16 px-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 gap-3 md:gap-6">
         <div>
           <Link to="/category/earrings" className="block">
-            <div className="w-full aspect-square mb-3 overflow-hidden">
+            <div className="w-full aspect-square mb-2 md:mb-3 overflow-hidden">
               <img 
                 src={earringsCollection} 
                 alt="Earrings collection" 
@@ -17,18 +17,18 @@ const FiftyFiftySection = () => {
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-normal text-foreground mb-1">
+            <h3 className="text-xs md:text-sm font-normal text-foreground mb-0.5 md:mb-1">
               Organic Forms
             </h3>
-            <p className="text-sm font-light text-foreground">
-              Nature-inspired pieces with fluid, sculptural details
+            <p className="text-xs md:text-sm font-light text-foreground/70 line-clamp-2">
+              Nature-inspired pieces with fluid details
             </p>
           </div>
         </div>
 
         <div>
           <Link to="/category/bracelets" className="block">
-            <div className="w-full aspect-square mb-3 overflow-hidden">
+            <div className="w-full aspect-square mb-2 md:mb-3 overflow-hidden">
               <img 
                 src={linkBracelet} 
                 alt="Chain link bracelet" 
@@ -37,11 +37,11 @@ const FiftyFiftySection = () => {
             </div>
           </Link>
           <div className="">
-            <h3 className="text-sm font-normal text-foreground mb-1">
+            <h3 className="text-xs md:text-sm font-normal text-foreground mb-0.5 md:mb-1">
               Chain Collection
             </h3>
-            <p className="text-sm font-light text-foreground">
-              Refined links and connections in precious metals
+            <p className="text-xs md:text-sm font-light text-foreground/70 line-clamp-2">
+              Refined links in precious metals
             </p>
           </div>
         </div>
