@@ -14,7 +14,7 @@ import haloImage from "@/assets/halo.jpg";
 interface CartItem {
   id: number;
   name: string;
-  price: string;
+  priceEUR: number;
   image: string;
   quantity: number;
   category: string;
@@ -33,7 +33,7 @@ const Navigation = () => {
     {
       id: 1,
       name: "Pantheon",
-      price: "€2,850",
+      priceEUR: 2850,
       image: pantheonImage,
       quantity: 1,
       category: "Earrings"
@@ -41,7 +41,7 @@ const Navigation = () => {
     {
       id: 2,
       name: "Eclipse",
-      price: "€3,200", 
+      priceEUR: 3200, 
       image: eclipseImage,
       quantity: 1,
       category: "Bracelets"
@@ -49,7 +49,7 @@ const Navigation = () => {
     {
       id: 3,
       name: "Halo",
-      price: "€1,950",
+      priceEUR: 1950,
       image: haloImage, 
       quantity: 1,
       category: "Earrings"

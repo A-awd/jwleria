@@ -10,9 +10,15 @@ import {
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
 import { Minus, Plus } from "lucide-react";
+import { useCurrency } from "@/i18n/CurrencyContext";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const ProductInfo = () => {
   const [quantity, setQuantity] = useState(1);
+  const { convertPrice } = useCurrency();
+  const { t } = useLanguage();
+  
+  const productPriceEUR = 2850;
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
@@ -31,7 +37,7 @@ const ProductInfo = () => {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/category/earrings">Earrings</Link>
+                <Link to="/category/earrings">{t("earrings")}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -46,11 +52,11 @@ const ProductInfo = () => {
       <div className="space-y-2">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-sm font-light text-muted-foreground mb-1">Earrings</p>
+            <p className="text-sm font-light text-muted-foreground mb-1">{t("earrings")}</p>
             <h1 className="text-2xl md:text-3xl font-light text-foreground">Pantheon</h1>
           </div>
           <div className="text-right">
-            <p className="text-xl font-light text-foreground">€2,850</p>
+            <p className="text-xl font-light text-foreground">{convertPrice(productPriceEUR)}</p>
           </div>
         </div>
       </div>
@@ -58,22 +64,22 @@ const ProductInfo = () => {
       {/* Product details */}
       <div className="space-y-4 py-4 border-b border-border">
         <div className="space-y-2">
-          <h3 className="text-sm font-light text-foreground">Material</h3>
+          <h3 className="text-sm font-light text-foreground">{t("material")}</h3>
           <p className="text-sm font-light text-muted-foreground">18k Gold Plated Sterling Silver</p>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-light text-foreground">Dimensions</h3>
+          <h3 className="text-sm font-light text-foreground">{t("dimensions")}</h3>
           <p className="text-sm font-light text-muted-foreground">2.5cm x 1.2cm</p>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-light text-foreground">Weight</h3>
+          <h3 className="text-sm font-light text-foreground">{t("weight")}</h3>
           <p className="text-sm font-light text-muted-foreground">4.2g per earring</p>
         </div>
         
         <div className="space-y-2">
-          <h3 className="text-sm font-light text-foreground">Editor's notes</h3>
+          <h3 className="text-sm font-light text-foreground">{t("editorsNotes")}</h3>
           <p className="text-sm font-light text-muted-foreground italic">"A modern interpretation of classical architecture, these earrings bridge timeless elegance with contemporary minimalism."</p>
         </div>
       </div>
@@ -81,7 +87,7 @@ const ProductInfo = () => {
       {/* Quantity and Add to Cart */}
       <div className="space-y-4">
         <div className="flex items-center gap-4">
-          <span className="text-sm font-light text-foreground">Quantity</span>
+          <span className="text-sm font-light text-foreground">{t("quantity")}</span>
           <div className="flex items-center border border-border">
             <Button
               variant="ghost"
@@ -108,7 +114,7 @@ const ProductInfo = () => {
         <Button 
           className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none"
         >
-          Add to Bag
+          {t("addToBag")}
         </Button>
       </div>
     </div>

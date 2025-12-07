@@ -5,6 +5,7 @@ import {
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { useCurrency } from "@/i18n/CurrencyContext";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
 import haloImage from "@/assets/halo.jpg";
@@ -18,7 +19,7 @@ interface Product {
   id: number;
   name: string;
   category: string;
-  price: string;
+  priceEUR: number;
   image: string;
 }
 
@@ -27,47 +28,49 @@ const products: Product[] = [
     id: 1,
     name: "Pantheon",
     category: "Earrings",
-    price: "€2,850",
+    priceEUR: 2850,
     image: pantheonImage,
   },
   {
     id: 2,
     name: "Eclipse",
     category: "Bracelets",
-    price: "€3,200",
+    priceEUR: 3200,
     image: eclipseImage,
   },
   {
     id: 3,
     name: "Halo",
     category: "Earrings",
-    price: "€1,950",
+    priceEUR: 1950,
     image: haloImage,
   },
   {
     id: 4,
     name: "Oblique",
     category: "Earrings",
-    price: "€1,650",
+    priceEUR: 1650,
     image: obliqueImage,
   },
   {
     id: 5,
     name: "Lintel",
     category: "Earrings",
-    price: "€2,250",
+    priceEUR: 2250,
     image: lintelImage,
   },
   {
     id: 6,
     name: "Shadowline",
     category: "Bracelets",
-    price: "€3,950",
+    priceEUR: 3950,
     image: shadowlineImage,
   },
 ];
 
 const ProductCarousel = () => {
+  const { convertPrice } = useCurrency();
+
   return (
     <section className="w-full mb-16 px-6">
       <Carousel
@@ -113,7 +116,7 @@ const ProductCarousel = () => {
                            {product.name}
                          </h3>
                          <p className="text-sm font-light text-foreground">
-                           {product.price}
+                           {convertPrice(product.priceEUR)}
                          </p>
                        </div>
                      </div>
