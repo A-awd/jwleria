@@ -15,57 +15,57 @@ const OurStory = () => {
           <AboutSidebar />
         </div>
         
-        <main className="w-full lg:w-[70vw] lg:ml-auto px-6">
+        <main className="w-full lg:w-[70vw] lg:mr-auto px-6">
           <PageHeader 
-            title="Our Story" 
-            subtitle="A journey of passion, craftsmanship, and timeless elegance"
+            title="قصتنا" 
+            subtitle="رحلة من الشغف والحرفية والأناقة الخالدة"
           />
           
           <ContentSection>
             <ImageTextBlock
               image="/founders.png"
-              imageAlt="Company founders"
-              title="Founded on Passion"
-              content="LINEA Jewelry was born from a shared vision of creating timeless pieces that transcend fleeting trends. Our founders, united by their passion for exceptional craftsmanship and sustainable practices, established the brand with a commitment to creating jewelry that tells a story - your story."
+              imageAlt="المؤسسون"
+              title="تأسست على الشغف"
+              content="ولدت jWleria من رؤية مشتركة لإبداع قطع خالدة تتجاوز الموضة العابرة. مؤسسونا، المتحدون بشغفهم للحرفية الاستثنائية والممارسات المستدامة، أسسوا العلامة التجارية بالتزام بإبداع مجوهرات تروي قصة - قصتك."
               imagePosition="left"
             />
           </ContentSection>
 
-          <ContentSection title="Our Heritage">
+          <ContentSection title="إرثنا">
             <div className="grid md:grid-cols-2 gap-12">
               <div className="space-y-6">
-                <h3 className="text-xl font-light text-foreground">Traditional Craftsmanship</h3>
+                <h3 className="text-xl font-normal text-foreground">الحرفية التقليدية</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  Every piece in our collection is meticulously handcrafted by skilled artisans who have honed their craft over generations. We honor traditional techniques while embracing modern innovation, ensuring each piece meets our exacting standards for quality and beauty.
+                  كل قطعة في مجموعتنا مصنوعة بدقة يدوياً من قبل حرفيين ماهرين صقلوا مهاراتهم عبر الأجيال. نحن نكرم التقنيات التقليدية مع تبني الابتكار الحديث، لضمان أن كل قطعة تلبي معاييرنا الصارمة للجودة والجمال.
                 </p>
               </div>
               <div className="space-y-6">
-                <h3 className="text-xl font-light text-foreground">Sustainable Future</h3>
+                <h3 className="text-xl font-normal text-foreground">مستقبل مستدام</h3>
                 <p className="text-muted-foreground leading-relaxed">
-                  We believe luxury and sustainability can coexist beautifully. Our commitment to ethical sourcing, recycled materials, and responsible manufacturing practices ensures that every piece you wear contributes to a more sustainable future.
+                  نؤمن بأن الفخامة والاستدامة يمكن أن تتعايشا بشكل جميل. التزامنا بالمصادر الأخلاقية والمواد المعاد تدويرها وممارسات التصنيع المسؤولة يضمن أن كل قطعة ترتديها تساهم في مستقبل أكثر استدامة.
                 </p>
               </div>
             </div>
           </ContentSection>
 
-          <ContentSection title="Our Values">
+          <ContentSection title="قيمنا">
             <div className="grid md:grid-cols-3 gap-8">
               <div className="space-y-4">
-                <h3 className="text-lg font-light text-foreground">Excellence</h3>
+                <h3 className="text-lg font-normal text-foreground">التميز</h3>
                 <p className="text-muted-foreground">
-                  We pursue perfection in every detail, from the initial design concept to the final polish.
+                  نسعى للكمال في كل تفصيل، من مفهوم التصميم الأولي إلى اللمسة النهائية.
                 </p>
               </div>
               <div className="space-y-4">
-                <h3 className="text-lg font-light text-foreground">Authenticity</h3>
+                <h3 className="text-lg font-normal text-foreground">الأصالة</h3>
                 <p className="text-muted-foreground">
-                  Each piece reflects genuine craftsmanship and tells an authentic story of artistry and care.
+                  كل قطعة تعكس حرفية حقيقية وتروي قصة أصيلة من الفن والعناية.
                 </p>
               </div>
               <div className="space-y-4">
-                <h3 className="text-lg font-light text-foreground">Innovation</h3>
+                <h3 className="text-lg font-normal text-foreground">الابتكار</h3>
                 <p className="text-muted-foreground">
-                  We continuously evolve our designs and techniques while honoring timeless aesthetic principles.
+                  نطور تصاميمنا وتقنياتنا باستمرار مع تكريم المبادئ الجمالية الخالدة.
                 </p>
               </div>
             </div>

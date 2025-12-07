@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['DM Sans', 'sans-serif'],
+        arabic: ['RTL Elegance', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,7 +51,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        /* Linea specific colors */
+        /* jWleria specific colors */
         "status-bar": {
           DEFAULT: "hsl(var(--status-bar))",
           foreground: "hsl(var(--status-bar-foreground))",
@@ -96,7 +96,7 @@ export default {
         },
         "slide-in": {
           from: {
-            transform: "translateX(-100%)",
+            transform: "translateX(100%)",
           },
           to: {
             transform: "translateX(0)",
@@ -104,7 +104,7 @@ export default {
         },
         "slide-in-right": {
           from: {
-            transform: "translateX(100%)",
+            transform: "translateX(-100%)",
           },
           to: {
             transform: "translateX(0)",
