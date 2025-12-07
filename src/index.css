@@ -2,7 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Linea E-commerce Design System - Minimalist & Modern */
+/* Arabic Font - RTL Elegance */
+@font-face {
+  font-family: 'RTL Elegance';
+  src: url('/fonts/RTL-EleganceArPro-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RTL Elegance';
+  src: url('/fonts/RTL-EleganceArPro-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RTL Elegance';
+  src: url('/fonts/RTL-EleganceArPro-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'RTL Elegance';
+  src: url('/fonts/RTL-EleganceArPro-Black.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* jWleria E-commerce Design System - Arabic RTL */
 
 @layer base {
   :root {
@@ -55,19 +88,12 @@
     --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -115,7 +141,11 @@
     @apply border-border;
   }
 
+  html {
+    direction: rtl;
+  }
+
   body {
-    @apply bg-background text-foreground font-light;
+    @apply bg-background text-foreground font-arabic;
   }
 }

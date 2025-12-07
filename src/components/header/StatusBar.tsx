@@ -4,9 +4,9 @@ const StatusBar = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   
   const usps = [
-    "Free shipping over €50",
-    "365 days warranty",
-    "+100,000 happy customers"
+    "شحن مجاني للطلبات فوق ٥٠٠ ر.س",
+    "ضمان ٣٦٥ يوم",
+    "+١٠٠،٠٠٠ عميل سعيد"
   ];
 
   useEffect(() => {
@@ -22,7 +22,7 @@ const StatusBar = () => {
       <div className="container mx-auto px-4 text-center">
         <p 
           key={currentIndex}
-          className="text-sm font-light transition-all duration-700 ease-in-out opacity-100 animate-fade-in"
+          className="text-sm font-normal transition-all duration-700 ease-in-out opacity-100 animate-fade-in"
         >
           {usps[currentIndex]}
         </p>
