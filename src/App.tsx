@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { CurrencyProvider } from "./i18n/CurrencyContext";
+import { FavoritesProvider } from "./contexts/FavoritesContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Category from "./pages/Category";
@@ -19,6 +20,8 @@ import StoreLocator from "./pages/about/StoreLocator";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import ShopByBrand from "./pages/ShopByBrand";
+import BrandDetail from "./pages/BrandDetail";
+import Favorites from "./pages/Favorites";
 
 const queryClient = new QueryClient();
 
@@ -26,29 +29,34 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <CurrencyProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/brands" element={<ShopByBrand />} />
-              <Route path="/category/:category" element={<Category />} />
-              <Route path="/category/brand/:brandId" element={<Category />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/about/our-story" element={<OurStory />} />
-              <Route path="/about/sustainability" element={<Sustainability />} />
-              <Route path="/about/size-guide" element={<SizeGuide />} />
-              <Route path="/about/customer-care" element={<CustomerCare />} />
-              <Route path="/about/store-locator" element={<StoreLocator />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+        <FavoritesProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ScrollToTop />
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/brands" element={<ShopByBrand />} />
+                <Route path="/brand/:brandId" element={<BrandDetail />} />
+                <Route path="/favorites" element={<Favorites />} />
+                <Route path="/category/:category" element={<Category />} />
+                <Route path="/category/brand/:brandId" element={<Category />} />
+                <Route path="/product/:productId" element={<ProductDetail />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/about/our-story" element={<OurStory />} />
+                <Route path="/about/sustainability" element={<Sustainability />} />
+                <Route path="/about/size-guide" element={<SizeGuide />} />
+                <Route path="/about/customer-care" element={<CustomerCare />} />
+                <Route path="/about/store-locator" element={<StoreLocator />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </TooltipProvider>
+        </FavoritesProvider>
       </CurrencyProvider>
     </LanguageProvider>
   </QueryClientProvider>

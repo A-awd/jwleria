@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { luxuryBrands, categories } from "@/data/products";
 import {
   Sheet,
   SheetContent,
@@ -24,38 +26,128 @@ interface FilterSortBarProps {
   filtersOpen: boolean;
   setFiltersOpen: (open: boolean) => void;
   itemCount: number;
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  selectedBrands: string[];
+  setSelectedBrands: (brands: string[]) => void;
+  selectedCategories: string[];
+  setSelectedCategories: (categories: string[]) => void;
+  sortBy: string;
+  setSortBy: (sort: string) => void;
 }
 
-const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBarProps) => {
+const FilterSortBar = ({ 
+  filtersOpen, 
+  setFiltersOpen, 
+  itemCount,
+  searchQuery,
+  setSearchQuery,
+  selectedBrands,
+  setSelectedBrands,
+  selectedCategories,
+  setSelectedCategories,
+  sortBy,
+  setSortBy
+}: FilterSortBarProps) => {
   const { t } = useLanguage();
-  const [sortBy, setSortBy] = useState("featured");
 
-  const categories = [
-    { key: "earrings", label: t("earrings") },
-    { key: "bracelets", label: t("bracelets") },
-    { key: "rings", label: t("rings") },
-    { key: "necklaces", label: t("necklaces") },
-    { key: "watches", label: t("watches") },
-  ];
-  
-  // Luxury brands for multi-brand personal shopper
-  const brands = [
-    "Cartier",
-    "Bulgari",
-    "Van Cleef & Arpels",
-    "Tiffany & Co.",
-    "Chopard",
-    "Graff",
-    "Harry Winston",
-    "Piaget",
+  const categoryItems = [
+    { key: "Rings", label: t("rings") },
+    { key: "Necklaces", label: t("necklaces") },
+    { key: "Earrings", label: t("earrings") },
+    { key: "Bracelets", label: t("bracelets") },
+    { key: "Watches", label: t("watches") },
+    { key: "Bags", label: t("bags") },
+    { key: "Sunglasses", label: t("sunglasses") },
   ];
   
   const priceRanges = ["Under €1,000", "€1,000 - €5,000", "€5,000 - €10,000", "Over €10,000"];
   const materials = ["Gold", "White Gold", "Rose Gold", "Platinum", "Diamond"];
 
+  const handleBrandToggle = (brand: string) => {
+    if (selectedBrands.includes(brand)) {
+      setSelectedBrands(selectedBrands.filter(b => b !== brand));
+    } else {
+      setSelectedBrands([...selectedBrands, brand]);
+    }
+  };
+
+  const handleCategoryToggle = (category: string) => {
+    if (selectedCategories.includes(category)) {
+      setSelectedCategories(selectedCategories.filter(c => c !== category));
+    } else {
+      setSelectedCategories([...selectedCategories, category]);
+    }
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedBrands([]);
+    setSelectedCategories([]);
+    setSortBy("featured");
+  };
+
+  const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0;
+
   return (
     <>
       <section className="w-full px-6 mb-8 border-b border-border pb-4">
+        {/* Search Bar */}
+        <div className="mb-4">
+          <div className="relative max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+            <Input
+              type="text"
+              placeholder={t("searchForJewelry")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 pr-10 border-border/50 bg-transparent focus:border-foreground/30"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2"
+              >
+                <X className="w-4 h-4 text-foreground/40 hover:text-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Active Filters */}
+        {hasActiveFilters && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {selectedBrands.map(brand => (
+              <button
+                key={brand}
+                onClick={() => handleBrandToggle(brand)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-foreground/10 text-foreground rounded-sm"
+              >
+                {brand}
+                <X className="w-3 h-3" />
+              </button>
+            ))}
+            {selectedCategories.map(category => (
+              <button
+                key={category}
+                onClick={() => handleCategoryToggle(category)}
+                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-foreground/10 text-foreground rounded-sm"
+              >
+                {category}
+                <X className="w-3 h-3" />
+              </button>
+            ))}
+            {hasActiveFilters && (
+              <button
+                onClick={clearAllFilters}
+                className="text-xs text-foreground/60 hover:text-foreground underline"
+              >
+                {t("clearAll")}
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="flex justify-between items-center">
           <p className="text-sm font-light text-muted-foreground">
             {itemCount} {t("products")}
@@ -70,9 +162,14 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                   className="font-light hover:bg-transparent"
                 >
                   {t("filters")}
+                  {(selectedBrands.length > 0 || selectedCategories.length > 0) && (
+                    <span className="ml-1 text-xs bg-foreground text-background px-1.5 rounded-full">
+                      {selectedBrands.length + selectedCategories.length}
+                    </span>
+                  )}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 bg-background border-none shadow-none">
+              <SheetContent side="right" className="w-80 bg-background border-none shadow-none overflow-y-auto">
                 <SheetHeader className="mb-6 border-b border-border pb-4">
                   <SheetTitle className="text-lg font-light">{t("filters")}</SheetTitle>
                 </SheetHeader>
@@ -81,10 +178,15 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                   {/* Brand Filter - Most important for multi-brand platform */}
                   <div>
                     <h3 className="text-sm font-light mb-4 text-foreground">{t("brand")}</h3>
-                    <div className="space-y-3">
-                      {brands.map((brand) => (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {luxuryBrands.map((brand) => (
                         <div key={brand} className="flex items-center space-x-3">
-                          <Checkbox id={brand} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                          <Checkbox 
+                            id={brand} 
+                            checked={selectedBrands.includes(brand)}
+                            onCheckedChange={() => handleBrandToggle(brand)}
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" 
+                          />
                           <Label htmlFor={brand} className="text-sm font-light text-foreground cursor-pointer">
                             {brand}
                           </Label>
@@ -99,9 +201,14 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                   <div>
                     <h3 className="text-sm font-light mb-4 text-foreground">{t("shop")}</h3>
                     <div className="space-y-3">
-                      {categories.map((category) => (
+                      {categoryItems.map((category) => (
                         <div key={category.key} className="flex items-center space-x-3">
-                          <Checkbox id={category.key} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                          <Checkbox 
+                            id={category.key} 
+                            checked={selectedCategories.includes(category.key)}
+                            onCheckedChange={() => handleCategoryToggle(category.key)}
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" 
+                          />
                           <Label htmlFor={category.key} className="text-sm font-light text-foreground cursor-pointer">
                             {category.label}
                           </Label>
@@ -147,8 +254,13 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                   <Separator className="border-border" />
 
                   <div className="flex flex-col gap-2 pt-4">
-                    <Button variant="ghost" size="sm" className="w-full border-none hover:bg-transparent hover:underline font-normal text-left justify-start">
-                      {t("apply")}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={clearAllFilters}
+                      className="w-full border-none hover:bg-transparent hover:underline font-normal text-left justify-start"
+                    >
+                      {t("clearAll")}
                     </Button>
                   </div>
                 </div>

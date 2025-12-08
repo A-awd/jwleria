@@ -221,15 +221,15 @@ const Navigation = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
             </svg>
           </button>
-          <button 
+          <Link 
+            to="/favorites"
             className="hidden lg:block p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200"
             aria-label={t("favorites")}
-            onClick={() => setOffCanvasType('favorites')}
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
             </svg>
-          </button>
+          </Link>
           <button 
             className="p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative"
             aria-label={t("shoppingBag")}
@@ -403,18 +403,16 @@ const Navigation = () => {
             
             {/* Favorites Button for Mobile */}
             <div className="mt-6 pt-4 border-t border-border">
-              <button
-                onClick={() => {
-                  setIsMobileMenuOpen(false);
-                  setOffCanvasType('favorites');
-                }}
+              <Link
+                to="/favorites"
+                onClick={() => setIsMobileMenuOpen(false)}
                 className="flex items-center gap-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-base font-light py-1.5 w-full"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
                 <span>{t("favorites")}</span>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
