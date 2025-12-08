@@ -1,74 +1,19 @@
-import { ArrowRight, X, Minus, Plus } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import ShoppingBag from "./ShoppingBag";
 import LanguageSwitcher from "./LanguageSwitcher";
 import CurrencySwitcher from "./CurrencySwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
-import pantheonImage from "@/assets/pantheon.jpg";
-import eclipseImage from "@/assets/eclipse.jpg";
-import haloImage from "@/assets/halo.jpg";
-
-interface CartItem {
-  id: number;
-  name: string;
-  priceEUR: number;
-  image: string;
-  quantity: number;
-  category: string;
-}
+import { useCart } from "@/contexts/CartContext";
 
 const Navigation = () => {
   const { t, direction } = useLanguage();
+  const { totalItems } = useCart();
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [offCanvasType, setOffCanvasType] = useState<'favorites' | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isShoppingBagOpen, setIsShoppingBagOpen] = useState(false);
-  
-  // Shopping bag state with 3 mock items
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: "Pantheon",
-      priceEUR: 2850,
-      image: pantheonImage,
-      quantity: 1,
-      category: "Earrings"
-    },
-    {
-      id: 2,
-      name: "Eclipse",
-      priceEUR: 3200, 
-      image: eclipseImage,
-      quantity: 1,
-      category: "Bracelets"
-    },
-    {
-      id: 3,
-      name: "Halo",
-      priceEUR: 1950,
-      image: haloImage, 
-      quantity: 1,
-      category: "Earrings"
-    }
-  ]);
-
-  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-  
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      setCartItems(items => items.filter(item => item.id !== id));
-    } else {
-      setCartItems(items => 
-        items.map(item => 
-          item.id === id ? { ...item, quantity: newQuantity } : item
-        )
-      );
-    }
-  };
   
   // Preload dropdown images for faster display
   useEffect(() => {
@@ -239,8 +184,8 @@ const Navigation = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
             </svg>
             {totalItems > 0 && (
-              <span className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[30%] text-[0.5rem] font-semibold text-black pointer-events-none">
-                {totalItems}
+              <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[0.6rem] font-medium w-4 h-4 rounded-full flex items-center justify-center">
+                {totalItems > 9 ? '9+' : totalItems}
               </span>
             )}
           </button>
@@ -417,51 +362,15 @@ const Navigation = () => {
           </div>
         </div>
       )}
-      
-      {/* Shopping Bag Component */}
+
+      {/* Shopping Bag Off-Canvas */}
       <ShoppingBag 
-        isOpen={isShoppingBagOpen}
+        isOpen={isShoppingBagOpen} 
         onClose={() => setIsShoppingBagOpen(false)}
-        cartItems={cartItems}
-        updateQuantity={updateQuantity}
         onViewFavorites={() => {
           setIsShoppingBagOpen(false);
-          setOffCanvasType('favorites');
         }}
       />
-      
-      {/* Favorites Off-canvas overlay */}
-      {offCanvasType === 'favorites' && (
-        <div className="fixed inset-0 z-50 h-screen">
-          {/* Backdrop */}
-          <div 
-            className="absolute inset-0 bg-black/50 h-screen"
-            onClick={() => setOffCanvasType(null)}
-          />
-          
-          {/* Off-canvas panel */}
-          <div className={`absolute ${direction === 'rtl' ? 'left-0' : 'right-0'} top-0 h-screen w-96 bg-background border-${direction === 'rtl' ? 'r' : 'l'} border-border animate-slide-in-right flex flex-col`}>
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border">
-              <h2 className="text-lg font-light text-foreground">{t("yourFavorites")}</h2>
-              <button
-                onClick={() => setOffCanvasType(null)}
-                className="p-2 text-foreground hover:text-muted-foreground transition-colors"
-                aria-label="Close"
-              >
-                <X size={20} />
-              </button>
-            </div>
-            
-            {/* Content */}
-            <div className="p-6">
-              <p className="text-muted-foreground text-sm mb-6">
-                {t("noFavoritesYet")}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
