@@ -1,16 +1,49 @@
 import { Link } from "react-router-dom";
-import { Minus, Plus, Trash2, ShoppingBag, ArrowRight } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ArrowRight, Loader2 } from "lucide-react";
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useShopifyCart } from "@/hooks/useShopifyCart";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCurrency } from "@/i18n/CurrencyContext";
 
 const Cart = () => {
   const { t, direction } = useLanguage();
-  const { convertPrice, currency } = useCurrency();
-  const { cartItems, removeFromCart, updateQuantity, totalPriceEUR, totalItems, clearCart } = useCart();
+  const { convertPrice } = useCurrency();
+  const { 
+    cart, 
+    isLoading, 
+    updateLineItem, 
+    removeFromCart, 
+    clearCart, 
+    goToCheckout,
+    isConfigured 
+  } = useShopifyCart();
+
+  const cartItems = cart?.lines || [];
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart?.subtotal ? parseFloat(cart.subtotal.amount) : 0;
+
+  const handleCheckout = () => {
+    if (cart?.checkoutUrl) {
+      goToCheckout();
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background" dir={direction}>
+        <Header />
+        <main className="pt-32 pb-20">
+          <div className="max-w-4xl mx-auto px-6 text-center">
+            <Loader2 className="w-12 h-12 mx-auto text-muted-foreground animate-spin mb-4" />
+            <p className="text-muted-foreground">{t("subtotal")}</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -44,16 +77,15 @@ const Cart = () => {
             {/* Cart Items */}
             <div className="lg:col-span-2 space-y-6">
               {cartItems.map((item) => {
-                const convertedPrice = convertPrice(item.priceEUR);
-                const itemTotal = convertPrice(item.priceEUR * item.quantity);
+                const itemTotal = item.price * item.quantity;
                 
                 return (
                   <div key={item.id} className="flex gap-6 p-6 bg-muted/20 border border-border/30">
-                    <Link to={`/product/${item.id}`} className="shrink-0">
+                    <Link to={`/product/${item.handle}`} className="shrink-0">
                       <div className="w-28 h-28 md:w-36 md:h-36 bg-muted overflow-hidden">
                         <img 
-                          src={item.image} 
-                          alt={item.name}
+                          src={item.image || "/placeholder.svg"} 
+                          alt={item.title}
                           className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       </div>
@@ -61,15 +93,14 @@ const Cart = () => {
                     
                     <div className="flex-1 flex flex-col justify-between">
                       <div>
-                        <Link to={`/product/${item.id}`}>
-                          <h3 className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                            {item.name}
-                          </h3>
-                        </Link>
-                        <p className="text-sm text-muted-foreground mt-1">{item.brand}</p>
-                        <p className="text-sm text-muted-foreground capitalize">{t(item.category as any)}</p>
+                        <h3 className="text-lg font-medium text-foreground">
+                          {item.title}
+                        </h3>
+                        {item.variantTitle && item.variantTitle !== "Default Title" && (
+                          <p className="text-sm text-muted-foreground mt-1">{item.variantTitle}</p>
+                        )}
                         <p className="text-foreground font-medium mt-2">
-                          {convertedPrice}
+                          {convertPrice(item.price)}
                         </p>
                       </div>
                       
@@ -79,7 +110,7 @@ const Cart = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateLineItem(item.id, item.quantity - 1)}
                             className="h-9 w-9 p-0 rounded-none border-border"
                           >
                             <Minus className="h-4 w-4" />
@@ -90,7 +121,7 @@ const Cart = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateLineItem(item.id, item.quantity + 1)}
                             className="h-9 w-9 p-0 rounded-none border-border"
                           >
                             <Plus className="h-4 w-4" />
@@ -100,7 +131,7 @@ const Cart = () => {
                         {/* Item Total & Remove */}
                         <div className="flex items-center gap-4">
                           <span className="text-foreground font-semibold">
-                            {itemTotal}
+                            {convertPrice(itemTotal)}
                           </span>
                           <Button
                             variant="ghost"
@@ -141,7 +172,7 @@ const Cart = () => {
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{t("subtotal")} ({totalItems} {t("products")})</span>
-                    <span className="text-foreground">{convertPrice(totalPriceEUR)}</span>
+                    <span className="text-foreground">{convertPrice(totalPrice)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">{t("shipping")}</span>
@@ -153,18 +184,31 @@ const Cart = () => {
                   <div className="flex justify-between">
                     <span className="text-lg font-medium text-foreground">{t("total")}</span>
                     <span className="text-lg font-semibold text-foreground">
-                      {convertPrice(totalPriceEUR)}
+                      {convertPrice(totalPrice)}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">{t("shippingTaxes")}</p>
                 </div>
                 
-                <Link to="/checkout">
-                  <Button className="w-full rounded-none py-6 text-base group">
+                {isConfigured ? (
+                  <Button 
+                    className="w-full rounded-none py-6 text-base group"
+                    onClick={handleCheckout}
+                    disabled={!cart?.checkoutUrl}
+                  >
                     {t("checkout")}
                     <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                   </Button>
-                </Link>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {t("complimentaryShipping")}
+                    </p>
+                    <Button className="w-full rounded-none py-6 text-base" disabled>
+                      {t("checkout")}
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           </div>

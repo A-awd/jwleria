@@ -1,9 +1,9 @@
-import { X, Minus, Plus, Trash2 } from "lucide-react";
+import { X, Minus, Plus, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useCart, CartItem } from "@/contexts/CartContext";
+import { useShopifyCart } from "@/hooks/useShopifyCart";
 
 interface ShoppingBagProps {
   isOpen: boolean;
@@ -14,9 +14,27 @@ interface ShoppingBagProps {
 const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => {
   const { convertPrice } = useCurrency();
   const { t, direction } = useLanguage();
-  const { cartItems, updateQuantity, removeFromCart, totalPriceEUR, totalItems } = useCart();
+  const { 
+    cart, 
+    isLoading, 
+    updateLineItem, 
+    removeFromCart, 
+    goToCheckout,
+    isConfigured 
+  } = useShopifyCart();
+  
+  const cartItems = cart?.lines || [];
+  const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = cart?.subtotal ? parseFloat(cart.subtotal.amount) : 0;
   
   if (!isOpen) return null;
+
+  const handleCheckout = () => {
+    if (cart?.checkoutUrl) {
+      goToCheckout();
+      onClose();
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 h-screen">
@@ -62,7 +80,12 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
             </div>
           )}
           
-          {cartItems.length === 0 ? (
+          {isLoading ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6">
+              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin mb-4" />
+              <p className="text-muted-foreground text-sm">{t("subtotal")}</p>
+            </div>
+          ) : cartItems.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center p-6">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor" className="w-16 h-16 text-muted-foreground/30 mb-4">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -88,28 +111,29 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                 {cartItems.map((item) => (
                   <div key={item.id} className={`flex gap-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''} pb-4 border-b border-border last:border-0`}>
                     <Link 
-                      to={`/product/${item.id}`}
+                      to={`/product/${item.variantId}`}
                       onClick={onClose}
                       className="w-24 h-24 bg-muted/10 rounded-lg overflow-hidden flex-shrink-0"
                     >
                       <img 
-                        src={item.image} 
-                        alt={item.name}
+                        src={item.image || "/placeholder.svg"} 
+                        alt={item.title}
                         className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
                     </Link>
                     <div className="flex-1 min-w-0">
                       <div className={`flex justify-between items-start gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className="min-w-0">
-                          <p className="text-xs font-light text-primary">{item.brand}</p>
-                          <p className="text-xs font-light text-muted-foreground">{item.category}</p>
                           <Link 
-                            to={`/product/${item.id}`}
+                            to={`/product/${item.variantId}`}
                             onClick={onClose}
                             className="text-sm font-medium text-foreground hover:underline truncate block"
                           >
-                            {item.name}
+                            {item.title}
                           </Link>
+                          {item.variantTitle && item.variantTitle !== "Default Title" && (
+                            <p className="text-xs font-light text-muted-foreground">{item.variantTitle}</p>
+                          )}
                         </div>
                         <button
                           onClick={() => removeFromCart(item.id)}
@@ -122,7 +146,7 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                       <div className={`flex items-center justify-between mt-3 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className="flex items-center border border-border">
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            onClick={() => updateLineItem(item.id, item.quantity - 1)}
                             className="p-1.5 hover:bg-muted/50 transition-colors"
                             aria-label="Decrease quantity"
                           >
@@ -132,14 +156,14 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                             {item.quantity}
                           </span>
                           <button 
-                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            onClick={() => updateLineItem(item.id, item.quantity + 1)}
                             className="p-1.5 hover:bg-muted/50 transition-colors"
                             aria-label="Increase quantity"
                           >
                             <Plus size={14} />
                           </button>
                         </div>
-                        <p className="text-sm font-medium text-foreground">{convertPrice(item.priceEUR * item.quantity)}</p>
+                        <p className="text-sm font-medium text-foreground">{convertPrice(item.price * item.quantity)}</p>
                       </div>
                     </div>
                   </div>
@@ -150,23 +174,33 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
               <div className="border-t border-border p-6 space-y-4 bg-background">
                 <div className={`flex justify-between items-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                   <span className="text-sm font-light text-foreground">{t("subtotal")}</span>
-                  <span className="text-lg font-medium text-foreground">{convertPrice(totalPriceEUR)}</span>
+                  <span className="text-lg font-medium text-foreground">{convertPrice(totalPrice)}</span>
                 </div>
                 
                 <p className="text-xs text-muted-foreground text-center">
                   {t("shippingTaxes")}
                 </p>
                 
-                <Button 
-                  asChild 
-                  className="w-full rounded-none" 
-                  size="lg"
-                  onClick={onClose}
-                >
-                  <Link to="/checkout">
+                {isConfigured && cart?.checkoutUrl ? (
+                  <Button 
+                    className="w-full rounded-none" 
+                    size="lg"
+                    onClick={handleCheckout}
+                  >
                     {t("checkout")}
-                  </Link>
-                </Button>
+                  </Button>
+                ) : (
+                  <Button 
+                    asChild 
+                    className="w-full rounded-none" 
+                    size="lg"
+                    onClick={onClose}
+                  >
+                    <Link to="/cart">
+                      {t("checkout")}
+                    </Link>
+                  </Button>
+                )}
 
                 <Button 
                   variant="outline" 
