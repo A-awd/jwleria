@@ -46,16 +46,6 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                     className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.03] transition-colors duration-300" />
-                  {product.isReadyToShip && (
-                    <span className="absolute top-2 left-2 px-2 py-1 text-[10px] md:text-xs font-medium text-emerald-700 bg-emerald-50/90 backdrop-blur-sm">
-                      {t("readyToShip")}
-                    </span>
-                  )}
-                  {product.isPreOrder && (
-                    <span className="absolute top-2 left-2 px-2 py-1 text-[10px] md:text-xs font-medium text-amber-700 bg-amber-50/90 backdrop-blur-sm">
-                      {t("preOrder")}
-                    </span>
-                  )}
                 </div>
 
                 {/* Info */}
@@ -69,6 +59,21 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                   <p className="text-xs md:text-sm font-light text-foreground/80">
                     {convertPrice(product.priceEUR)}
                   </p>
+                  {/* Elegant status indicator */}
+                  {(product.isReadyToShip || product.isPreOrder) && (
+                    <div className="pt-0.5">
+                      {product.isReadyToShip && (
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                          {t("readyToShip")}
+                        </span>
+                      )}
+                      {product.isPreOrder && (
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                          {t("preOrder")}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 {/* Button */}
