@@ -30,7 +30,7 @@ const EditorialSection = () => {
   ];
   
   return (
-    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
+    <section className="w-full mb-6 md:mb-10 px-4 md:px-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 items-center">
         <div className="space-y-4 md:space-y-6 max-w-[630px] order-last md:order-first">
           <h2 className="text-lg md:text-2xl font-normal text-foreground leading-tight">

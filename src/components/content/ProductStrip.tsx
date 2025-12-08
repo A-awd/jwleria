@@ -15,10 +15,10 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
   const { t } = useLanguage();
 
   return (
-    <section className="w-full py-10 md:py-14 px-4 md:px-6">
+    <section className="w-full py-6 md:py-10 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Title */}
-        <div className="mb-6 md:mb-8">
+        <div className="mb-4 md:mb-6">
           <h2 className="text-base md:text-lg font-medium text-foreground tracking-wide">
             {title}
           </h2>

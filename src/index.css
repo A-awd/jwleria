@@ -120,22 +120,18 @@
   }
 }
 
-/* Marquee animation for brand logos */
-@keyframes marquee {
+/* Marquee animation for brand logos - smooth infinite scroll */
+@keyframes marquee-smooth {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-50%);
+    transform: translateX(-33.333%);
   }
 }
 
-.animate-marquee {
-  animation: marquee 40s linear infinite;
-}
-
-.animate-marquee:hover {
-  animation-play-state: paused;
+.animate-marquee-smooth {
+  animation: marquee-smooth 60s linear infinite;
 }
 
 /* Hide scrollbar */
