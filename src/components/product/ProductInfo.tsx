@@ -131,6 +131,14 @@ const ProductInfo = () => {
             </span>
           </div>
         )}
+        {product.isPreOrder && (
+          <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm">
+            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+            <span className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400">
+              {t("preOrder")}
+            </span>
+          </div>
+        )}
         
         <div className="space-y-1 md:space-y-2">
           <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>

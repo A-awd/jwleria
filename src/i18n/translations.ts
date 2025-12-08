@@ -234,6 +234,7 @@ export const translations = {
     readFullStory: "Discover our services",
     newLabel: "NEW",
     readyToShip: "Ready to Ship",
+    preOrder: "Pre-Order",
     availability: "Availability",
     inStock: "In Stock",
 
@@ -606,6 +607,7 @@ export const translations = {
     readFullStory: "Descubre nuestros servicios",
     newLabel: "NUEVO",
     readyToShip: "Listo para Enviar",
+    preOrder: "Reserva Anticipada",
     availability: "Disponibilidad",
     inStock: "En Stock",
     modernHeritage: "Van Cleef & Arpels",
@@ -990,6 +992,7 @@ export const translations = {
     readFullStory: "اكتشف خدماتنا",
     newLabel: "جديد",
     readyToShip: "جاهز للتسليم",
+    preOrder: "طلب مسبق",
     availability: "التوفر",
     inStock: "متوفر",
 
@@ -1368,6 +1371,7 @@ export const translations = {
     readFullStory: "Découvrez nos services",
     newLabel: "NOUVEAU",
     readyToShip: "Prêt à Expédier",
+    preOrder: "Précommande",
     availability: "Disponibilité",
     inStock: "En Stock",
 
