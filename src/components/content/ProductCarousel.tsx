@@ -7,81 +7,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import pantheonImage from "@/assets/pantheon.jpg";
-import eclipseImage from "@/assets/eclipse.jpg";
-import haloImage from "@/assets/halo.jpg";
-import obliqueImage from "@/assets/oblique.jpg";
-import lintelImage from "@/assets/lintel.jpg";
-import shadowlineImage from "@/assets/shadowline.jpg";
+import { getFeaturedProducts } from "@/data/products";
 import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
-
-interface Product {
-  id: number;
-  name: string;
-  brand: string;
-  categoryKey: string;
-  priceEUR: number;
-  image: string;
-  isNew?: boolean;
-}
-
-const products: Product[] = [
-  {
-    id: 1,
-    name: "Love Bracelet",
-    brand: "Cartier",
-    categoryKey: "bracelets",
-    priceEUR: 6850,
-    image: pantheonImage,
-    isNew: true,
-  },
-  {
-    id: 2,
-    name: "Serpenti Ring",
-    brand: "Bulgari",
-    categoryKey: "rings",
-    priceEUR: 3200,
-    image: eclipseImage,
-  },
-  {
-    id: 3,
-    name: "Alhambra Pendant",
-    brand: "Van Cleef & Arpels",
-    categoryKey: "necklaces",
-    priceEUR: 4950,
-    image: haloImage,
-    isNew: true,
-  },
-  {
-    id: 4,
-    name: "T Wire Bracelet",
-    brand: "Tiffany & Co.",
-    categoryKey: "bracelets",
-    priceEUR: 1650,
-    image: obliqueImage,
-  },
-  {
-    id: 5,
-    name: "Happy Hearts",
-    brand: "Chopard",
-    categoryKey: "earrings",
-    priceEUR: 2250,
-    image: lintelImage,
-  },
-  {
-    id: 6,
-    name: "Butterfly Ring",
-    brand: "Graff",
-    categoryKey: "rings",
-    priceEUR: 12950,
-    image: shadowlineImage,
-  },
-];
 
 const ProductCarousel = () => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
+  
+  // Get featured products from all brands
+  const products = getFeaturedProducts(12);
 
   const getCategoryName = (categoryKey: string) => {
     return t(categoryKey as any);
