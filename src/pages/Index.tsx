@@ -5,14 +5,15 @@ import FiftyFiftySection from "../components/content/FiftyFiftySection";
 import OneThirdTwoThirdsSection from "../components/content/OneThirdTwoThirdsSection";
 import ProductCarousel from "../components/content/ProductCarousel";
 import EditorialSection from "../components/content/EditorialSection";
-import BrandLogosStrip from "../components/content/BrandLogosStrip";
+import BrandMarquee from "../components/content/BrandMarquee";
+import BestSellersCarousel from "../components/content/BestSellersCarousel";
 import ProductStrip from "../components/content/ProductStrip";
-import { getBestSellers, getNewArrivals, getFeaturedProducts } from "@/data/products";
+import ScrollReveal from "../components/ui/ScrollReveal";
+import { getNewArrivals, getFeaturedProducts } from "@/data/products";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Index = () => {
   const { t } = useLanguage();
-  const bestSellers = getBestSellers(4);
   const newArrivals = getNewArrivals(4);
   const editorsPicks = getFeaturedProducts(4);
 
@@ -22,26 +23,46 @@ const Index = () => {
       
       <main className="pt-4 md:pt-6">
         <FiftyFiftySection />
-        <BrandLogosStrip />
-        <ProductCarousel />
-        <LargeHero />
-        <ProductStrip 
-          title={t("bestSellers")} 
-          titleAr={t("bestSellersAr")} 
-          products={bestSellers} 
-        />
-        <OneThirdTwoThirdsSection />
-        <ProductStrip 
-          title={t("newArrivals")} 
-          titleAr={t("newArrivalsAr")} 
-          products={newArrivals} 
-        />
-        <EditorialSection />
-        <ProductStrip 
-          title={t("editorsPicks")} 
-          titleAr={t("editorsPicksAr")} 
-          products={editorsPicks} 
-        />
+        
+        <ScrollReveal>
+          <BestSellersCarousel />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <LargeHero />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <BrandMarquee />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <ProductCarousel />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <OneThirdTwoThirdsSection />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <ProductStrip 
+            title={t("newArrivals")} 
+            titleAr={t("newArrivalsAr")} 
+            products={newArrivals} 
+          />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <EditorialSection />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
+          <ProductStrip 
+            title={t("editorsPicks")} 
+            titleAr={t("editorsPicksAr")} 
+            products={editorsPicks} 
+          />
+        </ScrollReveal>
       </main>
       
       <Footer />
