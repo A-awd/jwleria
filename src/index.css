@@ -120,18 +120,19 @@
   }
 }
 
-/* Marquee animation for brand logos - smooth infinite scroll */
-@keyframes marquee-smooth {
+/* Marquee animation for brand logos - truly infinite seamless scroll */
+@keyframes marquee-infinite {
   0% {
     transform: translateX(0);
   }
   100% {
-    transform: translateX(-33.333%);
+    transform: translateX(-50%);
   }
 }
 
-.animate-marquee-smooth {
-  animation: marquee-smooth 60s linear infinite;
+.animate-marquee-infinite {
+  animation: marquee-infinite 40s linear infinite;
+  will-change: transform;
 }
 
 /* Hide scrollbar */
