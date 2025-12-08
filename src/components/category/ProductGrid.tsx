@@ -15,6 +15,7 @@ interface ProductGridProps {
   selectedCategories?: string[];
   sortBy?: string;
   readyToShipOnly?: boolean;
+  preOrderOnly?: boolean;
 }
 
 const ProductGrid = ({ 
@@ -22,7 +23,8 @@ const ProductGrid = ({
   selectedBrands = [], 
   selectedCategories = [],
   sortBy = "featured",
-  readyToShipOnly = false
+  readyToShipOnly = false,
+  preOrderOnly = false
 }: ProductGridProps) => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
@@ -58,6 +60,11 @@ const ProductGrid = ({
   // Ready to ship filter
   if (readyToShipOnly) {
     filteredProducts = filteredProducts.filter(product => product.isReadyToShip);
+  }
+
+  // Pre-order filter
+  if (preOrderOnly) {
+    filteredProducts = filteredProducts.filter(product => product.isPreOrder);
   }
 
   // Sort products
@@ -114,6 +121,11 @@ const ProductGrid = ({
                         {product.isReadyToShip && (
                           <span className="px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50/90 backdrop-blur-sm">
                             {t("readyToShip")}
+                          </span>
+                        )}
+                        {product.isPreOrder && (
+                          <span className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50/90 backdrop-blur-sm">
+                            {t("preOrder")}
                           </span>
                         )}
                       </div>

@@ -36,6 +36,8 @@ interface FilterSortBarProps {
   setSortBy: (sort: string) => void;
   readyToShipOnly: boolean;
   setReadyToShipOnly: (value: boolean) => void;
+  preOrderOnly: boolean;
+  setPreOrderOnly: (value: boolean) => void;
 }
 
 const FilterSortBar = ({ 
@@ -51,7 +53,9 @@ const FilterSortBar = ({
   sortBy,
   setSortBy,
   readyToShipOnly,
-  setReadyToShipOnly
+  setReadyToShipOnly,
+  preOrderOnly,
+  setPreOrderOnly
 }: FilterSortBarProps) => {
   const { t } = useLanguage();
 
@@ -90,9 +94,10 @@ const FilterSortBar = ({
     setSelectedCategories([]);
     setSortBy("featured");
     setReadyToShipOnly(false);
+    setPreOrderOnly(false);
   };
 
-  const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0 || readyToShipOnly;
+  const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0 || readyToShipOnly || preOrderOnly;
 
   return (
     <>
@@ -205,16 +210,29 @@ const FilterSortBar = ({
                   {/* Ready to Ship Filter */}
                   <div>
                     <h3 className="text-sm font-light mb-4 text-foreground">{t("availability")}</h3>
-                    <div className="flex items-center space-x-3">
-                      <Checkbox 
-                        id="readyToShip" 
-                        checked={readyToShipOnly}
-                        onCheckedChange={(checked) => setReadyToShipOnly(checked === true)}
-                        className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" 
-                      />
-                      <Label htmlFor="readyToShip" className="text-sm font-light text-foreground cursor-pointer">
-                        {t("readyToShip")}
-                      </Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Checkbox 
+                          id="readyToShip" 
+                          checked={readyToShipOnly}
+                          onCheckedChange={(checked) => setReadyToShipOnly(checked === true)}
+                          className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" 
+                        />
+                        <Label htmlFor="readyToShip" className="text-sm font-light text-foreground cursor-pointer">
+                          {t("readyToShip")}
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Checkbox 
+                          id="preOrder" 
+                          checked={preOrderOnly}
+                          onCheckedChange={(checked) => setPreOrderOnly(checked === true)}
+                          className="border-border data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600" 
+                        />
+                        <Label htmlFor="preOrder" className="text-sm font-light text-foreground cursor-pointer">
+                          {t("preOrder")}
+                        </Label>
+                      </div>
                     </div>
                   </div>
 

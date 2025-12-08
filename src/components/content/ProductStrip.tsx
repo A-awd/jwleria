@@ -51,6 +51,11 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                       {t("readyToShip")}
                     </span>
                   )}
+                  {product.isPreOrder && (
+                    <span className="absolute top-2 left-2 px-2 py-1 text-[10px] md:text-xs font-medium text-amber-700 bg-amber-50/90 backdrop-blur-sm">
+                      {t("preOrder")}
+                    </span>
+                  )}
                 </div>
 
                 {/* Info */}
