@@ -30,7 +30,14 @@ export const categories = [
 export const luxuryBrands = [
   "Cartier", "Bulgari", "Van Cleef & Arpels", "Tiffany & Co.", 
   "Chopard", "Graff", "Harry Winston", "Piaget",
-  "Dior", "Givenchy", "Rolex", "Patek Philippe"
+  "Dior", "Givenchy", "Rolex", "Patek Philippe",
+  "Chanel", "Hermès", "Louis Vuitton", "Gucci",
+  "Prada", "Versace", "Boucheron", "Chaumet",
+  "Messika", "Pomellato", "David Yurman", "Mikimoto",
+  "Audemars Piguet", "Vacheron Constantin", "Jaeger-LeCoultre", "IWC",
+  "Omega", "Breitling", "Tag Heuer", "Zenith",
+  "Bvlgari", "Fendi", "Bottega Veneta", "Celine",
+  "Balenciaga", "Saint Laurent", "Loewe", "Valentino"
 ];
 
 // Get featured products

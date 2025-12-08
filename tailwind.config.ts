@@ -134,7 +134,7 @@ export default {
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
         "marquee": "marquee 30s linear infinite",
-        "marquee-slow": "marquee 120s linear infinite",
+        "marquee-slow": "marquee 60s linear infinite",
       },
       transitionTimingFunction: {
         "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
