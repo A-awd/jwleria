@@ -8,13 +8,19 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useCurrency } from "@/i18n/CurrencyContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
 
 const Checkout = () => {
   const { t, direction } = useLanguage();
+  const { currency } = useCurrency();
   const [showDiscountInput, setShowDiscountInput] = useState(false);
   const [discountCode, setDiscountCode] = useState("");
+  const [orderNumber, setOrderNumber] = useState<string | null>(null);
+  const [orderError, setOrderError] = useState<string | null>(null);
   const [customerDetails, setCustomerDetails] = useState({
     email: "",
     firstName: "",
@@ -122,12 +128,61 @@ const Checkout = () => {
 
   const handleCompleteOrder = async () => {
     setIsProcessing(true);
+    setOrderError(null);
     
-    // Simulate payment processing
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setPaymentComplete(true);
+    try {
+      // Prepare order data
+      const orderData = {
+        customer_email: customerDetails.email.trim(),
+        customer_name: `${customerDetails.firstName.trim()} ${customerDetails.lastName.trim()}`,
+        customer_phone: customerDetails.phone || undefined,
+        shipping_address: shippingAddress.address.trim(),
+        shipping_city: shippingAddress.city.trim(),
+        shipping_postal_code: shippingAddress.postalCode || undefined,
+        shipping_country: shippingAddress.country.trim(),
+        currency: currency,
+        total_amount: total,
+        items: cartItems.map(item => ({
+          product_id: item.id,
+          product_name: item.name,
+          product_brand: "jWleria", // Default brand for mock data
+          product_image: typeof item.image === 'string' ? item.image : undefined,
+          unit_price: parseFloat(item.price.replace('€', '').replace(',', '')),
+          quantity: item.quantity,
+        })),
+      };
+
+      // Call the secure Edge Function
+      const { data, error } = await supabase.functions.invoke('create-order', {
+        body: orderData,
+      });
+
+      if (error) {
+        console.error('Order creation failed:', error);
+        setOrderError(error.message || 'Failed to create order');
+        toast.error('Order failed. Please try again.');
+        return;
+      }
+
+      if (data?.error) {
+        console.error('Order validation failed:', data.error, data.details);
+        setOrderError(data.details?.join(', ') || data.error);
+        toast.error(data.error);
+        return;
+      }
+
+      // Success
+      setOrderNumber(data.order_number);
+      setPaymentComplete(true);
+      toast.success(t("orderComplete") || 'Order placed successfully!');
+      
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setOrderError('An unexpected error occurred');
+      toast.error('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -661,8 +716,13 @@ const Checkout = () => {
                   </div>
                   <h3 className="text-xl font-light text-foreground mb-2">{t("orderComplete")}</h3>
                   <p className="text-muted-foreground">{t("orderConfirmation")}</p>
-                 </div>
-               )}
+                  {orderNumber && (
+                    <p className="text-foreground font-medium mt-4">
+                      {t("orderNumber") || "Order Number"}: {orderNumber}
+                    </p>
+                  )}
+                </div>
+              )}
              </div>
             </div>
           </div>
