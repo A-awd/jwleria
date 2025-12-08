@@ -118,14 +118,6 @@ export default {
             opacity: "1",
           },
         },
-        "marquee": {
-          from: {
-            transform: "translateX(0)",
-          },
-          to: {
-            transform: "translateX(-50%)",
-          },
-        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -133,7 +125,6 @@ export default {
         "slide-in": "slide-in 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "fade-in": "fade-in 0.2s ease-out",
-        "marquee": "marquee 30s linear infinite",
       },
       transitionTimingFunction: {
         "smooth": "cubic-bezier(0.4, 0, 0.2, 1)",
