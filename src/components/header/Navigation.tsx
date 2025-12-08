@@ -114,22 +114,6 @@ const Navigation = () => {
       ]
     },
     { 
-      name: t("newIn"), 
-      key: "New in",
-      href: "/category/new-in",
-      submenuItems: [
-        { key: "thisWeeksArrivals", label: t("thisWeeksArrivals") },
-        { key: "springCollection", label: t("springCollection") },
-        { key: "featuredDesigners", label: t("featuredDesigners") },
-        { key: "limitedEdition", label: t("limitedEdition") },
-        { key: "preOrders", label: t("preOrders") }
-      ],
-      images: [
-        { src: "/arcus-bracelet.png", alt: "Arcus Bracelet", label: "Arcus Bracelet" },
-        { src: "/span-bracelet.png", alt: "Span Bracelet", label: "Span Bracelet" }
-      ]
-    },
-    { 
       name: t("about"), 
       key: "About",
       href: "/about/our-story",

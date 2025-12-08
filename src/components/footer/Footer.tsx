@@ -56,7 +56,7 @@ const Footer = () => {
           <div>
             <h4 className="text-xs font-medium mb-3 uppercase tracking-wide">{t("shop")}</h4>
             <ul className="space-y-2">
-              <li><a href="/category/new-in" className="text-xs font-light text-black/70">{t("newIn")}</a></li>
+              <li><a href="/brands" className="text-xs font-light text-black/70">{t("shopByBrand")}</a></li>
               <li><a href="/category/rings" className="text-xs font-light text-black/70">{t("rings")}</a></li>
               <li><a href="/category/earrings" className="text-xs font-light text-black/70">{t("earrings")}</a></li>
               <li><a href="/category/bracelets" className="text-xs font-light text-black/70">{t("bracelets")}</a></li>
@@ -104,7 +104,7 @@ const Footer = () => {
             <div>
               <h4 className="text-sm font-normal mb-4">{t("shop")}</h4>
               <ul className="space-y-2">
-                <li><a href="/category/new-in" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("newIn")}</a></li>
+                <li><a href="/brands" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("shopByBrand")}</a></li>
                 <li><a href="/category/rings" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("rings")}</a></li>
                 <li><a href="/category/earrings" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("earrings")}</a></li>
                 <li><a href="/category/bracelets" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("bracelets")}</a></li>
