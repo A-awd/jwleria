@@ -14,7 +14,7 @@ const FiftyFiftySection = () => {
             <div className="w-full aspect-square mb-2 md:mb-3 overflow-hidden">
               <img 
                 src={earringsCollection} 
-                alt="Earrings collection" 
+                alt="Cartier Collection" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>
@@ -34,7 +34,7 @@ const FiftyFiftySection = () => {
             <div className="w-full aspect-square mb-2 md:mb-3 overflow-hidden">
               <img 
                 src={linkBracelet} 
-                alt="Chain link bracelet" 
+                alt="Bulgari Serpenti" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             </div>

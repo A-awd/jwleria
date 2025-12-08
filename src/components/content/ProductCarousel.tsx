@@ -19,52 +19,62 @@ import linkBracelet from "@/assets/link-bracelet.png";
 interface Product {
   id: number;
   name: string;
+  brand: string;
   categoryKey: string;
   priceEUR: number;
   image: string;
+  isNew?: boolean;
 }
 
 const products: Product[] = [
   {
     id: 1,
-    name: "Pantheon",
-    categoryKey: "earrings",
-    priceEUR: 2850,
+    name: "Love Bracelet",
+    brand: "Cartier",
+    categoryKey: "bracelets",
+    priceEUR: 6850,
     image: pantheonImage,
+    isNew: true,
   },
   {
     id: 2,
-    name: "Eclipse",
-    categoryKey: "bracelets",
+    name: "Serpenti Ring",
+    brand: "Bulgari",
+    categoryKey: "rings",
     priceEUR: 3200,
     image: eclipseImage,
   },
   {
     id: 3,
-    name: "Halo",
-    categoryKey: "earrings",
-    priceEUR: 1950,
+    name: "Alhambra Pendant",
+    brand: "Van Cleef & Arpels",
+    categoryKey: "necklaces",
+    priceEUR: 4950,
     image: haloImage,
+    isNew: true,
   },
   {
     id: 4,
-    name: "Oblique",
-    categoryKey: "earrings",
+    name: "T Wire Bracelet",
+    brand: "Tiffany & Co.",
+    categoryKey: "bracelets",
     priceEUR: 1650,
     image: obliqueImage,
   },
   {
     id: 5,
-    name: "Lintel",
+    name: "Happy Hearts",
+    brand: "Chopard",
     categoryKey: "earrings",
     priceEUR: 2250,
     image: lintelImage,
   },
   {
     id: 6,
-    name: "Shadowline",
-    categoryKey: "bracelets",
-    priceEUR: 3950,
+    name: "Butterfly Ring",
+    brand: "Graff",
+    categoryKey: "rings",
+    priceEUR: 12950,
     image: shadowlineImage,
   },
 ];
@@ -107,20 +117,24 @@ const ProductCarousel = () => {
                           className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
                         />
                         <div className="absolute inset-0 bg-black/[0.03]"></div>
-                        {(product.id === 1 || product.id === 3) && (
+                        {product.isNew && (
                           <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-black">
                             {t("newLabel")}
                           </div>
                         )}
                       </div>
                      <div className="space-y-0.5 md:space-y-1">
-                       <p className="text-[10px] md:text-sm font-light text-foreground/70">
-                         {getCategoryName(product.categoryKey)}
+                       {/* Brand name - prominent display */}
+                       <p className="text-[10px] md:text-xs font-medium text-foreground/60 uppercase tracking-wide">
+                         {product.brand}
                        </p>
+                       <h3 className="text-xs md:text-sm font-medium text-foreground">
+                         {product.name}
+                       </h3>
                        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-0.5">
-                         <h3 className="text-xs md:text-sm font-medium text-foreground">
-                           {product.name}
-                         </h3>
+                         <p className="text-[10px] md:text-xs font-light text-foreground/50">
+                           {getCategoryName(product.categoryKey)}
+                         </p>
                          <p className="text-xs md:text-sm font-light text-foreground">
                            {convertPrice(product.priceEUR)}
                          </p>
