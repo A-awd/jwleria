@@ -112,23 +112,11 @@ const ProductGrid = ({
                         className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
                       />
                       <div className="absolute inset-0 bg-black/[0.03]"></div>
-                      <div className="absolute top-2 left-2 flex flex-col gap-1">
-                        {product.isNew && (
-                          <span className="px-2 py-1 text-xs font-medium text-black bg-background/80 backdrop-blur-sm">
-                            {t("newLabel")}
-                          </span>
-                        )}
-                        {product.isReadyToShip && (
-                          <span className="px-2 py-1 text-xs font-medium text-emerald-700 bg-emerald-50/90 backdrop-blur-sm">
-                            {t("readyToShip")}
-                          </span>
-                        )}
-                        {product.isPreOrder && (
-                          <span className="px-2 py-1 text-xs font-medium text-amber-700 bg-amber-50/90 backdrop-blur-sm">
-                            {t("preOrder")}
-                          </span>
-                        )}
-                      </div>
+                      {product.isNew && (
+                        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-medium text-black bg-background/80 backdrop-blur-sm">
+                          {t("newLabel")}
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-1">
                       <p className="text-xs font-medium text-foreground/60 uppercase tracking-wide">
@@ -145,6 +133,21 @@ const ProductGrid = ({
                           {convertPrice(product.priceEUR)}
                         </p>
                       </div>
+                      {/* Elegant status indicator */}
+                      {(product.isReadyToShip || product.isPreOrder) && (
+                        <div className="pt-1">
+                          {product.isReadyToShip && (
+                            <span className="text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                              {t("readyToShip")}
+                            </span>
+                          )}
+                          {product.isPreOrder && (
+                            <span className="text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                              {t("preOrder")}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
