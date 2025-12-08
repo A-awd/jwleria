@@ -5,13 +5,12 @@ import { luxuryBrands } from "@/data/products";
 const BrandMarquee = () => {
   const { t } = useLanguage();
 
-  // Create brand handle from name
   const getBrandHandle = (brand: string) => {
     return brand.toLowerCase().replace(/[&\s]+/g, "-").replace(/\./g, "");
   };
 
-  // Triple the brands array for truly seamless infinite loop
-  const duplicatedBrands = [...luxuryBrands, ...luxuryBrands, ...luxuryBrands];
+  // Create two identical sets for seamless infinite loop
+  const brandsSet = [...luxuryBrands];
 
   return (
     <section className="w-full py-6 md:py-8 overflow-hidden">
@@ -21,15 +20,26 @@ const BrandMarquee = () => {
         </h2>
       </div>
 
-      {/* Marquee Container - infinite seamless loop */}
       <div className="relative overflow-hidden">
         <div 
-          className="flex items-center whitespace-nowrap animate-marquee-smooth hover:[animation-play-state:paused]"
-          style={{ width: 'max-content' }}
+          className="flex items-center animate-marquee-infinite hover:[animation-play-state:paused]"
         >
-          {duplicatedBrands.map((brand, index) => (
+          {/* First set */}
+          {brandsSet.map((brand, index) => (
             <Link
-              key={`${brand}-${index}`}
+              key={`set1-${brand}-${index}`}
+              to={`/brand/${getBrandHandle(brand)}`}
+              className="flex-shrink-0 px-6 md:px-10 lg:px-14"
+            >
+              <span className="text-sm md:text-base lg:text-lg font-light text-foreground/30 hover:text-foreground/70 transition-colors duration-300 whitespace-nowrap tracking-wide">
+                {brand}
+              </span>
+            </Link>
+          ))}
+          {/* Second set (duplicate for seamless loop) */}
+          {brandsSet.map((brand, index) => (
+            <Link
+              key={`set2-${brand}-${index}`}
               to={`/brand/${getBrandHandle(brand)}`}
               className="flex-shrink-0 px-6 md:px-10 lg:px-14"
             >
