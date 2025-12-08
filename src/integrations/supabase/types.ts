@@ -161,7 +161,72 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      lookup_order_by_credentials: {
+        Args: { p_email: string; p_order_number: string }
+        Returns: {
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_name: string
+          customer_phone: string | null
+          delivered_at: string | null
+          estimated_delivery: string | null
+          id: string
+          notes: string | null
+          order_number: string
+          shipped_at: string | null
+          shipping_address: string
+          shipping_city: string
+          shipping_country: string
+          shipping_postal_code: string | null
+          status: Database["public"]["Enums"]["order_status"]
+          total_amount: number
+          tracking_number: string | null
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      lookup_order_history_by_credentials: {
+        Args: { p_email: string; p_order_number: string }
+        Returns: {
+          created_at: string
+          id: string
+          notes: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "order_status_history"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      lookup_order_items_by_credentials: {
+        Args: { p_email: string; p_order_number: string }
+        Returns: {
+          created_at: string
+          id: string
+          order_id: string
+          product_brand: string
+          product_id: number
+          product_image: string | null
+          product_name: string
+          quantity: number
+          unit_price: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "order_items"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
     }
     Enums: {
       order_status:
