@@ -24,16 +24,17 @@ const Index = () => {
       <main className="pt-4 md:pt-6">
         <FiftyFiftySection />
         
+        {/* Shop by Brand Marquee - at top after first banner */}
         <ScrollReveal>
+          <BrandMarquee />
+        </ScrollReveal>
+        
+        <ScrollReveal delay={100}>
           <BestSellersCarousel />
         </ScrollReveal>
         
         <ScrollReveal delay={100}>
           <LargeHero />
-        </ScrollReveal>
-        
-        <ScrollReveal delay={100}>
-          <BrandMarquee />
         </ScrollReveal>
         
         <ScrollReveal delay={100}>
