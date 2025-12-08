@@ -6,6 +6,7 @@ import OneThirdTwoThirdsSection from "../components/content/OneThirdTwoThirdsSec
 import ProductCarousel from "../components/content/ProductCarousel";
 import EditorialSection from "../components/content/EditorialSection";
 import BrandMarquee from "../components/content/BrandMarquee";
+import BrandLogoStrip from "../components/content/BrandLogoStrip";
 import BestSellersCarousel from "../components/content/BestSellersCarousel";
 import ProductStrip from "../components/content/ProductStrip";
 import ScrollReveal from "../components/ui/ScrollReveal";
@@ -33,6 +34,9 @@ const Index = () => {
           <BestSellersCarousel />
         </ScrollReveal>
         
+        {/* Brand strip to reduce gap */}
+        <BrandLogoStrip />
+        
         <ScrollReveal delay={100}>
           <LargeHero />
         </ScrollReveal>
@@ -40,6 +44,9 @@ const Index = () => {
         <ScrollReveal delay={100}>
           <ProductCarousel />
         </ScrollReveal>
+        
+        {/* Brand strip to reduce gap */}
+        <BrandLogoStrip />
         
         <ScrollReveal delay={100}>
           <OneThirdTwoThirdsSection />
@@ -52,6 +59,9 @@ const Index = () => {
             products={newArrivals} 
           />
         </ScrollReveal>
+        
+        {/* Brand strip to reduce gap */}
+        <BrandLogoStrip />
         
         <ScrollReveal delay={100}>
           <EditorialSection />

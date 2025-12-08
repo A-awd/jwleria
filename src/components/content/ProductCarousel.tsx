@@ -23,7 +23,7 @@ const ProductCarousel = () => {
   };
 
   return (
-    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
+    <section className="w-full mb-6 md:mb-10 px-4 md:px-6">
       <Carousel
           opts={{
             align: "start",

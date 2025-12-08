@@ -5,7 +5,7 @@ const LargeHero = () => {
   const { t } = useLanguage();
   
   return (
-    <section className="w-full mb-10 md:mb-16 px-4 md:px-6">
+    <section className="w-full mb-6 md:mb-10 px-4 md:px-6">
       <div className="w-full aspect-[4/3] md:aspect-[16/9] mb-2 md:mb-3 overflow-hidden">
         <img 
           src={heroImage} 

@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
-import { useLanguage } from "@/i18n/LanguageContext";
 import { luxuryBrands } from "@/data/products";
 
-const BrandMarquee = () => {
-  const { t } = useLanguage();
+interface BrandLogoStripProps {
+  className?: string;
+}
 
+const BrandLogoStrip = ({ className = "" }: BrandLogoStripProps) => {
   // Create brand handle from name
   const getBrandHandle = (brand: string) => {
     return brand.toLowerCase().replace(/[&\s]+/g, "-").replace(/\./g, "");
@@ -14,14 +15,8 @@ const BrandMarquee = () => {
   const duplicatedBrands = [...luxuryBrands, ...luxuryBrands, ...luxuryBrands];
 
   return (
-    <section className="w-full py-6 md:py-8 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-6">
-        <h2 className="text-xs md:text-sm font-light text-foreground/60 uppercase tracking-widest text-center">
-          {t("shopByBrand")}
-        </h2>
-      </div>
-
-      {/* Marquee Container - infinite seamless loop */}
+    <div className={`w-full py-4 md:py-6 overflow-hidden ${className}`}>
+      {/* Marquee Container - minimal version with just logos */}
       <div className="relative overflow-hidden">
         <div 
           className="flex items-center whitespace-nowrap animate-marquee-smooth hover:[animation-play-state:paused]"
@@ -31,17 +26,17 @@ const BrandMarquee = () => {
             <Link
               key={`${brand}-${index}`}
               to={`/brand/${getBrandHandle(brand)}`}
-              className="flex-shrink-0 px-6 md:px-10 lg:px-14"
+              className="flex-shrink-0 px-5 md:px-8 lg:px-12"
             >
-              <span className="text-sm md:text-base lg:text-lg font-light text-foreground/30 hover:text-foreground/70 transition-colors duration-300 whitespace-nowrap tracking-wide">
+              <span className="text-xs md:text-sm lg:text-base font-light text-foreground/25 hover:text-foreground/60 transition-colors duration-300 whitespace-nowrap tracking-wide">
                 {brand}
               </span>
             </Link>
           ))}
         </div>
       </div>
-    </section>
+    </div>
   );
 };
 
-export default BrandMarquee;
+export default BrandLogoStrip;

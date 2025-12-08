@@ -63,8 +63,8 @@ const BestSellersCarousel = () => {
   const duplicatedProducts = [...bestSellers, ...bestSellers];
 
   return (
-    <section className="w-full py-12 md:py-16">
-      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-8 md:mb-10">
+    <section className="w-full py-8 md:py-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-6 mb-6 md:mb-8">
         <h2 className="text-base md:text-lg font-medium text-foreground tracking-wide">
           {t("bestSellers")}
         </h2>
