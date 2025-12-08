@@ -5,12 +5,12 @@ import { useLanguage } from "@/i18n/LanguageContext";
 
 interface Brand {
   id: string;
-  name: string;
+  nameKey: string;
   initials: string;
-  description: string;
-  country: string;
+  descriptionKey: string;
+  countryKey: string;
   founded: string;
-  specialty: string;
+  specialtyKey: string;
   productCount: number;
   accentColor: string;
 }
@@ -18,133 +18,133 @@ interface Brand {
 const brands: Brand[] = [
   {
     id: "cartier",
-    name: "Cartier",
+    nameKey: "brandCartier",
     initials: "C",
-    description: "The legendary French maison known for timeless elegance and iconic designs like the Love Bracelet and Panthère collection.",
-    country: "France",
+    descriptionKey: "brandCartierDesc",
+    countryKey: "countryFrance",
     founded: "1847",
-    specialty: "Fine Jewelry & Watches",
+    specialtyKey: "specialtyFineJewelryWatches",
     productCount: 156,
     accentColor: "from-red-900/20 to-red-800/10",
   },
   {
     id: "bulgari",
-    name: "Bulgari",
+    nameKey: "brandBulgari",
     initials: "B",
-    description: "Italian luxury house celebrated for bold Roman-inspired designs and the iconic Serpenti collection.",
-    country: "Italy",
+    descriptionKey: "brandBulgariDesc",
+    countryKey: "countryItaly",
     founded: "1884",
-    specialty: "Jewelry & Accessories",
+    specialtyKey: "specialtyJewelryAccessories",
     productCount: 142,
     accentColor: "from-amber-900/20 to-amber-800/10",
   },
   {
     id: "van-cleef-arpels",
-    name: "Van Cleef & Arpels",
+    nameKey: "brandVanCleef",
     initials: "VCA",
-    description: "Parisian high jewelry maison renowned for poetic creations and the beloved Alhambra motif.",
-    country: "France",
+    descriptionKey: "brandVanCleefDesc",
+    countryKey: "countryFrance",
     founded: "1906",
-    specialty: "High Jewelry",
+    specialtyKey: "specialtyHighJewelry",
     productCount: 98,
     accentColor: "from-emerald-900/20 to-emerald-800/10",
   },
   {
     id: "tiffany",
-    name: "Tiffany & Co.",
+    nameKey: "brandTiffany",
     initials: "T",
-    description: "American luxury jeweler famous for the iconic Tiffany Blue and timeless designs since 1837.",
-    country: "USA",
+    descriptionKey: "brandTiffanyDesc",
+    countryKey: "countryUSA",
     founded: "1837",
-    specialty: "Jewelry & Diamonds",
+    specialtyKey: "specialtyJewelryDiamonds",
     productCount: 234,
     accentColor: "from-cyan-700/20 to-cyan-600/10",
   },
   {
     id: "chopard",
-    name: "Chopard",
+    nameKey: "brandChopard",
     initials: "CH",
-    description: "Swiss luxury brand known for Happy Diamonds and exceptional watchmaking craftsmanship.",
-    country: "Switzerland",
+    descriptionKey: "brandChopardDesc",
+    countryKey: "countrySwitzerland",
     founded: "1860",
-    specialty: "Jewelry & Watches",
+    specialtyKey: "specialtyJewelryWatches",
     productCount: 87,
     accentColor: "from-rose-900/20 to-rose-800/10",
   },
   {
     id: "graff",
-    name: "Graff",
+    nameKey: "brandGraff",
     initials: "G",
-    description: "British jeweler renowned for acquiring and crafting the world's most exceptional diamonds.",
-    country: "UK",
+    descriptionKey: "brandGraffDesc",
+    countryKey: "countryUK",
     founded: "1960",
-    specialty: "Rare Diamonds",
+    specialtyKey: "specialtyRareDiamonds",
     productCount: 45,
     accentColor: "from-slate-800/20 to-slate-700/10",
   },
   {
     id: "harry-winston",
-    name: "Harry Winston",
+    nameKey: "brandHarryWinston",
     initials: "HW",
-    description: "The 'King of Diamonds' known for acquiring legendary gems and adorning Hollywood royalty.",
-    country: "USA",
+    descriptionKey: "brandHarryWinstonDesc",
+    countryKey: "countryUSA",
     founded: "1932",
-    specialty: "High Jewelry & Diamonds",
+    specialtyKey: "specialtyHighJewelryDiamonds",
     productCount: 62,
     accentColor: "from-blue-900/20 to-blue-800/10",
   },
   {
     id: "piaget",
-    name: "Piaget",
+    nameKey: "brandPiaget",
     initials: "P",
-    description: "Swiss maison celebrated for ultra-thin watches and colorful high jewelry masterpieces.",
-    country: "Switzerland",
+    descriptionKey: "brandPiagetDesc",
+    countryKey: "countrySwitzerland",
     founded: "1874",
-    specialty: "Watches & Jewelry",
+    specialtyKey: "specialtyWatchesJewelry",
     productCount: 78,
     accentColor: "from-violet-900/20 to-violet-800/10",
   },
   {
     id: "rolex",
-    name: "Rolex",
+    nameKey: "brandRolex",
     initials: "R",
-    description: "The crown of Swiss watchmaking, synonymous with precision, prestige, and timeless design.",
-    country: "Switzerland",
+    descriptionKey: "brandRolexDesc",
+    countryKey: "countrySwitzerland",
     founded: "1905",
-    specialty: "Luxury Watches",
+    specialtyKey: "specialtyLuxuryWatches",
     productCount: 112,
     accentColor: "from-green-900/20 to-green-800/10",
   },
   {
     id: "patek-philippe",
-    name: "Patek Philippe",
+    nameKey: "brandPatekPhilippe",
     initials: "PP",
-    description: "The pinnacle of haute horlogerie, creating the world's most coveted timepieces since 1839.",
-    country: "Switzerland",
+    descriptionKey: "brandPatekPhilippeDesc",
+    countryKey: "countrySwitzerland",
     founded: "1839",
-    specialty: "Haute Horlogerie",
+    specialtyKey: "specialtyHauteHorlogerie",
     productCount: 54,
     accentColor: "from-amber-800/20 to-amber-700/10",
   },
   {
     id: "boucheron",
-    name: "Boucheron",
+    nameKey: "brandBoucheron",
     initials: "BO",
-    description: "First jeweler to open on Place Vendôme, known for avant-garde designs and Serpent Bohème.",
-    country: "France",
+    descriptionKey: "brandBoucheronDesc",
+    countryKey: "countryFrance",
     founded: "1858",
-    specialty: "High Jewelry",
+    specialtyKey: "specialtyHighJewelry",
     productCount: 67,
     accentColor: "from-indigo-900/20 to-indigo-800/10",
   },
   {
     id: "chaumet",
-    name: "Chaumet",
+    nameKey: "brandChaumet",
     initials: "CM",
-    description: "Parisian jeweler to royalty, famous for exquisite tiaras and the Joséphine collection.",
-    country: "France",
+    descriptionKey: "brandChaumetDesc",
+    countryKey: "countryFrance",
     founded: "1780",
-    specialty: "Bridal & High Jewelry",
+    specialtyKey: "specialtyBridalHighJewelry",
     productCount: 89,
     accentColor: "from-pink-900/20 to-pink-800/10",
   },
@@ -203,10 +203,10 @@ const ShopByBrand = () => {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h2 className="text-base md:text-lg font-medium text-foreground mb-0.5 group-hover:text-foreground/80 transition-colors">
-                          {brand.name}
+                          {t(brand.nameKey as any)}
                         </h2>
                         <p className="text-[10px] text-foreground/50 uppercase tracking-wider">
-                          {brand.country} · Est. {brand.founded}
+                          {t(brand.countryKey as any)} · {t("established")} {brand.founded}
                         </p>
                       </div>
                       <span className="text-[10px] text-foreground/40 font-light whitespace-nowrap">
@@ -216,13 +216,13 @@ const ShopByBrand = () => {
 
                     {/* Description */}
                     <p className="text-xs font-light text-foreground/60 leading-relaxed mb-4 line-clamp-2">
-                      {brand.description}
+                      {t(brand.descriptionKey as any)}
                     </p>
 
                     {/* Footer */}
                     <div className="flex items-center justify-between pt-3 border-t border-border/30">
                       <span className="text-[10px] text-foreground/50 uppercase tracking-wide">
-                        {brand.specialty}
+                        {t(brand.specialtyKey as any)}
                       </span>
                       <span className="text-xs text-foreground group-hover:translate-x-1 transition-transform duration-300 flex items-center gap-1">
                         {t("shop")} 
