@@ -1,16 +1,16 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Product } from "@/data/products";
+import { ProductData } from "@/types/shopify";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useCart } from "@/contexts/CartContext";
+import { useShopifyCart } from "@/hooks/useShopifyCart";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart, ShoppingBag, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 interface QuickViewModalProps {
-  product: Product | null;
+  product: ProductData | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -18,20 +18,31 @@ interface QuickViewModalProps {
 const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  const { addToCart } = useCart();
+  const { addToCart } = useShopifyCart();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   if (!product) return null;
 
-  const handleAddToCart = () => {
-    addToCart(product, 1);
-    toast.success(t("itemAdded"));
-    onClose();
+  const numericId = parseInt(product.id.replace(/\D/g, '')) || 0;
+  const variantId = product.variants?.[0]?.id;
+
+  const handleAddToCart = async () => {
+    if (variantId) {
+      try {
+        await addToCart(variantId, 1);
+        toast.success(t("itemAdded"));
+        onClose();
+      } catch (error) {
+        toast.error("Failed to add to cart");
+      }
+    } else {
+      toast.error("No variant available");
+    }
   };
 
   const handleToggleFavorite = () => {
-    toggleFavorite(product.id);
-    toast.success(isFavorite(product.id) ? t("removedFromFav") : t("addedToFav"));
+    toggleFavorite(numericId);
+    toast.success(isFavorite(numericId) ? t("removedFromFav") : t("addedToFav"));
   };
 
   return (
@@ -49,7 +60,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
           {/* Product Image */}
           <div className="aspect-square bg-muted/10 overflow-hidden">
             <img
-              src={product.image}
+              src={product.images[0] || '/placeholder.svg'}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -64,7 +75,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
               {product.name}
             </h2>
             <p className="text-lg md:text-xl font-light text-foreground/80 mb-6">
-              {convertPrice(product.priceEUR)}
+              {convertPrice(product.price)}
             </p>
 
             {product.description && (
@@ -76,6 +87,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
             <div className="space-y-3">
               <Button
                 onClick={handleAddToCart}
+                disabled={!variantId}
                 className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 transition-colors"
               >
                 <ShoppingBag className="h-4 w-4 mr-2" />
@@ -89,12 +101,12 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
                   className="flex-1 h-11 border-foreground/20 hover:bg-foreground/5"
                 >
                   <Heart
-                    className={`h-4 w-4 mr-2 ${isFavorite(product.id) ? "fill-current text-red-500" : ""}`}
+                    className={`h-4 w-4 mr-2 ${isFavorite(numericId) ? "fill-current text-red-500" : ""}`}
                   />
-                  {isFavorite(product.id) ? t("favorites") : t("favorites")}
+                  {isFavorite(numericId) ? t("favorites") : t("favorites")}
                 </Button>
 
-                <Link to={`/product/${product.id}`} className="flex-1">
+                <Link to={`/product/${product.handle || product.id}`} className="flex-1">
                   <Button
                     variant="outline"
                     onClick={onClose}

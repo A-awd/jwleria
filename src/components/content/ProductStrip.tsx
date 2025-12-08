@@ -1,18 +1,22 @@
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Product } from "@/data/products";
+import { ProductData } from "@/types/shopify";
 import { Button } from "@/components/ui/button";
 
 interface ProductStripProps {
   title: string;
   titleAr?: string;
-  products: Product[];
+  products: ProductData[];
 }
 
 const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
+
+  if (products.length === 0) {
+    return null;
+  }
 
   return (
     <section className="w-full py-6 md:py-10 px-4 md:px-6">
@@ -34,14 +38,14 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
           {products.slice(0, 4).map((product) => (
             <Link
               key={product.id}
-              to={`/product/${product.id}`}
+              to={`/product/${product.handle || product.id}`}
               className="group"
             >
               <div className="space-y-2 md:space-y-3 transition-transform duration-300 group-hover:-translate-y-1">
                 {/* Image */}
                 <div className="aspect-square overflow-hidden bg-muted/10 relative">
                   <img
-                    src={product.image}
+                    src={product.images[0] || '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                   />
@@ -57,9 +61,9 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                     {product.name}
                   </h3>
                   <p className="text-xs md:text-sm font-light text-foreground/80">
-                    {convertPrice(product.priceEUR)}
+                    {convertPrice(product.price)}
                   </p>
-                  {/* Elegant status indicator with hover effect */}
+                  {/* Availability indicator */}
                   {(product.isReadyToShip || product.isPreOrder) && (
                     <div className="pt-0.5">
                       {product.isReadyToShip && (

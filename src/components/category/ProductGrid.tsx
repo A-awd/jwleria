@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { Heart } from "lucide-react";
+import { Heart, Loader2 } from "lucide-react";
 import Pagination from "./Pagination";
-import { allProducts, luxuryBrands, categories, Product } from "@/data/products";
+import { useShopifyProducts } from "@/hooks/useShopifyProducts";
 import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
@@ -29,11 +29,15 @@ const ProductGrid = ({
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
+  
+  // Fetch from Shopify
+  const { data, isLoading } = useShopifyProducts({ first: 100, query: searchQuery || undefined });
+  const allProducts = data?.products || [];
 
-  // Filter products
+  // Filter products client-side for now (can be moved to Shopify query later)
   let filteredProducts = [...allProducts];
 
-  // Search filter
+  // Search filter (already applied via Shopify query, but filter locally too for safety)
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase();
     filteredProducts = filteredProducts.filter(product => 
@@ -70,19 +74,25 @@ const ProductGrid = ({
   // Sort products
   switch (sortBy) {
     case "price-low":
-      filteredProducts.sort((a, b) => a.priceEUR - b.priceEUR);
+      filteredProducts.sort((a, b) => a.price - b.price);
       break;
     case "price-high":
-      filteredProducts.sort((a, b) => b.priceEUR - a.priceEUR);
+      filteredProducts.sort((a, b) => b.price - a.price);
       break;
     case "newest":
-      filteredProducts = filteredProducts.filter(p => p.isNew).concat(
-        filteredProducts.filter(p => !p.isNew)
-      );
+      // Keep original order from Shopify (typically sorted by date)
       break;
     default:
       // Featured - keep original order
       break;
+  }
+
+  if (isLoading) {
+    return (
+      <section className="w-full px-6 mb-16 flex justify-center py-16">
+        <Loader2 className="h-10 w-10 animate-spin text-foreground/50" />
+      </section>
+    );
   }
 
   return (
@@ -93,82 +103,80 @@ const ProductGrid = ({
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product.id} className="relative group">
-              <Link to={`/product/${product.id}`}>
-                <Card 
-                  className="border-none shadow-none bg-transparent cursor-pointer"
-                >
-                  <CardContent className="p-0">
-                    <div className="aspect-square mb-3 overflow-hidden bg-muted/10 relative">
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0"
-                      />
-                      <img
-                        src={product.category === "Earrings" ? organicEarring : linkBracelet}
-                        alt={`${product.name} lifestyle`}
-                        className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
-                      />
-                      <div className="absolute inset-0 bg-black/[0.03]"></div>
-                      {product.isNew && (
-                        <span className="absolute top-2 left-2 px-2 py-1 text-xs font-medium text-black bg-background/80 backdrop-blur-sm">
-                          {t("newLabel")}
-                        </span>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-foreground/60 uppercase tracking-wide">
-                        {product.brand}
-                      </p>
-                      <h3 className="text-sm font-medium text-foreground">
-                        {product.name}
-                      </h3>
-                      <div className="flex justify-between items-center">
-                        <p className="text-xs font-light text-foreground/50">
-                          {product.category}
-                        </p>
-                        <p className="text-sm font-light text-foreground">
-                          {convertPrice(product.priceEUR)}
-                        </p>
+          {filteredProducts.map((product) => {
+            const numericId = parseInt(product.id.replace(/\D/g, '')) || 0;
+            return (
+              <div key={product.id} className="relative group">
+                <Link to={`/product/${product.handle || product.id}`}>
+                  <Card 
+                    className="border-none shadow-none bg-transparent cursor-pointer"
+                  >
+                    <CardContent className="p-0">
+                      <div className="aspect-square mb-3 overflow-hidden bg-muted/10 relative">
+                        <img
+                          src={product.images[0] || '/placeholder.svg'}
+                          alt={product.name}
+                          className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0"
+                        />
+                        <img
+                          src={product.category === "Earrings" ? organicEarring : linkBracelet}
+                          alt={`${product.name} lifestyle`}
+                          className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
+                        />
+                        <div className="absolute inset-0 bg-black/[0.03]"></div>
                       </div>
-                      {/* Elegant status indicator with hover effect */}
-                      {(product.isReadyToShip || product.isPreOrder) && (
-                        <div className="pt-1">
-                          {product.isReadyToShip && (
-                            <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                              {t("readyToShip")}
-                            </span>
-                          )}
-                          {product.isPreOrder && (
-                            <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                              {t("preOrder")}
-                            </span>
-                          )}
+                      <div className="space-y-1">
+                        <p className="text-xs font-medium text-foreground/60 uppercase tracking-wide">
+                          {product.brand}
+                        </p>
+                        <h3 className="text-sm font-medium text-foreground">
+                          {product.name}
+                        </h3>
+                        <div className="flex justify-between items-center">
+                          <p className="text-xs font-light text-foreground/50">
+                            {product.category}
+                          </p>
+                          <p className="text-sm font-light text-foreground">
+                            {convertPrice(product.price)}
+                          </p>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-              {/* Favorite Button */}
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleFavorite(product.id);
-                }}
-                className="absolute top-2 right-2 p-2 bg-background/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
-              >
-                <Heart
-                  className={`w-4 h-4 transition-colors ${
-                    isFavorite(product.id) ? "fill-red-500 text-red-500" : "text-foreground/70"
-                  }`}
-                />
-              </button>
-            </div>
-          ))}
+                        {/* Availability indicator */}
+                        {(product.isReadyToShip || product.isPreOrder) && (
+                          <div className="pt-1">
+                            {product.isReadyToShip && (
+                              <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
+                                {t("readyToShip")}
+                              </span>
+                            )}
+                            {product.isPreOrder && (
+                              <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
+                                {t("preOrder")}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+                {/* Favorite Button */}
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleFavorite(numericId);
+                  }}
+                  className="absolute top-2 right-2 p-2 bg-background/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
+                >
+                  <Heart
+                    className={`w-4 h-4 transition-colors ${
+                      isFavorite(numericId) ? "fill-red-500 text-red-500" : "text-foreground/70"
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
         </div>
       )}
       

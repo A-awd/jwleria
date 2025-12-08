@@ -10,13 +10,16 @@ import BrandLogoStrip from "../components/content/BrandLogoStrip";
 import BestSellersCarousel from "../components/content/BestSellersCarousel";
 import ProductStrip from "../components/content/ProductStrip";
 import ScrollReveal from "../components/ui/ScrollReveal";
-import { getNewArrivals, getFeaturedProducts } from "@/data/products";
+import { useNewArrivals, useFeaturedProducts } from "@/hooks/useShopifyProducts";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const Index = () => {
   const { t } = useLanguage();
-  const newArrivals = getNewArrivals(4);
-  const editorsPicks = getFeaturedProducts(4);
+  const { data: newArrivalsData } = useNewArrivals(4);
+  const { data: editorsPicksData } = useFeaturedProducts(4);
+  
+  const newArrivals = newArrivalsData?.products || [];
+  const editorsPicks = editorsPicksData?.products || [];
 
   return (
     <div className="min-h-screen bg-background">
