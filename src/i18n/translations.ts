@@ -136,6 +136,10 @@ export const translations = {
     checkout: "Checkout",
     continueShopping: "Continue Shopping",
     viewBag: "View Bag",
+    shippingTaxes: "Shipping and taxes calculated at checkout",
+    itemAdded: "Added to bag",
+    addedToFav: "Added to favorites",
+    removedFromFav: "Removed from favorites",
     
     // Footer
     minimalistJewelry: "Your luxury personal shopping concierge — curating the finest pieces from the world's most prestigious brands",
@@ -472,6 +476,10 @@ export const translations = {
     checkout: "Pagar",
     continueShopping: "Seguir Comprando",
     viewBag: "Ver Bolsa",
+    shippingTaxes: "Envío e impuestos calculados en el pago",
+    itemAdded: "Añadido a la bolsa",
+    addedToFav: "Añadido a favoritos",
+    removedFromFav: "Eliminado de favoritos",
     
     // Footer
     minimalistJewelry: "Tu servicio de compras personales de lujo — seleccionando las mejores piezas de las marcas más prestigiosas del mundo",
@@ -805,6 +813,10 @@ export const translations = {
     checkout: "الدفع",
     continueShopping: "متابعة التسوق",
     viewBag: "عرض الحقيبة",
+    shippingTaxes: "يتم احتساب الشحن والضرائب عند الدفع",
+    itemAdded: "تمت الإضافة للحقيبة",
+    addedToFav: "تمت الإضافة للمفضلة",
+    removedFromFav: "تمت الإزالة من المفضلة",
     
     // Footer
     minimalistJewelry: "خدمة التسوق الشخصي الفاخرة — نختار لك أرقى القطع من أعرق العلامات العالمية",
@@ -1138,6 +1150,10 @@ export const translations = {
     checkout: "Commander",
     continueShopping: "Continuer vos achats",
     viewBag: "Voir le Panier",
+    shippingTaxes: "Frais de port et taxes calculés à la caisse",
+    itemAdded: "Ajouté au panier",
+    addedToFav: "Ajouté aux favoris",
+    removedFromFav: "Retiré des favoris",
     
     // Footer
     minimalistJewelry: "Bijoux minimalistes conçus pour l'individu moderne",

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { CurrencyProvider } from "./i18n/CurrencyContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { CartProvider } from "./contexts/CartContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Index from "./pages/Index";
 import Category from "./pages/Category";
@@ -30,7 +31,8 @@ const App = () => (
     <LanguageProvider>
       <CurrencyProvider>
         <FavoritesProvider>
-          <TooltipProvider>
+          <CartProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -55,7 +57,8 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-          </TooltipProvider>
+            </TooltipProvider>
+          </CartProvider>
         </FavoritesProvider>
       </CurrencyProvider>
     </LanguageProvider>

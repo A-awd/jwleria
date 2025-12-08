@@ -254,6 +254,18 @@ export const allProducts: Product[] = [
   { id: 211, name: "Sky Moon Tourbillon", brand: "Patek Philippe", category: "Watches", categoryKey: "watches", priceEUR: 1500000, image: "https://images.unsplash.com/photo-1548169874-53e85f753f1e?w=800&q=80" },
 ];
 
+// Categories list
+export const categories = [
+  { key: "rings", label: "Rings" },
+  { key: "necklaces", label: "Necklaces" },
+  { key: "earrings", label: "Earrings" },
+  { key: "bracelets", label: "Bracelets" },
+  { key: "watches", label: "Watches" },
+  { key: "bags", label: "Bags" },
+  { key: "sunglasses", label: "Sunglasses" },
+  { key: "brooches", label: "Brooches" },
+];
+
 // Helper functions
 export const getProductsByBrand = (brand: string) => 
   allProducts.filter(p => p.brand === brand);
@@ -266,6 +278,9 @@ export const getProductById = (id: number) =>
 
 export const getNewProducts = () => 
   allProducts.filter(p => p.isNew);
+
+export const getFeaturedProducts = (limit: number = 12) => 
+  allProducts.slice(0, limit);
 
 export const getAllCategories = () => 
   [...new Set(allProducts.map(p => p.categoryKey))];

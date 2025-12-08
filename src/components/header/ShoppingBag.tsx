@@ -154,7 +154,7 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                 </div>
                 
                 <p className="text-xs text-muted-foreground text-center">
-                  {t("shippingCalculatedAtCheckout")}
+                  {t("shippingTaxes")}
                 </p>
                 
                 <Button 
