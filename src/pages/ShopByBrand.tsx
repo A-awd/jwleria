@@ -176,7 +176,7 @@ const ShopByBrand = () => {
             {brands.map((brand) => (
               <Link
                 key={brand.id}
-                to={`/category/brand/${brand.id}`}
+                to={`/brand/${brand.id}`}
                 className="group block"
               >
                 <div className="border border-border/50 hover:border-foreground/30 transition-all duration-300 h-full overflow-hidden">

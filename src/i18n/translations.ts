@@ -86,6 +86,20 @@ export const translations = {
     earrings: "Earrings",
     bracelets: "Bracelets",
     watches: "Watches",
+    bags: "Bags",
+    sunglasses: "Sunglasses",
+    brooches: "Brooches",
+    
+    // New UI elements
+    clearAll: "Clear All",
+    noProductsFound: "No products found",
+    brandNotFound: "Brand not found",
+    
+    // Dior and Givenchy brands
+    brandDior: "Dior",
+    brandDiorDesc: "French luxury fashion house known for elegant haute couture, accessories, and timeless jewelry pieces.",
+    brandGivenchy: "Givenchy",
+    brandGivenchyDesc: "Iconic French fashion and perfume house famous for sophisticated luxury accessories.",
     
     // New in submenu
     thisWeeksArrivals: "This Week's Arrivals",
@@ -408,6 +422,20 @@ export const translations = {
     earrings: "Pendientes",
     bracelets: "Pulseras",
     watches: "Relojes",
+    bags: "Bolsos",
+    sunglasses: "Gafas de Sol",
+    brooches: "Broches",
+    
+    // New UI elements
+    clearAll: "Limpiar Todo",
+    noProductsFound: "No se encontraron productos",
+    brandNotFound: "Marca no encontrada",
+    
+    // Dior and Givenchy brands
+    brandDior: "Dior",
+    brandDiorDesc: "Casa de moda de lujo francesa conocida por la elegante alta costura, accesorios y piezas de joyería atemporales.",
+    brandGivenchy: "Givenchy",
+    brandGivenchyDesc: "Icónica casa francesa de moda y perfumes famosa por accesorios de lujo sofisticados.",
     
     // New in submenu
     thisWeeksArrivals: "Llegadas de esta semana",
@@ -727,6 +755,20 @@ export const translations = {
     earrings: "أقراط",
     bracelets: "أساور",
     watches: "ساعات",
+    bags: "حقائب",
+    sunglasses: "نظارات شمسية",
+    brooches: "دبابيس",
+    
+    // New UI elements
+    clearAll: "مسح الكل",
+    noProductsFound: "لم يتم العثور على منتجات",
+    brandNotFound: "لم يتم العثور على العلامة التجارية",
+    
+    // Dior and Givenchy brands
+    brandDior: "ديور",
+    brandDiorDesc: "دار أزياء فرنسية فاخرة معروفة بالأزياء الراقية الأنيقة والإكسسوارات وقطع المجوهرات الخالدة.",
+    brandGivenchy: "جيفنشي",
+    brandGivenchyDesc: "دار أزياء وعطور فرنسية أيقونية مشهورة بإكسسوارات الفخامة الراقية.",
     
     // New in submenu
     thisWeeksArrivals: "وصل هذا الأسبوع",
@@ -1046,6 +1088,20 @@ export const translations = {
     earrings: "Boucles d'oreilles",
     bracelets: "Bracelets",
     watches: "Montres",
+    bags: "Sacs",
+    sunglasses: "Lunettes de Soleil",
+    brooches: "Broches",
+    
+    // New UI elements
+    clearAll: "Tout Effacer",
+    noProductsFound: "Aucun produit trouvé",
+    brandNotFound: "Marque introuvable",
+    
+    // Dior and Givenchy brands
+    brandDior: "Dior",
+    brandDiorDesc: "Maison de mode française de luxe connue pour la haute couture élégante, les accessoires et les pièces de joaillerie intemporelles.",
+    brandGivenchy: "Givenchy",
+    brandGivenchyDesc: "Maison française iconique de mode et de parfums célèbre pour ses accessoires de luxe sophistiqués.",
     
     // New in submenu
     thisWeeksArrivals: "Arrivées de la semaine",
