@@ -65,7 +65,6 @@ const PRODUCT_FRAGMENT = `
           id
           title
           availableForSale
-          quantityAvailable
           sku
           price {
             amount
@@ -248,7 +247,9 @@ class ShopifyClient {
 
     const json: GraphQLResponse<T> = await response.json();
 
-    if (json.errors && json.errors.length > 0) {
+    // Only throw if there are errors AND no data was returned
+    // Shopify sometimes returns partial data with non-critical errors
+    if (json.errors && json.errors.length > 0 && !json.data) {
       throw new Error(`Shopify GraphQL error: ${json.errors.map(e => e.message).join(', ')}`);
     }
 
