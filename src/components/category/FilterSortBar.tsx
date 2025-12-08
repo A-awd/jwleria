@@ -35,10 +35,23 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
     { key: "bracelets", label: t("bracelets") },
     { key: "rings", label: t("rings") },
     { key: "necklaces", label: t("necklaces") },
+    { key: "watches", label: t("watches") },
   ];
   
-  const priceRanges = ["Under €1,000", "€1,000 - €2,000", "€2,000 - €3,000", "Over €3,000"];
-  const materials = ["Gold", "Silver", "Rose Gold", "Platinum"];
+  // Luxury brands for multi-brand personal shopper
+  const brands = [
+    "Cartier",
+    "Bulgari",
+    "Van Cleef & Arpels",
+    "Tiffany & Co.",
+    "Chopard",
+    "Graff",
+    "Harry Winston",
+    "Piaget",
+  ];
+  
+  const priceRanges = ["Under €1,000", "€1,000 - €5,000", "€5,000 - €10,000", "Over €10,000"];
+  const materials = ["Gold", "White Gold", "Rose Gold", "Platinum", "Diamond"];
 
   return (
     <>
@@ -65,6 +78,23 @@ const FilterSortBar = ({ filtersOpen, setFiltersOpen, itemCount }: FilterSortBar
                 </SheetHeader>
                 
                 <div className="space-y-8">
+                  {/* Brand Filter - Most important for multi-brand platform */}
+                  <div>
+                    <h3 className="text-sm font-light mb-4 text-foreground">{t("brand")}</h3>
+                    <div className="space-y-3">
+                      {brands.map((brand) => (
+                        <div key={brand} className="flex items-center space-x-3">
+                          <Checkbox id={brand} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                          <Label htmlFor={brand} className="text-sm font-light text-foreground cursor-pointer">
+                            {brand}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator className="border-border" />
+
                   {/* Category Filter */}
                   <div>
                     <h3 className="text-sm font-light mb-4 text-foreground">{t("shop")}</h3>
