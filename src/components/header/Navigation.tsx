@@ -105,7 +105,8 @@ const Navigation = () => {
         { key: "necklaces", label: t("necklaces") },
         { key: "earrings", label: t("earrings") },
         { key: "bracelets", label: t("bracelets") },
-        { key: "watches", label: t("watches") }
+        { key: "watches", label: t("watches") },
+        { key: "brands", label: t("shopByBrand"), isSpecial: true }
       ],
       images: [
         { src: "/rings-collection.png", alt: "Rings Collection", label: t("rings") },
@@ -146,6 +147,9 @@ const Navigation = () => {
   ];
 
   const getSubmenuPath = (itemKey: string, subItemKey: string) => {
+    if (subItemKey === "brands") {
+      return "/brands";
+    }
     if (itemKey === "About") {
       const pathMap: Record<string, string> = {
         ourStory: "our-story",
