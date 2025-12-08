@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -15,7 +15,8 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { toast } from "@/hooks/use-toast";
-import { ProductData } from "@/types/shopify";
+import { ProductData, ProductVariant } from "@/types/shopify";
+import { VariantSelector } from "./VariantSelector";
 
 interface ProductInfoProps {
   product: ProductData;
@@ -28,6 +29,36 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
   const { t } = useLanguage();
   const { addToCart, isInCart } = useCart();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+  
+  // Variant selection state
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(() => {
+    if (product.variants && product.variants.length > 0) {
+      return product.variants.find(v => v.available) || product.variants[0];
+    }
+    return null;
+  });
+
+  // Memoize current price based on selected variant
+  const currentPrice = useMemo(() => {
+    if (selectedVariant) {
+      return selectedVariant.price;
+    }
+    return product.price;
+  }, [selectedVariant, product.price]);
+
+  const currentCompareAtPrice = useMemo(() => {
+    if (selectedVariant?.compareAtPrice) {
+      return selectedVariant.compareAtPrice;
+    }
+    return product.compareAtPrice;
+  }, [selectedVariant, product.compareAtPrice]);
+
+  const isAvailable = useMemo(() => {
+    if (selectedVariant) {
+      return selectedVariant.available;
+    }
+    return product.isAvailable;
+  }, [selectedVariant, product.isAvailable]);
   
   // Convert string ID to number for legacy cart/favorites compatibility
   const numericId = parseInt(product.id, 10) || 0;
