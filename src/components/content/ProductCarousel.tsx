@@ -7,20 +7,32 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { getFeaturedProducts } from "@/data/products";
+import { useFeaturedProducts } from "@/hooks/useShopifyProducts";
+import { Loader2 } from "lucide-react";
 import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
 const ProductCarousel = () => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  
-  // Get featured products from all brands
-  const products = getFeaturedProducts(12);
+  const { data, isLoading } = useFeaturedProducts(12);
+  const products = data?.products || [];
 
   const getCategoryName = (categoryKey: string) => {
     return t(categoryKey as any);
   };
+
+  if (isLoading) {
+    return (
+      <section className="w-full mb-6 md:mb-10 px-4 md:px-6 flex justify-center py-10">
+        <Loader2 className="h-8 w-8 animate-spin text-foreground/50" />
+      </section>
+    );
+  }
+
+  if (products.length === 0) {
+    return null;
+  }
 
   return (
     <section className="w-full mb-6 md:mb-10 px-4 md:px-6">
@@ -37,12 +49,12 @@ const ProductCarousel = () => {
                  key={product.id}
                  className="basis-[45%] md:basis-1/3 lg:basis-1/4 pr-2 md:pr-4"
                >
-                 <Link to={`/product/${product.id}`}>
+                 <Link to={`/product/${product.handle || product.id}`}>
                   <Card className="border-none shadow-none bg-transparent group">
                     <CardContent className="p-0 transition-transform duration-300 group-hover:-translate-y-1">
                       <div className="aspect-square mb-2 md:mb-3 overflow-hidden bg-muted/10 relative">
                         <img
-                          src={product.image}
+                          src={product.images[0] || '/placeholder.svg'}
                           alt={product.name}
                           className="w-full h-full object-cover transition-all duration-500 group-hover:opacity-0 group-hover:scale-105"
                         />
@@ -52,11 +64,6 @@ const ProductCarousel = () => {
                           className="absolute inset-0 w-full h-full object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.03] transition-colors duration-300"></div>
-                        {product.isNew && (
-                          <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-black">
-                            {t("newLabel")}
-                          </div>
-                        )}
                       </div>
                      <div className="space-y-0.5 md:space-y-1">
                        {/* Brand name - prominent display */}
@@ -71,11 +78,11 @@ const ProductCarousel = () => {
                            {getCategoryName(product.categoryKey)}
                          </p>
                          <p className="text-xs md:text-sm font-light text-foreground">
-                           {convertPrice(product.priceEUR)}
+                           {convertPrice(product.price)}
                          </p>
                        </div>
-                       {/* Elegant status indicator with hover effect */}
-                       {(product.isReadyToShip || product.isPreOrder) && (
+                       {/* Availability indicator */}
+                       {(product.isReadyToShip || product.isAvailable) && (
                          <div className="pt-0.5">
                            {product.isReadyToShip && (
                              <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">

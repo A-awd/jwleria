@@ -7,6 +7,8 @@ import ProductInfoNew from "../components/product/ProductInfoNew";
 import ProductDescriptionNew from "../components/product/ProductDescriptionNew";
 import ProductCarousel from "../components/content/ProductCarousel";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useProduct } from "@/hooks/useProduct";
+import { Loader2 } from "lucide-react";
 import { 
   Breadcrumb, 
   BreadcrumbItem, 
@@ -15,10 +17,9 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { getProductById } from "@/data/products";
-import { mapLegacyProduct, ProductData } from "@/types/shopify";
+import { ProductData } from "@/types/shopify";
 
-// Demo images for product gallery
+// Demo images for product gallery fallback
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
 import haloImage from "@/assets/halo.jpg";
@@ -32,56 +33,46 @@ interface ProductDetailNewProps {
   isLoading?: boolean;
 }
 
-const ProductDetailNew = ({ product: externalProduct, isLoading }: ProductDetailNewProps) => {
+const ProductDetailNew = ({ product: externalProduct, isLoading: externalLoading }: ProductDetailNewProps) => {
   const { productId } = useParams();
   const { t } = useLanguage();
 
-  // If product is passed as prop (from Shopify), use it. Otherwise, fetch from legacy data
-  let product: ProductData | undefined = externalProduct;
-  
-  if (!product && productId) {
-    const legacyProduct = getProductById(Number(productId));
-    if (legacyProduct) {
-      // Map legacy product to ProductData format with enhanced demo data
-      product = {
-        ...mapLegacyProduct(legacyProduct),
-        // Add demo images for gallery
-        images: [
-          legacyProduct.image,
-          pantheonImage,
-          eclipseImage,
-          haloImage,
-          organicEarring,
-          linkBracelet,
-        ].filter(Boolean),
-        // Add demo product details
-        material: "18k Gold Plated Sterling Silver",
-        dimensions: "2.5cm x 1.2cm",
-        weight: "4.2g per piece",
-        editorsNotes: "A modern interpretation of classical architecture, bridging timeless elegance with contemporary minimalism.",
-        description: `The ${legacyProduct.name} by ${legacyProduct.brand} embodies timeless elegance with exceptional craftsmanship. A perfect addition to any luxury collection.`,
-      };
-    }
-  }
+  // Try to fetch from Shopify using handle
+  const { product: shopifyProduct, isLoading, isFromLegacy } = useProduct({
+    handle: productId,
+    legacyId: Number(productId) || undefined,
+    useLegacyFallback: true,
+    enabled: !externalProduct,
+  });
+
+  // Use external product if provided, otherwise use fetched product
+  const product = externalProduct || shopifyProduct;
+  const loading = externalLoading || isLoading;
+
+  // Enhance product with demo images if needed (for legacy fallback)
+  const enhancedProduct = product ? {
+    ...product,
+    images: product.images.length > 0 ? product.images : [
+      pantheonImage,
+      eclipseImage,
+      haloImage,
+      organicEarring,
+      linkBracelet,
+    ],
+    // Add demo product details if missing
+    material: product.material || "18k Gold Plated Sterling Silver",
+    dimensions: product.dimensions || "2.5cm x 1.2cm",
+    weight: product.weight || "4.2g per piece",
+    editorsNotes: product.editorsNotes || "A modern interpretation of classical architecture, bridging timeless elegance with contemporary minimalism.",
+  } : undefined;
 
   // Loading state
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pt-4 md:pt-6">
-          <div className="w-full px-4 md:px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
-              {/* Image skeleton */}
-              <div className="aspect-square bg-muted animate-pulse" />
-              {/* Info skeleton */}
-              <div className="lg:pl-12 mt-6 lg:mt-0 space-y-4">
-                <div className="h-4 w-24 bg-muted animate-pulse rounded" />
-                <div className="h-8 w-48 bg-muted animate-pulse rounded" />
-                <div className="h-6 w-32 bg-muted animate-pulse rounded" />
-              </div>
-            </div>
-          </div>
+        <main className="pt-4 md:pt-6 flex items-center justify-center min-h-[60vh]">
+          <Loader2 className="h-10 w-10 animate-spin text-foreground/50" />
         </main>
         <Footer />
       </div>
@@ -89,7 +80,7 @@ const ProductDetailNew = ({ product: externalProduct, isLoading }: ProductDetail
   }
 
   // Product not found
-  if (!product) {
+  if (!enhancedProduct) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -140,14 +131,14 @@ const ProductDetailNew = ({ product: externalProduct, isLoading }: ProductDetail
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
-                    <Link to={`/category/${product.categoryKey}`}>
-                      {getCategoryTranslation(product.categoryKey)}
+                    <Link to={`/category/${enhancedProduct.categoryKey}`}>
+                      {getCategoryTranslation(enhancedProduct.categoryKey)}
                     </Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>{product.name}</BreadcrumbPage>
+                  <BreadcrumbPage>{enhancedProduct.name}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
@@ -155,13 +146,13 @@ const ProductDetailNew = ({ product: externalProduct, isLoading }: ProductDetail
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
             <ProductImageGalleryNew 
-              images={product.images} 
-              productName={product.name}
+              images={enhancedProduct.images} 
+              productName={enhancedProduct.name}
             />
             
             <div className="lg:pl-12 mt-6 lg:mt-0 lg:sticky lg:top-6 lg:h-fit">
-              <ProductInfoNew product={product} />
-              <ProductDescriptionNew product={product} />
+              <ProductInfoNew product={enhancedProduct} />
+              <ProductDescriptionNew product={enhancedProduct} />
             </div>
           </div>
         </section>
@@ -178,7 +169,7 @@ const ProductDetailNew = ({ product: externalProduct, isLoading }: ProductDetail
         <section className="w-full">
           <div className="mb-3 md:mb-4 px-4 md:px-6">
             <h2 className="text-xs md:text-sm font-light text-foreground">
-              {t("ourOtherProducts")} {getCategoryTranslation(product.categoryKey)}
+              {t("ourOtherProducts")} {getCategoryTranslation(enhancedProduct.categoryKey)}
             </h2>
           </div>
           <ProductCarousel />
