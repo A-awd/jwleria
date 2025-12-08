@@ -133,16 +133,16 @@ const ProductGrid = ({
                           {convertPrice(product.priceEUR)}
                         </p>
                       </div>
-                      {/* Elegant status indicator */}
+                      {/* Elegant status indicator with hover effect */}
                       {(product.isReadyToShip || product.isPreOrder) && (
                         <div className="pt-1">
                           {product.isReadyToShip && (
-                            <span className="text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                            <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
                               {t("readyToShip")}
                             </span>
                           )}
                           {product.isPreOrder && (
-                            <span className="text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                            <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
                               {t("preOrder")}
                             </span>
                           )}
