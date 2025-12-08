@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useMemo } from "react";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { luxuryBrands } from "@/data/products";
 
@@ -9,11 +10,12 @@ const BrandMarquee = () => {
     return brand.toLowerCase().replace(/[&\s]+/g, "-").replace(/\./g, "");
   };
 
-  // Repeat brands 8 times for a very long seamless loop
-  const repeatedBrands = [
-    ...luxuryBrands, ...luxuryBrands, ...luxuryBrands, ...luxuryBrands,
-    ...luxuryBrands, ...luxuryBrands, ...luxuryBrands, ...luxuryBrands,
-  ];
+  // Shuffle brands randomly and repeat for seamless loop
+  const repeatedBrands = useMemo(() => {
+    const shuffled = [...luxuryBrands].sort(() => Math.random() - 0.5);
+    return [...shuffled, ...shuffled, ...shuffled, ...shuffled,
+            ...shuffled, ...shuffled, ...shuffled, ...shuffled];
+  }, []);
 
   return (
     <section className="w-full py-6 md:py-8 overflow-hidden">
