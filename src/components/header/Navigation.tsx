@@ -51,6 +51,8 @@ const Navigation = () => {
         { key: "earrings", label: t("earrings") },
         { key: "bracelets", label: t("bracelets") },
         { key: "watches", label: t("watches") },
+        { key: "bags", label: t("bags") },
+        { key: "travelBags", label: t("travelBags") },
         { key: "brands", label: t("shopByBrand"), isSpecial: true }
       ],
       images: [

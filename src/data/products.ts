@@ -252,6 +252,30 @@ export const allProducts: Product[] = [
   { id: 209, name: "Split-Seconds", brand: "Patek Philippe", category: "Watches", categoryKey: "watches", priceEUR: 250000, image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800&q=80" },
   { id: 210, name: "Celestial", brand: "Patek Philippe", category: "Watches", categoryKey: "watches", priceEUR: 285000, image: "https://images.unsplash.com/photo-1623998021446-45cd9b269056?w=800&q=80" },
   { id: 211, name: "Sky Moon Tourbillon", brand: "Patek Philippe", category: "Watches", categoryKey: "watches", priceEUR: 1500000, image: "https://images.unsplash.com/photo-1548169874-53e85f753f1e?w=800&q=80" },
+
+  // ==================== TRAVEL BAGS (New Category) ====================
+  { id: 212, name: "Keepall 55 Bandoulière", brand: "Dior", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 2850, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80", isNew: true },
+  { id: 213, name: "Saddle Voyage Bag", brand: "Dior", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 3200, image: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=800&q=80" },
+  { id: 214, name: "Antigona Sport Duffle", brand: "Givenchy", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 2650, image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80", isNew: true },
+  { id: 215, name: "Pandora Travel Bag", brand: "Givenchy", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 2450, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80" },
+  { id: 216, name: "Book Tote Large", brand: "Dior", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 3100, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80" },
+  { id: 217, name: "G-Tote XL", brand: "Givenchy", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 2300, image: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=800&q=80" },
+  { id: 218, name: "Oblique Weekender", brand: "Dior", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 4200, image: "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80", isNew: true },
+  { id: 219, name: "Voyager Leather Duffle", brand: "Cartier", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 5500, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80" },
+  { id: 220, name: "Serpenti Travel Tote", brand: "Bulgari", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 4800, image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80" },
+  { id: 221, name: "Leather Weekender", brand: "Tiffany & Co.", category: "Travel Bags", categoryKey: "travelBags", priceEUR: 3900, image: "https://images.unsplash.com/photo-1565026057447-bc90a3dceb87?w=800&q=80" },
+
+  // ==================== MORE BAGS (Handbags) ====================
+  { id: 222, name: "Lady Dior Medium", brand: "Dior", category: "Bags", categoryKey: "bags", priceEUR: 5400, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80", isNew: true },
+  { id: 223, name: "Saddle Bag", brand: "Dior", category: "Bags", categoryKey: "bags", priceEUR: 3650, image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80" },
+  { id: 224, name: "30 Montaigne Bag", brand: "Dior", category: "Bags", categoryKey: "bags", priceEUR: 4100, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80", isNew: true },
+  { id: 225, name: "Bobby Bag", brand: "Dior", category: "Bags", categoryKey: "bags", priceEUR: 2900, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80" },
+  { id: 226, name: "Antigona Medium", brand: "Givenchy", category: "Bags", categoryKey: "bags", priceEUR: 2850, image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80" },
+  { id: 227, name: "4G Soft Bag", brand: "Givenchy", category: "Bags", categoryKey: "bags", priceEUR: 2200, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80", isNew: true },
+  { id: 228, name: "Cut Out Bag", brand: "Givenchy", category: "Bags", categoryKey: "bags", priceEUR: 1990, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80" },
+  { id: 229, name: "Voyou Bag", brand: "Givenchy", category: "Bags", categoryKey: "bags", priceEUR: 2650, image: "https://images.unsplash.com/photo-1591561954557-26941169b49e?w=800&q=80" },
+  { id: 230, name: "Love Leather Tote", brand: "Cartier", category: "Bags", categoryKey: "bags", priceEUR: 4200, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=800&q=80" },
+  { id: 231, name: "Must de Cartier Bag", brand: "Cartier", category: "Bags", categoryKey: "bags", priceEUR: 3800, image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80" },
 ];
 
 // Categories list
@@ -262,6 +286,7 @@ export const categories = [
   { key: "bracelets", label: "Bracelets" },
   { key: "watches", label: "Watches" },
   { key: "bags", label: "Bags" },
+  { key: "travelBags", label: "Travel Bags" },
   { key: "sunglasses", label: "Sunglasses" },
   { key: "brooches", label: "Brooches" },
 ];

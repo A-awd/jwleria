@@ -87,6 +87,7 @@ export const translations = {
     bracelets: "Bracelets",
     watches: "Watches",
     bags: "Bags",
+    travelBags: "Travel Bags",
     sunglasses: "Sunglasses",
     brooches: "Brooches",
     
@@ -427,6 +428,7 @@ export const translations = {
     bracelets: "Pulseras",
     watches: "Relojes",
     bags: "Bolsos",
+    travelBags: "Bolsas de Viaje",
     sunglasses: "Gafas de Sol",
     brooches: "Broches",
     
@@ -763,7 +765,8 @@ export const translations = {
     earrings: "أقراط",
     bracelets: "أساور",
     watches: "ساعات",
-    bags: "حقائب",
+    bags: "شنط",
+    travelBags: "حقائب سفر",
     sunglasses: "نظارات شمسية",
     brooches: "دبابيس",
     
@@ -1101,6 +1104,7 @@ export const translations = {
     bracelets: "Bracelets",
     watches: "Montres",
     bags: "Sacs",
+    travelBags: "Sacs de Voyage",
     sunglasses: "Lunettes de Soleil",
     brooches: "Broches",
     
