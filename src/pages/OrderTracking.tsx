@@ -46,7 +46,8 @@ interface Order {
 const OrderTracking = () => {
   const { t, direction } = useLanguage();
   const { convertPrice } = useCurrency();
-  const [searchQuery, setSearchQuery] = useState("");
+  const [orderNumber, setOrderNumber] = useState("");
+  const [email, setEmail] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [statusHistory, setStatusHistory] = useState<StatusHistory[]>([]);
@@ -54,8 +55,8 @@ const OrderTracking = () => {
   const [searched, setSearched] = useState(false);
 
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      toast.error(t("enterOrderNumber"));
+    if (!orderNumber.trim() || !email.trim()) {
+      toast.error(t("enterOrderNumberAndEmail"));
       return;
     }
 
@@ -63,44 +64,48 @@ const OrderTracking = () => {
     setSearched(true);
 
     try {
-      // Search by order number or email
+      // Use secure RPC function that requires both order number AND email
       const { data: orderData, error: orderError } = await supabase
-        .from("orders")
-        .select("*")
-        .or(`order_number.eq.${searchQuery},customer_email.eq.${searchQuery}`)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .rpc("lookup_order_by_credentials", {
+          p_order_number: orderNumber.trim(),
+          p_email: email.trim()
+        });
 
       if (orderError) throw orderError;
 
-      if (!orderData) {
+      if (!orderData || orderData.length === 0) {
         setOrder(null);
         setOrderItems([]);
         setStatusHistory([]);
         return;
       }
 
-      setOrder(orderData);
+      const foundOrder = orderData[0] as Order;
+      setOrder(foundOrder);
 
-      // Fetch order items
+      // Fetch order items using secure RPC function
       const { data: items, error: itemsError } = await supabase
-        .from("order_items")
-        .select("*")
-        .eq("order_id", orderData.id);
+        .rpc("lookup_order_items_by_credentials", {
+          p_order_number: orderNumber.trim(),
+          p_email: email.trim()
+        });
 
       if (itemsError) throw itemsError;
-      setOrderItems(items || []);
+      setOrderItems((items as OrderItem[]) || []);
 
-      // Fetch status history
+      // Fetch status history using secure RPC function
       const { data: history, error: historyError } = await supabase
-        .from("order_status_history")
-        .select("*")
-        .eq("order_id", orderData.id)
-        .order("created_at", { ascending: false });
+        .rpc("lookup_order_history_by_credentials", {
+          p_order_number: orderNumber.trim(),
+          p_email: email.trim()
+        });
 
       if (historyError) throw historyError;
-      setStatusHistory(history || []);
+      // Sort by created_at descending
+      const sortedHistory = ((history as StatusHistory[]) || []).sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setStatusHistory(sortedHistory);
 
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -147,6 +152,16 @@ const OrderTracking = () => {
   const statusSteps = ["pending", "processing", "shipped", "delivered"];
   const currentStepIndex = order ? statusSteps.indexOf(order.status) : -1;
 
+  // Mask sensitive data for display
+  const maskEmail = (emailStr: string) => {
+    const [local, domain] = emailStr.split("@");
+    if (!domain) return emailStr;
+    const maskedLocal = local.length > 2 
+      ? local[0] + "***" + local[local.length - 1]
+      : "***";
+    return `${maskedLocal}@${domain}`;
+  };
+
   return (
     <div className="min-h-screen bg-background" dir={direction}>
       <Header />
@@ -156,28 +171,39 @@ const OrderTracking = () => {
             {t("trackYourOrder")}
           </h1>
           <p className="text-muted-foreground text-center mb-10">
-            {t("trackOrderDescription")}
+            {t("trackOrderDescriptionSecure")}
           </p>
 
-          {/* Search Form */}
-          <div className="max-w-xl mx-auto mb-12">
-            <div className="flex gap-3">
+          {/* Search Form - Now requires both order number AND email */}
+          <div className="max-w-xl mx-auto mb-12 space-y-4">
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">{t("orderNumber")}</label>
               <Input
-                placeholder={t("orderNumberOrEmail")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="flex-1 rounded-none h-12"
+                placeholder={t("enterOrderNumber")}
+                value={orderNumber}
+                onChange={(e) => setOrderNumber(e.target.value)}
+                className="rounded-none h-12"
               />
-              <Button 
-                onClick={handleSearch} 
-                className="rounded-none h-12 px-6"
-                disabled={isLoading}
-              >
-                <Search className="w-5 h-5 mr-2" />
-                {t("search")}
-              </Button>
             </div>
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">{t("email")}</label>
+              <Input
+                type="email"
+                placeholder={t("enterEmail")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                className="rounded-none h-12"
+              />
+            </div>
+            <Button 
+              onClick={handleSearch} 
+              className="rounded-none h-12 w-full"
+              disabled={isLoading}
+            >
+              <Search className="w-5 h-5 mr-2" />
+              {t("trackOrder")}
+            </Button>
           </div>
 
           {/* Results */}
@@ -192,7 +218,7 @@ const OrderTracking = () => {
             <div className="text-center py-12 bg-muted/20 border border-border/30">
               <Package className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
               <h3 className="text-xl font-light text-foreground mb-2">{t("orderNotFound")}</h3>
-              <p className="text-muted-foreground">{t("orderNotFoundDesc")}</p>
+              <p className="text-muted-foreground">{t("orderNotFoundDescSecure")}</p>
             </div>
           )}
 
@@ -284,14 +310,14 @@ const OrderTracking = () => {
                   </div>
                 </div>
 
-                {/* Shipping Address */}
+                {/* Shipping Address - with masked email for security */}
                 <div className="bg-muted/20 border border-border/30 p-6">
                   <h3 className="text-lg font-light text-foreground mb-4">{t("shippingAddress")}</h3>
                   <div className="text-sm text-muted-foreground space-y-1">
                     <p className="text-foreground font-medium">{order.customer_name}</p>
                     <p>{order.shipping_address}</p>
                     <p>{order.shipping_city}, {order.shipping_country}</p>
-                    <p>{order.customer_email}</p>
+                    <p>{maskEmail(order.customer_email)}</p>
                   </div>
                 </div>
               </div>
