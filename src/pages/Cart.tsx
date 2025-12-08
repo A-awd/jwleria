@@ -202,7 +202,7 @@ const Cart = () => {
                 ) : (
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-4">
-                      {t("complimentaryShipping")}
+                      {t("shippingTaxes")}
                     </p>
                     <Button className="w-full rounded-none py-6 text-base" disabled>
                       {t("checkout")}
