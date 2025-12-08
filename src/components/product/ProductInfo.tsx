@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
   Breadcrumb, 
@@ -9,19 +9,57 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, Heart, Check } from "lucide-react";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { useCart } from "@/contexts/CartContext";
+import { useFavorites } from "@/contexts/FavoritesContext";
+import { getProductById } from "@/data/products";
+import { toast } from "@/hooks/use-toast";
 
 const ProductInfo = () => {
+  const { productId } = useParams();
   const [quantity, setQuantity] = useState(1);
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
+  const { addToCart, isInCart } = useCart();
+  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   
-  const productPriceEUR = 2850;
+  const product = getProductById(Number(productId));
+  
+  if (!product) {
+    return <div className="p-4">{t("productNotFound")}</div>;
+  }
+
+  const productInCart = isInCart(product.id);
+  const productIsFavorite = isFavorite(product.id);
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast({
+      title: t("addedToCart"),
+      description: `${product.name} x${quantity}`,
+    });
+  };
+
+  const handleToggleFavorite = () => {
+    if (productIsFavorite) {
+      removeFromFavorites(product.id);
+      toast({
+        title: t("removedFromFavorites"),
+        description: product.name,
+      });
+    } else {
+      addToFavorites(product);
+      toast({
+        title: t("addedToFavorites"),
+        description: product.name,
+      });
+    }
+  };
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -31,18 +69,18 @@ const ProductInfo = () => {
           <BreadcrumbList>
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/">Home</Link>
+                <Link to="/">{t("home")}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to="/category/earrings">{t("earrings")}</Link>
+                <Link to={`/category/${product.categoryKey}`}>{t(product.categoryKey)}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>Pantheon</BreadcrumbPage>
+              <BreadcrumbPage>{product.name}</BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -52,11 +90,17 @@ const ProductInfo = () => {
       <div className="space-y-1 md:space-y-2">
         <div className="flex justify-between items-start">
           <div>
-            <p className="text-xs md:text-sm font-light text-muted-foreground mb-0.5 md:mb-1">{t("earrings")}</p>
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-light text-foreground">Pantheon</h1>
+            <Link 
+              to={`/brand/${encodeURIComponent(product.brand)}`}
+              className="text-xs md:text-sm font-light text-primary hover:underline mb-0.5 md:mb-1 block"
+            >
+              {product.brand}
+            </Link>
+            <p className="text-xs md:text-sm font-light text-muted-foreground mb-0.5 md:mb-1">{t(product.categoryKey)}</p>
+            <h1 className="text-xl md:text-2xl lg:text-3xl font-light text-foreground">{product.name}</h1>
           </div>
           <div className="text-right">
-            <p className="text-lg md:text-xl font-light text-foreground">{convertPrice(productPriceEUR)}</p>
+            <p className="text-lg md:text-xl font-light text-foreground">{convertPrice(product.priceEUR)}</p>
           </div>
         </div>
       </div>
@@ -75,12 +119,12 @@ const ProductInfo = () => {
         
         <div className="space-y-1 md:space-y-2">
           <h3 className="text-xs md:text-sm font-light text-foreground">{t("weight")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground">4.2g per earring</p>
+          <p className="text-xs md:text-sm font-light text-muted-foreground">4.2g per piece</p>
         </div>
         
         <div className="space-y-1 md:space-y-2">
           <h3 className="text-xs md:text-sm font-light text-foreground">{t("editorsNotes")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground italic">"A modern interpretation of classical architecture, these earrings bridge timeless elegance with contemporary minimalism."</p>
+          <p className="text-xs md:text-sm font-light text-muted-foreground italic">"A modern interpretation of classical architecture, bridging timeless elegance with contemporary minimalism."</p>
         </div>
       </div>
 
@@ -111,11 +155,31 @@ const ProductInfo = () => {
           </div>
         </div>
 
-        <Button 
-          className="w-full h-11 md:h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none text-sm md:text-base"
-        >
-          {t("addToBag")}
-        </Button>
+        <div className="flex gap-3">
+          <Button 
+            className="flex-1 h-11 md:h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none text-sm md:text-base"
+            onClick={handleAddToCart}
+          >
+            {productInCart ? (
+              <>
+                <Check className="h-4 w-4 mr-2" />
+                {t("addMore")}
+              </>
+            ) : (
+              t("addToBag")
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-11 md:h-12 w-11 md:w-12 rounded-none border-border"
+            onClick={handleToggleFavorite}
+          >
+            <Heart 
+              className={`h-5 w-5 ${productIsFavorite ? 'fill-red-500 text-red-500' : ''}`} 
+            />
+          </Button>
+        </div>
       </div>
     </div>
   );

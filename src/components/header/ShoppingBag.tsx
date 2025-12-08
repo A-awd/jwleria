@@ -1,35 +1,22 @@
-import { X, Minus, Plus } from "lucide-react";
+import { X, Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-
-interface CartItem {
-  id: number;
-  name: string;
-  priceEUR: number;
-  image: string;
-  quantity: number;
-  category: string;
-}
+import { useCart, CartItem } from "@/contexts/CartContext";
 
 interface ShoppingBagProps {
   isOpen: boolean;
   onClose: () => void;
-  cartItems: CartItem[];
-  updateQuantity: (id: number, newQuantity: number) => void;
   onViewFavorites?: () => void;
 }
 
-const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorites }: ShoppingBagProps) => {
+const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => {
   const { convertPrice } = useCurrency();
   const { t, direction } = useLanguage();
+  const { cartItems, updateQuantity, removeFromCart, totalPriceEUR, totalItems } = useCart();
   
   if (!isOpen) return null;
-
-  const subtotalEUR = cartItems.reduce((sum, item) => {
-    return sum + (item.priceEUR * item.quantity);
-  }, 0);
 
   return (
     <div className="fixed inset-0 z-50 h-screen">
@@ -40,10 +27,15 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
       />
       
       {/* Off-canvas panel */}
-      <div className={`absolute ${direction === 'rtl' ? 'left-0' : 'right-0'} top-0 h-screen w-96 bg-background border-${direction === 'rtl' ? 'r' : 'l'} border-border animate-slide-in-right flex flex-col`}>
+      <div className={`absolute ${direction === 'rtl' ? 'left-0' : 'right-0'} top-0 h-screen w-full max-w-md bg-background border-${direction === 'rtl' ? 'r' : 'l'} border-border animate-slide-in-right flex flex-col`}>
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
-          <h2 className="text-lg font-light text-foreground">{t("shoppingBag")}</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-lg font-light text-foreground">{t("shoppingBag")}</h2>
+            {totalItems > 0 && (
+              <span className="text-sm text-muted-foreground">({totalItems})</span>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 text-foreground hover:text-muted-foreground transition-colors"
@@ -54,10 +46,10 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
         </div>
         
         {/* Content */}
-        <div className="flex-1 flex flex-col p-6">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Mobile favorites toggle - only show on mobile */}
           {onViewFavorites && (
-            <div className="md:hidden mb-6 pb-6 border-b border-border">
+            <div className="md:hidden p-4 border-b border-border">
               <button
                 onClick={onViewFavorites}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-border rounded-lg text-nav-foreground hover:text-nav-hover hover:border-nav-hover transition-colors duration-200"
@@ -71,52 +63,83 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
           )}
           
           {cartItems.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <p className="text-muted-foreground text-sm text-center">
+            <div className="flex-1 flex flex-col items-center justify-center p-6">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1" stroke="currentColor" className="w-16 h-16 text-muted-foreground/30 mb-4">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+              </svg>
+              <p className="text-muted-foreground text-sm text-center mb-4">
                 {t("emptyBag")}
               </p>
+              <Button 
+                variant="outline" 
+                className="rounded-none" 
+                onClick={onClose}
+                asChild
+              >
+                <Link to="/category/shop">
+                  {t("continueShopping")}
+                </Link>
+              </Button>
             </div>
           ) : (
             <>
               {/* Cart items */}
-              <div className="flex-1 overflow-y-auto space-y-6 mb-6">
+              <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 {cartItems.map((item) => (
-                  <div key={item.id} className={`flex gap-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                    <div className="w-20 h-20 bg-muted/10 rounded-lg overflow-hidden">
+                  <div key={item.id} className={`flex gap-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''} pb-4 border-b border-border last:border-0`}>
+                    <Link 
+                      to={`/product/${item.id}`}
+                      onClick={onClose}
+                      className="w-24 h-24 bg-muted/10 rounded-lg overflow-hidden flex-shrink-0"
+                    >
                       <img 
                         src={item.image} 
                         alt={item.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                       />
-                    </div>
-                    <div className="flex-1">
-                      <div className={`flex justify-between items-start mb-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                        <div>
-                          <p className="text-sm font-light text-muted-foreground">{item.category}</p>
-                          <h3 className="text-sm font-medium text-foreground">{item.name}</h3>
+                    </Link>
+                    <div className="flex-1 min-w-0">
+                      <div className={`flex justify-between items-start gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
+                        <div className="min-w-0">
+                          <p className="text-xs font-light text-primary">{item.brand}</p>
+                          <p className="text-xs font-light text-muted-foreground">{item.category}</p>
+                          <Link 
+                            to={`/product/${item.id}`}
+                            onClick={onClose}
+                            className="text-sm font-medium text-foreground hover:underline truncate block"
+                          >
+                            {item.name}
+                          </Link>
                         </div>
-                        <p className="text-sm font-light text-foreground">{convertPrice(item.priceEUR)}</p>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="p-1 text-muted-foreground hover:text-destructive transition-colors flex-shrink-0"
+                          aria-label="Remove item"
+                        >
+                          <Trash2 size={16} />
+                        </button>
                       </div>
-                      <div className="flex items-center gap-2 mt-3">
+                      <div className={`flex items-center justify-between mt-3 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className="flex items-center border border-border">
                           <button 
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                            className="p-2 hover:bg-muted/50 transition-colors"
+                            className="p-1.5 hover:bg-muted/50 transition-colors"
                             aria-label="Decrease quantity"
                           >
                             <Minus size={14} />
                           </button>
-                          <span className="px-3 py-2 text-sm font-light min-w-[40px] text-center">
+                          <span className="px-3 py-1.5 text-sm font-light min-w-[36px] text-center">
                             {item.quantity}
                           </span>
                           <button 
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                            className="p-2 hover:bg-muted/50 transition-colors"
+                            className="p-1.5 hover:bg-muted/50 transition-colors"
                             aria-label="Increase quantity"
                           >
                             <Plus size={14} />
                           </button>
                         </div>
+                        <p className="text-sm font-medium text-foreground">{convertPrice(item.priceEUR * item.quantity)}</p>
                       </div>
                     </div>
                   </div>
@@ -124,14 +147,14 @@ const ShoppingBag = ({ isOpen, onClose, cartItems, updateQuantity, onViewFavorit
               </div>
               
               {/* Subtotal and checkout */}
-              <div className="border-t border-border pt-6 space-y-4">
+              <div className="border-t border-border p-6 space-y-4 bg-background">
                 <div className={`flex justify-between items-center ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                   <span className="text-sm font-light text-foreground">{t("subtotal")}</span>
-                  <span className="text-sm font-medium text-foreground">{convertPrice(subtotalEUR)}</span>
+                  <span className="text-lg font-medium text-foreground">{convertPrice(totalPriceEUR)}</span>
                 </div>
                 
-                <p className="text-xs text-muted-foreground">
-                  Shipping and taxes calculated at checkout
+                <p className="text-xs text-muted-foreground text-center">
+                  {t("shippingCalculatedAtCheckout")}
                 </p>
                 
                 <Button 
