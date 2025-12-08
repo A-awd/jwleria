@@ -37,20 +37,20 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
               to={`/product/${product.id}`}
               className="group"
             >
-              <div className="space-y-2 md:space-y-3">
+              <div className="space-y-2 md:space-y-3 transition-transform duration-300 group-hover:-translate-y-1">
                 {/* Image */}
                 <div className="aspect-square overflow-hidden bg-muted/10 relative">
                   <img
                     src={product.image}
                     alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black/[0.02] group-hover:bg-black/[0.05] transition-colors" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.03] transition-colors duration-300" />
                 </div>
 
                 {/* Info */}
-                <div className="space-y-1">
-                  <p className="text-[10px] md:text-xs font-medium text-foreground/50 uppercase tracking-wide">
+                <div className="space-y-1 transition-opacity duration-300">
+                  <p className="text-[10px] md:text-xs font-medium text-foreground/50 uppercase tracking-wide group-hover:text-foreground/70 transition-colors duration-300">
                     {product.brand}
                   </p>
                   <h3 className="text-xs md:text-sm font-medium text-foreground line-clamp-1">
@@ -65,7 +65,7 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full text-xs h-8 md:h-9 border-foreground/20 hover:bg-foreground hover:text-background transition-colors"
+                  className="w-full text-xs h-8 md:h-9 border-foreground/20 hover:bg-foreground hover:text-background transition-all duration-300 group-hover:border-foreground/40"
                 >
                   {t("viewDetails")}
                 </Button>
