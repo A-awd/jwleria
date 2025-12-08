@@ -59,16 +59,16 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                   <p className="text-xs md:text-sm font-light text-foreground/80">
                     {convertPrice(product.priceEUR)}
                   </p>
-                  {/* Elegant status indicator */}
+                  {/* Elegant status indicator with hover effect */}
                   {(product.isReadyToShip || product.isPreOrder) && (
                     <div className="pt-0.5">
                       {product.isReadyToShip && (
-                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
                           {t("readyToShip")}
                         </span>
                       )}
                       {product.isPreOrder && (
-                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/50 border-b border-foreground/20 pb-0.5">
+                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
                           {t("preOrder")}
                         </span>
                       )}
