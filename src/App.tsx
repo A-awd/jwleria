@@ -24,7 +24,6 @@ import TermsOfService from "./pages/TermsOfService";
 import ShopByBrand from "./pages/ShopByBrand";
 import BrandDetail from "./pages/BrandDetail";
 import Favorites from "./pages/Favorites";
-import OrderTracking from "./pages/OrderTracking";
 
 const queryClient = new QueryClient();
 
@@ -56,7 +55,6 @@ const App = () => (
                 <Route path="/about/store-locator" element={<StoreLocator />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/track-order" element={<OrderTracking />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
