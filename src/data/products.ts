@@ -43,6 +43,21 @@ export const getProductsByBrand = (brand: string): Product[] => {
   return allProducts.filter(p => p.brand.toLowerCase() === brand.toLowerCase());
 };
 
+// Get product by ID
+export const getProductById = (id: number): Product | undefined => {
+  return allProducts.find(p => p.id === id);
+};
+
+// Get best sellers (sorted by price, top items)
+export const getBestSellers = (count: number = 4): Product[] => {
+  return [...allProducts].sort((a, b) => b.priceEUR - a.priceEUR).slice(0, count);
+};
+
+// Get new arrivals
+export const getNewArrivals = (count: number = 4): Product[] => {
+  return allProducts.filter(p => p.isNew).slice(0, count);
+};
+
 // Comprehensive product catalog
 export const allProducts: Product[] = [
   // CARTIER

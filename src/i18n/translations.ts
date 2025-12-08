@@ -197,6 +197,16 @@ export const translations = {
     weight: "Weight",
     editorsNotes: "Editor's Notes",
     
+    // Homepage strips
+    selectedBrands: "Selected Brands",
+    bestSellers: "Best Sellers",
+    bestSellersAr: "الأكثر مبيعاً",
+    newArrivals: "New Arrivals",
+    newArrivalsAr: "وصل حديثاً",
+    editorsPicks: "Editor's Picks",
+    editorsPicksAr: "اختيارات المحرر",
+    viewDetails: "View Details",
+    
     // Checkout
     support: "Support",
     
@@ -565,6 +575,16 @@ export const translations = {
     weight: "Peso",
     editorsNotes: "Notas del Editor",
     
+    // Homepage strips
+    selectedBrands: "Marcas Seleccionadas",
+    bestSellers: "Los Más Vendidos",
+    bestSellersAr: "الأكثر مبيعاً",
+    newArrivals: "Nuevas Llegadas",
+    newArrivalsAr: "وصل حديثاً",
+    editorsPicks: "Selección del Editor",
+    editorsPicksAr: "اختيارات المحرر",
+    viewDetails: "Ver Detalles",
+    
     // Language
     language: "Idioma",
     english: "Inglés",
@@ -930,6 +950,16 @@ export const translations = {
     weight: "الوزن",
     editorsNotes: "ملاحظات المحرر",
     
+    // Homepage strips
+    selectedBrands: "علامات تجارية مختارة",
+    bestSellers: "الأكثر مبيعاً",
+    bestSellersAr: "الأكثر مبيعاً",
+    newArrivals: "وصل حديثاً",
+    newArrivalsAr: "وصل حديثاً",
+    editorsPicks: "اختيارات المحرر",
+    editorsPicksAr: "اختيارات المحرر",
+    viewDetails: "عرض التفاصيل",
+    
     // Language
     language: "اللغة",
     english: "الإنجليزية",
@@ -1294,6 +1324,16 @@ export const translations = {
     dimensions: "Dimensions",
     weight: "Poids",
     editorsNotes: "Notes de l'éditeur",
+    
+    // Homepage strips
+    selectedBrands: "Marques Sélectionnées",
+    bestSellers: "Meilleures Ventes",
+    bestSellersAr: "الأكثر مبيعاً",
+    newArrivals: "Nouveautés",
+    newArrivalsAr: "وصل حديثاً",
+    editorsPicks: "Sélection de l'éditeur",
+    editorsPicksAr: "اختيارات المحرر",
+    viewDetails: "Voir les Détails",
     
     // Language
     language: "Langue",
