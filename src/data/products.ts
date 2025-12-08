@@ -45,7 +45,7 @@ export const getProductsByBrand = (brand: string): Product[] => {
 
 // Get product by ID
 export const getProductById = (id: number): Product | undefined => {
-  return allProducts.find(p => p.id === id);
+  return allProducts.find((p) => p.id === id);
 };
 
 // Get best sellers (sorted by price, top items)
