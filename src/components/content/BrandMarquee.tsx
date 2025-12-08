@@ -1,16 +1,53 @@
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { luxuryBrands } from "@/data/products";
 
 const BrandMarquee = () => {
   const { t } = useLanguage();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
+  const scrollPositionRef = useRef(0);
+  const animationRef = useRef<number | null>(null);
 
   const getBrandHandle = (brand: string) => {
     return brand.toLowerCase().replace(/[&\s]+/g, "-").replace(/\./g, "");
   };
 
-  // Create two identical sets for seamless infinite loop
-  const brandsSet = [...luxuryBrands];
+  // Quadruple the brands for extra seamless looping
+  const allBrands = [...luxuryBrands, ...luxuryBrands, ...luxuryBrands, ...luxuryBrands];
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const scrollSpeed = 0.5; // pixels per frame
+    
+    const animate = () => {
+      if (!isPaused && container) {
+        scrollPositionRef.current += scrollSpeed;
+        
+        // Get the width of one set of brands (1/4 of total since we quadrupled)
+        const singleSetWidth = container.scrollWidth / 4;
+        
+        // When we've scrolled past one complete set, reset to create infinite loop
+        if (scrollPositionRef.current >= singleSetWidth) {
+          scrollPositionRef.current = 0;
+        }
+        
+        container.style.transform = `translateX(-${scrollPositionRef.current}px)`;
+      }
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    animationRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [isPaused]);
 
   return (
     <section className="w-full py-6 md:py-8 overflow-hidden">
@@ -20,26 +57,19 @@ const BrandMarquee = () => {
         </h2>
       </div>
 
-      <div className="relative overflow-hidden">
+      <div 
+        className="relative overflow-hidden"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+      >
         <div 
-          className="flex items-center animate-marquee-infinite hover:[animation-play-state:paused]"
+          ref={containerRef}
+          className="flex items-center will-change-transform"
+          style={{ transition: isPaused ? 'none' : 'none' }}
         >
-          {/* First set */}
-          {brandsSet.map((brand, index) => (
+          {allBrands.map((brand, index) => (
             <Link
-              key={`set1-${brand}-${index}`}
-              to={`/brand/${getBrandHandle(brand)}`}
-              className="flex-shrink-0 px-6 md:px-10 lg:px-14"
-            >
-              <span className="text-sm md:text-base lg:text-lg font-light text-foreground/30 hover:text-foreground/70 transition-colors duration-300 whitespace-nowrap tracking-wide">
-                {brand}
-              </span>
-            </Link>
-          ))}
-          {/* Second set (duplicate for seamless loop) */}
-          {brandsSet.map((brand, index) => (
-            <Link
-              key={`set2-${brand}-${index}`}
+              key={`brand-${index}`}
               to={`/brand/${getBrandHandle(brand)}`}
               className="flex-shrink-0 px-6 md:px-10 lg:px-14"
             >
