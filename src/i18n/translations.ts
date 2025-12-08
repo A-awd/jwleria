@@ -233,6 +233,9 @@ export const translations = {
     lineaStoryDesc: "jWleria is your trusted personal shopping concierge, connecting you with the world's most prestigious luxury brands. From Dior to Cartier, Rolex to Patek Philippe — we source, authenticate, and deliver exceptional pieces tailored to your desires.",
     readFullStory: "Discover our services",
     newLabel: "NEW",
+    readyToShip: "Ready to Ship",
+    availability: "Availability",
+    inStock: "In Stock",
 
     // Product Detail page
     home: "Home",
@@ -598,16 +601,19 @@ export const translations = {
     organicFormsDesc: "Diseños icónicos de la legendaria casa francesa",
     chainCollection: "Bulgari Serpenti",
     chainCollectionDesc: "Artesanía italiana atemporal y elegancia audaz",
+    jewelryDrawnFrom: "Tu Puerta al Lujo",
+    lineaStoryDesc: "jWleria es tu servicio de compras personales de confianza, conectándote con las marcas de lujo más prestigiosas del mundo. Desde Dior hasta Cartier, Rolex hasta Patek Philippe — buscamos, autenticamos y entregamos piezas excepcionales a tu medida.",
+    readFullStory: "Descubre nuestros servicios",
+    newLabel: "NUEVO",
+    readyToShip: "Listo para Enviar",
+    availability: "Disponibilidad",
+    inStock: "En Stock",
     modernHeritage: "Van Cleef & Arpels",
     modernHeritageDesc: "Creaciones poéticas con excepcional saber hacer",
     artisanCraft: "Tiffany & Co.",
     artisanCraftDesc: "Lujo americano con estilo perdurable desde 1837",
     circularElements: "Relojes Rolex",
     circularElementsDesc: "Relojería de precisión de la corona de la horología",
-    jewelryDrawnFrom: "Tu Puerta al Lujo",
-    lineaStoryDesc: "jWleria es tu servicio de compra personal de confianza, conectándote con las marcas de lujo más prestigiosas del mundo. De Dior a Cartier, de Rolex a Patek Philippe — buscamos, autenticamos y entregamos piezas excepcionales adaptadas a tus deseos.",
-    readFullStory: "Descubre nuestros servicios",
-    newLabel: "NUEVO",
 
     // Product Detail page
     home: "Inicio",
@@ -979,10 +985,13 @@ export const translations = {
     artisanCraftDesc: "قطع مصنوعة يدوياً باهتمام دقيق بالتفاصيل",
     circularElements: "عناصر دائرية",
     circularElementsDesc: "الكمال الهندسي يلتقي بالبساطة المعاصرة",
-    jewelryDrawnFrom: "مجوهرات مستوحاة من الظلال والخطوط",
-    lineaStoryDesc: "ولدت لينيا من لقاء عقلين رأيا الجمال ليس فقط في الزخرفة، بل في البنية. مع خلفيات تمتد من العمارة إلى الفنون الجميلة، آمن المؤسسون بأن المجوهرات يمكن أن تكون أكثر من مجرد زينة.",
-    readFullStory: "اقرأ قصتنا الكاملة",
+    jewelryDrawnFrom: "بوابتك إلى الفخامة",
+    lineaStoryDesc: "jWleria هو خدمة التسوق الشخصية الموثوقة الخاصة بك، تربطك بأكثر العلامات التجارية الفاخرة في العالم. من ديور إلى كارتييه، روليكس إلى باتيك فيليب — نحن نبحث ونوثق ونسلم قطعاً استثنائية مصممة لرغباتك.",
+    readFullStory: "اكتشف خدماتنا",
     newLabel: "جديد",
+    readyToShip: "جاهز للتسليم",
+    availability: "التوفر",
+    inStock: "متوفر",
 
     // Product Detail page
     home: "الرئيسية",
@@ -1358,6 +1367,9 @@ export const translations = {
     lineaStoryDesc: "jWleria est votre service d'achat personnel de confiance, vous connectant aux marques de luxe les plus prestigieuses au monde. De Dior à Cartier, de Rolex à Patek Philippe — nous trouvons, authentifions et livrons des pièces exceptionnelles adaptées à vos désirs.",
     readFullStory: "Découvrez nos services",
     newLabel: "NOUVEAU",
+    readyToShip: "Prêt à Expédier",
+    availability: "Disponibilité",
+    inStock: "En Stock",
 
     // Product Detail page
     home: "Accueil",

@@ -122,6 +122,16 @@ const ProductInfo = () => {
 
       {/* Product details */}
       <div className="space-y-3 md:space-y-4 py-3 md:py-4 border-b border-border">
+        {/* Availability */}
+        {product.isReadyToShip && (
+          <div className="flex items-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-sm">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-400">
+              {t("readyToShip")}
+            </span>
+          </div>
+        )}
+        
         <div className="space-y-1 md:space-y-2">
           <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>
           <p className="text-xs md:text-sm font-light text-muted-foreground">18k Gold Plated Sterling Silver</p>

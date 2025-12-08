@@ -15,6 +15,7 @@ const Category = () => {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState("featured");
+  const [readyToShipOnly, setReadyToShipOnly] = useState(false);
 
   // Calculate filtered product count
   const filteredCount = useMemo(() => {
@@ -36,9 +37,13 @@ const Category = () => {
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(product => selectedCategories.includes(product.category));
     }
+
+    if (readyToShipOnly) {
+      filtered = filtered.filter(product => product.isReadyToShip);
+    }
     
     return filtered.length;
-  }, [searchQuery, selectedBrands, selectedCategories]);
+  }, [searchQuery, selectedBrands, selectedCategories, readyToShipOnly]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -61,6 +66,8 @@ const Category = () => {
           setSelectedCategories={setSelectedCategories}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          readyToShipOnly={readyToShipOnly}
+          setReadyToShipOnly={setReadyToShipOnly}
         />
         
         <ProductGrid 
@@ -68,6 +75,7 @@ const Category = () => {
           selectedBrands={selectedBrands}
           selectedCategories={selectedCategories}
           sortBy={sortBy}
+          readyToShipOnly={readyToShipOnly}
         />
       </main>
       

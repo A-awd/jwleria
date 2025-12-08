@@ -34,6 +34,8 @@ interface FilterSortBarProps {
   setSelectedCategories: (categories: string[]) => void;
   sortBy: string;
   setSortBy: (sort: string) => void;
+  readyToShipOnly: boolean;
+  setReadyToShipOnly: (value: boolean) => void;
 }
 
 const FilterSortBar = ({ 
@@ -47,7 +49,9 @@ const FilterSortBar = ({
   selectedCategories,
   setSelectedCategories,
   sortBy,
-  setSortBy
+  setSortBy,
+  readyToShipOnly,
+  setReadyToShipOnly
 }: FilterSortBarProps) => {
   const { t } = useLanguage();
 
@@ -85,9 +89,10 @@ const FilterSortBar = ({
     setSelectedBrands([]);
     setSelectedCategories([]);
     setSortBy("featured");
+    setReadyToShipOnly(false);
   };
 
-  const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0;
+  const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0 || readyToShipOnly;
 
   return (
     <>
@@ -192,6 +197,24 @@ const FilterSortBar = ({
                           </Label>
                         </div>
                       ))}
+                    </div>
+                  </div>
+
+                  <Separator className="border-border" />
+
+                  {/* Ready to Ship Filter */}
+                  <div>
+                    <h3 className="text-sm font-light mb-4 text-foreground">{t("availability")}</h3>
+                    <div className="flex items-center space-x-3">
+                      <Checkbox 
+                        id="readyToShip" 
+                        checked={readyToShipOnly}
+                        onCheckedChange={(checked) => setReadyToShipOnly(checked === true)}
+                        className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" 
+                      />
+                      <Label htmlFor="readyToShip" className="text-sm font-light text-foreground cursor-pointer">
+                        {t("readyToShip")}
+                      </Label>
                     </div>
                   </div>
 
