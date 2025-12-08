@@ -69,7 +69,6 @@ const Footer = () => {
             <h4 className="text-xs font-medium mb-3 uppercase tracking-wide">{t("footerSupport")}</h4>
             <ul className="space-y-2">
               <li><a href="/about/size-guide" className="text-xs font-light text-black/70">{t("sizeGuide")}</a></li>
-              <li><a href="/track-order" className="text-xs font-light text-black/70">{t("trackOrder")}</a></li>
               <li><a href="#" className="text-xs font-light text-black/70">{t("careInstructions")}</a></li>
               <li><a href="#" className="text-xs font-light text-black/70">{t("returns")}</a></li>
               <li><a href="#" className="text-xs font-light text-black/70">{t("shipping")}</a></li>
@@ -118,7 +117,6 @@ const Footer = () => {
               <h4 className="text-sm font-normal mb-4">{t("footerSupport")}</h4>
               <ul className="space-y-2">
                 <li><a href="/about/size-guide" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("sizeGuide")}</a></li>
-                <li><a href="/track-order" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("trackOrder")}</a></li>
                 <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("careInstructions")}</a></li>
                 <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("returns")}</a></li>
                 <li><a href="#" className="text-sm font-light text-black/70 hover:text-black transition-colors">{t("shipping")}</a></li>
