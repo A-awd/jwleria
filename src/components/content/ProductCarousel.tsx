@@ -39,19 +39,19 @@ const ProductCarousel = () => {
                >
                  <Link to={`/product/${product.id}`}>
                   <Card className="border-none shadow-none bg-transparent group">
-                    <CardContent className="p-0">
+                    <CardContent className="p-0 transition-transform duration-300 group-hover:-translate-y-1">
                       <div className="aspect-square mb-2 md:mb-3 overflow-hidden bg-muted/10 relative">
                         <img
                           src={product.image}
                           alt={product.name}
-                          className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0"
+                          className="w-full h-full object-cover transition-all duration-500 group-hover:opacity-0 group-hover:scale-105"
                         />
                         <img
                           src={product.categoryKey === "earrings" ? organicEarring : linkBracelet}
                           alt={`${product.name} lifestyle`}
-                          className="absolute inset-0 w-full h-full object-cover transition-all duration-300 opacity-0 group-hover:opacity-100"
+                          className="absolute inset-0 w-full h-full object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
                         />
-                        <div className="absolute inset-0 bg-black/[0.03]"></div>
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/[0.03] transition-colors duration-300"></div>
                         {product.isNew && (
                           <div className="absolute top-1.5 left-1.5 md:top-2 md:left-2 px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs font-medium text-black">
                             {t("newLabel")}
@@ -60,7 +60,7 @@ const ProductCarousel = () => {
                       </div>
                      <div className="space-y-0.5 md:space-y-1">
                        {/* Brand name - prominent display */}
-                       <p className="text-[10px] md:text-xs font-medium text-foreground/60 uppercase tracking-wide">
+                       <p className="text-[10px] md:text-xs font-medium text-foreground/60 uppercase tracking-wide group-hover:text-foreground/80 transition-colors duration-300">
                          {product.brand}
                        </p>
                        <h3 className="text-xs md:text-sm font-medium text-foreground">
