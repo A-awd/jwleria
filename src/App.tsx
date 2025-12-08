@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import Cart from "./pages/Cart";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -45,6 +46,7 @@ const App = () => (
                 <Route path="/category/:category" element={<Category />} />
                 <Route path="/category/brand/:brandId" element={<Category />} />
                 <Route path="/product/:productId" element={<ProductDetail />} />
+                <Route path="/cart" element={<Cart />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about/our-story" element={<OurStory />} />
                 <Route path="/about/sustainability" element={<Sustainability />} />
