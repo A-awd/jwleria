@@ -11,11 +11,16 @@ export function useShopifyProducts(options?: {
 }) {
   const { first = 50, query, enabled = true } = options || {};
   const isConfigured = shopifyClient.isConfigured();
+  
+  console.log('[Shopify] isConfigured:', isConfigured, 'domain:', import.meta.env.VITE_SHOPIFY_STORE_DOMAIN);
 
   return useQuery({
     queryKey: ['shopify-products', first, query],
     queryFn: async () => {
+      console.log('[Shopify] Fetching products, isConfigured:', isConfigured);
+      
       if (!isConfigured) {
+        console.log('[Shopify] Not configured, using fallback data');
         // Fallback to local data
         return {
           products: allProducts.map(mapLegacyProduct),
