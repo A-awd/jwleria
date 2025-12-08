@@ -28,7 +28,7 @@ const ProductInfo = () => {
   const product = getProductById(Number(productId));
   
   if (!product) {
-    return <div className="p-4">{t("productNotFound")}</div>;
+    return <div className="p-4">{t("noProductsFound")}</div>;
   }
 
   const productInCart = isInCart(product.id);
@@ -40,7 +40,7 @@ const ProductInfo = () => {
   const handleAddToCart = () => {
     addToCart(product, quantity);
     toast({
-      title: t("addedToCart"),
+      title: t("itemAdded"),
       description: `${product.name} x${quantity}`,
     });
   };
@@ -49,16 +49,31 @@ const ProductInfo = () => {
     if (productIsFavorite) {
       removeFromFavorites(product.id);
       toast({
-        title: t("removedFromFavorites"),
+        title: t("removedFromFav"),
         description: product.name,
       });
     } else {
-      addToFavorites(product);
+      addToFavorites(product.id);
       toast({
-        title: t("addedToFavorites"),
+        title: t("addedToFav"),
         description: product.name,
       });
     }
+  };
+
+  // Get translated category name with fallback
+  const getCategoryTranslation = (categoryKey: string) => {
+    const categoryMap: Record<string, string> = {
+      rings: t("rings"),
+      necklaces: t("necklaces"),
+      earrings: t("earrings"),
+      bracelets: t("bracelets"),
+      watches: t("watches"),
+      bags: t("bags"),
+      sunglasses: t("sunglasses"),
+      brooches: t("brooches"),
+    };
+    return categoryMap[categoryKey] || categoryKey;
   };
 
   return (
@@ -75,7 +90,7 @@ const ProductInfo = () => {
             <BreadcrumbSeparator />
             <BreadcrumbItem>
               <BreadcrumbLink asChild>
-                <Link to={`/category/${product.categoryKey}`}>{t(product.categoryKey)}</Link>
+                <Link to={`/category/${product.categoryKey}`}>{getCategoryTranslation(product.categoryKey)}</Link>
               </BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
@@ -96,7 +111,7 @@ const ProductInfo = () => {
             >
               {product.brand}
             </Link>
-            <p className="text-xs md:text-sm font-light text-muted-foreground mb-0.5 md:mb-1">{t(product.categoryKey)}</p>
+            <p className="text-xs md:text-sm font-light text-muted-foreground mb-0.5 md:mb-1">{getCategoryTranslation(product.categoryKey)}</p>
             <h1 className="text-xl md:text-2xl lg:text-3xl font-light text-foreground">{product.name}</h1>
           </div>
           <div className="text-right">
@@ -163,7 +178,7 @@ const ProductInfo = () => {
             {productInCart ? (
               <>
                 <Check className="h-4 w-4 mr-2" />
-                {t("addMore")}
+                {t("addToBag")}
               </>
             ) : (
               t("addToBag")
