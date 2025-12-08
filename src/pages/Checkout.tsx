@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Minus, Plus, CreditCard, Check } from "lucide-react";
+import { Minus, Plus, CreditCard, Check, ShoppingBag } from "lucide-react";
 import CheckoutHeader from "../components/header/CheckoutHeader";
 import Footer from "../components/footer/Footer";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useCurrency } from "@/i18n/CurrencyContext";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import pantheonImage from "@/assets/pantheon.jpg";
 import eclipseImage from "@/assets/eclipse.jpg";
@@ -45,12 +44,8 @@ const Checkout = () => {
     country: ""
   });
   const [shippingOption, setShippingOption] = useState("standard");
-  const [paymentDetails, setPaymentDetails] = useState({
-    cardNumber: "",
-    expiryDate: "",
-    cvv: "",
-    cardholderName: ""
-  });
+  // Demo mode - no real payment processing
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("card");
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentComplete, setPaymentComplete] = useState(false);
   
@@ -122,67 +117,21 @@ const Checkout = () => {
     setBillingDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePaymentDetailsChange = (field: string, value: string) => {
-    setPaymentDetails(prev => ({ ...prev, [field]: value }));
-  };
-
+  // Demo checkout - simulates order completion for UI preview
+  // Real orders will be processed through Shopify
   const handleCompleteOrder = async () => {
     setIsProcessing(true);
     setOrderError(null);
     
-    try {
-      // Prepare order data
-      const orderData = {
-        customer_email: customerDetails.email.trim(),
-        customer_name: `${customerDetails.firstName.trim()} ${customerDetails.lastName.trim()}`,
-        customer_phone: customerDetails.phone || undefined,
-        shipping_address: shippingAddress.address.trim(),
-        shipping_city: shippingAddress.city.trim(),
-        shipping_postal_code: shippingAddress.postalCode || undefined,
-        shipping_country: shippingAddress.country.trim(),
-        currency: currency,
-        total_amount: total,
-        items: cartItems.map(item => ({
-          product_id: item.id,
-          product_name: item.name,
-          product_brand: "jWleria", // Default brand for mock data
-          product_image: typeof item.image === 'string' ? item.image : undefined,
-          unit_price: parseFloat(item.price.replace('€', '').replace(',', '')),
-          quantity: item.quantity,
-        })),
-      };
-
-      // Call the secure Edge Function
-      const { data, error } = await supabase.functions.invoke('create-order', {
-        body: orderData,
-      });
-
-      if (error) {
-        console.error('Order creation failed:', error);
-        setOrderError(error.message || 'Failed to create order');
-        toast.error('Order failed. Please try again.');
-        return;
-      }
-
-      if (data?.error) {
-        console.error('Order validation failed:', data.error, data.details);
-        setOrderError(data.details?.join(', ') || data.error);
-        toast.error(data.error);
-        return;
-      }
-
-      // Success
-      setOrderNumber(data.order_number);
-      setPaymentComplete(true);
-      toast.success(t("orderComplete") || 'Order placed successfully!');
-      
-    } catch (err) {
-      console.error('Unexpected error:', err);
-      setOrderError('An unexpected error occurred');
-      toast.error('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsProcessing(false);
-    }
+    // Simulate processing delay for demo purposes
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    
+    // Generate demo order number
+    const demoOrderNumber = `DEMO-${Date.now().toString(36).toUpperCase()}`;
+    setOrderNumber(demoOrderNumber);
+    setPaymentComplete(true);
+    toast.success(t("orderComplete") || 'Demo order placed successfully!');
+    setIsProcessing(false);
   };
 
   return (
@@ -599,87 +548,31 @@ const Checkout = () => {
               </RadioGroup>
             </div>
 
-            {/* Payment Section */}
+            {/* Payment Section - Demo UI Only */}
             <div className="bg-muted/20 p-8 rounded-none">
-              <h2 className="text-lg font-light text-foreground mb-6">{t("paymentMethod")}</h2>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-light text-foreground">{t("paymentMethod")}</h2>
+                <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded">
+                  Demo Mode
+                </span>
+              </div>
               
               {!paymentComplete ? (
                 <div className="space-y-6">
-                  <div>
-                    <Label htmlFor="cardholderName" className="text-sm font-light text-foreground">
-                      {t("cardholderName")} *
-                    </Label>
-                    <Input
-                      id="cardholderName"
-                      type="text"
-                      value={paymentDetails.cardholderName}
-                      onChange={(e) => handlePaymentDetailsChange("cardholderName", e.target.value)}
-                      className="mt-2 rounded-none"
-                      placeholder={t("cardholderName")}
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="cardNumber" className="text-sm font-light text-foreground">
-                      {t("cardNumber")} *
-                    </Label>
-                    <div className="relative mt-2">
-                      <Input
-                        id="cardNumber"
-                        type="text"
-                        value={paymentDetails.cardNumber}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-                          if (value.length <= 19) {
-                            handlePaymentDetailsChange("cardNumber", value);
-                          }
-                        }}
-                        className="rounded-none pl-10"
-                        placeholder="4242 4242 4242 4242"
-                        maxLength={19}
-                      />
-                      <CreditCard className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="expiryDate" className="text-sm font-light text-foreground">
-                        {t("expiryDate")} *
-                      </Label>
-                      <Input
-                        id="expiryDate"
-                        type="text"
-                        value={paymentDetails.expiryDate}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2');
-                          if (value.length <= 5) {
-                            handlePaymentDetailsChange("expiryDate", value);
-                          }
-                        }}
-                        className="mt-2 rounded-none"
-                        placeholder="MM/YY"
-                        maxLength={5}
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="cvv" className="text-sm font-light text-foreground">
-                        {t("cvv")} *
-                      </Label>
-                      <Input
-                        id="cvv"
-                        type="text"
-                        value={paymentDetails.cvv}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '');
-                          if (value.length <= 3) {
-                            handlePaymentDetailsChange("cvv", value);
-                          }
-                        }}
-                        className="mt-2 rounded-none"
-                        placeholder="123"
-                        maxLength={3}
-                      />
+                  {/* Demo Payment Methods */}
+                  <div className="bg-muted/30 p-4 rounded-none border border-dashed border-muted-foreground/30">
+                    <p className="text-sm text-muted-foreground text-center mb-4">
+                      Payment will be processed through Shopify Checkout
+                    </p>
+                    <div className="flex justify-center gap-4">
+                      <div className="flex items-center gap-2 px-4 py-2 bg-background rounded border border-muted-foreground/20">
+                        <CreditCard className="h-4 w-4" />
+                        <span className="text-sm">Card</span>
+                      </div>
+                      <div className="flex items-center gap-2 px-4 py-2 bg-background rounded border border-muted-foreground/20">
+                        <ShoppingBag className="h-4 w-4" />
+                        <span className="text-sm">Shop Pay</span>
+                      </div>
                     </div>
                   </div>
 
@@ -703,11 +596,15 @@ const Checkout = () => {
 
                   <Button
                     onClick={handleCompleteOrder}
-                    disabled={isProcessing || !paymentDetails.cardNumber || !paymentDetails.expiryDate || !paymentDetails.cvv || !paymentDetails.cardholderName}
+                    disabled={isProcessing}
                     className="w-full rounded-none h-12 text-base"
                   >
                     {isProcessing ? t("processing") : `${t("completeOrder")} • €${total.toLocaleString()}`}
                   </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    This is a design preview. Real payments will use Shopify Checkout.
+                  </p>
                 </div>
               ) : (
                 <div className="text-center py-12">
@@ -721,6 +618,9 @@ const Checkout = () => {
                       {t("orderNumber") || "Order Number"}: {orderNumber}
                     </p>
                   )}
+                  <p className="text-xs text-muted-foreground mt-4">
+                    Demo order - No actual transaction processed
+                  </p>
                 </div>
               )}
              </div>
