@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.setup-shopify-metafields]
 verify_jwt = false
+
+[functions.translate-product]
+verify_jwt = false
