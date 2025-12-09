@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import Cart from "./pages/Cart";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -24,7 +25,8 @@ import TermsOfService from "./pages/TermsOfService";
 import ShopByBrand from "./pages/ShopByBrand";
 import BrandDetail from "./pages/BrandDetail";
 import Favorites from "./pages/Favorites";
-import TranslateProducts from "./pages/admin/TranslateProducts";
+
+const TranslateProducts = lazy(() => import("./pages/admin/TranslateProducts"));
 
 const queryClient = new QueryClient();
 
@@ -56,7 +58,7 @@ const App = () => (
                 <Route path="/about/store-locator" element={<StoreLocator />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/terms-of-service" element={<TermsOfService />} />
-                <Route path="/admin/translate" element={<TranslateProducts />} />
+                <Route path="/admin/translate" element={<Suspense fallback={<div>Loading...</div>}><TranslateProducts /></Suspense>} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
