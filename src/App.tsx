@@ -25,6 +25,7 @@ import TermsOfService from "./pages/TermsOfService";
 import ShopByBrand from "./pages/ShopByBrand";
 import BrandDetail from "./pages/BrandDetail";
 import Favorites from "./pages/Favorites";
+import Account from "./pages/Account";
 
 const TranslateProducts = lazy(() => import("./pages/admin/TranslateProducts"));
 
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/category/brand/:brandId" element={<Category />} />
                 <Route path="/product/:productId" element={<ProductDetailNew />} />
                 <Route path="/cart" element={<Cart />} />
+                <Route path="/account" element={<Account />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/about/our-story" element={<OurStory />} />
                 <Route path="/about/sustainability" element={<Sustainability />} />
