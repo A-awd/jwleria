@@ -184,9 +184,10 @@ export function mapShopifyProduct(shopifyProduct: ShopifyProduct): ProductData {
   const images = shopifyProduct.images.edges.map(edge => edge.node.url);
   const firstVariant = shopifyProduct.variants.edges[0]?.node;
   
-  // Extract custom metafields
+  // Extract custom metafields (filter out null values first)
   const getMetafield = (key: string): string | undefined => {
-    return shopifyProduct.metafields?.find(m => m.key === key)?.value;
+    const validMetafields = shopifyProduct.metafields?.filter((m): m is ShopifyMetafield => m !== null);
+    return validMetafields?.find(m => m.key === key)?.value;
   };
 
   return {
