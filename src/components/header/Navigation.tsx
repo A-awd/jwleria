@@ -262,13 +262,13 @@ const Navigation = () => {
             <div className="flex items-center gap-4 pb-4 mb-4 border-b border-border sm:hidden">
               <div className="flex-1">
                 <span className="text-xs text-nav-foreground/60 block mb-1">
-                  {direction === 'rtl' ? 'العملة' : 'Currency'}
+                  {t("currency")}
                 </span>
                 <CurrencySwitcher />
               </div>
               <div className="flex-1">
                 <span className="text-xs text-nav-foreground/60 block mb-1">
-                  {direction === 'rtl' ? 'اللغة' : 'Language'}
+                  {t("language")}
                 </span>
                 <LanguageSwitcher />
               </div>
