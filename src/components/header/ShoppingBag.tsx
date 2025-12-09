@@ -111,7 +111,7 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                 {cartItems.map((item) => (
                   <div key={item.id} className={`flex gap-4 ${direction === 'rtl' ? 'flex-row-reverse' : ''} pb-4 border-b border-border last:border-0`}>
                     <Link 
-                      to={`/product/${item.variantId}`}
+                      to={`/product/${item.handle}`}
                       onClick={onClose}
                       className="w-24 h-24 bg-muted/10 rounded-lg overflow-hidden flex-shrink-0"
                     >
@@ -125,7 +125,7 @@ const ShoppingBag = ({ isOpen, onClose, onViewFavorites }: ShoppingBagProps) => 
                       <div className={`flex justify-between items-start gap-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
                         <div className="min-w-0">
                           <Link 
-                            to={`/product/${item.variantId}`}
+                            to={`/product/${item.handle}`}
                             onClick={onClose}
                             className="text-sm font-medium text-foreground hover:underline truncate block"
                           >
