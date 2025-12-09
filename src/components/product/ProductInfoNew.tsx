@@ -189,7 +189,7 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
 
       {/* Product details */}
       <div className="space-y-3 md:space-y-4 py-3 md:py-4 border-b border-border">
-        {/* Availability */}
+        {/* Availability Status */}
         {product.isReadyToShip && (
           <div className="flex items-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-sm">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
@@ -203,6 +203,28 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
             <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
             <span className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400">
               {t("preOrder")}
+              {product.leadTime && (
+                <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime}</span>
+              )}
+            </span>
+          </div>
+        )}
+        {product.isMadeToOrder && (
+          <div className="flex items-center gap-2 py-2 px-3 bg-violet-50 dark:bg-violet-950/30 rounded-sm">
+            <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
+            <span className="text-xs md:text-sm font-medium text-violet-700 dark:text-violet-400">
+              {t("madeToOrder")}
+              {product.leadTime && (
+                <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime}</span>
+              )}
+            </span>
+          </div>
+        )}
+        {product.isLimitedEdition && (
+          <div className="flex items-center gap-2 py-2 px-3 bg-rose-50 dark:bg-rose-950/30 rounded-sm">
+            <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+            <span className="text-xs md:text-sm font-medium text-rose-700 dark:text-rose-400">
+              {t("limitedEdition")}
             </span>
           </div>
         )}

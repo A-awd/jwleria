@@ -106,7 +106,6 @@ export const translations = {
     thisWeeksArrivals: "This Week's Arrivals",
     springCollection: "Spring Collection",
     featuredDesigners: "Featured Designers",
-    limitedEdition: "Limited Edition",
     preOrders: "Pre-Orders",
     
     // About submenu
@@ -235,6 +234,9 @@ export const translations = {
     newLabel: "NEW",
     readyToShip: "Ready to Ship",
     preOrder: "Pre-Order",
+    madeToOrder: "Made to Order",
+    limitedEdition: "Limited Edition",
+    usuallyShipsIn: "Usually ships in",
     availability: "Availability",
     inStock: "In Stock",
 
@@ -487,7 +489,6 @@ export const translations = {
     thisWeeksArrivals: "Llegadas de esta semana",
     springCollection: "Colección Primavera",
     featuredDesigners: "Diseñadores Destacados",
-    limitedEdition: "Edición Limitada",
     preOrders: "Pre-órdenes",
     
     // About submenu
@@ -608,6 +609,9 @@ export const translations = {
     newLabel: "NUEVO",
     readyToShip: "Listo para Enviar",
     preOrder: "Reserva Anticipada",
+    madeToOrder: "Hecho a Medida",
+    limitedEdition: "Edición Limitada",
+    usuallyShipsIn: "Normalmente se envía en",
     availability: "Disponibilidad",
     inStock: "En Stock",
     modernHeritage: "Van Cleef & Arpels",
@@ -866,7 +870,6 @@ export const translations = {
     thisWeeksArrivals: "وصل هذا الأسبوع",
     springCollection: "مجموعة الربيع",
     featuredDesigners: "مصممون مميزون",
-    limitedEdition: "إصدار محدود",
     preOrders: "الطلبات المسبقة",
     
     // About submenu
@@ -993,6 +996,9 @@ export const translations = {
     newLabel: "جديد",
     readyToShip: "جاهز للتسليم",
     preOrder: "طلب مسبق",
+    madeToOrder: "مصنوع حسب الطلب",
+    limitedEdition: "إصدار محدود",
+    usuallyShipsIn: "يُشحن عادة خلال",
     availability: "التوفر",
     inStock: "متوفر",
 
@@ -1245,7 +1251,6 @@ export const translations = {
     thisWeeksArrivals: "Arrivées de la semaine",
     springCollection: "Collection Printemps",
     featuredDesigners: "Créateurs en vedette",
-    limitedEdition: "Édition Limitée",
     preOrders: "Précommandes",
     
     // About submenu
@@ -1372,6 +1377,9 @@ export const translations = {
     newLabel: "NOUVEAU",
     readyToShip: "Prêt à Expédier",
     preOrder: "Précommande",
+    madeToOrder: "Fait sur Commande",
+    limitedEdition: "Édition Limitée",
+    usuallyShipsIn: "Expédié généralement sous",
     availability: "Disponibilité",
     inStock: "En Stock",
 

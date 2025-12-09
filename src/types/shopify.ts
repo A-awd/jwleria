@@ -77,6 +77,9 @@ export interface ShopifyProduct {
   };
 }
 
+// Fulfillment type enum
+export type FulfillmentType = 'ready_to_ship' | 'preorder' | 'made_to_order';
+
 // Simplified product type for UI components (mapped from Shopify data)
 export interface ProductData {
   id: string;
@@ -94,6 +97,11 @@ export interface ProductData {
   isAvailable: boolean;
   isReadyToShip?: boolean;
   isPreOrder?: boolean;
+  isMadeToOrder?: boolean;
+  isLimitedEdition?: boolean;
+  fulfillmentType?: FulfillmentType;
+  leadTime?: string;
+  leadTimeDays?: number;
   sku?: string;
   material?: string;
   dimensions?: string;
@@ -185,10 +193,42 @@ export function mapShopifyProduct(shopifyProduct: ShopifyProduct): ProductData {
   const firstVariant = shopifyProduct.variants.edges[0]?.node;
   
   // Extract custom metafields (filter out null values first)
-  const getMetafield = (key: string): string | undefined => {
+  const getMetafield = (key: string, namespace: string = 'custom'): string | undefined => {
     const validMetafields = shopifyProduct.metafields?.filter((m): m is ShopifyMetafield => m !== null);
-    return validMetafields?.find(m => m.key === key)?.value;
+    return validMetafields?.find(m => m.key === key && m.namespace === namespace)?.value;
   };
+
+  // Get fulfillment type from metafield or tags
+  const fulfillmentTypeMetafield = getMetafield('fulfillment_type', 'jwleria') as FulfillmentType | undefined;
+  const leadTime = getMetafield('lead_time', 'jwleria');
+  const leadTimeDaysStr = getMetafield('lead_time_days', 'jwleria');
+  const leadTimeDays = leadTimeDaysStr ? parseInt(leadTimeDaysStr, 10) : undefined;
+  const isLimitedEdition = getMetafield('limited_edition', 'jwleria') === 'true';
+
+  // Determine fulfillment status from metafield or tags
+  const hasReadyToShipTag = shopifyProduct.tags.includes('ready-to-ship');
+  const hasPreOrderTag = shopifyProduct.tags.includes('pre-order');
+  
+  let fulfillmentType: FulfillmentType = 'ready_to_ship';
+  let isReadyToShip = false;
+  let isPreOrder = false;
+  let isMadeToOrder = false;
+
+  if (fulfillmentTypeMetafield) {
+    fulfillmentType = fulfillmentTypeMetafield;
+    isReadyToShip = fulfillmentType === 'ready_to_ship';
+    isPreOrder = fulfillmentType === 'preorder';
+    isMadeToOrder = fulfillmentType === 'made_to_order';
+  } else {
+    // Fallback to tags
+    isReadyToShip = hasReadyToShipTag;
+    isPreOrder = hasPreOrderTag;
+    if (isPreOrder) {
+      fulfillmentType = 'preorder';
+    } else if (isReadyToShip) {
+      fulfillmentType = 'ready_to_ship';
+    }
+  }
 
   return {
     id: shopifyProduct.id,
@@ -206,8 +246,13 @@ export function mapShopifyProduct(shopifyProduct: ShopifyProduct): ProductData {
       : undefined,
     images,
     isAvailable: shopifyProduct.availableForSale,
-    isReadyToShip: shopifyProduct.tags.includes('ready-to-ship'),
-    isPreOrder: shopifyProduct.tags.includes('pre-order'),
+    isReadyToShip,
+    isPreOrder,
+    isMadeToOrder,
+    isLimitedEdition,
+    fulfillmentType,
+    leadTime,
+    leadTimeDays,
     sku: firstVariant?.sku,
     material: getMetafield('material'),
     dimensions: getMetafield('dimensions'),
