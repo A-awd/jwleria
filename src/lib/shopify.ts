@@ -93,7 +93,11 @@ const PRODUCT_FRAGMENT = `
       { namespace: "custom", key: "dimensions" },
       { namespace: "custom", key: "weight" },
       { namespace: "custom", key: "editors_notes" },
-      { namespace: "custom", key: "care_instructions" }
+      { namespace: "custom", key: "care_instructions" },
+      { namespace: "jwleria", key: "fulfillment_type" },
+      { namespace: "jwleria", key: "lead_time" },
+      { namespace: "jwleria", key: "lead_time_days" },
+      { namespace: "jwleria", key: "limited_edition" }
     ]) {
       key
       value
