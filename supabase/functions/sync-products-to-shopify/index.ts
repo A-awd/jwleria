@@ -107,6 +107,42 @@ serve(async (req) => {
     console.log('Starting sync to Shopify...');
     console.log(`Store: ${storeDomain}`);
 
+    // Get the Online Store publication ID first
+    let publicationId = '';
+    try {
+      const pubQuery = `
+        query {
+          publications(first: 10) {
+            edges {
+              node {
+                id
+                name
+              }
+            }
+          }
+        }
+      `;
+      const pubResponse = await fetch(`${baseUrl}/graphql.json`, {
+        method: 'POST',
+        headers: {
+          'X-Shopify-Access-Token': adminToken,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query: pubQuery }),
+      });
+      const pubData = await pubResponse.json();
+      const publications = pubData.data?.publications?.edges || [];
+      const onlineStore = publications.find((p: { node: { name: string } }) => 
+        p.node.name === 'Online Store' || p.node.name.includes('Online')
+      );
+      if (onlineStore) {
+        publicationId = onlineStore.node.id;
+        console.log(`Found Online Store publication: ${publicationId}`);
+      }
+    } catch (e) {
+      console.log('Could not fetch publications');
+    }
+
     // Create collections first
     console.log('Creating collections...');
     const collectionIds: Record<string, string> = {};
@@ -206,6 +242,45 @@ serve(async (req) => {
           const productId = data.product.id;
           results.products.created++;
           console.log(`Created product: ${product.name}`);
+
+          // Publish product to Online Store sales channel using GraphQL
+          if (publicationId) {
+            try {
+              const publishMutation = `
+                mutation publishablePublish($id: ID!, $input: [PublicationInput!]!) {
+                  publishablePublish(id: $id, input: $input) {
+                    publishable {
+                      availablePublicationsCount {
+                        count
+                      }
+                    }
+                    userErrors {
+                      field
+                      message
+                    }
+                  }
+                }
+              `;
+              
+              await fetch(`${baseUrl}/graphql.json`, {
+                method: 'POST',
+                headers: {
+                  'X-Shopify-Access-Token': adminToken,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  query: publishMutation,
+                  variables: {
+                    id: `gid://shopify/Product/${productId}`,
+                    input: [{ publicationId }]
+                  }
+                }),
+              });
+              console.log(`Published product to storefront: ${product.name}`);
+            } catch (pubError) {
+              console.log(`Note: Could not publish ${product.name} to storefront channel`);
+            }
+          }
 
           // Add product to appropriate collections
           const categoryHandle = product.category.toLowerCase();
