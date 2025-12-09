@@ -9,11 +9,11 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Minus, Plus, Heart, Check } from "lucide-react";
+import { Minus, Plus, Heart, Check, Loader2 } from "lucide-react";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
+import { useShopifyCart } from "@/hooks/useShopifyCart";
 import { toast } from "@/hooks/use-toast";
 import { ProductData, ProductVariant } from "@/types/shopify";
 import { VariantSelector } from "./VariantSelector";
@@ -27,7 +27,7 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
   const [quantity, setQuantity] = useState(1);
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  const { addToCart, isInCart } = useCart();
+  const { addToCart, cart, isLoading: isCartLoading } = useShopifyCart();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   
   // Variant selection state
@@ -60,32 +60,42 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
     return product.isAvailable;
   }, [selectedVariant, product.isAvailable]);
   
-  // Convert string ID to number for legacy cart/favorites compatibility
+  // Check if product variant is in Shopify cart
+  const productInCart = useMemo(() => {
+    if (!cart || !selectedVariant) return false;
+    return cart.lines.some(line => line.variantId === selectedVariant.id);
+  }, [cart, selectedVariant]);
+  
+  // Convert string ID to number for legacy favorites compatibility
   const numericId = parseInt(product.id, 10) || 0;
-  const productInCart = isInCart(numericId);
   const productIsFavorite = isFavorite(numericId);
 
   const incrementQuantity = () => setQuantity(prev => prev + 1);
   const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
 
-  const handleAddToCart = () => {
-    // Create legacy product format for cart compatibility
-    const legacyProduct = {
-      id: numericId,
-      name: product.name,
-      brand: product.brand,
-      category: product.category,
-      categoryKey: product.categoryKey,
-      priceEUR: product.price,
-      image: product.images[0] || '/placeholder.svg',
-      isReadyToShip: product.isReadyToShip,
-      isPreOrder: product.isPreOrder,
-    };
-    addToCart(legacyProduct, quantity);
-    toast({
-      title: t("itemAdded"),
-      description: `${product.name} x${quantity}`,
-    });
+  const handleAddToCart = async () => {
+    if (!selectedVariant) {
+      toast({
+        title: "Please select options",
+        description: "Please select all product options before adding to cart",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await addToCart(selectedVariant.id, quantity);
+      toast({
+        title: t("itemAdded"),
+        description: `${product.name} x${quantity}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleToggleFavorite = () => {
@@ -259,9 +269,11 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
           <Button 
             className="flex-1 h-11 md:h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none text-sm md:text-base"
             onClick={handleAddToCart}
-            disabled={!product.isAvailable}
+            disabled={!isAvailable || isCartLoading}
           >
-            {!product.isAvailable ? (
+            {isCartLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : !isAvailable ? (
               "Sold Out"
             ) : productInCart ? (
               <>
