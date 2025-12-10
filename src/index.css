@@ -144,3 +144,65 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+/* Mobile performance optimizations */
+@layer utilities {
+  /* Smooth touch scrolling for carousels */
+  .scroll-smooth-touch {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    overscroll-behavior-x: contain;
+  }
+  
+  /* Optimize images for mobile - prevent layout shift */
+  .img-optimized {
+    content-visibility: auto;
+    contain-intrinsic-size: 300px 400px;
+  }
+  
+  /* Hardware-accelerated transitions */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Reduce paint areas on hover effects */
+  .contain-paint {
+    contain: paint;
+  }
+  
+  /* Touch-friendly tap targets */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Prevent text size adjustment on orientation change */
+  .text-size-adjust-none {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* Optimize image transitions on mobile */
+@media (hover: none) and (pointer: coarse) {
+  .group-hover\:scale-105,
+  .group-hover\:scale-110 {
+    transform: none !important;
+  }
+  
+  /* Show favorite buttons always on touch devices */
+  .group .opacity-0 {
+    opacity: 1;
+  }
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-infinite,
+  .transition-transform,
+  .transition-all {
+    animation: none !important;
+    transition: none !important;
+  }
+}
