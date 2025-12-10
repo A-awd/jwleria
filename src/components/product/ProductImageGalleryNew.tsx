@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import ImageZoom from "./ImageZoom";
 
 interface ProductImageGalleryProps {
@@ -56,27 +57,33 @@ const ProductImageGalleryNew = ({ images, productName = "Product" }: ProductImag
   };
 
   return (
-    <div className="w-full">
-      {/* Desktop: Vertical scrolling gallery */}
+    <div className="w-full lg:w-[55%]">
+      {/* Desktop: Large vertical scrolling gallery */}
       <div className="hidden lg:block">
-        <div className="space-y-4">
+        <div className="space-y-2">
           {displayImages.map((image, index) => (
-            <div 
+            <motion.div 
               key={index} 
-              className="w-full aspect-square overflow-hidden cursor-pointer group"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-50px" }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="w-full aspect-[4/5] overflow-hidden cursor-pointer group"
               onClick={() => handleImageClick(index)}
             >
-              <img
+              <motion.img
                 src={image}
                 alt={`${productName} - View ${index + 1}`}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="w-full h-full object-cover"
+                whileHover={{ scale: 1.03 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
               />
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
 
-      {/* Mobile: Image slider */}
+      {/* Mobile: Image slider with smooth transitions */}
       <div className="lg:hidden">
         <div className="relative">
           <div 
@@ -86,25 +93,41 @@ const ProductImageGalleryNew = ({ images, productName = "Product" }: ProductImag
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <img
-              src={displayImages[currentImageIndex]}
-              alt={`${productName} - View ${currentImageIndex + 1}`}
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 select-none"
-            />
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentImageIndex}
+                src={displayImages[currentImageIndex]}
+                alt={`${productName} - View ${currentImageIndex + 1}`}
+                className="w-full h-full object-cover select-none"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+              />
+            </AnimatePresence>
           </div>
           
-          {/* Dots indicator */}
+          {/* Thumbnail strip */}
           {displayImages.length > 1 && (
-            <div className="flex justify-center mt-4 gap-2">
-              {displayImages.map((_, index) => (
-                <button
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 px-1">
+              {displayImages.map((image, index) => (
+                <motion.button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentImageIndex ? 'bg-foreground' : 'bg-muted'
+                  className={`flex-shrink-0 w-16 h-16 overflow-hidden border-2 transition-colors ${
+                    index === currentImageIndex 
+                      ? 'border-foreground' 
+                      : 'border-transparent hover:border-muted-foreground/50'
                   }`}
+                  whileTap={{ scale: 0.95 }}
                   aria-label={`View image ${index + 1}`}
-                />
+                >
+                  <img
+                    src={image}
+                    alt={`Thumbnail ${index + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                </motion.button>
               ))}
             </div>
           )}

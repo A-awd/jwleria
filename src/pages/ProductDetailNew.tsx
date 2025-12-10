@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
 import ProductImageGalleryNew from "../components/product/ProductImageGalleryNew";
@@ -25,7 +26,6 @@ import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
 interface ProductDetailNewProps {
-  // Optional: Pass product data directly
   product?: Product;
 }
 
@@ -39,7 +39,6 @@ const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) =
   // Enhance product with demo images if needed
   const enhancedProduct = product ? {
     ...product,
-    // Map priceEUR to price for component compatibility
     price: product.priceEUR,
     images: product.images && product.images.length > 0 ? product.images : [
       product.image || pantheonImage,
@@ -48,7 +47,6 @@ const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) =
       organicEarring,
       linkBracelet,
     ],
-    // Add demo product details if missing
     material: product.material || "18k Gold Plated Sterling Silver",
     dimensions: product.dimensions || "2.5cm x 1.2cm",
     weight: product.weight || "4.2g per piece",
@@ -93,9 +91,14 @@ const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) =
       <Header />
       
       <main className="pt-4 md:pt-6">
-        <section className="w-full px-4 md:px-6">
+        <section className="w-full px-4 md:px-6 lg:px-8 max-w-[1800px] mx-auto">
           {/* Mobile Breadcrumb */}
-          <div className="lg:hidden mb-4">
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="lg:hidden mb-4"
+          >
             <Breadcrumb>
               <BreadcrumbList className="text-xs">
                 <BreadcrumbItem>
@@ -117,38 +120,57 @@ const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) =
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
-          </div>
+          </motion.div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+          {/* Main Product Layout - Gallery wider, info sticky */}
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-12">
+            {/* Product Gallery - Takes more space */}
             <ProductImageGalleryNew 
               images={enhancedProduct.images} 
               productName={enhancedProduct.name}
             />
             
-            <div className="lg:pl-12 mt-6 lg:mt-0 lg:sticky lg:top-6 lg:h-fit">
+            {/* Product Info - Sticky sidebar */}
+            <div className="w-full lg:w-[45%] lg:sticky lg:top-6 lg:self-start lg:max-h-[calc(100vh-3rem)] lg:overflow-y-auto lg:scrollbar-hide">
               <ProductInfoNew product={enhancedProduct} />
-              <ProductDescriptionNew product={enhancedProduct} />
+              <div className="mt-6">
+                <ProductDescriptionNew product={enhancedProduct} />
+              </div>
             </div>
           </div>
         </section>
         
-        <section className="w-full mt-12 lg:mt-24">
-          <div className="mb-3 md:mb-4 px-4 md:px-6">
-            <h2 className="text-xs md:text-sm font-light text-foreground">
+        {/* Related Products */}
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="w-full mt-16 lg:mt-24"
+        >
+          <div className="mb-4 md:mb-6 px-4 md:px-6 lg:px-8">
+            <h2 className="text-lg md:text-xl font-light text-foreground">
               {t("youMightAlsoLike")}
             </h2>
           </div>
           <ProductCarousel />
-        </section>
+        </motion.section>
         
-        <section className="w-full">
-          <div className="mb-3 md:mb-4 px-4 md:px-6">
-            <h2 className="text-xs md:text-sm font-light text-foreground">
+        {/* More from category */}
+        <motion.section 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.5 }}
+          className="w-full mt-8"
+        >
+          <div className="mb-4 md:mb-6 px-4 md:px-6 lg:px-8">
+            <h2 className="text-lg md:text-xl font-light text-foreground">
               {t("ourOtherProducts")} {getCategoryTranslation(enhancedProduct.categoryKey)}
             </h2>
           </div>
           <ProductCarousel />
-        </section>
+        </motion.section>
       </main>
       
       <Footer />
