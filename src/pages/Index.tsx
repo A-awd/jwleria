@@ -23,7 +23,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main>
+      <main id="main-content">
         {/* Full-width Hero */}
         <HeroSection />
         

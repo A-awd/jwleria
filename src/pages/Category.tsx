@@ -46,7 +46,7 @@ const Category = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-6">
+      <main id="main-content" className="pt-6">
         <CategoryHeader 
           category={category || 'All Products'} 
         />

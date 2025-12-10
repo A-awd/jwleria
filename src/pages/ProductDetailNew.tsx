@@ -90,7 +90,7 @@ const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) =
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-4 md:pt-6">
+      <main id="main-content" className="pt-4 md:pt-6">
         <section className="w-full px-4 md:px-6 lg:px-8 max-w-[1800px] mx-auto">
           {/* Mobile Breadcrumb */}
           <motion.div 
