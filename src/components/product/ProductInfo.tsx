@@ -129,7 +129,6 @@ const ProductInfo = () => {
             {t("preOrder")} — {t("shipsIn5to7Days")}
           </span>
         </div>
-        )}
         
         <div className="space-y-1 md:space-y-2">
           <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>
