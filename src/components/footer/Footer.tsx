@@ -52,7 +52,7 @@ const Footer = () => {
           {/* WhatsApp Button */}
           <button
             onClick={handleWhatsAppClick}
-            className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 text-sm font-medium transition-colors mb-4"
+            className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors mb-4"
           >
             <MessageCircle size={16} />
             {t("contactOnWhatsApp")}
@@ -104,7 +104,7 @@ const Footer = () => {
             </p>
             
             {/* Disclaimer */}
-            <p className="text-xs text-black/50 mb-6 max-w-md">
+            <p className="text-xs text-black/70 mb-6 max-w-md">
               {t("footerDisclaimer")}
             </p>
             
@@ -158,7 +158,7 @@ const Footer = () => {
               {/* WhatsApp Button */}
               <button
                 onClick={handleWhatsAppClick}
-                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-4 py-2 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors"
               >
                 <MessageCircle size={16} />
                 {t("contactOnWhatsApp")}
