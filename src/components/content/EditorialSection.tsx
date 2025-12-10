@@ -65,7 +65,15 @@ const EditorialSection = () => {
         
         <div className="order-first md:order-last">
           <div className="w-full aspect-[4/3] md:aspect-square overflow-hidden">
-            <img src={founders} alt="jWleria personal shopping team" className="w-full h-full object-cover" />
+            <img 
+              src={founders} 
+              alt="jWleria personal shopping team" 
+              className="w-full h-full object-cover"
+              loading="lazy"
+              decoding="async"
+              width={609}
+              height={609}
+            />
           </div>
         </div>
       </div>

@@ -28,13 +28,22 @@ const Navigation = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Preload dropdown images for faster display
+  // Defer preloading dropdown images to avoid blocking initial render
   useEffect(() => {
-    const imagesToPreload = ["/rings-collection.png", "/earrings-collection.png", "/arcus-bracelet.png", "/span-bracelet.png", "/founders.png"];
-    imagesToPreload.forEach(src => {
-      const img = new Image();
-      img.src = src;
-    });
+    // Only preload after the page is idle
+    const preloadImages = () => {
+      const imagesToPreload = ["/rings-collection.png", "/earrings-collection.png", "/arcus-bracelet.png", "/span-bracelet.png", "/founders.png"];
+      imagesToPreload.forEach(src => {
+        const img = new Image();
+        img.src = src;
+      });
+    };
+    
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(preloadImages, { timeout: 5000 });
+    } else {
+      setTimeout(preloadImages, 2000);
+    }
   }, []);
 
   const handleWhatsAppClick = () => {
@@ -235,7 +244,7 @@ const Navigation = () => {
                 linkTo = "/about/our-story";
               }
               return <Link key={index} to={linkTo} className="w-[400px] h-[280px] cursor-pointer group relative overflow-hidden block">
-                        <img src={image.src} alt={image.alt} className="w-full h-full object-cover transition-opacity duration-200 group-hover:opacity-90" />
+                        <img src={image.src} alt={image.alt} className="w-full h-full object-cover transition-opacity duration-200 group-hover:opacity-90" loading="lazy" decoding="async" width={400} height={280} />
                         {(activeDropdown === "Shop" || activeDropdown === "New in" || activeDropdown === "About") && <div className={`absolute bottom-2 ${direction === 'rtl' ? 'right-2' : 'left-2'} text-white text-xs font-light flex items-center gap-1`}>
                             <span>{image.label}</span>
                             <ArrowRight size={12} className={direction === 'rtl' ? 'rotate-180' : ''} />
