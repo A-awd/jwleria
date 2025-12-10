@@ -1,8 +1,10 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
-import earringsCollection from "@/assets/earrings-collection.png";
-import linkBracelet from "@/assets/link-bracelet.png";
-import ringsCollection from "@/assets/rings-collection.png";
+import categoryRings from "@/assets/category-rings.jpg";
+import categoryNecklaces from "@/assets/category-necklaces.jpg";
+import categoryBracelets from "@/assets/category-bracelets.jpg";
+import categoryEarrings from "@/assets/category-earrings.jpg";
+import categoryWatches from "@/assets/category-watches.jpg";
 
 const CategoryShowcase = () => {
   const { t, direction } = useLanguage();
@@ -10,27 +12,27 @@ const CategoryShowcase = () => {
   const categories = [
     {
       key: "rings",
-      image: ringsCollection,
+      image: categoryRings,
       label: t("rings"),
     },
     {
       key: "necklaces",
-      image: earringsCollection,
+      image: categoryNecklaces,
       label: t("necklaces"),
     },
     {
       key: "bracelets",
-      image: linkBracelet,
+      image: categoryBracelets,
       label: t("bracelets"),
     },
     {
       key: "earrings",
-      image: earringsCollection,
+      image: categoryEarrings,
       label: t("earrings"),
     },
     {
       key: "watches",
-      image: linkBracelet,
+      image: categoryWatches,
       label: t("watches"),
     },
   ];
