@@ -16,6 +16,10 @@ const FiftyFiftySection = () => {
                 src={earringsCollection} 
                 alt="Cartier Collection" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                decoding="async"
+                width={400}
+                height={400}
               />
             </div>
           </Link>
@@ -36,6 +40,10 @@ const FiftyFiftySection = () => {
                 src={linkBracelet} 
                 alt="Bulgari Serpenti" 
                 className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+                decoding="async"
+                width={400}
+                height={400}
               />
             </div>
           </Link>

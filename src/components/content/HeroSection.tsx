@@ -14,6 +14,10 @@ const HeroSection = () => {
           src={heroImage}
           alt="JWleria luxury jewelry collection"
           className="w-full h-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+          width={1920}
+          height={1080}
         />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />

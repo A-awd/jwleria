@@ -100,7 +100,7 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
   // Load rates on mount and set up auto-refresh
   useEffect(() => {
     const initializeRates = async () => {
-      // First try to load from cache
+      // First try to load from cache synchronously
       const cached = loadRatesFromCache();
       if (cached) {
         const updatedCurrencies = updateCurrenciesWithRates(defaultCurrencies, cached.rates);
@@ -114,8 +114,17 @@ export const CurrencyProvider = ({ children }: { children: ReactNode }) => {
         }
       }
       
-      // Then fetch fresh rates in background
-      await refreshRates();
+      // Defer fresh rates fetch to avoid blocking initial render
+      // Use requestIdleCallback if available, otherwise setTimeout
+      const deferFetch = (callback: () => void) => {
+        if ('requestIdleCallback' in window) {
+          (window as any).requestIdleCallback(callback, { timeout: 3000 });
+        } else {
+          setTimeout(callback, 1000);
+        }
+      };
+      
+      deferFetch(() => refreshRates());
     };
 
     initializeRates();

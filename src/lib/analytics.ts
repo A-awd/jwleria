@@ -22,36 +22,46 @@ const hasMetaPixel = () => Boolean(STORE_CONFIG.analytics.metaPixelId);
 const hasTikTokPixel = () => Boolean(STORE_CONFIG.analytics.tiktokPixelId);
 const hasSnapchatPixel = () => Boolean(STORE_CONFIG.analytics.snapchatPixelId);
 
-// Track page view
+// Track page view - deferred to avoid blocking render
 export function trackPageView(pagePath?: string) {
-  const path = pagePath || window.location.pathname;
+  // Defer tracking to not block initial render
+  const track = () => {
+    const path = pagePath || window.location.pathname;
+    
+    // GA4
+    if (hasGA4() && window.gtag) {
+      window.gtag('event', 'page_view', {
+        page_path: path,
+        page_title: document.title,
+      });
+    }
+    
+    // Meta Pixel
+    if (hasMetaPixel() && window.fbq) {
+      window.fbq('track', 'PageView');
+    }
+    
+    // TikTok Pixel
+    if (hasTikTokPixel() && window.ttq) {
+      window.ttq.page();
+    }
+    
+    // Snapchat Pixel
+    if (hasSnapchatPixel() && window.snaptr) {
+      window.snaptr('track', 'PAGE_VIEW');
+    }
+    
+    // Debug logging in development
+    if (import.meta.env.DEV) {
+      console.log('[Analytics] jw_page_view', { path });
+    }
+  };
   
-  // GA4
-  if (hasGA4() && window.gtag) {
-    window.gtag('event', 'page_view', {
-      page_path: path,
-      page_title: document.title,
-    });
-  }
-  
-  // Meta Pixel
-  if (hasMetaPixel() && window.fbq) {
-    window.fbq('track', 'PageView');
-  }
-  
-  // TikTok Pixel
-  if (hasTikTokPixel() && window.ttq) {
-    window.ttq.page();
-  }
-  
-  // Snapchat Pixel
-  if (hasSnapchatPixel() && window.snaptr) {
-    window.snaptr('track', 'PAGE_VIEW');
-  }
-  
-  // Debug logging in development
-  if (import.meta.env.DEV) {
-    console.log('[Analytics] jw_page_view', { path });
+  // Use requestIdleCallback if available, otherwise setTimeout
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(track, { timeout: 2000 });
+  } else {
+    setTimeout(track, 100);
   }
 }
 
