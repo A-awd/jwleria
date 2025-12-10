@@ -12,6 +12,21 @@ const Navigation = () => {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  // Track scroll for minimized header on mobile
+  useEffect(() => {
+    let lastScrollY = window.scrollY;
+    
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      setIsScrolled(currentScrollY > 50);
+      lastScrollY = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Preload dropdown images for faster display
   useEffect(() => {
@@ -135,7 +150,7 @@ const Navigation = () => {
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     backdropFilter: 'blur(10px)'
   }} dir={direction}>
-      <div className="flex items-center justify-between h-14 md:h-16 px-3 md:px-6">
+      <div className={`flex items-center justify-between px-3 md:px-6 transition-all duration-300 ease-out ${isScrolled ? 'h-11 md:h-14' : 'h-14 md:h-16'}`}>
         {/* Mobile hamburger button */}
         <button className="lg:hidden p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} aria-label="Toggle menu">
           <div className="w-5 h-5 relative">
@@ -157,7 +172,7 @@ const Navigation = () => {
         {/* Center logo - absolute on all screens */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <Link to="/" className="block">
-            <span className="text-lg md:text-xl font-light tracking-widest text-nav-foreground text-center">jWleria</span>
+            <span className={`font-light tracking-widest text-nav-foreground text-center transition-all duration-300 ${isScrolled ? 'text-base md:text-lg' : 'text-lg md:text-xl'}`}>jWleria</span>
           </Link>
         </div>
 
