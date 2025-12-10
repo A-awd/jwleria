@@ -1,4 +1,3 @@
-import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { CurrencyProvider } from "./i18n/CurrencyContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import ScrollToTop from "./components/ScrollToTop";
 import SkipLink from "./components/ui/SkipLink";
@@ -26,6 +26,15 @@ import Favorites from "./pages/Favorites";
 import HowItWorks from "./pages/HowItWorks";
 import RefundPolicy from "./pages/RefundPolicy";
 import Contact from "./pages/Contact";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminHome from "./pages/admin/AdminHome";
+import AdminProducts from "./pages/admin/AdminProducts";
+import AdminBrands from "./pages/admin/AdminBrands";
+import AdminCategories from "./pages/admin/AdminCategories";
+import AdminProductForm from "./pages/admin/AdminProductForm";
+import AdminBrandForm from "./pages/admin/AdminBrandForm";
+import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
 
 const queryClient = new QueryClient();
 
@@ -64,8 +73,14 @@ const App = () => (
                     <Route path="/admin" element={<AdminDashboard />}>
                       <Route index element={<AdminHome />} />
                       <Route path="products" element={<AdminProducts />} />
+                      <Route path="products/new" element={<AdminProductForm />} />
+                      <Route path="products/:id" element={<AdminProductForm />} />
                       <Route path="brands" element={<AdminBrands />} />
+                      <Route path="brands/new" element={<AdminBrandForm />} />
+                      <Route path="brands/:id" element={<AdminBrandForm />} />
                       <Route path="categories" element={<AdminCategories />} />
+                      <Route path="categories/new" element={<AdminCategoryForm />} />
+                      <Route path="categories/:id" element={<AdminCategoryForm />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
