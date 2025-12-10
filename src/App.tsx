@@ -31,42 +31,51 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <CurrencyProvider>
-        <AriaLiveProvider>
-          <FavoritesProvider>
-            <TooltipProvider>
-              <SkipLink />
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ScrollToTop />
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/brands" element={<ShopByBrand />} />
-                  <Route path="/brand/:brandId" element={<BrandDetail />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/category/:category" element={<Category />} />
-                  <Route path="/category/brand/:brandId" element={<Category />} />
-                  <Route path="/product/:productId" element={<ProductDetailNew />} />
-                  <Route path="/how-it-works" element={<HowItWorks />} />
-                  <Route path="/contact" element={<Contact />} />
-                  <Route path="/about/our-story" element={<OurStory />} />
-                  <Route path="/about/sustainability" element={<Sustainability />} />
-                  <Route path="/about/size-guide" element={<SizeGuide />} />
-                  <Route path="/about/customer-care" element={<CustomerCare />} />
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                  <Route path="/terms-of-service" element={<TermsOfService />} />
-                  <Route path="/refund-policy" element={<RefundPolicy />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </FavoritesProvider>
-        </AriaLiveProvider>
-      </CurrencyProvider>
-    </LanguageProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <CurrencyProvider>
+          <AriaLiveProvider>
+            <FavoritesProvider>
+              <TooltipProvider>
+                <SkipLink />
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <ScrollToTop />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/brands" element={<ShopByBrand />} />
+                    <Route path="/brand/:brandId" element={<BrandDetail />} />
+                    <Route path="/favorites" element={<Favorites />} />
+                    <Route path="/category/:category" element={<Category />} />
+                    <Route path="/category/brand/:brandId" element={<Category />} />
+                    <Route path="/product/:productId" element={<ProductDetailNew />} />
+                    <Route path="/how-it-works" element={<HowItWorks />} />
+                    <Route path="/contact" element={<Contact />} />
+                    <Route path="/about/our-story" element={<OurStory />} />
+                    <Route path="/about/sustainability" element={<Sustainability />} />
+                    <Route path="/about/size-guide" element={<SizeGuide />} />
+                    <Route path="/about/customer-care" element={<CustomerCare />} />
+                    <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                    <Route path="/terms-of-service" element={<TermsOfService />} />
+                    <Route path="/refund-policy" element={<RefundPolicy />} />
+                    {/* Admin Routes */}
+                    <Route path="/admin/login" element={<AdminLogin />} />
+                    <Route path="/admin" element={<AdminDashboard />}>
+                      <Route index element={<AdminHome />} />
+                      <Route path="products" element={<AdminProducts />} />
+                      <Route path="brands" element={<AdminBrands />} />
+                      <Route path="categories" element={<AdminCategories />} />
+                    </Route>
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </FavoritesProvider>
+          </AriaLiveProvider>
+        </CurrencyProvider>
+      </LanguageProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
