@@ -238,11 +238,12 @@ const Navigation = () => {
             <div className="max-w-2xl mx-auto">
               {/* Search input */}
               <div className="relative mb-8">
+                <label htmlFor="search-input" className="sr-only">{t("search")}</label>
                 <div className={`flex items-center border-b border-border pb-2 ${direction === 'rtl' ? 'flex-row-reverse' : ''}`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={`w-5 h-5 text-nav-foreground ${direction === 'rtl' ? 'ml-3' : 'mr-3'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className={`w-5 h-5 text-nav-foreground ${direction === 'rtl' ? 'ml-3' : 'mr-3'}`} aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
                   </svg>
-                  <input type="text" placeholder={t("searchForJewelry")} className={`flex-1 bg-transparent text-nav-foreground placeholder:text-nav-foreground/60 outline-none text-lg ${direction === 'rtl' ? 'text-right' : ''}`} autoFocus dir={direction} />
+                  <input id="search-input" type="text" placeholder={t("searchForJewelry")} className={`flex-1 bg-transparent text-nav-foreground placeholder:text-nav-foreground/60 outline-none text-lg ${direction === 'rtl' ? 'text-right' : ''}`} autoFocus dir={direction} />
                 </div>
               </div>
 
