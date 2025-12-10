@@ -1,10 +1,1 @@
 project_id = "lhuypulptozigcefxrqu"
-
-[functions.sync-products-to-shopify]
-verify_jwt = false
-
-[functions.setup-shopify-metafields]
-verify_jwt = false
-
-[functions.translate-product]
-verify_jwt = false
