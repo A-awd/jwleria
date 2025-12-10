@@ -479,6 +479,25 @@ export const translations = {
     globalDelivery: "Global Delivery",
     globalDeliveryDesc: "Secure worldwide shipping with tracking and insurance included",
     startShoppingNow: "Start Shopping Now",
+    
+    // New Homepage sections
+    luxuryPersonalShopper: "Luxury Personal Shopper",
+    heroTitle: "Curated Luxury From the World's Finest Maisons",
+    heroSubtitle: "Your personal gateway to Cartier, Van Cleef & Arpels, Rolex, and more. Authentic pieces sourced and delivered with care.",
+    shopCollection: "Shop Collection",
+    exploreBrands: "Explore Brands",
+    discoverOurCollection: "Discover Our Collection",
+    shopByCategory: "Shop by Category",
+    curatedLuxury: "Curated Luxury",
+    featuredBrands: "Featured Brands",
+    viewAllBrands: "View All Brands",
+    justArrived: "Just Arrived",
+    new: "New",
+    handpickedForYou: "Handpicked For You",
+    authenticityGuaranteeShort: "Every piece verified authentic",
+    globalAccessShort: "Source from boutiques worldwide",
+    expertCurationShort: "Handpicked by our specialists",
+    conciergeServiceShort: "24/7 personal assistance",
   },
   
   es: {
@@ -950,6 +969,25 @@ export const translations = {
 
     // Footer
     footerDisclaimer: "jWleria es un servicio independiente de compras personales de lujo. No estamos afiliados ni respaldados por ninguna marca. Todas las marcas comerciales y nombres de marca son propiedad de sus respectivos dueños.",
+
+    // New Homepage sections
+    luxuryPersonalShopper: "Personal Shopper de Lujo",
+    heroTitle: "Lujo Curado de las Mejores Maisons del Mundo",
+    heroSubtitle: "Tu acceso personal a Cartier, Van Cleef & Arpels, Rolex y más. Piezas auténticas seleccionadas y entregadas con cuidado.",
+    shopCollection: "Ver Colección",
+    exploreBrands: "Explorar Marcas",
+    discoverOurCollection: "Descubre Nuestra Colección",
+    shopByCategory: "Comprar por Categoría",
+    curatedLuxury: "Lujo Curado",
+    featuredBrands: "Marcas Destacadas",
+    viewAllBrands: "Ver Todas las Marcas",
+    justArrived: "Recién Llegados",
+    new: "Nuevo",
+    handpickedForYou: "Seleccionado Para Ti",
+    authenticityGuaranteeShort: "Cada pieza verificada como auténtica",
+    globalAccessShort: "Fuentes de boutiques en todo el mundo",
+    expertCurationShort: "Seleccionado por nuestros especialistas",
+    conciergeServiceShort: "Asistencia personal 24/7",
   },
   
   ar: {
@@ -1421,6 +1459,25 @@ export const translations = {
 
     // Footer
     footerDisclaimer: "jWleria هي خدمة تسوق شخصية فاخرة مستقلة. نحن غير تابعين أو معتمدين من أي علامات تجارية. جميع العلامات التجارية وأسماء العلامات هي ملك لأصحابها.",
+
+    // New Homepage sections
+    luxuryPersonalShopper: "خدمة التسوق الشخصي الفاخرة",
+    heroTitle: "فخامة منتقاة من أرقى الدور العالمية",
+    heroSubtitle: "بوابتك الشخصية إلى كارتييه، فان كليف آند آربلز، رولكس والمزيد. قطع أصلية منتقاة ومسلمة بعناية.",
+    shopCollection: "تسوق المجموعة",
+    exploreBrands: "استكشف العلامات التجارية",
+    discoverOurCollection: "اكتشف مجموعتنا",
+    shopByCategory: "تسوق حسب الفئة",
+    curatedLuxury: "فخامة منتقاة",
+    featuredBrands: "العلامات التجارية المميزة",
+    viewAllBrands: "عرض جميع العلامات التجارية",
+    justArrived: "وصل حديثاً",
+    new: "جديد",
+    handpickedForYou: "منتقاة لك",
+    authenticityGuaranteeShort: "كل قطعة موثقة الأصالة",
+    globalAccessShort: "مصادر من بوتيكات حول العالم",
+    expertCurationShort: "منتقاة بواسطة خبرائنا",
+    conciergeServiceShort: "مساعدة شخصية على مدار الساعة",
   },
   
   fr: {
@@ -1892,6 +1949,25 @@ export const translations = {
 
     // Footer
     footerDisclaimer: "jWleria est un service indépendant de personal shopping de luxe. Nous ne sommes pas affiliés ni approuvés par aucune marque. Toutes les marques commerciales et noms de marques appartiennent à leurs propriétaires respectifs.",
+
+    // New Homepage sections
+    luxuryPersonalShopper: "Personal Shopper de Luxe",
+    heroTitle: "Luxe Sélectionné des Plus Grandes Maisons du Monde",
+    heroSubtitle: "Votre passerelle personnelle vers Cartier, Van Cleef & Arpels, Rolex et plus. Pièces authentiques sélectionnées et livrées avec soin.",
+    shopCollection: "Voir la Collection",
+    exploreBrands: "Explorer les Marques",
+    discoverOurCollection: "Découvrez Notre Collection",
+    shopByCategory: "Acheter par Catégorie",
+    curatedLuxury: "Luxe Sélectionné",
+    featuredBrands: "Marques en Vedette",
+    viewAllBrands: "Voir Toutes les Marques",
+    justArrived: "Nouveaux Arrivages",
+    new: "Nouveau",
+    handpickedForYou: "Sélectionné Pour Vous",
+    authenticityGuaranteeShort: "Chaque pièce vérifiée authentique",
+    globalAccessShort: "Sources des boutiques du monde entier",
+    expertCurationShort: "Sélectionné par nos spécialistes",
+    conciergeServiceShort: "Assistance personnelle 24/7",
   }
 };
 

@@ -1,25 +1,19 @@
 import Header from "../components/header/Header";
 import Footer from "../components/footer/Footer";
-import LargeHero from "../components/content/LargeHero";
-import FiftyFiftySection from "../components/content/FiftyFiftySection";
-import OneThirdTwoThirdsSection from "../components/content/OneThirdTwoThirdsSection";
-import ProductCarousel from "../components/content/ProductCarousel";
+import HeroSection from "../components/content/HeroSection";
+import CategoryShowcase from "../components/content/CategoryShowcase";
+import FeaturedBrands from "../components/content/FeaturedBrands";
+import NewArrivalsGrid from "../components/content/NewArrivalsGrid";
+import CuratedPicks from "../components/content/CuratedPicks";
+import ServiceFeatures from "../components/content/ServiceFeatures";
+import BestSellersCarousel from "../components/content/BestSellersCarousel";
 import EditorialSection from "../components/content/EditorialSection";
 import BrandMarquee from "../components/content/BrandMarquee";
-import BrandLogoStrip from "../components/content/BrandLogoStrip";
-import BestSellersCarousel from "../components/content/BestSellersCarousel";
-import ProductStrip from "../components/content/ProductStrip";
 import ScrollReveal from "../components/ui/ScrollReveal";
-import { useNewArrivals, useFeaturedProducts } from "@/hooks/useProducts";
-import { useLanguage } from "@/i18n/LanguageContext";
 import { useEffect } from "react";
 import { trackPageView } from "@/lib/analytics";
 
 const Index = () => {
-  const { t } = useLanguage();
-  const { products: newArrivals } = useNewArrivals(4);
-  const { products: editorsPicks } = useFeaturedProducts(4);
-
   // Track page view on mount
   useEffect(() => {
     trackPageView('/');
@@ -29,57 +23,46 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="pt-4 md:pt-6">
-        <FiftyFiftySection />
+      <main>
+        {/* Full-width Hero */}
+        <HeroSection />
         
-        {/* Shop by Brand Marquee - at top after first banner */}
+        {/* Service Features Strip */}
+        <ServiceFeatures />
+        
+        {/* Shop by Category */}
         <ScrollReveal>
-          <BrandMarquee />
+          <CategoryShowcase />
         </ScrollReveal>
         
+        {/* Best Sellers Carousel */}
         <ScrollReveal delay={100}>
           <BestSellersCarousel />
         </ScrollReveal>
         
-        {/* Brand strip to reduce gap */}
-        <BrandLogoStrip />
-        
+        {/* Featured Brands */}
         <ScrollReveal delay={100}>
-          <LargeHero />
+          <FeaturedBrands />
         </ScrollReveal>
         
+        {/* New Arrivals Grid */}
         <ScrollReveal delay={100}>
-          <ProductCarousel />
+          <NewArrivalsGrid />
         </ScrollReveal>
         
-        {/* Brand strip to reduce gap */}
-        <BrandLogoStrip />
+        {/* Brand Marquee */}
+        <BrandMarquee />
         
+        {/* Editorial / About Section */}
         <ScrollReveal delay={100}>
-          <OneThirdTwoThirdsSection />
+          <div className="px-4 md:px-6 py-12 md:py-20">
+            <EditorialSection />
+          </div>
         </ScrollReveal>
         
+        {/* Editor's Picks / Curated */}
         <ScrollReveal delay={100}>
-          <ProductStrip 
-            title={t("newArrivals")} 
-            titleAr={t("newArrivalsAr")} 
-            products={newArrivals} 
-          />
-        </ScrollReveal>
-        
-        {/* Brand strip to reduce gap */}
-        <BrandLogoStrip />
-        
-        <ScrollReveal delay={100}>
-          <EditorialSection />
-        </ScrollReveal>
-        
-        <ScrollReveal delay={100}>
-          <ProductStrip 
-            title={t("editorsPicks")} 
-            titleAr={t("editorsPicksAr")} 
-            products={editorsPicks} 
-          />
+          <CuratedPicks />
         </ScrollReveal>
       </main>
       
