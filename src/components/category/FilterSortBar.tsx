@@ -1,9 +1,9 @@
-import { useState } from "react";
-import { Search, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { luxuryBrands, categories } from "@/data/products";
+import { luxuryBrands } from "@/data/products";
 import {
   Sheet,
   SheetContent,
@@ -98,208 +98,211 @@ const FilterSortBar = ({
   };
 
   const hasActiveFilters = searchQuery || selectedBrands.length > 0 || selectedCategories.length > 0 || readyToShipOnly || preOrderOnly;
+  const activeFilterCount = selectedBrands.length + selectedCategories.length + (readyToShipOnly ? 1 : 0) + (preOrderOnly ? 1 : 0);
 
   return (
-    <>
-      <section className="w-full px-6 mb-8 border-b border-border pb-4">
-        {/* Search Bar */}
-        <div className="mb-4">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+    <section className="w-full px-4 md:px-6 lg:px-8 mb-6">
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-muted/30 rounded-sm p-4 md:p-5"
+      >
+        {/* Top Row: Search and Controls */}
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          {/* Search Bar */}
+          <div className="relative flex-1 max-w-lg">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder={t("searchForJewelry")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-10 border-border/50 bg-transparent focus:border-foreground/30"
+              className="pl-10 pr-10 h-11 bg-background border-border/50 focus:border-foreground/30 rounded-sm"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2"
-              >
-                <X className="w-4 h-4 text-foreground/40 hover:text-foreground" />
-              </button>
-            )}
+            <AnimatePresence>
+              {searchQuery && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                >
+                  <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
-        </div>
 
-        {/* Active Filters */}
-        {hasActiveFilters && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            {selectedBrands.map(brand => (
-              <button
-                key={brand}
-                onClick={() => handleBrandToggle(brand)}
-                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-foreground/10 text-foreground rounded-sm"
-              >
-                {brand}
-                <X className="w-3 h-3" />
-              </button>
-            ))}
-            {selectedCategories.map(category => (
-              <button
-                key={category}
-                onClick={() => handleCategoryToggle(category)}
-                className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-foreground/10 text-foreground rounded-sm"
-              >
-                {category}
-                <X className="w-3 h-3" />
-              </button>
-            ))}
-            {hasActiveFilters && (
-              <button
-                onClick={clearAllFilters}
-                className="text-xs text-foreground/60 hover:text-foreground underline"
-              >
-                {t("clearAll")}
-              </button>
-            )}
-          </div>
-        )}
-
-        <div className="flex justify-between items-center">
-          <p className="text-sm font-light text-muted-foreground">
-            {itemCount} {t("products")}
-          </p>
-          
-          <div className="flex items-center gap-4">
+          {/* Filter & Sort Controls */}
+          <div className="flex items-center gap-3">
             <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
               <SheetTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  className="font-light hover:bg-transparent"
-                >
-                  {t("filters")}
-                  {(selectedBrands.length > 0 || selectedCategories.length > 0) && (
-                    <span className="ml-1 text-xs bg-foreground text-background px-1.5 rounded-full">
-                      {selectedBrands.length + selectedCategories.length}
-                    </span>
-                  )}
-                </Button>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Button 
+                    variant="outline" 
+                    size="default"
+                    className="h-11 px-4 gap-2 rounded-sm border-border/50 hover:border-foreground/30 hover:bg-transparent"
+                  >
+                    <SlidersHorizontal className="w-4 h-4" />
+                    <span>{t("filters")}</span>
+                    {activeFilterCount > 0 && (
+                      <span className="ml-1 text-xs bg-foreground text-background px-1.5 py-0.5 rounded-full">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </motion.div>
               </SheetTrigger>
-              <SheetContent side="right" className="w-80 bg-background border-none shadow-none overflow-y-auto">
-                <SheetHeader className="mb-6 border-b border-border pb-4">
-                  <SheetTitle className="text-lg font-light">{t("filters")}</SheetTitle>
+              <SheetContent side="right" className="w-full sm:w-96 bg-background border-l border-border overflow-y-auto">
+                <SheetHeader className="mb-6 pb-4 border-b border-border">
+                  <SheetTitle className="text-xl font-light">{t("filters")}</SheetTitle>
                 </SheetHeader>
                 
-                <div className="space-y-8">
-                  {/* Brand Filter - Most important for multi-brand platform */}
+                <div className="space-y-6">
+                  {/* Brand Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">{t("brand")}</h3>
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("brand")}</h3>
+                    <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
                       {luxuryBrands.map((brand) => (
-                        <div key={brand} className="flex items-center space-x-3">
+                        <motion.div 
+                          key={brand} 
+                          className="flex items-center space-x-3"
+                          whileHover={{ x: 2 }}
+                          transition={{ duration: 0.2 }}
+                        >
                           <Checkbox 
                             id={brand} 
                             checked={selectedBrands.includes(brand)}
                             onCheckedChange={() => handleBrandToggle(brand)}
-                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" 
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
                           />
                           <Label htmlFor={brand} className="text-sm font-light text-foreground cursor-pointer">
                             {brand}
                           </Label>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  <Separator className="border-border" />
+                  <Separator />
 
-                  {/* Ready to Ship Filter */}
+                  {/* Availability Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">{t("availability")}</h3>
+                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("availability")}</h3>
                     <div className="space-y-3">
-                      <div className="flex items-center space-x-3">
+                      <motion.div 
+                        className="flex items-center space-x-3"
+                        whileHover={{ x: 2 }}
+                      >
                         <Checkbox 
                           id="readyToShip" 
                           checked={readyToShipOnly}
                           onCheckedChange={(checked) => setReadyToShipOnly(checked === true)}
-                          className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600" 
+                          className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 rounded-sm" 
                         />
                         <Label htmlFor="readyToShip" className="text-sm font-light text-foreground cursor-pointer">
                           {t("readyToShip")}
                         </Label>
-                      </div>
-                      <div className="flex items-center space-x-3">
+                      </motion.div>
+                      <motion.div 
+                        className="flex items-center space-x-3"
+                        whileHover={{ x: 2 }}
+                      >
                         <Checkbox 
                           id="preOrder" 
                           checked={preOrderOnly}
                           onCheckedChange={(checked) => setPreOrderOnly(checked === true)}
-                          className="border-border data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600" 
+                          className="border-border data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600 rounded-sm" 
                         />
                         <Label htmlFor="preOrder" className="text-sm font-light text-foreground cursor-pointer">
                           {t("preOrder")}
                         </Label>
-                      </div>
+                      </motion.div>
                     </div>
                   </div>
 
-                  <Separator className="border-border" />
+                  <Separator />
 
                   {/* Category Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">{t("shop")}</h3>
+                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("shop")}</h3>
                     <div className="space-y-3">
                       {categoryItems.map((category) => (
-                        <div key={category.key} className="flex items-center space-x-3">
+                        <motion.div 
+                          key={category.key} 
+                          className="flex items-center space-x-3"
+                          whileHover={{ x: 2 }}
+                        >
                           <Checkbox 
                             id={category.key} 
                             checked={selectedCategories.includes(category.key)}
                             onCheckedChange={() => handleCategoryToggle(category.key)}
-                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" 
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
                           />
                           <Label htmlFor={category.key} className="text-sm font-light text-foreground cursor-pointer">
                             {category.label}
                           </Label>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  <Separator className="border-border" />
+                  <Separator />
 
                   {/* Price Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">{t("subtotal")}</h3>
+                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("subtotal")}</h3>
                     <div className="space-y-3">
                       {priceRanges.map((range) => (
-                        <div key={range} className="flex items-center space-x-3">
-                          <Checkbox id={range} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                        <motion.div 
+                          key={range} 
+                          className="flex items-center space-x-3"
+                          whileHover={{ x: 2 }}
+                        >
+                          <Checkbox 
+                            id={range} 
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
+                          />
                           <Label htmlFor={range} className="text-sm font-light text-foreground cursor-pointer">
                             {range}
                           </Label>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  <Separator className="border-border" />
+                  <Separator />
 
                   {/* Material Filter */}
                   <div>
-                    <h3 className="text-sm font-light mb-4 text-foreground">{t("material")}</h3>
+                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("material")}</h3>
                     <div className="space-y-3">
                       {materials.map((material) => (
-                        <div key={material} className="flex items-center space-x-3">
-                          <Checkbox id={material} className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground" />
+                        <motion.div 
+                          key={material} 
+                          className="flex items-center space-x-3"
+                          whileHover={{ x: 2 }}
+                        >
+                          <Checkbox 
+                            id={material} 
+                            className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
+                          />
                           <Label htmlFor={material} className="text-sm font-light text-foreground cursor-pointer">
                             {material}
                           </Label>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   </div>
 
-                  <Separator className="border-border" />
-
-                  <div className="flex flex-col gap-2 pt-4">
+                  {/* Clear All Button */}
+                  <div className="pt-4 border-t border-border">
                     <Button 
                       variant="ghost" 
-                      size="sm" 
                       onClick={clearAllFilters}
-                      className="w-full border-none hover:bg-transparent hover:underline font-normal text-left justify-start"
+                      className="w-full justify-center hover:bg-transparent hover:underline font-light"
                     >
                       {t("clearAll")}
                     </Button>
@@ -308,21 +311,71 @@ const FilterSortBar = ({
               </SheetContent>
             </Sheet>
 
+            {/* Sort Dropdown */}
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-auto border-none bg-transparent text-sm font-light shadow-none rounded-none pr-2">
+              <SelectTrigger className="h-11 w-auto min-w-[140px] border-border/50 bg-background hover:border-foreground/30 rounded-sm gap-2">
                 <SelectValue />
+                <ChevronDown className="w-4 h-4 opacity-50" />
               </SelectTrigger>
-              <SelectContent className="shadow-none border-none rounded-none bg-background">
-                <SelectItem value="featured" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("featured")}</SelectItem>
-                <SelectItem value="price-low" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("priceLowHigh")}</SelectItem>
-                <SelectItem value="price-high" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("priceHighLow")}</SelectItem>
-                <SelectItem value="newest" className="hover:bg-transparent hover:underline data-[state=checked]:bg-transparent data-[state=checked]:underline pl-2 [&>span:first-child]:hidden">{t("newest")}</SelectItem>
+              <SelectContent className="rounded-sm border-border bg-background">
+                <SelectItem value="featured" className="rounded-sm">{t("featured")}</SelectItem>
+                <SelectItem value="price-low" className="rounded-sm">{t("priceLowHigh")}</SelectItem>
+                <SelectItem value="price-high" className="rounded-sm">{t("priceHighLow")}</SelectItem>
+                <SelectItem value="newest" className="rounded-sm">{t("newest")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
-      </section>
-    </>
+
+        {/* Active Filters & Count */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <AnimatePresence mode="popLayout">
+              {selectedBrands.map(brand => (
+                <motion.button
+                  key={brand}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => handleBrandToggle(brand)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-foreground/10 text-foreground rounded-sm hover:bg-foreground/20 transition-colors"
+                >
+                  {brand}
+                  <X className="w-3 h-3" />
+                </motion.button>
+              ))}
+              {selectedCategories.map(category => (
+                <motion.button
+                  key={category}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  onClick={() => handleCategoryToggle(category)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs bg-foreground/10 text-foreground rounded-sm hover:bg-foreground/20 transition-colors"
+                >
+                  {category}
+                  <X className="w-3 h-3" />
+                </motion.button>
+              ))}
+            </AnimatePresence>
+            {hasActiveFilters && (
+              <motion.button
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                onClick={clearAllFilters}
+                className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+              >
+                {t("clearAll")}
+              </motion.button>
+            )}
+          </div>
+          
+          <p className="text-sm text-muted-foreground">
+            {itemCount} {t("products")}
+          </p>
+        </div>
+      </motion.div>
+    </section>
   );
 };
 

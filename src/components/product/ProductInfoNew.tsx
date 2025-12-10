@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { 
   Breadcrumb, 
@@ -9,7 +9,7 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, MessageCircle, Truck, Shield, Clock } from "lucide-react";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
@@ -31,6 +31,7 @@ interface ProductInfoProps {
     leadTime?: string;
     isPreOrder?: boolean;
     isLimitedEdition?: boolean;
+    description?: string;
   };
   showBreadcrumb?: boolean;
 }
@@ -79,11 +80,32 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
     return categoryMap[categoryKey] || categoryKey;
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
+  };
+
   return (
-    <div className="space-y-4 md:space-y-6">
+    <motion.div 
+      className="space-y-5 md:space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Breadcrumb - Desktop only */}
       {showBreadcrumb && (
-        <div className="hidden lg:block">
+        <motion.div variants={itemVariants} className="hidden lg:block">
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -105,117 +127,153 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-        </div>
+        </motion.div>
       )}
 
-      {/* Product title and price */}
-      <div className="space-y-1 md:space-y-2">
-        <div className="flex justify-between items-start">
-          <div>
-            <Link 
-              to={`/brand/${encodeURIComponent(product.brand)}`}
-              className="text-xs md:text-sm font-light text-primary hover:underline mb-0.5 md:mb-1 block"
-            >
-              {product.brand}
-            </Link>
-            <p className="text-xs md:text-sm font-light text-muted-foreground mb-0.5 md:mb-1">
-              {getCategoryTranslation(product.categoryKey)}
-            </p>
-            <h1 className="text-xl md:text-2xl lg:text-3xl font-light text-foreground">
-              {product.name}
-            </h1>
-          </div>
-          <div className="text-right">
-            {product.compareAtPrice && product.compareAtPrice > product.price && (
-              <p className="text-sm font-light text-muted-foreground line-through">
-                {convertPrice(product.compareAtPrice)}
-              </p>
-            )}
-            <p className="text-lg md:text-xl font-light text-foreground">
-              {convertPrice(product.price)}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Brand & Category */}
+      <motion.div variants={itemVariants} className="space-y-1">
+        <Link 
+          to={`/brand/${encodeURIComponent(product.brand)}`}
+          className="text-sm font-medium text-primary hover:underline block uppercase tracking-wider"
+        >
+          {product.brand}
+        </Link>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">
+          {getCategoryTranslation(product.categoryKey)}
+        </p>
+      </motion.div>
 
-      {/* Product details */}
-      <div className="space-y-3 md:space-y-4 py-3 md:py-4 border-b border-border">
-        {/* Pre-order Status - Always shown since all products are pre-order */}
-        <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm">
-          <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-          <span className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400">
-            {t("preOrder")}
-            <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime || STORE_CONFIG.defaultLeadTime}</span>
-          </span>
+      {/* Product Name */}
+      <motion.h1 
+        variants={itemVariants}
+        className="text-2xl md:text-3xl lg:text-4xl font-light text-foreground leading-tight"
+      >
+        {product.name}
+      </motion.h1>
+
+      {/* Price */}
+      <motion.div variants={itemVariants} className="flex items-baseline gap-3">
+        <p className="text-xl md:text-2xl font-light text-foreground">
+          {convertPrice(product.price)}
+        </p>
+        {product.compareAtPrice && product.compareAtPrice > product.price && (
+          <p className="text-base font-light text-muted-foreground line-through">
+            {convertPrice(product.compareAtPrice)}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Pre-order & Limited Edition Status */}
+      <motion.div variants={itemVariants} className="space-y-2">
+        <div className="flex items-center gap-2 py-3 px-4 bg-amber-50 dark:bg-amber-950/30 rounded-sm border border-amber-200/50 dark:border-amber-800/30">
+          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+          <div>
+            <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+              {t("preOrder")}
+            </span>
+            <span className="text-sm text-amber-600/80 dark:text-amber-400/80 ml-2">
+              {t("usuallyShipsIn")} {product.leadTime || STORE_CONFIG.defaultLeadTime}
+            </span>
+          </div>
         </div>
         
         {product.isLimitedEdition && (
-          <div className="flex items-center gap-2 py-2 px-3 bg-rose-50 dark:bg-rose-950/30 rounded-sm">
+          <div className="flex items-center gap-2 py-3 px-4 bg-rose-50 dark:bg-rose-950/30 rounded-sm border border-rose-200/50 dark:border-rose-800/30">
             <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
-            <span className="text-xs md:text-sm font-medium text-rose-700 dark:text-rose-400">
+            <span className="text-sm font-medium text-rose-700 dark:text-rose-400">
               {t("limitedEdition")}
             </span>
           </div>
         )}
-        
-        {product.material && (
-          <div className="space-y-1 md:space-y-2">
-            <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>
-            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.material}</p>
-          </div>
-        )}
-        
-        {product.dimensions && (
-          <div className="space-y-1 md:space-y-2">
-            <h3 className="text-xs md:text-sm font-light text-foreground">{t("dimensions")}</h3>
-            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.dimensions}</p>
-          </div>
-        )}
-        
-        {product.weight && (
-          <div className="space-y-1 md:space-y-2">
-            <h3 className="text-xs md:text-sm font-light text-foreground">{t("weight")}</h3>
-            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.weight}</p>
-          </div>
-        )}
-        
-        {product.editorsNotes && (
-          <div className="space-y-1 md:space-y-2">
-            <h3 className="text-xs md:text-sm font-light text-foreground">{t("editorsNotes")}</h3>
-            <p className="text-xs md:text-sm font-light text-muted-foreground italic">
-              "{product.editorsNotes}"
-            </p>
-          </div>
-        )}
-      </div>
+      </motion.div>
 
-      {/* WhatsApp Contact and Favorites */}
-      <div className="space-y-3 md:space-y-4">
-        <div className="flex gap-3">
-          <Button 
-            className="flex-1 h-11 md:h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-light rounded-none text-sm md:text-base"
-            onClick={handleWhatsAppClick}
+      {/* WhatsApp CTA Section */}
+      <motion.div 
+        variants={itemVariants}
+        className="bg-gradient-to-r from-[#25D366]/10 to-[#128C7E]/10 dark:from-[#25D366]/5 dark:to-[#128C7E]/5 p-5 md:p-6 rounded-sm border border-[#25D366]/20"
+      >
+        <div className="flex gap-3 mb-4">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="flex-1"
           >
-            <MessageCircle className="h-4 w-4 mr-2" />
-            {t("orderOnWhatsApp")}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-11 md:h-12 w-11 md:w-12 rounded-none border-border"
-            onClick={handleToggleFavorite}
-          >
-            <Heart 
-              className={`h-5 w-5 ${productIsFavorite ? 'fill-red-500 text-red-500' : ''}`} 
-            />
-          </Button>
+            <Button 
+              className="w-full h-12 md:h-14 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium rounded-sm text-base md:text-lg shadow-lg shadow-[#25D366]/20"
+              onClick={handleWhatsAppClick}
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              {t("orderOnWhatsApp")}
+            </Button>
+          </motion.div>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-12 md:h-14 w-12 md:w-14 rounded-sm border-border/50 hover:border-foreground/30"
+              onClick={handleToggleFavorite}
+            >
+              <Heart 
+                className={`h-5 w-5 transition-colors ${productIsFavorite ? 'fill-red-500 text-red-500' : ''}`} 
+              />
+            </Button>
+          </motion.div>
         </div>
         
         <p className="text-xs text-muted-foreground text-center">
           {t("whatsappOrderNote")}
         </p>
-      </div>
-    </div>
+      </motion.div>
+
+      {/* Product Details */}
+      <motion.div variants={itemVariants} className="space-y-4 py-5 border-t border-border/50">
+        {product.material && (
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-muted-foreground">{t("material")}</span>
+            <span className="text-sm text-foreground text-right max-w-[60%]">{product.material}</span>
+          </div>
+        )}
+        
+        {product.dimensions && (
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-muted-foreground">{t("dimensions")}</span>
+            <span className="text-sm text-foreground text-right max-w-[60%]">{product.dimensions}</span>
+          </div>
+        )}
+        
+        {product.weight && (
+          <div className="flex justify-between items-start">
+            <span className="text-sm text-muted-foreground">{t("weight")}</span>
+            <span className="text-sm text-foreground text-right max-w-[60%]">{product.weight}</span>
+          </div>
+        )}
+      </motion.div>
+
+      {/* Trust badges */}
+      <motion.div 
+        variants={itemVariants}
+        className="flex flex-wrap gap-4 py-4 border-t border-border/50 text-xs text-muted-foreground"
+      >
+        <div className="flex items-center gap-2">
+          <Shield className="w-4 h-4" />
+          <span>{t("authenticGuaranteed")}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Truck className="w-4 h-4" />
+          <span>{t("worldwideShipping")}</span>
+        </div>
+      </motion.div>
+
+      {/* Editor's Notes */}
+      {product.editorsNotes && (
+        <motion.div variants={itemVariants} className="py-4 border-t border-border/50">
+          <h3 className="text-sm font-medium text-foreground mb-2">{t("editorsNotes")}</h3>
+          <p className="text-sm text-muted-foreground italic leading-relaxed">
+            "{product.editorsNotes}"
+          </p>
+        </motion.div>
+      )}
+    </motion.div>
   );
 };
 
