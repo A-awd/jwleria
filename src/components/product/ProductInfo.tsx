@@ -206,6 +206,7 @@ const ProductInfo = () => {
             size="icon"
             className="h-11 md:h-12 w-11 md:w-12 rounded-none border-border"
             onClick={handleToggleFavorite}
+            aria-label={productIsFavorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
           >
             <Heart 
               className={`h-5 w-5 ${productIsFavorite ? 'fill-red-500 text-red-500' : ''}`} 
