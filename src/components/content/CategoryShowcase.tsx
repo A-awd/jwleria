@@ -38,17 +38,17 @@ const CategoryShowcase = () => {
   ];
 
   return (
-    <section className="w-full py-10 md:py-16 px-4 md:px-6">
-      <div className="text-center mb-8 md:mb-12">
-        <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-foreground/50 mb-2">
+    <section className="w-full py-8 sm:py-10 md:py-16 px-4 md:px-6">
+      <div className="text-center mb-6 sm:mb-8 md:mb-12">
+        <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-foreground/50 mb-1.5 sm:mb-2">
           {t("discoverOurCollection")}
         </p>
-        <h2 className="text-xl md:text-3xl font-light text-foreground">
+        <h2 className="text-lg sm:text-xl md:text-3xl font-light text-foreground">
           {t("shopByCategory")}
         </h2>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
         {categories.map((category, index) => (
           <Link
             key={category.key}
@@ -67,11 +67,11 @@ const CategoryShowcase = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
               
               {/* Label */}
-              <div className="absolute inset-0 flex flex-col items-center justify-end p-4 md:p-6">
-                <h3 className="text-sm md:text-base font-light text-white tracking-wide text-center">
+              <div className="absolute inset-0 flex flex-col items-center justify-end p-3 sm:p-4 md:p-6">
+                <h3 className="text-xs sm:text-sm md:text-base font-light text-white tracking-wide text-center">
                   {category.label}
                 </h3>
-                <div className="h-px w-8 bg-white/50 mt-2 group-hover:w-12 transition-all duration-300" />
+                <div className="h-px w-6 sm:w-8 bg-white/50 mt-1.5 sm:mt-2 group-hover:w-10 sm:group-hover:w-12 transition-all duration-300" />
               </div>
             </div>
           </Link>
