@@ -14,14 +14,14 @@ const NewArrivalsGrid = () => {
   const newArrivals = allProducts.filter(p => p.isNew).slice(0, 6);
 
   return (
-    <section className="w-full py-8 sm:py-12 md:py-20 px-4 md:px-6">
+    <section className="w-full py-12 md:py-20 px-4 md:px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 sm:mb-8 md:mb-12">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-8 md:mb-12">
           <div>
-            <p className="text-[9px] sm:text-[10px] md:text-xs uppercase tracking-[0.2em] sm:tracking-[0.3em] text-foreground/50 mb-1.5 sm:mb-2">
+            <p className="text-[10px] md:text-xs uppercase tracking-[0.3em] text-foreground/50 mb-2">
               {t("justArrived")}
             </p>
-            <h2 className="text-lg sm:text-xl md:text-3xl font-light text-foreground">
+            <h2 className="text-xl md:text-3xl font-light text-foreground">
               {t("newArrivals")}
             </h2>
           </div>
@@ -34,20 +34,20 @@ const NewArrivalsGrid = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 md:gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
           {newArrivals.map((product) => (
             <div key={product.id} className="group relative">
               <Link to={`/product/${product.id}`}>
                 {/* Image container */}
-                <div className="aspect-square overflow-hidden bg-muted/10 relative mb-3 sm:mb-4">
+                <div className="aspect-square overflow-hidden bg-muted/10 relative mb-4">
                   <img
                     src={product.image || '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   {/* New badge */}
-                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-                    <span className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-widest bg-foreground text-background px-1.5 sm:px-2 py-0.5 sm:py-1">
+                  <div className="absolute top-3 left-3">
+                    <span className="text-[9px] md:text-[10px] uppercase tracking-widest bg-foreground text-background px-2 py-1">
                       {t("new")}
                     </span>
                   </div>
@@ -56,23 +56,23 @@ const NewArrivalsGrid = () => {
                 </div>
 
                 {/* Product info */}
-                <div className="space-y-1 sm:space-y-1.5">
-                  <p className="text-[9px] sm:text-[10px] md:text-xs font-medium text-foreground/50 uppercase tracking-wider">
+                <div className="space-y-1.5">
+                  <p className="text-[10px] md:text-xs font-medium text-foreground/50 uppercase tracking-wider">
                     {product.brand}
                   </p>
-                  <h3 className="text-xs sm:text-sm md:text-base font-light text-foreground group-hover:text-foreground/80 transition-colors line-clamp-1">
+                  <h3 className="text-sm md:text-base font-light text-foreground group-hover:text-foreground/80 transition-colors">
                     {product.name}
                   </h3>
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] sm:text-xs md:text-sm text-foreground/70 hidden sm:block">
+                    <p className="text-xs md:text-sm text-foreground/70">
                       {product.category}
                     </p>
-                    <p className="text-xs sm:text-sm md:text-base font-light text-foreground">
+                    <p className="text-sm md:text-base font-light text-foreground">
                       {convertPrice(product.priceEUR)}
                     </p>
                   </div>
                   {/* Pre-order indicator */}
-                  <p className="text-[8px] sm:text-[9px] md:text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 pt-0.5 sm:pt-1">
+                  <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 pt-1">
                     {t("preOrder")} — {product.leadTime}
                   </p>
                 </div>
