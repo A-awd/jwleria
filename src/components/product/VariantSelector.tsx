@@ -1,6 +1,14 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
-import { ProductVariant } from '@/types/shopify';
+
+// Native variant type for pre-order products
+export interface ProductVariant {
+  id: string;
+  title: string;
+  price: number;
+  available: boolean;
+  options: Record<string, string>;
+}
 
 interface VariantSelectorProps {
   variants: ProductVariant[];

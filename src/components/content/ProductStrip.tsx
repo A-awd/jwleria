@@ -1,13 +1,13 @@
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { ProductData } from "@/types/shopify";
+import { Product } from "@/data/products";
 import { Button } from "@/components/ui/button";
 
 interface ProductStripProps {
   title: string;
   titleAr?: string;
-  products: ProductData[];
+  products: Product[];
 }
 
 const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
@@ -38,14 +38,14 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
           {products.slice(0, 4).map((product) => (
             <Link
               key={product.id}
-              to={`/product/${product.handle || product.id}`}
+              to={`/product/${product.id}`}
               className="group"
             >
               <div className="space-y-2 md:space-y-3 transition-transform duration-300 group-hover:-translate-y-1">
                 {/* Image */}
                 <div className="aspect-square overflow-hidden bg-muted/10 relative">
                   <img
-                    src={product.images[0] || '/placeholder.svg'}
+                    src={product.image || '/placeholder.svg'}
                     alt={product.name}
                     className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                   />
@@ -61,23 +61,14 @@ const ProductStrip = ({ title, titleAr, products }: ProductStripProps) => {
                     {product.name}
                   </h3>
                   <p className="text-xs md:text-sm font-light text-foreground/80">
-                    {convertPrice(product.price)}
+                    {convertPrice(product.priceEUR)}
                   </p>
-                  {/* Availability indicator */}
-                  {(product.isReadyToShip || product.isPreOrder) && (
-                    <div className="pt-0.5">
-                      {product.isReadyToShip && (
-                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                          {t("readyToShip")}
-                        </span>
-                      )}
-                      {product.isPreOrder && (
-                        <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                          {t("preOrder")}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {/* Pre-order indicator */}
+                  <div className="pt-0.5">
+                    <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
+                      {t("preOrder")}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Button */}

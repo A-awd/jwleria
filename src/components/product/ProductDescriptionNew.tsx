@@ -3,10 +3,19 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewProduct from "./ReviewProduct";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { ProductData, ProductReview } from "@/types/shopify";
+import { Product } from "@/data/products";
+
+interface ProductReview {
+  id: string;
+  author: string;
+  rating: number;
+  content: string;
+  date: string;
+  verified: boolean;
+}
 
 interface ProductDescriptionProps {
-  product: ProductData;
+  product: Product;
 }
 
 const CustomStar = ({ filled, className }: { filled: boolean; className?: string }) => (
@@ -67,13 +76,13 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
   const [isCareOpen, setIsCareOpen] = useState(false);
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
 
-  const reviews = product.reviews || defaultReviews;
-  const careInstructions = product.careInstructions || defaultCareInstructions;
-  const productDetails = product.productDetails || {
-    SKU: product.sku || `JWL-${product.id.slice(-6).toUpperCase()}`,
+  const reviews = defaultReviews;
+  const careInstructions = defaultCareInstructions;
+  const productDetails = {
+    SKU: `JWL-${String(product.id).slice(-6).toUpperCase()}`,
     Collection: "Signature Collection",
-    Closure: "Standard",
-    Hypoallergenic: "Yes",
+    Material: product.material || "Premium Materials",
+    Brand: product.brand,
   };
 
   // Calculate average rating
@@ -99,16 +108,9 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
         </Button>
         {isDescriptionOpen && (
           <div className="pb-6 space-y-4">
-            {product.descriptionHtml ? (
-              <div 
-                className="text-sm font-light text-muted-foreground leading-relaxed prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: product.descriptionHtml }}
-              />
-            ) : (
-              <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                {product.description || `The ${product.name} by ${product.brand} embodies timeless elegance with exceptional craftsmanship. A perfect addition to any luxury collection.`}
-              </p>
-            )}
+            <p className="text-sm font-light text-muted-foreground leading-relaxed">
+              {product.description || `The ${product.name} by ${product.brand} embodies timeless elegance with exceptional craftsmanship. A perfect addition to any luxury collection.`}
+            </p>
           </div>
         )}
       </div>
