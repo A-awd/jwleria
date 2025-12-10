@@ -15,6 +15,8 @@ const TikTokIcon = ({ size = 24, className = "" }: { size?: number; className?: 
     strokeLinecap="round" 
     strokeLinejoin="round"
     className={className}
+    role="img"
+    aria-hidden="true"
   >
     <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
   </svg>
@@ -53,8 +55,9 @@ const Footer = () => {
           <button
             onClick={handleWhatsAppClick}
             className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors mb-4"
+            aria-label={t("contactOnWhatsApp")}
           >
-            <MessageCircle size={16} />
+            <MessageCircle size={16} aria-hidden="true" />
             {t("contactOnWhatsApp")}
           </button>
         </div>
@@ -159,8 +162,9 @@ const Footer = () => {
               <button
                 onClick={handleWhatsAppClick}
                 className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors"
+                aria-label={t("contactOnWhatsApp")}
               >
-                <MessageCircle size={16} />
+                <MessageCircle size={16} aria-hidden="true" />
                 {t("contactOnWhatsApp")}
               </button>
             </div>
