@@ -1,5 +1,5 @@
 // Native product hooks for jWleria catalog
-import { allProducts, Product, getProductById, getProductsByBrand, getProductsByBrandSlug, getProductsByCategory, getBestSellers, getNewArrivals, getFeaturedProducts, searchProducts, categories, leadTimeOptions } from '@/data/products';
+import { allProducts, Product, getProductById, getProductsByBrand, getProductsByBrandSlug, getProductsByCategory, getBestSellers, getNewArrivals, getFeaturedProducts, searchProducts, categories, STANDARD_LEAD_TIME } from '@/data/products';
 
 // Get all products
 export function useAllProducts() {
@@ -108,10 +108,10 @@ export function useCategories() {
   };
 }
 
-// Get lead time options
-export function useLeadTimeOptions() {
+// Get standard lead time
+export function useLeadTime() {
   return {
-    leadTimeOptions,
+    leadTime: STANDARD_LEAD_TIME,
     isLoading: false,
     error: null,
   };
