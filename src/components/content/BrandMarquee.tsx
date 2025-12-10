@@ -39,7 +39,7 @@ const BrandMarquee = () => {
               to={`/brand/${getBrandHandle(brand)}`}
               className="flex-shrink-0 px-6 md:px-10 lg:px-14"
             >
-              <span className="text-sm md:text-base lg:text-lg font-light text-foreground/30 hover:text-foreground/70 transition-colors duration-300 whitespace-nowrap tracking-wide">
+              <span className="text-sm md:text-base lg:text-lg font-light text-foreground/60 hover:text-foreground transition-colors duration-300 whitespace-nowrap tracking-wide">
                 {brand}
               </span>
             </Link>
