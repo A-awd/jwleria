@@ -2,9 +2,8 @@ import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ArrowRight } from "lucide-react";
 
-// Use WebP with PNG fallback for LCP image
-const heroImageWebP = "/hero-image.webp";
-const heroImagePng = "/hero-image.png";
+// Use public folder path for LCP image to enable preloading
+const heroImage = "/hero-image.png";
 
 const HeroSection = () => {
   const { t, direction } = useLanguage();
@@ -13,18 +12,15 @@ const HeroSection = () => {
     <section className="w-full mb-8 md:mb-12">
       {/* Full-width hero with overlay text */}
       <div className="relative w-full h-[70vh] md:h-[85vh] overflow-hidden">
-        <picture>
-          <source srcSet={heroImageWebP} type="image/webp" />
-          <img
-            src={heroImagePng}
-            alt="JWleria luxury jewelry collection"
-            className="w-full h-full object-cover"
-            fetchPriority="high"
-            decoding="async"
-            width={1920}
-            height={1080}
-          />
-        </picture>
+        <img
+          src={heroImage}
+          alt="JWleria luxury jewelry collection"
+          className="w-full h-full object-cover"
+          fetchPriority="high"
+          decoding="async"
+          width={1920}
+          height={1080}
+        />
         {/* Gradient overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
         
