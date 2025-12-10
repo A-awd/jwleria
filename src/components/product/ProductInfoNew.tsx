@@ -212,6 +212,7 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
               size="icon"
               className="h-12 md:h-14 w-12 md:w-14 rounded-sm border-border/50 hover:border-foreground/30"
               onClick={handleToggleFavorite}
+              aria-label={productIsFavorite ? `Remove ${name} from favorites` : `Add ${name} to favorites`}
             >
               <Heart 
                 className={`h-5 w-5 transition-colors ${productIsFavorite ? 'fill-red-500 text-red-500' : ''}`} 

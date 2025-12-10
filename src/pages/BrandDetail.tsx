@@ -147,6 +147,7 @@ const BrandDetail = () => {
                     e.stopPropagation();
                     toggleFavorite(product.id);
                   }}
+                  aria-label={isFavorite(product.id) ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
                   className="absolute top-2 right-2 p-2 bg-background/80 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10"
                 >
                   <Heart

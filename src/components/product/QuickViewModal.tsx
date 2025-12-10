@@ -107,6 +107,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
                 <Button
                   variant="outline"
                   onClick={handleToggleFavorite}
+                  aria-label={isFavorite(numericId) ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
                   className="flex-1 h-11 border-foreground/20 hover:bg-foreground/5"
                 >
                   <Heart

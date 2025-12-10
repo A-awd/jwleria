@@ -170,6 +170,7 @@ const ProductGrid = ({
                   e.stopPropagation();
                   toggleFavorite(product.id);
                 }}
+                aria-label={isFavorite(product.id) ? `Remove ${product.name} from favorites` : `Add ${product.name} to favorites`}
                 className="absolute top-3 right-3 p-2.5 bg-background/90 backdrop-blur-sm rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110 z-10"
               >
                 <Heart
