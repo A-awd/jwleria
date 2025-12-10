@@ -154,8 +154,8 @@ const Navigation = () => {
             </div>)}
         </div>
 
-        {/* Center logo - NOT absolute on mobile */}
-        <div className="lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
+        {/* Center logo - absolute on all screens */}
+        <div className="absolute left-1/2 transform -translate-x-1/2">
           <Link to="/" className="block">
             <span className="text-lg md:text-xl font-light tracking-widest text-nav-foreground text-center">jWleria</span>
           </Link>
