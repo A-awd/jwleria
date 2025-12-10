@@ -69,8 +69,22 @@ const FilterSortBar = ({
     { key: "Sunglasses", label: t("sunglasses") },
   ];
   
-  const priceRanges = ["Under €1,000", "€1,000 - €5,000", "€5,000 - €10,000", "Over €10,000"];
-  const materials = ["Gold", "White Gold", "Rose Gold", "Platinum", "Diamond"];
+  // Price ranges - translated
+  const priceRanges = [
+    { key: "under1000", label: t("priceUnder1000") },
+    { key: "1000-5000", label: t("price1kTo5k") },
+    { key: "5000-10000", label: t("price5kTo10k") },
+    { key: "over10000", label: t("priceOver10000") },
+  ];
+  
+  // Materials - translated
+  const materials = [
+    { key: "gold", label: t("materialGold") },
+    { key: "whiteGold", label: t("materialWhiteGold") },
+    { key: "roseGold", label: t("materialRoseGold") },
+    { key: "platinum", label: t("materialPlatinum") },
+    { key: "diamond", label: t("materialDiamond") },
+  ];
 
   const handleBrandToggle = (brand: string) => {
     if (selectedBrands.includes(brand)) {
@@ -188,38 +202,13 @@ const FilterSortBar = ({
 
                   <Separator />
 
-                  {/* Availability Filter */}
+                  {/* All Products Pre-Order Info */}
                   <div>
-                    <h3 className="text-sm font-medium mb-4 text-foreground">{t("availability")}</h3>
-                    <div className="space-y-3">
-                      <motion.div 
-                        className="flex items-center space-x-3"
-                        whileHover={{ x: 2 }}
-                      >
-                        <Checkbox 
-                          id="readyToShip" 
-                          checked={readyToShipOnly}
-                          onCheckedChange={(checked) => setReadyToShipOnly(checked === true)}
-                          className="border-border data-[state=checked]:bg-emerald-600 data-[state=checked]:border-emerald-600 rounded-sm" 
-                        />
-                        <Label htmlFor="readyToShip" className="text-sm font-light text-foreground cursor-pointer">
-                          {t("readyToShip")}
-                        </Label>
-                      </motion.div>
-                      <motion.div 
-                        className="flex items-center space-x-3"
-                        whileHover={{ x: 2 }}
-                      >
-                        <Checkbox 
-                          id="preOrder" 
-                          checked={preOrderOnly}
-                          onCheckedChange={(checked) => setPreOrderOnly(checked === true)}
-                          className="border-border data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600 rounded-sm" 
-                        />
-                        <Label htmlFor="preOrder" className="text-sm font-light text-foreground cursor-pointer">
-                          {t("preOrder")}
-                        </Label>
-                      </motion.div>
+                    <h3 className="text-sm font-medium mb-3 text-foreground">{t("availability")}</h3>
+                    <div className="p-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm">
+                      <p className="text-xs text-amber-700 dark:text-amber-400">
+                        {t("allProductsPreOrder")}
+                      </p>
                     </div>
                   </div>
 
@@ -257,16 +246,16 @@ const FilterSortBar = ({
                     <div className="space-y-3">
                       {priceRanges.map((range) => (
                         <motion.div 
-                          key={range} 
+                          key={range.key} 
                           className="flex items-center space-x-3"
                           whileHover={{ x: 2 }}
                         >
                           <Checkbox 
-                            id={range} 
+                            id={range.key} 
                             className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
                           />
-                          <Label htmlFor={range} className="text-sm font-light text-foreground cursor-pointer">
-                            {range}
+                          <Label htmlFor={range.key} className="text-sm font-light text-foreground cursor-pointer">
+                            {range.label}
                           </Label>
                         </motion.div>
                       ))}
@@ -281,16 +270,16 @@ const FilterSortBar = ({
                     <div className="space-y-3">
                       {materials.map((material) => (
                         <motion.div 
-                          key={material} 
+                          key={material.key} 
                           className="flex items-center space-x-3"
                           whileHover={{ x: 2 }}
                         >
                           <Checkbox 
-                            id={material} 
+                            id={material.key} 
                             className="border-border data-[state=checked]:bg-foreground data-[state=checked]:border-foreground rounded-sm" 
                           />
-                          <Label htmlFor={material} className="text-sm font-light text-foreground cursor-pointer">
-                            {material}
+                          <Label htmlFor={material.key} className="text-sm font-light text-foreground cursor-pointer">
+                            {material.label}
                           </Label>
                         </motion.div>
                       ))}

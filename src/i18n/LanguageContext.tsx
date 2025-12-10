@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Language, translations, getDirection } from './translations';
 
+export type { Language };
+
 type TranslationKeys = keyof typeof translations.en;
 
 interface LanguageContextType {

@@ -11,21 +11,22 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Minus, Plus, Heart, Check } from "lucide-react";
 import { useCurrency } from "@/i18n/CurrencyContext";
-import { useLanguage } from "@/i18n/LanguageContext";
+import { useLanguage, Language } from "@/i18n/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { getProductById } from "@/data/products";
+import { getProductById, getLocalizedProduct } from "@/data/products";
 import { toast } from "@/hooks/use-toast";
 
 const ProductInfo = () => {
   const { productId } = useParams();
   const [quantity, setQuantity] = useState(1);
   const { convertPrice } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { addToCart, isInCart } = useCart();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   
-  const product = getProductById(Number(productId));
+  const rawProduct = getProductById(Number(productId));
+  const product = rawProduct ? getLocalizedProduct(rawProduct, language as Language) : null;
   
   if (!product) {
     return <div className="p-4">{t("noProductsFound")}</div>;
@@ -130,25 +131,33 @@ const ProductInfo = () => {
           </span>
         </div>
         
-        <div className="space-y-1 md:space-y-2">
-          <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground">18k Gold Plated Sterling Silver</p>
-        </div>
+        {product.material && (
+          <div className="space-y-1 md:space-y-2">
+            <h3 className="text-xs md:text-sm font-light text-foreground">{t("material")}</h3>
+            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.material}</p>
+          </div>
+        )}
         
-        <div className="space-y-1 md:space-y-2">
-          <h3 className="text-xs md:text-sm font-light text-foreground">{t("dimensions")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground">2.5cm x 1.2cm</p>
-        </div>
+        {product.dimensions && (
+          <div className="space-y-1 md:space-y-2">
+            <h3 className="text-xs md:text-sm font-light text-foreground">{t("dimensions")}</h3>
+            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.dimensions}</p>
+          </div>
+        )}
         
-        <div className="space-y-1 md:space-y-2">
-          <h3 className="text-xs md:text-sm font-light text-foreground">{t("weight")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground">4.2g per piece</p>
-        </div>
+        {product.weight && (
+          <div className="space-y-1 md:space-y-2">
+            <h3 className="text-xs md:text-sm font-light text-foreground">{t("weight")}</h3>
+            <p className="text-xs md:text-sm font-light text-muted-foreground">{product.weight}</p>
+          </div>
+        )}
         
-        <div className="space-y-1 md:space-y-2">
-          <h3 className="text-xs md:text-sm font-light text-foreground">{t("editorsNotes")}</h3>
-          <p className="text-xs md:text-sm font-light text-muted-foreground italic">"A modern interpretation of classical architecture, bridging timeless elegance with contemporary minimalism."</p>
-        </div>
+        {product.description && (
+          <div className="space-y-1 md:space-y-2">
+            <h3 className="text-xs md:text-sm font-light text-foreground">{t("productDescription")}</h3>
+            <p className="text-xs md:text-sm font-light text-muted-foreground italic">{product.description}</p>
+          </div>
+        )}
       </div>
 
       {/* Quantity and Add to Cart */}
