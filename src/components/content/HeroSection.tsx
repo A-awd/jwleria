@@ -1,7 +1,9 @@
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { ArrowRight } from "lucide-react";
-import heroImage from "@/assets/hero-image.png";
+
+// Use public folder path for LCP image to enable preloading
+const heroImage = "/hero-image.png";
 
 const HeroSection = () => {
   const { t, direction } = useLanguage();
