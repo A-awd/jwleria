@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const CustomStar = ({ filled, onClick, className }: { filled: boolean; onClick: () => void; className?: string }) => (
   <svg 
@@ -20,6 +21,7 @@ const CustomStar = ({ filled, onClick, className }: { filled: boolean; onClick: 
 );
 
 const ReviewProduct = () => {
+  const { t } = useLanguage();
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -39,16 +41,16 @@ const ReviewProduct = () => {
           variant="outline" 
           className="w-full h-12 font-light rounded-none border-foreground text-foreground hover:bg-foreground hover:text-background"
         >
-          Review product
+          {t("reviewProduct")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md !rounded-none">
         <DialogHeader>
-          <DialogTitle className="font-light text-xl">Review product</DialogTitle>
+          <DialogTitle className="font-light text-xl">{t("reviewProduct")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           <div className="space-y-3">
-            <label className="text-sm font-light text-foreground">Rating</label>
+            <label className="text-sm font-light text-foreground">{t("rating")}</label>
             <div className="flex items-center gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <CustomStar
@@ -61,11 +63,11 @@ const ReviewProduct = () => {
           </div>
           
           <div className="space-y-3">
-            <label className="text-sm font-light text-foreground">Your review</label>
+            <label className="text-sm font-light text-foreground">{t("yourReview")}</label>
             <Textarea
               value={review}
               onChange={(e) => setReview(e.target.value)}
-              placeholder="Share your thoughts about this product..."
+              placeholder={t("shareYourThoughts")}
               className="min-h-24 resize-none rounded-none font-light"
             />
           </div>
@@ -75,7 +77,7 @@ const ReviewProduct = () => {
             disabled={rating === 0 || review.trim() === ""}
             className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none"
           >
-            Submit review
+            {t("submitReview")}
           </Button>
         </div>
       </DialogContent>
