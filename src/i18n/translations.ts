@@ -428,6 +428,57 @@ export const translations = {
     changesToTermsText: "We reserve the right to revise these Terms of Service at any time without notice. By using this website, you are agreeing to be bound by the current version of these Terms of Service.",
     contactInfo: "Contact Information",
     contactInfoText: "If you have any questions about these Terms of Service, please contact us at:",
+
+    // How It Works page
+    howItWorksTitle: "How It Works",
+    howItWorksSubtitle: "Your journey to luxury made simple",
+    howItWorksNav: "How It Works",
+    browseOurCatalog: "Browse Our Catalog",
+    browseDescription: "Explore our curated selection of luxury pieces from the world's finest brands",
+    contactUsOnWhatsApp: "Contact Us on WhatsApp",
+    contactDescription: "Send us a message about the piece you're interested in. We're here to help!",
+    weConfirmAvailability: "We Confirm Availability",
+    confirmDescription: "We check stock, confirm pricing, and provide all details you need",
+    securePayment: "Secure Payment",
+    paymentDescription: "Complete your purchase via secure bank transfer or payment link",
+    weSourcItem: "We Source Your Item",
+    sourcingDescription: "We purchase from official boutiques and trusted suppliers worldwide",
+    deliveryToYou: "Delivery to You",
+    deliveryDescription: "Your piece arrives safely packaged within the indicated lead time",
+
+    // Contact page
+    contactSubtitle: "We're here to help with any questions about our luxury personal shopping service",
+    whatsappContactDesc: "Chat with us directly for personalized assistance",
+    chatNow: "Chat Now",
+    emailContactDesc: "Send us a message and we'll respond within 24 hours",
+    businessHours: "Business Hours",
+    businessHoursDesc: "Sunday - Thursday: 9AM - 9PM (Gulf Time)",
+    responseTime: "We typically respond within 2-4 hours during business hours",
+    frequentlyAsked: "Frequently Asked Questions",
+    faqAuthenticTitle: "Are all items authentic?",
+    faqAuthenticAnswer: "Yes, we guarantee 100% authenticity. All items are sourced from official boutiques and authorized dealers.",
+    faqDeliveryTitle: "How long does delivery take?",
+    faqDeliveryAnswer: "Delivery times vary by item. Pre-order items typically arrive within 2-6 weeks depending on the product.",
+    faqPaymentTitle: "What payment methods do you accept?",
+    faqPaymentAnswer: "We accept bank transfers and secure payment links. Payment details are provided after order confirmation.",
+
+    // Refund Policy
+    refundPolicy: "Refund Policy",
+
+    // Footer
+    footerDisclaimer: "jWleria is an independent luxury personal shopping service. We are not affiliated with or endorsed by any brands. All trademarks and brand names are the property of their respective owners.",
+
+    // Additional HowItWorks translations
+    howItWorks: "How It Works",
+    weDeliverToYou: "Delivery to You",
+    step: "Step",
+    authenticProducts: "100% Authentic Products",
+    authenticProductsDesc: "All items are sourced from official boutiques and authorized dealers with authenticity guaranteed",
+    personalService: "Personalized Service",
+    personalServiceDesc: "Direct communication with our concierge team for a tailored shopping experience",
+    globalDelivery: "Global Delivery",
+    globalDeliveryDesc: "Secure worldwide shipping with tracking and insurance included",
+    startShoppingNow: "Start Shopping Now",
   },
   
   es: {
@@ -850,6 +901,55 @@ export const translations = {
     changesToTermsText: "Nos reservamos el derecho de revisar estos Términos de Servicio en cualquier momento sin previo aviso. Al usar este sitio web, usted acepta estar sujeto a la versión actual de estos Términos de Servicio.",
     contactInfo: "Información de Contacto",
     contactInfoText: "Si tiene alguna pregunta sobre estos Términos de Servicio, contáctenos en:",
+
+    // How It Works page
+    howItWorksTitle: "Cómo Funciona",
+    howItWorksSubtitle: "Tu camino al lujo simplificado",
+    howItWorksNav: "Cómo Funciona",
+    browseOurCatalog: "Explora Nuestro Catálogo",
+    browseDescription: "Descubre nuestra selección curada de piezas de lujo de las mejores marcas del mundo",
+    contactUsOnWhatsApp: "Contáctanos por WhatsApp",
+    contactDescription: "Envíanos un mensaje sobre la pieza que te interesa. ¡Estamos aquí para ayudar!",
+    weConfirmAvailability: "Confirmamos Disponibilidad",
+    confirmDescription: "Verificamos el stock, confirmamos precios y te proporcionamos todos los detalles que necesitas",
+    securePayment: "Pago Seguro",
+    paymentDescription: "Completa tu compra mediante transferencia bancaria segura o enlace de pago",
+    weSourcItem: "Buscamos Tu Artículo",
+    sourcingDescription: "Compramos en boutiques oficiales y proveedores de confianza en todo el mundo",
+    deliveryToYou: "Entrega a Tu Puerta",
+    deliveryDescription: "Tu pieza llega empaquetada de forma segura dentro del tiempo de entrega indicado",
+    howItWorks: "Cómo Funciona",
+    weDeliverToYou: "Entrega a Tu Puerta",
+    step: "Paso",
+    authenticProducts: "Productos 100% Auténticos",
+    authenticProductsDesc: "Todos los artículos provienen de boutiques oficiales y distribuidores autorizados con autenticidad garantizada",
+    personalService: "Servicio Personalizado",
+    personalServiceDesc: "Comunicación directa con nuestro equipo de conserjería para una experiencia de compra a medida",
+    globalDelivery: "Entrega Global",
+    globalDeliveryDesc: "Envío mundial seguro con seguimiento y seguro incluido",
+    startShoppingNow: "Comienza a Comprar Ahora",
+
+    // Contact page
+    contactSubtitle: "Estamos aquí para ayudarte con cualquier pregunta sobre nuestro servicio de compras personales de lujo",
+    whatsappContactDesc: "Chatea con nosotros directamente para asistencia personalizada",
+    chatNow: "Chatear Ahora",
+    emailContactDesc: "Envíanos un mensaje y te responderemos dentro de 24 horas",
+    businessHours: "Horario de Atención",
+    businessHoursDesc: "Domingo - Jueves: 9AM - 9PM (Hora del Golfo)",
+    responseTime: "Típicamente respondemos dentro de 2-4 horas durante el horario de atención",
+    frequentlyAsked: "Preguntas Frecuentes",
+    faqAuthenticTitle: "¿Todos los artículos son auténticos?",
+    faqAuthenticAnswer: "Sí, garantizamos 100% autenticidad. Todos los artículos provienen de boutiques oficiales y distribuidores autorizados.",
+    faqDeliveryTitle: "¿Cuánto tiempo tarda la entrega?",
+    faqDeliveryAnswer: "Los tiempos de entrega varían según el artículo. Los artículos de pre-orden típicamente llegan dentro de 2-6 semanas dependiendo del producto.",
+    faqPaymentTitle: "¿Qué métodos de pago aceptan?",
+    faqPaymentAnswer: "Aceptamos transferencias bancarias y enlaces de pago seguros. Los detalles de pago se proporcionan después de la confirmación del pedido.",
+
+    // Refund Policy
+    refundPolicy: "Política de Reembolso",
+
+    // Footer
+    footerDisclaimer: "jWleria es un servicio independiente de compras personales de lujo. No estamos afiliados ni respaldados por ninguna marca. Todas las marcas comerciales y nombres de marca son propiedad de sus respectivos dueños.",
   },
   
   ar: {
@@ -1272,6 +1372,55 @@ export const translations = {
     changesToTermsText: "نحتفظ بالحق في مراجعة شروط الخدمة هذه في أي وقت دون إشعار. باستخدام هذا الموقع، فإنك توافق على الالتزام بالإصدار الحالي من شروط الخدمة هذه.",
     contactInfo: "معلومات الاتصال",
     contactInfoText: "إذا كانت لديك أي أسئلة حول شروط الخدمة هذه، يرجى الاتصال بنا على:",
+
+    // How It Works page
+    howItWorksTitle: "كيف يعمل",
+    howItWorksSubtitle: "رحلتك إلى الفخامة أصبحت بسيطة",
+    howItWorksNav: "كيف يعمل",
+    browseOurCatalog: "تصفح كتالوجنا",
+    browseDescription: "استكشف مجموعتنا المنتقاة من القطع الفاخرة من أرقى العلامات التجارية في العالم",
+    contactUsOnWhatsApp: "تواصل معنا عبر واتساب",
+    contactDescription: "أرسل لنا رسالة حول القطعة التي تهتم بها. نحن هنا للمساعدة!",
+    weConfirmAvailability: "نؤكد التوفر",
+    confirmDescription: "نتحقق من المخزون ونؤكد الأسعار ونقدم لك جميع التفاصيل التي تحتاجها",
+    securePayment: "دفع آمن",
+    paymentDescription: "أكمل عملية الشراء عبر التحويل البنكي الآمن أو رابط الدفع",
+    weSourcItem: "نحصل على قطعتك",
+    sourcingDescription: "نشتري من البوتيكات الرسمية والموردين الموثوقين حول العالم",
+    deliveryToYou: "التوصيل إليك",
+    deliveryDescription: "تصل قطعتك معبأة بأمان خلال المدة الزمنية المحددة",
+    howItWorks: "كيف يعمل",
+    weDeliverToYou: "التوصيل إليك",
+    step: "الخطوة",
+    authenticProducts: "منتجات أصلية 100%",
+    authenticProductsDesc: "جميع المنتجات من البوتيكات الرسمية والموزعين المعتمدين مع ضمان الأصالة",
+    personalService: "خدمة شخصية",
+    personalServiceDesc: "تواصل مباشر مع فريق الكونسيرج لتجربة تسوق مخصصة",
+    globalDelivery: "توصيل عالمي",
+    globalDeliveryDesc: "شحن آمن حول العالم مع التتبع والتأمين مشمول",
+    startShoppingNow: "ابدأ التسوق الآن",
+
+    // Contact page
+    contactSubtitle: "نحن هنا للمساعدة في أي أسئلة حول خدمة التسوق الشخصي الفاخرة",
+    whatsappContactDesc: "تحدث معنا مباشرة للحصول على مساعدة شخصية",
+    chatNow: "ابدأ المحادثة",
+    emailContactDesc: "أرسل لنا رسالة وسنرد خلال 24 ساعة",
+    businessHours: "ساعات العمل",
+    businessHoursDesc: "الأحد - الخميس: 9 صباحاً - 9 مساءً (توقيت الخليج)",
+    responseTime: "نرد عادة خلال 2-4 ساعات أثناء ساعات العمل",
+    frequentlyAsked: "الأسئلة الشائعة",
+    faqAuthenticTitle: "هل جميع المنتجات أصلية؟",
+    faqAuthenticAnswer: "نعم، نضمن أصالة 100%. جميع المنتجات من البوتيكات الرسمية والموزعين المعتمدين.",
+    faqDeliveryTitle: "كم يستغرق التوصيل؟",
+    faqDeliveryAnswer: "تختلف أوقات التوصيل حسب المنتج. منتجات الطلب المسبق تصل عادة خلال 2-6 أسابيع حسب المنتج.",
+    faqPaymentTitle: "ما طرق الدفع التي تقبلونها؟",
+    faqPaymentAnswer: "نقبل التحويلات البنكية وروابط الدفع الآمنة. تقدم تفاصيل الدفع بعد تأكيد الطلب.",
+
+    // Refund Policy
+    refundPolicy: "سياسة الاسترداد",
+
+    // Footer
+    footerDisclaimer: "jWleria هي خدمة تسوق شخصية فاخرة مستقلة. نحن غير تابعين أو معتمدين من أي علامات تجارية. جميع العلامات التجارية وأسماء العلامات هي ملك لأصحابها.",
   },
   
   fr: {
@@ -1694,6 +1843,55 @@ export const translations = {
     changesToTermsText: "Nous nous réservons le droit de réviser ces Conditions d'Utilisation à tout moment sans préavis. En utilisant ce site web, vous acceptez d'être lié par la version actuelle de ces Conditions d'Utilisation.",
     contactInfo: "Informations de Contact",
     contactInfoText: "Si vous avez des questions concernant ces Conditions d'Utilisation, veuillez nous contacter à:",
+
+    // How It Works page
+    howItWorksTitle: "Comment Ça Marche",
+    howItWorksSubtitle: "Votre voyage vers le luxe simplifié",
+    howItWorksNav: "Comment Ça Marche",
+    browseOurCatalog: "Parcourez Notre Catalogue",
+    browseDescription: "Explorez notre sélection de pièces de luxe des plus grandes marques du monde",
+    contactUsOnWhatsApp: "Contactez-Nous sur WhatsApp",
+    contactDescription: "Envoyez-nous un message concernant la pièce qui vous intéresse. Nous sommes là pour vous aider!",
+    weConfirmAvailability: "Nous Confirmons la Disponibilité",
+    confirmDescription: "Nous vérifions le stock, confirmons les prix et vous fournissons tous les détails nécessaires",
+    securePayment: "Paiement Sécurisé",
+    paymentDescription: "Finalisez votre achat par virement bancaire sécurisé ou lien de paiement",
+    weSourcItem: "Nous Trouvons Votre Article",
+    sourcingDescription: "Nous achetons auprès de boutiques officielles et de fournisseurs de confiance dans le monde entier",
+    deliveryToYou: "Livraison Chez Vous",
+    deliveryDescription: "Votre pièce arrive emballée en toute sécurité dans les délais indiqués",
+    howItWorks: "Comment Ça Marche",
+    weDeliverToYou: "Livraison Chez Vous",
+    step: "Étape",
+    authenticProducts: "Produits 100% Authentiques",
+    authenticProductsDesc: "Tous les articles proviennent de boutiques officielles et de revendeurs agréés avec authenticité garantie",
+    personalService: "Service Personnalisé",
+    personalServiceDesc: "Communication directe avec notre équipe de conciergerie pour une expérience d'achat sur mesure",
+    globalDelivery: "Livraison Mondiale",
+    globalDeliveryDesc: "Expédition sécurisée dans le monde entier avec suivi et assurance inclus",
+    startShoppingNow: "Commencez Vos Achats",
+
+    // Contact page
+    contactSubtitle: "Nous sommes là pour répondre à vos questions sur notre service de personal shopping de luxe",
+    whatsappContactDesc: "Discutez directement avec nous pour une assistance personnalisée",
+    chatNow: "Discuter Maintenant",
+    emailContactDesc: "Envoyez-nous un message et nous vous répondrons dans les 24 heures",
+    businessHours: "Heures d'Ouverture",
+    businessHoursDesc: "Dimanche - Jeudi: 9h - 21h (Heure du Golfe)",
+    responseTime: "Nous répondons généralement dans les 2-4 heures pendant les heures d'ouverture",
+    frequentlyAsked: "Questions Fréquentes",
+    faqAuthenticTitle: "Tous les articles sont-ils authentiques?",
+    faqAuthenticAnswer: "Oui, nous garantissons une authenticité à 100%. Tous les articles proviennent de boutiques officielles et de revendeurs agréés.",
+    faqDeliveryTitle: "Combien de temps prend la livraison?",
+    faqDeliveryAnswer: "Les délais de livraison varient selon l'article. Les articles en précommande arrivent généralement dans les 2-6 semaines selon le produit.",
+    faqPaymentTitle: "Quels modes de paiement acceptez-vous?",
+    faqPaymentAnswer: "Nous acceptons les virements bancaires et les liens de paiement sécurisés. Les détails de paiement sont fournis après confirmation de la commande.",
+
+    // Refund Policy
+    refundPolicy: "Politique de Remboursement",
+
+    // Footer
+    footerDisclaimer: "jWleria est un service indépendant de personal shopping de luxe. Nous ne sommes pas affiliés ni approuvés par aucune marque. Toutes les marques commerciales et noms de marques appartiennent à leurs propriétaires respectifs.",
   }
 };
 

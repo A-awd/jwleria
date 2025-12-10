@@ -7,8 +7,7 @@ import ProductInfoNew from "../components/product/ProductInfoNew";
 import ProductDescriptionNew from "../components/product/ProductDescriptionNew";
 import ProductCarousel from "../components/content/ProductCarousel";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useProduct } from "@/hooks/useProduct";
-import { Loader2 } from "lucide-react";
+import { getProductById, Product } from "@/data/products";
 import { 
   Breadcrumb, 
   BreadcrumbItem, 
@@ -17,7 +16,6 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { ProductData } from "@/types/shopify";
 
 // Demo images for product gallery fallback
 import pantheonImage from "@/assets/pantheon.jpg";
@@ -27,33 +25,24 @@ import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
 interface ProductDetailNewProps {
-  // Optional: Pass product data directly (for Shopify integration)
-  product?: ProductData;
-  // Optional: Loading state
-  isLoading?: boolean;
+  // Optional: Pass product data directly
+  product?: Product;
 }
 
-const ProductDetailNew = ({ product: externalProduct, isLoading: externalLoading }: ProductDetailNewProps) => {
+const ProductDetailNew = ({ product: externalProduct }: ProductDetailNewProps) => {
   const { productId } = useParams();
   const { t } = useLanguage();
 
-  // Try to fetch from Shopify using handle
-  const { product: shopifyProduct, isLoading, isFromLegacy } = useProduct({
-    handle: productId,
-    legacyId: Number(productId) || undefined,
-    useLegacyFallback: true,
-    enabled: !externalProduct,
-  });
+  // Get product from native data
+  const product = externalProduct || getProductById(Number(productId));
 
-  // Use external product if provided, otherwise use fetched product
-  const product = externalProduct || shopifyProduct;
-  const loading = externalLoading || isLoading;
-
-  // Enhance product with demo images if needed (for legacy fallback)
+  // Enhance product with demo images if needed
   const enhancedProduct = product ? {
     ...product,
-    images: product.images.length > 0 ? product.images : [
-      pantheonImage,
+    // Map priceEUR to price for component compatibility
+    price: product.priceEUR,
+    images: product.images && product.images.length > 0 ? product.images : [
+      product.image || pantheonImage,
       eclipseImage,
       haloImage,
       organicEarring,
@@ -63,21 +52,7 @@ const ProductDetailNew = ({ product: externalProduct, isLoading: externalLoading
     material: product.material || "18k Gold Plated Sterling Silver",
     dimensions: product.dimensions || "2.5cm x 1.2cm",
     weight: product.weight || "4.2g per piece",
-    editorsNotes: product.editorsNotes || "A modern interpretation of classical architecture, bridging timeless elegance with contemporary minimalism.",
   } : undefined;
-
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <main className="pt-4 md:pt-6 flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-10 w-10 animate-spin text-foreground/50" />
-        </main>
-        <Footer />
-      </div>
-    );
-  }
 
   // Product not found
   if (!enhancedProduct) {
