@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/i18n/LanguageContext";
+import Logo from "@/components/ui/Logo";
 
 const CheckoutHeader = () => {
   const { t, direction } = useLanguage();
@@ -21,7 +22,7 @@ const CheckoutHeader = () => {
 
           {/* Center - Logo - Absolutely positioned to ensure perfect centering */}
           <Link to="/" className="absolute left-1/2 transform -translate-x-1/2">
-            <span className="text-xl font-light tracking-widest text-foreground">jWleria</span>
+            <Logo size="lg" className="text-foreground" />
           </Link>
 
           {/* Right side - Support */}

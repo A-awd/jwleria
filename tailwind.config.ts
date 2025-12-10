@@ -15,6 +15,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ['DM Sans', 'sans-serif'],
+        arabic: ['"Noto Naskh Arabic"', '"Traditional Arabic"', '"Arabic Typesetting"', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",

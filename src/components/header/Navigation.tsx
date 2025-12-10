@@ -6,6 +6,7 @@ import CurrencySwitcher from "./CurrencySwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
+import Logo from "@/components/ui/Logo";
 
 const Navigation = () => {
   const { t, direction } = useLanguage();
@@ -181,7 +182,10 @@ const Navigation = () => {
         {/* Center logo - absolute on all screens */}
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <Link to="/" className="block">
-            <span className={`font-light tracking-widest text-nav-foreground text-center transition-all duration-300 ${isScrolled ? 'text-base md:text-lg' : 'text-lg md:text-xl'}`}>jWleria</span>
+            <Logo 
+              size={isScrolled ? "sm" : "md"} 
+              className="text-nav-foreground text-center transition-all duration-300" 
+            />
           </Link>
         </div>
 
