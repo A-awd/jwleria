@@ -643,6 +643,16 @@ export const translations = {
     howCanWeHelp: "How can we help you?",
     describeInquiry: "Please describe your inquiry in detail",
     sendMessage: "Send Message",
+    
+    // Accessibility
+    skipToContent: "Skip to main content",
+    addedToFavorites: "Added to favorites",
+    removedFromFavorites: "Removed from favorites",
+    searchResultsFound: "search results found",
+    noSearchResults: "No search results found",
+    loadingContent: "Loading content",
+    menuExpanded: "Menu expanded",
+    menuCollapsed: "Menu collapsed",
   },
   
   es: {
@@ -1277,6 +1287,16 @@ export const translations = {
     howCanWeHelp: "¿Cómo podemos ayudarte?",
     describeInquiry: "Por favor describe tu consulta en detalle",
     sendMessage: "Enviar Mensaje",
+    
+    // Accessibility
+    skipToContent: "Saltar al contenido principal",
+    addedToFavorites: "Añadido a favoritos",
+    removedFromFavorites: "Eliminado de favoritos",
+    searchResultsFound: "resultados de búsqueda encontrados",
+    noSearchResults: "No se encontraron resultados",
+    loadingContent: "Cargando contenido",
+    menuExpanded: "Menú expandido",
+    menuCollapsed: "Menú colapsado",
   },
   
   ar: {
@@ -1911,6 +1931,16 @@ export const translations = {
     howCanWeHelp: "كيف يمكننا مساعدتك؟",
     describeInquiry: "يرجى وصف استفسارك بالتفصيل",
     sendMessage: "إرسال رسالة",
+    
+    // Accessibility
+    skipToContent: "تخطي إلى المحتوى الرئيسي",
+    addedToFavorites: "تمت الإضافة إلى المفضلة",
+    removedFromFavorites: "تمت الإزالة من المفضلة",
+    searchResultsFound: "نتائج بحث تم العثور عليها",
+    noSearchResults: "لم يتم العثور على نتائج",
+    loadingContent: "جاري تحميل المحتوى",
+    menuExpanded: "تم توسيع القائمة",
+    menuCollapsed: "تم طي القائمة",
   },
   
   fr: {
@@ -2545,6 +2575,16 @@ export const translations = {
     howCanWeHelp: "Comment pouvons-nous vous aider?",
     describeInquiry: "Veuillez décrire votre demande en détail",
     sendMessage: "Envoyer le Message",
+    
+    // Accessibility
+    skipToContent: "Passer au contenu principal",
+    addedToFavorites: "Ajouté aux favoris",
+    removedFromFavorites: "Retiré des favoris",
+    searchResultsFound: "résultats de recherche trouvés",
+    noSearchResults: "Aucun résultat trouvé",
+    loadingContent: "Chargement du contenu",
+    menuExpanded: "Menu étendu",
+    menuCollapsed: "Menu réduit",
   }
 };
 

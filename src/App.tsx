@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./i18n/LanguageContext";
 import { CurrencyProvider } from "./i18n/CurrencyContext";
 import { FavoritesProvider } from "./contexts/FavoritesContext";
+import { AriaLiveProvider } from "./components/ui/AriaLiveRegion";
 import ScrollToTop from "./components/ScrollToTop";
+import SkipLink from "./components/ui/SkipLink";
 import Index from "./pages/Index";
 import Category from "./pages/Category";
 import ProductDetailNew from "./pages/ProductDetailNew";
@@ -31,35 +33,38 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
       <CurrencyProvider>
-        <FavoritesProvider>
-          <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/brands" element={<ShopByBrand />} />
-              <Route path="/brand/:brandId" element={<BrandDetail />} />
-              <Route path="/favorites" element={<Favorites />} />
-              <Route path="/category/:category" element={<Category />} />
-              <Route path="/category/brand/:brandId" element={<Category />} />
-              <Route path="/product/:productId" element={<ProductDetailNew />} />
-              <Route path="/how-it-works" element={<HowItWorks />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/about/our-story" element={<OurStory />} />
-              <Route path="/about/sustainability" element={<Sustainability />} />
-              <Route path="/about/size-guide" element={<SizeGuide />} />
-              <Route path="/about/customer-care" element={<CustomerCare />} />
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-of-service" element={<TermsOfService />} />
-              <Route path="/refund-policy" element={<RefundPolicy />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-          </TooltipProvider>
-        </FavoritesProvider>
+        <AriaLiveProvider>
+          <FavoritesProvider>
+            <TooltipProvider>
+              <SkipLink />
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <ScrollToTop />
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/brands" element={<ShopByBrand />} />
+                  <Route path="/brand/:brandId" element={<BrandDetail />} />
+                  <Route path="/favorites" element={<Favorites />} />
+                  <Route path="/category/:category" element={<Category />} />
+                  <Route path="/category/brand/:brandId" element={<Category />} />
+                  <Route path="/product/:productId" element={<ProductDetailNew />} />
+                  <Route path="/how-it-works" element={<HowItWorks />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/about/our-story" element={<OurStory />} />
+                  <Route path="/about/sustainability" element={<Sustainability />} />
+                  <Route path="/about/size-guide" element={<SizeGuide />} />
+                  <Route path="/about/customer-care" element={<CustomerCare />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/terms-of-service" element={<TermsOfService />} />
+                  <Route path="/refund-policy" element={<RefundPolicy />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </TooltipProvider>
+          </FavoritesProvider>
+        </AriaLiveProvider>
       </CurrencyProvider>
     </LanguageProvider>
   </QueryClientProvider>

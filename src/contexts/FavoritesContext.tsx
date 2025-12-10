@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useAriaLive } from '@/components/ui/AriaLiveRegion';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface FavoritesContextType {
   favorites: number[];
@@ -14,6 +16,17 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 const STORAGE_KEY = 'jwleria_favorites';
 
 export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
+  const { t } = useLanguage();
+  
+  // Try to use AriaLive, but handle case where it's not available yet
+  let announce: ((message: string, priority?: "polite" | "assertive") => void) | undefined;
+  try {
+    const ariaLive = useAriaLive();
+    announce = ariaLive.announce;
+  } catch {
+    // AriaLive not available (during initial render), will use fallback
+  }
+
   const [favorites, setFavorites] = useState<number[]>(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -30,12 +43,16 @@ export const FavoritesProvider = ({ children }: { children: ReactNode }) => {
   const addToFavorites = (productId: number) => {
     setFavorites(prev => {
       if (prev.includes(productId)) return prev;
+      announce?.(t("addedToFavorites"), "polite");
       return [...prev, productId];
     });
   };
 
   const removeFromFavorites = (productId: number) => {
-    setFavorites(prev => prev.filter(id => id !== productId));
+    setFavorites(prev => {
+      announce?.(t("removedFromFavorites"), "polite");
+      return prev.filter(id => id !== productId);
+    });
   };
 
   const toggleFavorite = (productId: number) => {
