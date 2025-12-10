@@ -17,65 +17,42 @@ const RefundPolicy = () => {
           
           <div className="prose prose-sm max-w-none text-muted-foreground space-y-6">
             <p className="text-foreground font-medium">
-              Last updated: December 2024
+              {t("lastUpdated")}: {t("december")} 2024
             </p>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Pre-Order Nature of Our Service</h2>
-              <p>
-                As a luxury personal shopping service, all items offered by jWleria are sourced on a pre-order basis. 
-                This means we purchase items from official boutiques or authorized dealers specifically for you after 
-                receiving your order and payment.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundPreOrderNature")}</h2>
+              <p>{t("refundPreOrderNatureDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Cancellation Before Sourcing</h2>
-              <p>
-                If you wish to cancel your order before we have sourced the item, please contact us immediately via WhatsApp. 
-                In most cases, we can offer a full refund minus any non-recoverable bank transfer fees.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundCancellationBefore")}</h2>
+              <p>{t("refundCancellationBeforeDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Cancellation After Sourcing</h2>
-              <p>
-                Once we have purchased the item on your behalf, cancellations may not be possible as luxury items are 
-                typically non-returnable to boutiques. If cancellation is possible, a restocking fee of up to 20% may apply.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundCancellationAfter")}</h2>
+              <p>{t("refundCancellationAfterDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Defective or Incorrect Items</h2>
-              <p>
-                If you receive an item that is defective or different from what was ordered, please contact us within 
-                48 hours of delivery. We will work with you to arrange a return or exchange at no additional cost.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundDefectiveItems")}</h2>
+              <p>{t("refundDefectiveItemsDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Authenticity Guarantee</h2>
-              <p>
-                All items are 100% authentic and sourced from official brand boutiques or authorized dealers. 
-                If you have any concerns about authenticity, we will provide full documentation and work with 
-                you to verify the item.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundAuthenticity")}</h2>
+              <p>{t("refundAuthenticityDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Refund Processing</h2>
-              <p>
-                Approved refunds will be processed within 7-14 business days. Refunds will be issued to the 
-                original payment method. Bank transfer refunds may take additional time depending on your bank.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("refundProcessing")}</h2>
+              <p>{t("refundProcessingDesc")}</p>
             </section>
 
             <section>
-              <h2 className="text-xl font-light text-foreground mb-4">Contact Us</h2>
-              <p>
-                For any questions about refunds or cancellations, please contact us via WhatsApp or email at 
-                hello@jwleria.com. We are committed to ensuring your satisfaction with every purchase.
-              </p>
+              <h2 className="text-xl font-light text-foreground mb-4">{t("contactUsTitle")}</h2>
+              <p>{t("refundContactDesc")}</p>
             </section>
           </div>
         </div>

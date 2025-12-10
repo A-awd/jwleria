@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ReviewProduct from "./ReviewProduct";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const CustomStar = ({ filled, className }: { filled: boolean; className?: string }) => (
   <svg 
@@ -19,6 +20,7 @@ const CustomStar = ({ filled, className }: { filled: boolean; className?: string
 );
 
 const ProductDescription = () => {
+  const { t } = useLanguage();
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isCareOpen, setIsCareOpen] = useState(false);
@@ -33,7 +35,7 @@ const ProductDescription = () => {
           onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
-          <span>Description</span>
+          <span>{t("productDescription")}</span>
           {isDescriptionOpen ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -43,14 +45,10 @@ const ProductDescription = () => {
         {isDescriptionOpen && (
           <div className="pb-6 space-y-4">
             <p className="text-sm font-light text-muted-foreground leading-relaxed">
-              The Pantheon earrings embody architectural elegance with their clean, geometric design. 
-              Inspired by classical Roman architecture, these statement pieces feature a sophisticated 
-              interplay of curves and angles that catch and reflect light beautifully.
+              {t("productDescriptionText1")}
             </p>
             <p className="text-sm font-light text-muted-foreground leading-relaxed">
-              Each earring is meticulously crafted from premium sterling silver with an 18k gold 
-              plating, ensuring both durability and luxury. The minimalist aesthetic makes them 
-              perfect for both everyday wear and special occasions.
+              {t("productDescriptionText2")}
             </p>
           </div>
         )}
@@ -63,7 +61,7 @@ const ProductDescription = () => {
           onClick={() => setIsDetailsOpen(!isDetailsOpen)}
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
-          <span>Product Details</span>
+          <span>{t("productDetails")}</span>
           {isDetailsOpen ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -73,20 +71,20 @@ const ProductDescription = () => {
         {isDetailsOpen && (
           <div className="pb-6 space-y-3">
             <div className="flex justify-between">
-              <span className="text-sm font-light text-muted-foreground">SKU</span>
+              <span className="text-sm font-light text-muted-foreground">{t("sku")}</span>
               <span className="text-sm font-light text-foreground">LE-PTH-001</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm font-light text-muted-foreground">Collection</span>
-              <span className="text-sm font-light text-foreground">Architectural Series</span>
+              <span className="text-sm font-light text-muted-foreground">{t("collection")}</span>
+              <span className="text-sm font-light text-foreground">{t("architecturalSeries")}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm font-light text-muted-foreground">Closure</span>
-              <span className="text-sm font-light text-foreground">Post and butterfly back</span>
+              <span className="text-sm font-light text-muted-foreground">{t("closure")}</span>
+              <span className="text-sm font-light text-foreground">{t("postAndButterflyBack")}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-sm font-light text-muted-foreground">Hypoallergenic</span>
-              <span className="text-sm font-light text-foreground">Yes</span>
+              <span className="text-sm font-light text-muted-foreground">{t("hypoallergenic")}</span>
+              <span className="text-sm font-light text-foreground">{t("yes")}</span>
             </div>
           </div>
         )}
@@ -99,7 +97,7 @@ const ProductDescription = () => {
           onClick={() => setIsCareOpen(!isCareOpen)}
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
-          <span>Care & Cleaning</span>
+          <span>{t("careCleaning")}</span>
           {isCareOpen ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -109,13 +107,13 @@ const ProductDescription = () => {
         {isCareOpen && (
           <div className="pb-6 space-y-4">
             <ul className="space-y-2">
-              <li className="text-sm font-light text-muted-foreground">• Clean with a soft, dry cloth after each wear</li>
-              <li className="text-sm font-light text-muted-foreground">• Avoid contact with perfumes, lotions, and cleaning products</li>
-              <li className="text-sm font-light text-muted-foreground">• Store in the provided jewelry pouch when not wearing</li>
-              <li className="text-sm font-light text-muted-foreground">• Remove before swimming, exercising, or showering</li>
+              <li className="text-sm font-light text-muted-foreground">• {t("careInstruction1")}</li>
+              <li className="text-sm font-light text-muted-foreground">• {t("careInstruction2")}</li>
+              <li className="text-sm font-light text-muted-foreground">• {t("careInstruction3")}</li>
+              <li className="text-sm font-light text-muted-foreground">• {t("careInstruction4")}</li>
             </ul>
             <p className="text-sm font-light text-muted-foreground">
-              For professional cleaning, visit your local jeweler or contact our customer service team.
+              {t("careInstructionProfessional")}
             </p>
           </div>
         )}
@@ -129,7 +127,7 @@ const ProductDescription = () => {
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
           <div className="flex items-center gap-3">
-            <span>Customer Reviews</span>
+            <span>{t("customerReviews")}</span>
             <div className="flex items-center">
               {[1, 2, 3, 4, 5].map((star) => (
                 <CustomStar
@@ -166,8 +164,7 @@ const ProductDescription = () => {
                   <span className="text-sm font-light text-muted-foreground">Sarah M.</span>
                 </div>
                 <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                  "Absolutely stunning earrings! The quality is exceptional and they go with everything. 
-                  The architectural design is so unique and I get compliments every time I wear them."
+                  {t("review1")}
                 </p>
               </div>
 
@@ -184,8 +181,7 @@ const ProductDescription = () => {
                   <span className="text-sm font-light text-muted-foreground">Emma T.</span>
                 </div>
                 <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                  "Beautiful craftsmanship and comfortable to wear all day. The gold plating has held up 
-                  perfectly after months of regular wear. Highly recommend!"
+                  {t("review2")}
                 </p>
               </div>
 
@@ -202,8 +198,7 @@ const ProductDescription = () => {
                   <span className="text-sm font-light text-muted-foreground">Jessica R.</span>
                 </div>
                 <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                  "These earrings are a work of art. The minimalist design is elegant and sophisticated. 
-                  Perfect weight and the packaging was beautiful too."
+                  {t("review3")}
                 </p>
               </div>
             </div>

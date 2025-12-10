@@ -495,6 +495,34 @@ export const translations = {
 
     // Refund Policy
     refundPolicy: "Refund Policy",
+    december: "December",
+    refundPreOrderNature: "Pre-Order Nature of Our Service",
+    refundPreOrderNatureDesc: "As a luxury personal shopping service, all items offered by jWleria are sourced on a pre-order basis. This means we purchase items from official boutiques or authorized dealers specifically for you after receiving your order and payment.",
+    refundCancellationBefore: "Cancellation Before Sourcing",
+    refundCancellationBeforeDesc: "If you wish to cancel your order before we have sourced the item, please contact us immediately via WhatsApp. In most cases, we can offer a full refund minus any non-recoverable bank transfer fees.",
+    refundCancellationAfter: "Cancellation After Sourcing",
+    refundCancellationAfterDesc: "Once we have purchased the item on your behalf, cancellations may not be possible as luxury items are typically non-returnable to boutiques. If cancellation is possible, a restocking fee of up to 20% may apply.",
+    refundDefectiveItems: "Defective or Incorrect Items",
+    refundDefectiveItemsDesc: "If you receive an item that is defective or different from what was ordered, please contact us within 48 hours of delivery. We will work with you to arrange a return or exchange at no additional cost.",
+    refundAuthenticity: "Authenticity Guarantee",
+    refundAuthenticityDesc: "All items are 100% authentic and sourced from official brand boutiques or authorized dealers. If you have any concerns about authenticity, we will provide full documentation and work with you to verify the item.",
+    refundProcessing: "Refund Processing",
+    refundProcessingDesc: "Approved refunds will be processed within 7-14 business days. Refunds will be issued to the original payment method. Bank transfer refunds may take additional time depending on your bank.",
+    refundContactDesc: "For any questions about refunds or cancellations, please contact us via WhatsApp or email at hello@jwleria.com. We are committed to ensuring your satisfaction with every purchase.",
+
+    // Product Description
+    productDescriptionText1: "This exquisite piece embodies architectural elegance with its clean, geometric design. Inspired by classical design principles, this statement piece features a sophisticated interplay of curves and angles that catch and reflect light beautifully.",
+    productDescriptionText2: "Meticulously crafted from premium materials with exceptional attention to detail, ensuring both durability and luxury. The minimalist aesthetic makes it perfect for both everyday wear and special occasions.",
+    architecturalSeries: "Architectural Series",
+    closure: "Closure",
+    postAndButterflyBack: "Post and butterfly back",
+    hypoallergenic: "Hypoallergenic",
+    yes: "Yes",
+    careCleaning: "Care & Cleaning",
+    careInstructionProfessional: "For professional cleaning, visit your local jeweler or contact our customer service team.",
+    review1: "Absolutely stunning piece! The quality is exceptional and it goes with everything. The design is so unique and I get compliments every time I wear it.",
+    review2: "Beautiful craftsmanship and comfortable to wear all day. The finish has held up perfectly after months of regular wear. Highly recommend!",
+    review3: "This piece is a work of art. The minimalist design is elegant and sophisticated. Perfect weight and the packaging was beautiful too.",
 
     // Footer
     footerDisclaimer: "jWleria is an independent luxury personal shopping service. We are not affiliated with or endorsed by any brands. All trademarks and brand names are the property of their respective owners.",
@@ -1030,6 +1058,34 @@ export const translations = {
 
     // Refund Policy
     refundPolicy: "Política de Reembolso",
+    december: "Diciembre",
+    refundPreOrderNature: "Naturaleza de Nuestro Servicio de Pre-Orden",
+    refundPreOrderNatureDesc: "Como servicio de compras personales de lujo, todos los artículos ofrecidos por jWleria se obtienen en base a pre-orden. Esto significa que compramos artículos de boutiques oficiales o distribuidores autorizados específicamente para usted después de recibir su pedido y pago.",
+    refundCancellationBefore: "Cancelación Antes del Aprovisionamiento",
+    refundCancellationBeforeDesc: "Si desea cancelar su pedido antes de que hayamos obtenido el artículo, contáctenos inmediatamente por WhatsApp. En la mayoría de los casos, podemos ofrecer un reembolso completo menos cualquier tarifa de transferencia bancaria no recuperable.",
+    refundCancellationAfter: "Cancelación Después del Aprovisionamiento",
+    refundCancellationAfterDesc: "Una vez que hemos comprado el artículo en su nombre, las cancelaciones pueden no ser posibles ya que los artículos de lujo normalmente no son retornables a las boutiques. Si la cancelación es posible, puede aplicarse una tarifa de reposición de hasta el 20%.",
+    refundDefectiveItems: "Artículos Defectuosos o Incorrectos",
+    refundDefectiveItemsDesc: "Si recibe un artículo que está defectuoso o es diferente de lo que ordenó, contáctenos dentro de las 48 horas posteriores a la entrega. Trabajaremos con usted para organizar una devolución o cambio sin costo adicional.",
+    refundAuthenticity: "Garantía de Autenticidad",
+    refundAuthenticityDesc: "Todos los artículos son 100% auténticos y se obtienen de boutiques oficiales de marca o distribuidores autorizados. Si tiene alguna inquietud sobre la autenticidad, proporcionaremos documentación completa y trabajaremos con usted para verificar el artículo.",
+    refundProcessing: "Procesamiento de Reembolso",
+    refundProcessingDesc: "Los reembolsos aprobados se procesarán dentro de 7-14 días hábiles. Los reembolsos se emitirán al método de pago original. Los reembolsos por transferencia bancaria pueden tomar tiempo adicional dependiendo de su banco.",
+    refundContactDesc: "Para cualquier pregunta sobre reembolsos o cancelaciones, contáctenos por WhatsApp o correo electrónico a hello@jwleria.com. Estamos comprometidos a asegurar su satisfacción con cada compra.",
+
+    // Product Description
+    productDescriptionText1: "Esta pieza exquisita encarna la elegancia arquitectónica con su diseño limpio y geométrico. Inspirada en principios de diseño clásico, esta pieza distintiva presenta un sofisticado juego de curvas y ángulos que captura y refleja la luz bellamente.",
+    productDescriptionText2: "Fabricada meticulosamente con materiales premium con excepcional atención al detalle, asegurando tanto durabilidad como lujo. La estética minimalista la hace perfecta tanto para uso diario como para ocasiones especiales.",
+    architecturalSeries: "Serie Arquitectónica",
+    closure: "Cierre",
+    postAndButterflyBack: "Poste y mariposa trasera",
+    hypoallergenic: "Hipoalergénico",
+    yes: "Sí",
+    careCleaning: "Cuidado y Limpieza",
+    careInstructionProfessional: "Para limpieza profesional, visite su joyero local o contacte a nuestro equipo de servicio al cliente.",
+    review1: "¡Pieza absolutamente impresionante! La calidad es excepcional y combina con todo. El diseño es tan único y recibo cumplidos cada vez que la uso.",
+    review2: "Bella artesanía y cómoda de usar todo el día. El acabado se ha mantenido perfectamente después de meses de uso regular. ¡Altamente recomendado!",
+    review3: "Esta pieza es una obra de arte. El diseño minimalista es elegante y sofisticado. Peso perfecto y el empaque también fue hermoso.",
 
     // Footer
     footerDisclaimer: "jWleria es un servicio independiente de compras personales de lujo. No estamos afiliados ni respaldados por ninguna marca. Todas las marcas comerciales y nombres de marca son propiedad de sus respectivos dueños.",
@@ -1553,6 +1609,34 @@ export const translations = {
 
     // Refund Policy
     refundPolicy: "سياسة الاسترداد",
+    december: "ديسمبر",
+    refundPreOrderNature: "طبيعة خدمة الطلب المسبق",
+    refundPreOrderNatureDesc: "كخدمة تسوق شخصية فاخرة، يتم الحصول على جميع المنتجات التي تقدمها jWleria على أساس الطلب المسبق. هذا يعني أننا نشتري المنتجات من البوتيكات الرسمية أو الموزعين المعتمدين خصيصاً لك بعد استلام طلبك والدفع.",
+    refundCancellationBefore: "الإلغاء قبل التوريد",
+    refundCancellationBeforeDesc: "إذا كنت ترغب في إلغاء طلبك قبل أن نحصل على المنتج، يرجى التواصل معنا فوراً عبر واتساب. في معظم الحالات، يمكننا تقديم استرداد كامل ناقص أي رسوم تحويل بنكي غير قابلة للاسترداد.",
+    refundCancellationAfter: "الإلغاء بعد التوريد",
+    refundCancellationAfterDesc: "بمجرد شراء المنتج نيابة عنك، قد لا يكون الإلغاء ممكناً لأن منتجات الفخامة عادة غير قابلة للإرجاع إلى البوتيكات. إذا كان الإلغاء ممكناً، قد تطبق رسوم إعادة تخزين تصل إلى 20%.",
+    refundDefectiveItems: "المنتجات المعيبة أو الخاطئة",
+    refundDefectiveItemsDesc: "إذا استلمت منتجاً معيباً أو مختلفاً عما طلبته، يرجى التواصل معنا خلال 48 ساعة من التسليم. سنعمل معك لترتيب إرجاع أو استبدال دون تكلفة إضافية.",
+    refundAuthenticity: "ضمان الأصالة",
+    refundAuthenticityDesc: "جميع المنتجات أصلية 100% ويتم الحصول عليها من بوتيكات العلامات التجارية الرسمية أو الموزعين المعتمدين. إذا كانت لديك أي مخاوف بشأن الأصالة، سنقدم وثائق كاملة ونعمل معك للتحقق من المنتج.",
+    refundProcessing: "معالجة الاسترداد",
+    refundProcessingDesc: "سيتم معالجة المبالغ المستردة المعتمدة خلال 7-14 يوم عمل. سيتم إصدار المبالغ المستردة إلى طريقة الدفع الأصلية. قد تستغرق المبالغ المستردة بالتحويل البنكي وقتاً إضافياً حسب بنكك.",
+    refundContactDesc: "لأي أسئلة حول الاسترداد أو الإلغاء، يرجى التواصل معنا عبر واتساب أو البريد الإلكتروني على hello@jwleria.com. نحن ملتزمون بضمان رضاك عن كل عملية شراء.",
+
+    // Product Description
+    productDescriptionText1: "تجسد هذه القطعة الفاخرة الأناقة المعمارية بتصميمها النظيف والهندسي. مستوحاة من مبادئ التصميم الكلاسيكي، تتميز هذه القطعة المميزة بتفاعل متطور بين المنحنيات والزوايا التي تلتقط الضوء وتعكسه بشكل جميل.",
+    productDescriptionText2: "مصنوعة بدقة من مواد فاخرة مع اهتمام استثنائي بالتفاصيل، مما يضمن المتانة والفخامة معاً. الجمالية البسيطة تجعلها مثالية للارتداء اليومي والمناسبات الخاصة.",
+    architecturalSeries: "السلسلة المعمارية",
+    closure: "القفل",
+    postAndButterflyBack: "عمود وظهر فراشة",
+    hypoallergenic: "مضاد للحساسية",
+    yes: "نعم",
+    careCleaning: "العناية والتنظيف",
+    careInstructionProfessional: "للتنظيف المهني، قم بزيارة صائغ المجوهرات المحلي أو اتصل بفريق خدمة العملاء لدينا.",
+    review1: "قطعة مذهلة للغاية! الجودة استثنائية وتتناسب مع كل شيء. التصميم فريد جداً وأتلقى الإطراء في كل مرة أرتديها.",
+    review2: "حرفية جميلة ومريحة للارتداء طوال اليوم. الإنهاء صمد تماماً بعد أشهر من الاستخدام المنتظم. أوصي بشدة!",
+    review3: "هذه القطعة عمل فني. التصميم البسيط أنيق وراقي. وزن مثالي والتغليف كان جميلاً أيضاً.",
 
     // Footer
     footerDisclaimer: "jWleria هي خدمة تسوق شخصية فاخرة مستقلة. نحن غير تابعين أو معتمدين من أي علامات تجارية. جميع العلامات التجارية وأسماء العلامات هي ملك لأصحابها.",
@@ -2076,6 +2160,34 @@ export const translations = {
 
     // Refund Policy
     refundPolicy: "Politique de Remboursement",
+    december: "Décembre",
+    refundPreOrderNature: "Nature de Notre Service de Précommande",
+    refundPreOrderNatureDesc: "En tant que service de personal shopping de luxe, tous les articles proposés par jWleria sont sourcés sur une base de précommande. Cela signifie que nous achetons les articles auprès de boutiques officielles ou de revendeurs agréés spécifiquement pour vous après réception de votre commande et paiement.",
+    refundCancellationBefore: "Annulation Avant l'Approvisionnement",
+    refundCancellationBeforeDesc: "Si vous souhaitez annuler votre commande avant que nous ayons sourcé l'article, veuillez nous contacter immédiatement via WhatsApp. Dans la plupart des cas, nous pouvons offrir un remboursement complet moins les frais de virement bancaire non récupérables.",
+    refundCancellationAfter: "Annulation Après l'Approvisionnement",
+    refundCancellationAfterDesc: "Une fois que nous avons acheté l'article en votre nom, les annulations peuvent ne pas être possibles car les articles de luxe ne sont généralement pas retournables aux boutiques. Si l'annulation est possible, des frais de restockage jusqu'à 20% peuvent s'appliquer.",
+    refundDefectiveItems: "Articles Défectueux ou Incorrects",
+    refundDefectiveItemsDesc: "Si vous recevez un article défectueux ou différent de ce qui a été commandé, veuillez nous contacter dans les 48 heures suivant la livraison. Nous travaillerons avec vous pour organiser un retour ou un échange sans frais supplémentaires.",
+    refundAuthenticity: "Garantie d'Authenticité",
+    refundAuthenticityDesc: "Tous les articles sont 100% authentiques et proviennent de boutiques officielles de la marque ou de revendeurs agréés. Si vous avez des préoccupations concernant l'authenticité, nous fournirons une documentation complète et travaillerons avec vous pour vérifier l'article.",
+    refundProcessing: "Traitement des Remboursements",
+    refundProcessingDesc: "Les remboursements approuvés seront traités dans les 7-14 jours ouvrables. Les remboursements seront émis selon le mode de paiement original. Les remboursements par virement bancaire peuvent prendre plus de temps selon votre banque.",
+    refundContactDesc: "Pour toute question sur les remboursements ou annulations, veuillez nous contacter via WhatsApp ou par email à hello@jwleria.com. Nous nous engageons à assurer votre satisfaction pour chaque achat.",
+
+    // Product Description
+    productDescriptionText1: "Cette pièce exquise incarne l'élégance architecturale avec son design épuré et géométrique. Inspirée par les principes de design classique, cette pièce distinctive présente un jeu sophistiqué de courbes et d'angles qui captent et reflètent magnifiquement la lumière.",
+    productDescriptionText2: "Fabriquée méticuleusement à partir de matériaux premium avec une attention exceptionnelle aux détails, assurant à la fois durabilité et luxe. L'esthétique minimaliste la rend parfaite pour le port quotidien et les occasions spéciales.",
+    architecturalSeries: "Série Architecturale",
+    closure: "Fermeture",
+    postAndButterflyBack: "Tige et poussette papillon",
+    hypoallergenic: "Hypoallergénique",
+    yes: "Oui",
+    careCleaning: "Entretien et Nettoyage",
+    careInstructionProfessional: "Pour un nettoyage professionnel, visitez votre bijoutier local ou contactez notre équipe de service client.",
+    review1: "Pièce absolument magnifique! La qualité est exceptionnelle et elle va avec tout. Le design est tellement unique et je reçois des compliments à chaque fois que je la porte.",
+    review2: "Belle fabrication et confortable à porter toute la journée. La finition a parfaitement tenu après des mois d'utilisation régulière. Je recommande vivement!",
+    review3: "Cette pièce est une œuvre d'art. Le design minimaliste est élégant et sophistiqué. Poids parfait et l'emballage était également magnifique.",
 
     // Footer
     footerDisclaimer: "jWleria est un service indépendant de personal shopping de luxe. Nous ne sommes pas affiliés ni approuvés par aucune marque. Toutes les marques commerciales et noms de marques appartiennent à leurs propriétaires respectifs.",
