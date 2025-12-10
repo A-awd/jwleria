@@ -2,6 +2,7 @@ import { useLanguage } from "@/i18n/LanguageContext";
 import { Instagram, MessageCircle } from "lucide-react";
 import { STORE_CONFIG, getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
+import Logo from "@/components/ui/Logo";
 
 // Custom TikTok icon since Lucide doesn't have one
 const TikTokIcon = ({ size = 24, className = "" }: { size?: number; className?: string }) => (
@@ -36,7 +37,9 @@ const Footer = () => {
       <div className="md:hidden">
         {/* Brand & Social */}
         <div className="text-center mb-6">
-          <span className="text-xl font-light tracking-widest text-black mb-3 block">jWleria</span>
+          <div className="mb-3">
+            <Logo size="lg" className="text-black" />
+          </div>
           <p className="text-xs font-light text-black/70 leading-relaxed mb-4 px-4">
             {t("minimalistJewelry")}
           </p>
@@ -101,7 +104,9 @@ const Footer = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-8">
           {/* Brand - Left side */}
           <div>
-            <span className="text-xl font-light tracking-widest text-black mb-4 block">jWleria</span>
+            <div className="mb-4">
+              <Logo size="lg" className="text-black" />
+            </div>
             <p className="text-sm font-light text-black/70 leading-relaxed max-w-md mb-6">
               {t("minimalistJewelry")}
             </p>
@@ -176,7 +181,7 @@ const Footer = () => {
       <div className="border-t border-[#e5e5e5] -mx-4 md:-mx-6 px-4 md:px-6 pt-2">
         <div className="flex flex-col md:flex-row justify-between items-center gap-2">
           <p className="text-xs md:text-sm font-light text-black">
-            © 2024 jWleria. {t("allRightsReserved")}
+            © 2024 <Logo size="sm" className="text-black inline" />. {t("allRightsReserved")}
           </p>
           <div className={`flex ${direction === 'rtl' ? 'space-x-reverse' : ''} space-x-4 md:space-x-6`}>
             <a href="/privacy-policy" className="text-xs md:text-sm font-light text-black hover:text-black/70 transition-colors">
