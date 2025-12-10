@@ -490,6 +490,19 @@ export const translations = {
     review2: "Beautiful craftsmanship and comfortable to wear all day. The finish has held up perfectly after months of regular wear. Highly recommend!",
     review3: "This piece is a work of art. The minimalist design is elegant and sophisticated. Perfect weight and the packaging was beautiful too.",
 
+    // 404 Page
+    pageNotFound: "Page Not Found",
+    pageNotFoundDesc: "The page you're looking for doesn't exist or has been moved.",
+    returnToHome: "Return to Home",
+
+    // Review Product
+    reviewProduct: "Write a Review",
+    rating: "Rating",
+    yourReview: "Your Review",
+    shareYourThoughts: "Share your thoughts about this product...",
+    submitReview: "Submit Review",
+    defaultProductDescription: "This exquisite piece embodies timeless elegance with exceptional craftsmanship. A perfect addition to any luxury collection.",
+
     // Footer
     footerDisclaimer: "jWleria is an independent luxury personal shopping service. We are not affiliated with or endorsed by any brands. All trademarks and brand names are the property of their respective owners.",
 
@@ -1123,6 +1136,19 @@ export const translations = {
     review2: "Bella artesanía y cómoda de usar todo el día. El acabado se ha mantenido perfectamente después de meses de uso regular. ¡Altamente recomendado!",
     review3: "Esta pieza es una obra de arte. El diseño minimalista es elegante y sofisticado. Peso perfecto y el empaque también fue hermoso.",
 
+    // 404 Page
+    pageNotFound: "Página No Encontrada",
+    pageNotFoundDesc: "La página que buscas no existe o ha sido movida.",
+    returnToHome: "Volver al Inicio",
+
+    // Review Product
+    reviewProduct: "Escribir Reseña",
+    rating: "Calificación",
+    yourReview: "Tu Reseña",
+    shareYourThoughts: "Comparte tu opinión sobre este producto...",
+    submitReview: "Enviar Reseña",
+    defaultProductDescription: "Esta pieza exquisita encarna la elegancia atemporal con una artesanía excepcional. Una adición perfecta a cualquier colección de lujo.",
+
     // Footer
     footerDisclaimer: "jWleria es un servicio independiente de compras personales de lujo. No estamos afiliados ni respaldados por ninguna marca. Todas las marcas comerciales y nombres de marca son propiedad de sus respectivos dueños.",
 
@@ -1744,6 +1770,19 @@ export const translations = {
     review2: "حرفية جميلة ومريحة للارتداء طوال اليوم. الإنهاء صمد تماماً بعد أشهر من الاستخدام المنتظم. أوصي بشدة!",
     review3: "هذه القطعة عمل فني. التصميم البسيط أنيق وراقي. وزن مثالي والتغليف كان جميلاً أيضاً.",
 
+    // 404 Page
+    pageNotFound: "الصفحة غير موجودة",
+    pageNotFoundDesc: "الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
+    returnToHome: "العودة للرئيسية",
+
+    // Review Product
+    reviewProduct: "اكتب تقييماً",
+    rating: "التقييم",
+    yourReview: "تقييمك",
+    shareYourThoughts: "شارك رأيك حول هذا المنتج...",
+    submitReview: "إرسال التقييم",
+    defaultProductDescription: "تجسد هذه القطعة الرائعة الأناقة الخالدة مع حرفية استثنائية. إضافة مثالية لأي مجموعة فاخرة.",
+
     // Footer
     footerDisclaimer: "jWleria هي خدمة تسوق شخصية فاخرة مستقلة. نحن غير تابعين أو معتمدين من أي علامات تجارية. جميع العلامات التجارية وأسماء العلامات هي ملك لأصحابها.",
 
@@ -2364,6 +2403,19 @@ export const translations = {
     review1: "Pièce absolument magnifique! La qualité est exceptionnelle et elle va avec tout. Le design est tellement unique et je reçois des compliments à chaque fois que je la porte.",
     review2: "Belle fabrication et confortable à porter toute la journée. La finition a parfaitement tenu après des mois d'utilisation régulière. Je recommande vivement!",
     review3: "Cette pièce est une œuvre d'art. Le design minimaliste est élégant et sophistiqué. Poids parfait et l'emballage était également magnifique.",
+
+    // 404 Page
+    pageNotFound: "Page Introuvable",
+    pageNotFoundDesc: "La page que vous recherchez n'existe pas ou a été déplacée.",
+    returnToHome: "Retourner à l'Accueil",
+
+    // Review Product
+    reviewProduct: "Écrire un Avis",
+    rating: "Note",
+    yourReview: "Votre Avis",
+    shareYourThoughts: "Partagez votre avis sur ce produit...",
+    submitReview: "Envoyer l'Avis",
+    defaultProductDescription: "Cette pièce exquise incarne l'élégance intemporelle avec un savoir-faire exceptionnel. Un ajout parfait à toute collection de luxe.",
 
     // Footer
     footerDisclaimer: "jWleria est un service indépendant de personal shopping de luxe. Nous ne sommes pas affiliés ni approuvés par aucune marque. Toutes les marques commerciales et noms de marques appartiennent à leurs propriétaires respectifs.",

@@ -79,7 +79,7 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
         {isDescriptionOpen && (
           <div className="pb-6 space-y-4">
             <p className="text-sm font-light text-muted-foreground leading-relaxed">
-              {product.description || `The ${product.name} by ${product.brand} embodies timeless elegance with exceptional craftsmanship. A perfect addition to any luxury collection.`}
+              {product.description || t("defaultProductDescription")}
             </p>
           </div>
         )}
@@ -135,7 +135,7 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
               ))}
             </ul>
             <p className="text-sm font-light text-muted-foreground">
-              For professional cleaning, visit your local jeweler or contact our customer service team.
+              {t("careContactService")}
             </p>
           </div>
         )}
