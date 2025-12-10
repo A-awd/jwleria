@@ -1,20 +1,17 @@
-import { ArrowRight, User } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import ShoppingBag from "./ShoppingBag";
 import LanguageSwitcher from "./LanguageSwitcher";
 import CurrencySwitcher from "./CurrencySwitcher";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useShopifyCart } from "@/hooks/useShopifyCart";
+import { getGeneralWhatsAppLink } from "@/config/store";
+import { trackWhatsAppClick } from "@/lib/analytics";
 
 const Navigation = () => {
   const { t, direction } = useLanguage();
-  const { cart } = useShopifyCart();
-  const totalItems = cart?.totalQuantity || 0;
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isShoppingBagOpen, setIsShoppingBagOpen] = useState(false);
 
   // Preload dropdown images for faster display
   useEffect(() => {
@@ -24,6 +21,12 @@ const Navigation = () => {
       img.src = src;
     });
   }, []);
+
+  const handleWhatsAppClick = () => {
+    trackWhatsAppClick({ type: 'general' });
+    window.open(getGeneralWhatsAppLink(), '_blank');
+  };
+
   const popularSearches = [{
     key: "goldRings",
     label: t("goldRings")
@@ -43,6 +46,7 @@ const Navigation = () => {
     key: "vintageCollection",
     label: t("vintageCollection")
   }];
+
   const navItems = [{
     name: t("shop"),
     key: "Shop",
@@ -90,6 +94,9 @@ const Navigation = () => {
       key: "ourStory",
       label: t("ourStory")
     }, {
+      key: "howItWorks",
+      label: t("howItWorksNav")
+    }, {
       key: "sustainability",
       label: t("sustainability")
     }, {
@@ -98,9 +105,6 @@ const Navigation = () => {
     }, {
       key: "customerCare",
       label: t("customerCare")
-    }, {
-      key: "storeLocator",
-      label: t("storeLocator")
     }],
     images: [{
       src: "/founders.png",
@@ -108,6 +112,7 @@ const Navigation = () => {
       label: t("readOurStory")
     }]
   }];
+
   const getSubmenuPath = (itemKey: string, subItemKey: string) => {
     if (subItemKey === "brands") {
       return "/brands";
@@ -115,15 +120,17 @@ const Navigation = () => {
     if (itemKey === "About") {
       const pathMap: Record<string, string> = {
         ourStory: "our-story",
+        howItWorks: "/how-it-works",
         sustainability: "sustainability",
         sizeGuide: "size-guide",
         customerCare: "customer-care",
-        storeLocator: "store-locator"
       };
+      if (subItemKey === "howItWorks") return "/how-it-works";
       return `/about/${pathMap[subItemKey] || subItemKey}`;
     }
     return `/category/${subItemKey.toLowerCase()}`;
   };
+
   return <nav className="relative" style={{
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     backdropFilter: 'blur(10px)'
@@ -174,16 +181,13 @@ const Navigation = () => {
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
             </svg>
           </Link>
-          <Link to="/account" className="hidden sm:block p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200" aria-label={t("account")}>
-            <User className="w-5 h-5" />
-          </Link>
-          <button className="p-1.5 md:p-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 relative" aria-label={t("shoppingBag")} onClick={() => setIsShoppingBagOpen(true)}>
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
-            </svg>
-            {totalItems > 0 && <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[0.6rem] font-medium w-4 h-4 rounded-full flex items-center justify-center">
-                {totalItems > 9 ? '9+' : totalItems}
-              </span>}
+          {/* WhatsApp CTA button */}
+          <button 
+            onClick={handleWhatsAppClick}
+            className="p-1.5 md:p-2 text-[#25D366] hover:text-[#20bd5a] transition-colors duration-200" 
+            aria-label="Contact on WhatsApp"
+          >
+            <MessageCircle className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -288,21 +292,28 @@ const Navigation = () => {
             </div>
             
             {/* Favorites Button for Mobile */}
-            <div className="mt-6 pt-4 border-t border-border">
+            <div className="mt-6 pt-4 border-t border-border space-y-3">
               <Link to="/favorites" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-base font-light py-1.5 w-full">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z" />
                 </svg>
                 <span>{t("favorites")}</span>
               </Link>
+              
+              {/* WhatsApp CTA for Mobile */}
+              <button 
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  handleWhatsAppClick();
+                }}
+                className="flex items-center gap-2 text-[#25D366] hover:text-[#20bd5a] transition-colors duration-200 text-base font-light py-1.5 w-full"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span>{t("contactOnWhatsApp")}</span>
+              </button>
             </div>
           </div>
         </div>}
-
-      {/* Shopping Bag Off-Canvas */}
-      <ShoppingBag isOpen={isShoppingBagOpen} onClose={() => setIsShoppingBagOpen(false)} onViewFavorites={() => {
-      setIsShoppingBagOpen(false);
-    }} />
     </nav>;
 };
 export default Navigation;
