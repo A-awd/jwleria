@@ -206,8 +206,21 @@ export const translations = {
     footerSupport: "Support",
     connect: "Connect",
     careInstructions: "Care Instructions",
+    careInstruction1: "Clean with a soft, dry cloth after each wear",
+    careInstruction2: "Avoid contact with perfumes, lotions, and cleaning products",
+    careInstruction3: "Store in the provided jewelry pouch when not wearing",
+    careInstruction4: "Remove before swimming, exercising, or showering",
+    careContactService: "For professional cleaning, visit your local jeweler or contact our customer service team.",
     returns: "Returns",
     shipping: "Shipping",
+    
+    // Product details
+    sku: "SKU",
+    collection: "Collection",
+    signatureCollection: "Signature Collection",
+    premiumMaterials: "Premium Materials",
+    customerReviews: "Customer Reviews",
+    productDetails: "Product Details",
     instagram: "Instagram",
     pinterest: "Pinterest",
     newsletter: "Newsletter",
@@ -289,6 +302,7 @@ export const translations = {
 
     // Product Detail page
     home: "Home",
+    productDescription: "Description",
     youMightAlsoLike: "You might also like",
     ourOtherProducts: "Our other",
     size: "Size",
@@ -302,6 +316,22 @@ export const translations = {
     priceLowHigh: "Price: Low to High",
     priceHighLow: "Price: High to Low",
     newest: "Newest",
+    
+    // Price ranges
+    priceUnder1000: "Under €1,000",
+    price1kTo5k: "€1,000 - €5,000",
+    price5kTo10k: "€5,000 - €10,000",
+    priceOver10000: "Over €10,000",
+    
+    // Materials
+    materialGold: "Gold",
+    materialWhiteGold: "White Gold",
+    materialRoseGold: "Rose Gold",
+    materialPlatinum: "Platinum",
+    materialDiamond: "Diamond",
+    
+    // Pre-order info
+    allProductsPreOrder: "All products are sourced on demand and ship within 5-7 days worldwide.",
 
     // Checkout page
     orderSummary: "Order Summary",
@@ -703,8 +733,21 @@ export const translations = {
     footerSupport: "Soporte",
     connect: "Conectar",
     careInstructions: "Instrucciones de Cuidado",
+    careInstruction1: "Limpiar con un paño suave y seco después de cada uso",
+    careInstruction2: "Evitar el contacto con perfumes, lociones y productos de limpieza",
+    careInstruction3: "Guardar en la bolsa de joyería proporcionada cuando no se use",
+    careInstruction4: "Quitar antes de nadar, hacer ejercicio o ducharse",
+    careContactService: "Para una limpieza profesional, visite a su joyero local o contacte a nuestro equipo de servicio al cliente.",
     returns: "Devoluciones",
     shipping: "Envíos",
+    
+    // Product details
+    sku: "SKU",
+    collection: "Colección",
+    signatureCollection: "Colección Signature",
+    premiumMaterials: "Materiales Premium",
+    customerReviews: "Opiniones de Clientes",
+    productDetails: "Detalles del Producto",
     instagram: "Instagram",
     pinterest: "Pinterest",
     newsletter: "Boletín",
@@ -784,6 +827,7 @@ export const translations = {
 
     // Product Detail page
     home: "Inicio",
+    productDescription: "Descripción",
     youMightAlsoLike: "También te puede gustar",
     ourOtherProducts: "Otros",
     size: "Talla",
@@ -797,6 +841,22 @@ export const translations = {
     priceLowHigh: "Precio: Menor a Mayor",
     priceHighLow: "Precio: Mayor a Menor",
     newest: "Más Recientes",
+    
+    // Price ranges
+    priceUnder1000: "Menos de €1,000",
+    price1kTo5k: "€1,000 - €5,000",
+    price5kTo10k: "€5,000 - €10,000",
+    priceOver10000: "Más de €10,000",
+    
+    // Materials
+    materialGold: "Oro",
+    materialWhiteGold: "Oro Blanco",
+    materialRoseGold: "Oro Rosa",
+    materialPlatinum: "Platino",
+    materialDiamond: "Diamante",
+    
+    // Pre-order info
+    allProductsPreOrder: "Todos los productos se obtienen bajo demanda y se envían en 5-7 días a todo el mundo.",
 
     // Checkout page
     orderSummary: "Resumen del Pedido",
@@ -1196,8 +1256,21 @@ export const translations = {
     footerSupport: "الدعم",
     connect: "تواصل",
     careInstructions: "تعليمات العناية",
+    careInstruction1: "نظّف بقطعة قماش ناعمة وجافة بعد كل استخدام",
+    careInstruction2: "تجنب ملامسة العطور والمستحضرات ومنتجات التنظيف",
+    careInstruction3: "احفظ في حقيبة المجوهرات المرفقة عند عدم الارتداء",
+    careInstruction4: "اخلع قبل السباحة أو التمارين أو الاستحمام",
+    careContactService: "للتنظيف المتخصص، قم بزيارة صائغ المجوهرات المحلي أو تواصل مع فريق خدمة العملاء.",
     returns: "الإرجاع",
     shipping: "الشحن",
+    
+    // Product details
+    sku: "رقم المنتج",
+    collection: "المجموعة",
+    signatureCollection: "مجموعة التوقيع",
+    premiumMaterials: "مواد فاخرة",
+    customerReviews: "آراء العملاء",
+    productDetails: "تفاصيل المنتج",
     instagram: "انستغرام",
     pinterest: "بنترست",
     newsletter: "النشرة الإخبارية",
@@ -1277,6 +1350,7 @@ export const translations = {
 
     // Product Detail page
     home: "الرئيسية",
+    productDescription: "الوصف",
     youMightAlsoLike: "قد يعجبك أيضاً",
     ourOtherProducts: "منتجاتنا الأخرى من",
     size: "المقاس",
@@ -1290,6 +1364,22 @@ export const translations = {
     priceLowHigh: "السعر: من الأقل للأعلى",
     priceHighLow: "السعر: من الأعلى للأقل",
     newest: "الأحدث",
+    
+    // Price ranges
+    priceUnder1000: "أقل من 1,000€",
+    price1kTo5k: "1,000€ - 5,000€",
+    price5kTo10k: "5,000€ - 10,000€",
+    priceOver10000: "أكثر من 10,000€",
+    
+    // Materials
+    materialGold: "ذهب",
+    materialWhiteGold: "ذهب أبيض",
+    materialRoseGold: "ذهب وردي",
+    materialPlatinum: "بلاتين",
+    materialDiamond: "ألماس",
+    
+    // Pre-order info
+    allProductsPreOrder: "جميع المنتجات يتم توفيرها حسب الطلب وتُشحن خلال 5-7 أيام حول العالم.",
 
     // Checkout page
     orderSummary: "ملخص الطلب",
@@ -1689,8 +1779,21 @@ export const translations = {
     footerSupport: "Assistance",
     connect: "Connectez-vous",
     careInstructions: "Instructions d'entretien",
+    careInstruction1: "Nettoyer avec un chiffon doux et sec après chaque port",
+    careInstruction2: "Éviter le contact avec les parfums, lotions et produits de nettoyage",
+    careInstruction3: "Ranger dans la pochette à bijoux fournie lorsque vous ne le portez pas",
+    careInstruction4: "Retirer avant de nager, faire de l'exercice ou se doucher",
+    careContactService: "Pour un nettoyage professionnel, rendez-vous chez votre bijoutier local ou contactez notre équipe de service client.",
     returns: "Retours",
     shipping: "Livraison",
+    
+    // Product details
+    sku: "Réf.",
+    collection: "Collection",
+    signatureCollection: "Collection Signature",
+    premiumMaterials: "Matériaux Premium",
+    customerReviews: "Avis Clients",
+    productDetails: "Détails du Produit",
     instagram: "Instagram",
     pinterest: "Pinterest",
     newsletter: "Newsletter",
@@ -1770,6 +1873,7 @@ export const translations = {
 
     // Product Detail page
     home: "Accueil",
+    productDescription: "Description",
     youMightAlsoLike: "Vous aimerez aussi",
     ourOtherProducts: "Nos autres",
     size: "Taille",
@@ -1783,6 +1887,22 @@ export const translations = {
     priceLowHigh: "Prix: Croissant",
     priceHighLow: "Prix: Décroissant",
     newest: "Plus récents",
+    
+    // Price ranges
+    priceUnder1000: "Moins de 1 000€",
+    price1kTo5k: "1 000€ - 5 000€",
+    price5kTo10k: "5 000€ - 10 000€",
+    priceOver10000: "Plus de 10 000€",
+    
+    // Materials
+    materialGold: "Or",
+    materialWhiteGold: "Or Blanc",
+    materialRoseGold: "Or Rose",
+    materialPlatinum: "Platine",
+    materialDiamond: "Diamant",
+    
+    // Pre-order info
+    allProductsPreOrder: "Tous les produits sont sourcés à la demande et expédiés sous 5-7 jours dans le monde entier.",
 
     // Checkout page
     orderSummary: "Récapitulatif",

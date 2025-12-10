@@ -33,41 +33,7 @@ const CustomStar = ({ filled, className }: { filled: boolean; className?: string
   </svg>
 );
 
-// Default reviews for demo purposes
-const defaultReviews: ProductReview[] = [
-  {
-    id: "1",
-    author: "Sarah M.",
-    rating: 5,
-    content: "Absolutely stunning! The quality is exceptional and I get compliments every time I wear it.",
-    date: "2024-01-15",
-    verified: true,
-  },
-  {
-    id: "2", 
-    author: "Emma T.",
-    rating: 4,
-    content: "Beautiful craftsmanship and comfortable to wear all day. Highly recommend!",
-    date: "2024-01-10",
-    verified: true,
-  },
-  {
-    id: "3",
-    author: "Jessica R.",
-    rating: 5,
-    content: "A work of art. The minimalist design is elegant and sophisticated. Perfect packaging too.",
-    date: "2024-01-05",
-    verified: true,
-  },
-];
-
-// Default care instructions
-const defaultCareInstructions = [
-  "Clean with a soft, dry cloth after each wear",
-  "Avoid contact with perfumes, lotions, and cleaning products",
-  "Store in the provided jewelry pouch when not wearing",
-  "Remove before swimming, exercising, or showering",
-];
+// Reviews and care instructions are provided via translation keys
 
 const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
   const { t } = useLanguage();
@@ -76,19 +42,23 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
   const [isCareOpen, setIsCareOpen] = useState(false);
   const [isReviewsOpen, setIsReviewsOpen] = useState(false);
 
-  const reviews = defaultReviews;
-  const careInstructions = defaultCareInstructions;
+  // Care instructions from translations
+  const careInstructions = [
+    t("careInstruction1"),
+    t("careInstruction2"),
+    t("careInstruction3"),
+    t("careInstruction4"),
+  ];
+
   const productDetails = {
-    SKU: `JWL-${String(product.id).slice(-6).toUpperCase()}`,
-    Collection: "Signature Collection",
-    Material: product.material || "Premium Materials",
-    Brand: product.brand,
+    [t("sku")]: `JWL-${String(product.id).slice(-6).toUpperCase()}`,
+    [t("collection")]: t("signatureCollection"),
+    [t("material")]: product.material || t("premiumMaterials"),
+    [t("brand")]: product.brand,
   };
 
-  // Calculate average rating
-  const averageRating = reviews.length > 0 
-    ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length 
-    : 4.8;
+  // Average rating (static for now)
+  const averageRating = 4.8;
 
   return (
     <div className="space-y-0 mt-8 border-t border-border">
@@ -99,7 +69,7 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
           onClick={() => setIsDescriptionOpen(!isDescriptionOpen)}
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
-          <span>Description</span>
+          <span>{t("productDescription")}</span>
           {isDescriptionOpen ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -122,7 +92,7 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
           onClick={() => setIsDetailsOpen(!isDetailsOpen)}
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
-          <span>Product Details</span>
+          <span>{t("productDetails")}</span>
           {isDetailsOpen ? (
             <ChevronUp className="h-4 w-4" />
           ) : (
@@ -179,7 +149,7 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
           className="w-full h-14 px-0 justify-between hover:bg-transparent font-light rounded-none"
         >
           <div className="flex items-center gap-3">
-            <span>Customer Reviews</span>
+            <span>{t("customerReviews")}</span>
             <div className="flex items-center">
               {[1, 2, 3, 4, 5].map((star) => (
                 <CustomStar
@@ -201,32 +171,6 @@ const ProductDescriptionNew = ({ product }: ProductDescriptionProps) => {
         {isReviewsOpen && (
           <div className="pb-6 space-y-6">
             <ReviewProduct />
-            
-            <div className="space-y-6">
-              {reviews.map((review) => (
-                <div key={review.id} className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <CustomStar
-                          key={star}
-                          filled={star <= review.rating}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-sm font-light text-muted-foreground">
-                      {review.author}
-                      {review.verified && (
-                        <span className="ml-1 text-emerald-600 dark:text-emerald-400">✓</span>
-                      )}
-                    </span>
-                  </div>
-                  <p className="text-sm font-light text-muted-foreground leading-relaxed">
-                    "{review.content}"
-                  </p>
-                </div>
-              ))}
-            </div>
           </div>
         )}
       </div>
