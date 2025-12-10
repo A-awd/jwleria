@@ -4,8 +4,11 @@ import PageHeader from "../../components/about/PageHeader";
 import ContentSection from "../../components/about/ContentSection";
 import { Button } from "../../components/ui/button";
 import AboutSidebar from "../../components/about/AboutSidebar";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const SizeGuide = () => {
+  const { t } = useLanguage();
+  
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -17,30 +20,30 @@ const SizeGuide = () => {
         
         <main className="w-full lg:w-[70vw] lg:ml-auto px-6">
         <PageHeader 
-          title="Size Guide" 
-          subtitle="Find your perfect fit with our comprehensive sizing guide"
+          title={t("sizeGuide")} 
+          subtitle={t("sizeGuideSubtitle")}
         />
         
-        <ContentSection title="Ring Sizing">
+        <ContentSection title={t("ringSizing")}>
           <div className="space-y-8">
             <div className="bg-muted/10 rounded-lg p-8">
-              <h3 className="text-xl font-light text-foreground mb-6">How to Measure Your Ring Size</h3>
+              <h3 className="text-xl font-light text-foreground mb-6">{t("howToMeasureRing")}</h3>
               <div className="grid md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Method 1: Using a Ring You Own</h4>
+                  <h4 className="font-medium text-foreground">{t("method1Title")}</h4>
                   <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Take a ring that fits comfortably on your desired finger</li>
-                    <li>Place it on a ruler and measure the inner diameter in millimeters</li>
-                    <li>Use our size chart below to find your size</li>
+                    <li>{t("method1Step1")}</li>
+                    <li>{t("method1Step2")}</li>
+                    <li>{t("method1Step3")}</li>
                   </ol>
                 </div>
                 <div className="space-y-4">
-                  <h4 className="font-medium text-foreground">Method 2: Using String or Paper</h4>
+                  <h4 className="font-medium text-foreground">{t("method2Title")}</h4>
                   <ol className="list-decimal list-inside space-y-2 text-muted-foreground">
-                    <li>Wrap string or paper around your finger where the ring will sit</li>
-                    <li>Mark where the material overlaps</li>
-                    <li>Measure the length in millimeters</li>
-                    <li>Divide by 3.14 to get the diameter</li>
+                    <li>{t("method2Step1")}</li>
+                    <li>{t("method2Step2")}</li>
+                    <li>{t("method2Step3")}</li>
+                    <li>{t("method2Step4")}</li>
                   </ol>
                 </div>
               </div>
@@ -50,11 +53,11 @@ const SizeGuide = () => {
               <table className="w-full border-collapse border border-border">
                 <thead>
                   <tr className="bg-muted/20">
-                    <th className="border border-border p-3 text-left font-light">US Size</th>
-                    <th className="border border-border p-3 text-left font-light">UK Size</th>
-                    <th className="border border-border p-3 text-left font-light">EU Size</th>
-                    <th className="border border-border p-3 text-left font-light">Diameter (mm)</th>
-                    <th className="border border-border p-3 text-left font-light">Circumference (mm)</th>
+                    <th className="border border-border p-3 text-left font-light">{t("usSize")}</th>
+                    <th className="border border-border p-3 text-left font-light">{t("ukSize")}</th>
+                    <th className="border border-border p-3 text-left font-light">{t("euSize")}</th>
+                    <th className="border border-border p-3 text-left font-light">{t("diameterMm")}</th>
+                    <th className="border border-border p-3 text-left font-light">{t("circumferenceMm")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -83,43 +86,43 @@ const SizeGuide = () => {
           </div>
         </ContentSection>
 
-        <ContentSection title="Bracelet & Necklace Sizing">
+        <ContentSection title={t("braceletNecklaceSizing")}>
           <div className="grid md:grid-cols-2 gap-12">
             <div className="space-y-6">
-              <h3 className="text-xl font-light text-foreground">Bracelet Sizes</h3>
+              <h3 className="text-xl font-light text-foreground">{t("braceletSizes")}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Small</span>
+                  <span className="text-muted-foreground">{t("small")}</span>
                   <span className="text-foreground">6.5" - 7"</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Medium</span>
+                  <span className="text-muted-foreground">{t("medium")}</span>
                   <span className="text-foreground">7" - 7.5"</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Large</span>
+                  <span className="text-muted-foreground">{t("large")}</span>
                   <span className="text-foreground">7.5" - 8"</span>
                 </div>
               </div>
             </div>
             
             <div className="space-y-6">
-              <h3 className="text-xl font-light text-foreground">Necklace Lengths</h3>
+              <h3 className="text-xl font-light text-foreground">{t("necklaceLengths")}</h3>
               <div className="space-y-4">
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Choker</span>
+                  <span className="text-muted-foreground">{t("choker")}</span>
                   <span className="text-foreground">14" - 16"</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Princess</span>
+                  <span className="text-muted-foreground">{t("princess")}</span>
                   <span className="text-foreground">17" - 19"</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Matinee</span>
+                  <span className="text-muted-foreground">{t("matinee")}</span>
                   <span className="text-foreground">20" - 24"</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-border">
-                  <span className="text-muted-foreground">Opera</span>
+                  <span className="text-muted-foreground">{t("opera")}</span>
                   <span className="text-foreground">28" - 36"</span>
                 </div>
               </div>
@@ -127,18 +130,17 @@ const SizeGuide = () => {
           </div>
         </ContentSection>
 
-        <ContentSection title="Need Help?">
+        <ContentSection title={t("needHelp")}>
           <div className="space-y-6">
             <p className="text-muted-foreground">
-              Still unsure about sizing? Our jewelry consultants are here to help you find the perfect fit. 
-              Download our printable size guide or schedule a virtual consultation.
+              {t("needHelpDesc")}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button variant="outline" className="rounded-none">
-                Download PDF Guide
+                {t("downloadPdfGuide")}
               </Button>
               <Button className="rounded-none">
-                Schedule Consultation
+                {t("scheduleConsultation")}
               </Button>
             </div>
           </div>
