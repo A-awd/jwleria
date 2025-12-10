@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { 
@@ -9,93 +9,44 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Minus, Plus, Heart, Check, Loader2 } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { useShopifyCart } from "@/hooks/useShopifyCart";
 import { toast } from "@/hooks/use-toast";
-import { ProductData, ProductVariant } from "@/types/shopify";
-import { VariantSelector } from "./VariantSelector";
+import { getWhatsAppLink, STORE_CONFIG } from "@/config/store";
 
 interface ProductInfoProps {
-  product: ProductData;
+  product: {
+    id: string | number;
+    name: string;
+    brand: string;
+    price: number;
+    compareAtPrice?: number;
+    categoryKey: string;
+    material?: string;
+    dimensions?: string;
+    weight?: string;
+    editorsNotes?: string;
+    leadTime?: string;
+    isPreOrder?: boolean;
+    isLimitedEdition?: boolean;
+  };
   showBreadcrumb?: boolean;
 }
 
 const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) => {
-  const [quantity, setQuantity] = useState(1);
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  const { addToCart, cart, isLoading: isCartLoading } = useShopifyCart();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   
-  // Variant selection state
-  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(() => {
-    if (product.variants && product.variants.length > 0) {
-      return product.variants.find(v => v.available) || product.variants[0];
-    }
-    return null;
-  });
-
-  // Memoize current price based on selected variant
-  const currentPrice = useMemo(() => {
-    if (selectedVariant) {
-      return selectedVariant.price;
-    }
-    return product.price;
-  }, [selectedVariant, product.price]);
-
-  const currentCompareAtPrice = useMemo(() => {
-    if (selectedVariant?.compareAtPrice) {
-      return selectedVariant.compareAtPrice;
-    }
-    return product.compareAtPrice;
-  }, [selectedVariant, product.compareAtPrice]);
-
-  const isAvailable = useMemo(() => {
-    if (selectedVariant) {
-      return selectedVariant.available;
-    }
-    return product.isAvailable;
-  }, [selectedVariant, product.isAvailable]);
-  
-  // Check if product variant is in Shopify cart
-  const productInCart = useMemo(() => {
-    if (!cart || !selectedVariant) return false;
-    return cart.lines.some(line => line.variantId === selectedVariant.id);
-  }, [cart, selectedVariant]);
-  
   // Convert string ID to number for legacy favorites compatibility
-  const numericId = parseInt(product.id, 10) || 0;
+  const numericId = typeof product.id === 'string' ? parseInt(product.id, 10) || 0 : product.id;
   const productIsFavorite = isFavorite(numericId);
 
-  const incrementQuantity = () => setQuantity(prev => prev + 1);
-  const decrementQuantity = () => setQuantity(prev => Math.max(1, prev - 1));
-
-  const handleAddToCart = async () => {
-    if (!selectedVariant) {
-      toast({
-        title: "Please select options",
-        description: "Please select all product options before adding to cart",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      await addToCart(selectedVariant.id, quantity);
-      toast({
-        title: t("itemAdded"),
-        description: `${product.name} x${quantity}`,
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add item to cart. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleWhatsAppClick = () => {
+    const whatsappLink = getWhatsAppLink(product.brand, product.name, product.id);
+    window.open(whatsappLink, '_blank');
   };
 
   const handleToggleFavorite = () => {
@@ -189,37 +140,15 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
 
       {/* Product details */}
       <div className="space-y-3 md:space-y-4 py-3 md:py-4 border-b border-border">
-        {/* Availability Status */}
-        {product.isReadyToShip && (
-          <div className="flex items-center gap-2 py-2 px-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-sm">
-            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-            <span className="text-xs md:text-sm font-medium text-emerald-700 dark:text-emerald-400">
-              {t("readyToShip")}
-            </span>
-          </div>
-        )}
-        {product.isPreOrder && (
-          <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm">
-            <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
-            <span className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400">
-              {t("preOrder")}
-              {product.leadTime && (
-                <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime}</span>
-              )}
-            </span>
-          </div>
-        )}
-        {product.isMadeToOrder && (
-          <div className="flex items-center gap-2 py-2 px-3 bg-violet-50 dark:bg-violet-950/30 rounded-sm">
-            <div className="w-2 h-2 bg-violet-500 rounded-full animate-pulse" />
-            <span className="text-xs md:text-sm font-medium text-violet-700 dark:text-violet-400">
-              {t("madeToOrder")}
-              {product.leadTime && (
-                <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime}</span>
-              )}
-            </span>
-          </div>
-        )}
+        {/* Pre-order Status - Always shown since all products are pre-order */}
+        <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm">
+          <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+          <span className="text-xs md:text-sm font-medium text-amber-700 dark:text-amber-400">
+            {t("preOrder")}
+            <span className="font-normal ml-1">— {t("usuallyShipsIn")} {product.leadTime || STORE_CONFIG.defaultLeadTime}</span>
+          </span>
+        </div>
+        
         {product.isLimitedEdition && (
           <div className="flex items-center gap-2 py-2 px-3 bg-rose-50 dark:bg-rose-950/30 rounded-sm">
             <div className="w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
@@ -260,51 +189,15 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
         )}
       </div>
 
-      {/* Quantity and Add to Cart */}
+      {/* WhatsApp Contact and Favorites */}
       <div className="space-y-3 md:space-y-4">
-        <div className="flex items-center gap-3 md:gap-4">
-          <span className="text-xs md:text-sm font-light text-foreground">{t("quantity")}</span>
-          <div className="flex items-center border border-border">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={decrementQuantity}
-              className="h-9 md:h-10 w-9 md:w-10 p-0 hover:bg-transparent hover:opacity-50 rounded-none border-none"
-            >
-              <Minus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            </Button>
-            <span className="h-9 md:h-10 flex items-center px-3 md:px-4 text-xs md:text-sm font-light min-w-10 md:min-w-12 justify-center border-l border-r border-border">
-              {quantity}
-            </span>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={incrementQuantity}
-              className="h-9 md:h-10 w-9 md:w-10 p-0 hover:bg-transparent hover:opacity-50 rounded-none border-none"
-            >
-              <Plus className="h-3.5 w-3.5 md:h-4 md:w-4" />
-            </Button>
-          </div>
-        </div>
-
         <div className="flex gap-3">
           <Button 
-            className="flex-1 h-11 md:h-12 bg-foreground text-background hover:bg-foreground/90 font-light rounded-none text-sm md:text-base"
-            onClick={handleAddToCart}
-            disabled={!isAvailable || isCartLoading}
+            className="flex-1 h-11 md:h-12 bg-[#25D366] hover:bg-[#128C7E] text-white font-light rounded-none text-sm md:text-base"
+            onClick={handleWhatsAppClick}
           >
-            {isCartLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : !isAvailable ? (
-              "Sold Out"
-            ) : productInCart ? (
-              <>
-                <Check className="h-4 w-4 mr-2" />
-                {t("addToBag")}
-              </>
-            ) : (
-              t("addToBag")
-            )}
+            <MessageCircle className="h-4 w-4 mr-2" />
+            {t("orderOnWhatsApp")}
           </Button>
           <Button
             variant="outline"
@@ -317,6 +210,10 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
             />
           </Button>
         </div>
+        
+        <p className="text-xs text-muted-foreground text-center">
+          {t("whatsappOrderNote")}
+        </p>
       </div>
     </div>
   );

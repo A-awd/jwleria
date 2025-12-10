@@ -120,6 +120,12 @@ export const translations = {
     noProductsFound: "No products found",
     brandNotFound: "Brand not found",
     
+    // WhatsApp & Catalog
+    orderOnWhatsApp: "Order on WhatsApp",
+    contactOnWhatsApp: "Contact on WhatsApp",
+    whatsappOrderNote: "Click to chat with us on WhatsApp and place your order",
+    usuallyShipsIn: "Usually ships in",
+    
     // Dior and Givenchy brands
     brandDior: "Dior",
     brandDiorDesc: "French luxury fashion house known for elegant haute couture, accessories, and timeless jewelry pieces.",
@@ -277,7 +283,6 @@ export const translations = {
     preOrder: "Pre-Order",
     madeToOrder: "Made to Order",
     limitedEdition: "Limited Edition",
-    usuallyShipsIn: "Usually ships in",
     availability: "Availability",
     inStock: "In Stock",
 

@@ -3,9 +3,9 @@ import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { Heart, Loader2 } from "lucide-react";
+import { Heart } from "lucide-react";
 import Pagination from "./Pagination";
-import { useShopifyProducts } from "@/hooks/useShopifyProducts";
+import { allProducts, Product } from "@/data/products";
 import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
@@ -14,8 +14,8 @@ interface ProductGridProps {
   selectedBrands?: string[];
   selectedCategories?: string[];
   sortBy?: string;
-  readyToShipOnly?: boolean;
-  preOrderOnly?: boolean;
+  priceRange?: [number, number];
+  leadTimeFilter?: string;
 }
 
 const ProductGrid = ({ 
@@ -23,21 +23,17 @@ const ProductGrid = ({
   selectedBrands = [], 
   selectedCategories = [],
   sortBy = "featured",
-  readyToShipOnly = false,
-  preOrderOnly = false
+  priceRange,
+  leadTimeFilter
 }: ProductGridProps) => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   
-  // Fetch from Shopify
-  const { data, isLoading } = useShopifyProducts({ first: 100, query: searchQuery || undefined });
-  const allProducts = data?.products || [];
-
-  // Filter products client-side for now (can be moved to Shopify query later)
+  // Use local products data
   let filteredProducts = [...allProducts];
 
-  // Search filter (already applied via Shopify query, but filter locally too for safety)
+  // Search filter
   if (searchQuery.trim()) {
     const query = searchQuery.toLowerCase();
     filteredProducts = filteredProducts.filter(product => 
@@ -57,42 +53,39 @@ const ProductGrid = ({
   // Category filter
   if (selectedCategories.length > 0) {
     filteredProducts = filteredProducts.filter(product => 
-      selectedCategories.includes(product.category)
+      selectedCategories.includes(product.category) || 
+      selectedCategories.includes(product.categoryKey)
     );
   }
 
-  // Ready to ship filter
-  if (readyToShipOnly) {
-    filteredProducts = filteredProducts.filter(product => product.isReadyToShip);
+  // Price range filter
+  if (priceRange) {
+    filteredProducts = filteredProducts.filter(product => 
+      product.priceEUR >= priceRange[0] && product.priceEUR <= priceRange[1]
+    );
   }
 
-  // Pre-order filter
-  if (preOrderOnly) {
-    filteredProducts = filteredProducts.filter(product => product.isPreOrder);
+  // Lead time filter
+  if (leadTimeFilter) {
+    filteredProducts = filteredProducts.filter(product => 
+      product.leadTime === leadTimeFilter
+    );
   }
 
   // Sort products
   switch (sortBy) {
     case "price-low":
-      filteredProducts.sort((a, b) => a.price - b.price);
+      filteredProducts.sort((a, b) => a.priceEUR - b.priceEUR);
       break;
     case "price-high":
-      filteredProducts.sort((a, b) => b.price - a.price);
+      filteredProducts.sort((a, b) => b.priceEUR - a.priceEUR);
       break;
     case "newest":
-      // Keep original order from Shopify (typically sorted by date)
+      // Keep original order
       break;
     default:
       // Featured - keep original order
       break;
-  }
-
-  if (isLoading) {
-    return (
-      <section className="w-full px-6 mb-16 flex justify-center py-16">
-        <Loader2 className="h-10 w-10 animate-spin text-foreground/50" />
-      </section>
-    );
   }
 
   return (
@@ -104,17 +97,17 @@ const ProductGrid = ({
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
           {filteredProducts.map((product) => {
-            const numericId = parseInt(product.id.replace(/\D/g, '')) || 0;
+            const numericId = product.id;
             return (
               <div key={product.id} className="relative group">
-                <Link to={`/product/${product.handle || product.id}`}>
+                <Link to={`/product/${product.id}`}>
                   <Card 
                     className="border-none shadow-none bg-transparent cursor-pointer"
                   >
                     <CardContent className="p-0">
                       <div className="aspect-square mb-3 overflow-hidden bg-muted/10 relative">
                         <img
-                          src={product.images[0] || '/placeholder.svg'}
+                          src={product.image || '/placeholder.svg'}
                           alt={product.name}
                           className="w-full h-full object-cover transition-all duration-300 group-hover:opacity-0"
                         />
@@ -137,24 +130,15 @@ const ProductGrid = ({
                             {product.category}
                           </p>
                           <p className="text-sm font-light text-foreground">
-                            {convertPrice(product.price)}
+                            {convertPrice(product.priceEUR)}
                           </p>
                         </div>
-                        {/* Availability indicator */}
-                        {(product.isReadyToShip || product.isPreOrder) && (
-                          <div className="pt-1">
-                            {product.isReadyToShip && (
-                              <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                                {t("readyToShip")}
-                              </span>
-                            )}
-                            {product.isPreOrder && (
-                              <span className="text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                                {t("preOrder")}
-                              </span>
-                            )}
-                          </div>
-                        )}
+                        {/* Pre-order indicator - all products are pre-order */}
+                        <div className="pt-1">
+                          <span className="text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 border-b border-transparent hover:border-amber-500 pb-0.5 transition-all duration-300 cursor-default">
+                            {t("preOrder")} — {product.leadTime}
+                          </span>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
