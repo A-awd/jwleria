@@ -38,17 +38,9 @@ const Category = () => {
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(product => selectedCategories.includes(product.category));
     }
-
-    if (readyToShipOnly) {
-      filtered = filtered.filter(product => product.isReadyToShip);
-    }
-
-    if (preOrderOnly) {
-      filtered = filtered.filter(product => product.isPreOrder);
-    }
     
     return filtered.length;
-  }, [searchQuery, selectedBrands, selectedCategories, readyToShipOnly, preOrderOnly]);
+  }, [searchQuery, selectedBrands, selectedCategories]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,8 +74,6 @@ const Category = () => {
           selectedBrands={selectedBrands}
           selectedCategories={selectedCategories}
           sortBy={sortBy}
-          readyToShipOnly={readyToShipOnly}
-          preOrderOnly={preOrderOnly}
         />
       </main>
       

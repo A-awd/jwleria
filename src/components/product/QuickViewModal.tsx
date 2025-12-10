@@ -1,13 +1,23 @@
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ProductData } from "@/types/shopify";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useShopifyCart } from "@/hooks/useShopifyCart";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { Heart, ShoppingBag, X } from "lucide-react";
+import { Heart, MessageCircle, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
+import { getWhatsAppLink, STORE_CONFIG } from "@/config/store";
+
+interface ProductData {
+  id: string | number;
+  name: string;
+  brand: string;
+  price: number;
+  description?: string;
+  images: string[];
+  handle?: string;
+  leadTime?: string;
+}
 
 interface QuickViewModalProps {
   product: ProductData | null;
@@ -18,26 +28,18 @@ interface QuickViewModalProps {
 const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  const { addToCart } = useShopifyCart();
   const { toggleFavorite, isFavorite } = useFavorites();
 
   if (!product) return null;
 
-  const numericId = parseInt(product.id.replace(/\D/g, '')) || 0;
-  const variantId = product.variants?.[0]?.id;
+  const numericId = typeof product.id === 'string' 
+    ? parseInt(product.id.replace(/\D/g, '')) || 0 
+    : product.id;
 
-  const handleAddToCart = async () => {
-    if (variantId) {
-      try {
-        await addToCart(variantId, 1);
-        toast.success(t("itemAdded"));
-        onClose();
-      } catch (error) {
-        toast.error("Failed to add to cart");
-      }
-    } else {
-      toast.error("No variant available");
-    }
+  const handleWhatsAppClick = () => {
+    const whatsappLink = getWhatsAppLink(product.brand, product.name, product.id);
+    window.open(whatsappLink, '_blank');
+    onClose();
   };
 
   const handleToggleFavorite = () => {
@@ -74,9 +76,17 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
             <h2 className="text-xl md:text-2xl font-light text-foreground mb-2">
               {product.name}
             </h2>
-            <p className="text-lg md:text-xl font-light text-foreground/80 mb-6">
+            <p className="text-lg md:text-xl font-light text-foreground/80 mb-4">
               {convertPrice(product.price)}
             </p>
+
+            {/* Pre-order indicator */}
+            <div className="flex items-center gap-2 py-2 px-3 bg-amber-50 dark:bg-amber-950/30 rounded-sm mb-4">
+              <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse" />
+              <span className="text-xs font-medium text-amber-700 dark:text-amber-400">
+                {t("preOrder")} — {product.leadTime || STORE_CONFIG.defaultLeadTime}
+              </span>
+            </div>
 
             {product.description && (
               <p className="text-sm font-light text-foreground/70 mb-6 line-clamp-3">
@@ -86,12 +96,11 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
 
             <div className="space-y-3">
               <Button
-                onClick={handleAddToCart}
-                disabled={!variantId}
-                className="w-full h-11 bg-foreground text-background hover:bg-foreground/90 transition-colors"
+                onClick={handleWhatsAppClick}
+                className="w-full h-11 bg-[#25D366] hover:bg-[#128C7E] text-white transition-colors"
               >
-                <ShoppingBag className="h-4 w-4 mr-2" />
-                {t("addToBag")}
+                <MessageCircle className="h-4 w-4 mr-2" />
+                {t("orderOnWhatsApp")}
               </Button>
 
               <div className="flex gap-3">
@@ -103,7 +112,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
                   <Heart
                     className={`h-4 w-4 mr-2 ${isFavorite(numericId) ? "fill-current text-red-500" : ""}`}
                   />
-                  {isFavorite(numericId) ? t("favorites") : t("favorites")}
+                  {t("favorites")}
                 </Button>
 
                 <Link to={`/product/${product.handle || product.id}`} className="flex-1">

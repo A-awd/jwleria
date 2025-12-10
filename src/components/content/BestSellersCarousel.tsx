@@ -2,20 +2,22 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { useBestSellers } from "@/hooks/useShopifyProducts";
-import { ProductData } from "@/types/shopify";
+import { allProducts, Product } from "@/data/products";
 import { Button } from "@/components/ui/button";
-import { Eye, Loader2 } from "lucide-react";
+import { Eye } from "lucide-react";
 import QuickViewModal from "@/components/product/QuickViewModal";
 
 const BestSellersCarousel = () => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
-  const { data, isLoading } = useBestSellers(8);
-  const bestSellers = data?.products || [];
-  const [quickViewProduct, setQuickViewProduct] = useState<ProductData | null>(null);
+  
+  // Get first 8 products as "best sellers"
+  const bestSellers = allProducts.slice(0, 8);
+  
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
   // Slow auto-scroll effect
   useEffect(() => {
     const scrollContainer = scrollRef.current;
@@ -53,7 +55,7 @@ const BestSellersCarousel = () => {
     };
   }, []);
 
-  const handleQuickView = (product: ProductData, e: React.MouseEvent) => {
+  const handleQuickView = (product: Product, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setQuickViewProduct(product);
@@ -63,17 +65,20 @@ const BestSellersCarousel = () => {
   // Double the products for seamless loop
   const duplicatedProducts = [...bestSellers, ...bestSellers];
 
-  if (isLoading) {
-    return (
-      <section className="w-full py-8 md:py-10 flex justify-center items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-foreground/50" />
-      </section>
-    );
-  }
-
   if (bestSellers.length === 0) {
     return null;
   }
+
+  // Convert Product to QuickViewModal format
+  const quickViewData = quickViewProduct ? {
+    id: quickViewProduct.id,
+    name: quickViewProduct.name,
+    brand: quickViewProduct.brand,
+    price: quickViewProduct.priceEUR,
+    description: quickViewProduct.description,
+    images: quickViewProduct.images || [quickViewProduct.image],
+    leadTime: quickViewProduct.leadTime,
+  } : null;
 
   return (
     <section className="w-full py-8 md:py-10">
@@ -95,14 +100,14 @@ const BestSellersCarousel = () => {
         {duplicatedProducts.map((product, index) => (
           <Link
             key={`${product.id}-${index}`}
-            to={`/product/${product.handle || product.id}`}
+            to={`/product/${product.id}`}
             className="group flex-shrink-0 w-[220px] md:w-[280px]"
           >
             <div className="space-y-3 transition-transform duration-300 group-hover:-translate-y-1">
               {/* Image with Quick View */}
               <div className="aspect-square overflow-hidden bg-muted/10 relative">
                 <img
-                  src={product.images[0] || '/placeholder.svg'}
+                  src={product.image || '/placeholder.svg'}
                   alt={product.name}
                   className="w-full h-full object-cover transition-all duration-500 group-hover:scale-105"
                 />
@@ -127,16 +132,14 @@ const BestSellersCarousel = () => {
                   {product.name}
                 </h3>
                 <p className="text-xs md:text-sm font-light text-foreground/80">
-                  {convertPrice(product.price)}
+                  {convertPrice(product.priceEUR)}
                 </p>
-                {/* Availability indicator */}
-                {(product.isReadyToShip || product.isAvailable) && (
-                  <div className="pt-0.5">
-                    <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-foreground/40 border-b border-transparent hover:border-foreground/30 hover:text-foreground/60 pb-0.5 transition-all duration-300 cursor-default">
-                      {t("readyToShip")}
-                    </span>
-                  </div>
-                )}
+                {/* Pre-order indicator */}
+                <div className="pt-0.5">
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-widest text-amber-600 dark:text-amber-400 border-b border-transparent hover:border-amber-500 pb-0.5 transition-all duration-300 cursor-default">
+                    {t("preOrder")} — {product.leadTime}
+                  </span>
+                </div>
               </div>
 
               {/* Button */}
@@ -153,7 +156,7 @@ const BestSellersCarousel = () => {
       </div>
 
       <QuickViewModal
-        product={quickViewProduct}
+        product={quickViewData}
         isOpen={isQuickViewOpen}
         onClose={() => setIsQuickViewOpen(false)}
       />
