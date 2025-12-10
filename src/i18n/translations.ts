@@ -289,7 +289,7 @@ export const translations = {
     circularElements: "Rolex Timepieces",
     circularElementsDesc: "Precision watchmaking from the crown of horology",
     jewelryDrawnFrom: "Your Gateway to Luxury",
-    lineaStoryDesc: "jWleria is your trusted personal shopping concierge, connecting you with the world's most prestigious luxury brands. From Dior to Cartier, Rolex to Patek Philippe — we source, authenticate, and deliver exceptional pieces tailored to your desires.",
+    lineaStoryDesc: "jWleria connects you with the world's most prestigious luxury brands. From Dior to Cartier, Rolex to Patek Philippe — we source, authenticate, and deliver exceptional pieces tailored to your desires.",
     readFullStory: "Discover our services",
     newLabel: "NEW",
     readyToShip: "Ready to Ship",
@@ -542,7 +542,7 @@ export const translations = {
     // New Homepage sections
     luxuryPersonalShopper: "jWleria",
     heroTitle: "Curated Luxury From the World's Finest Maisons",
-    heroSubtitle: "Your personal gateway to Cartier, Van Cleef & Arpels, Rolex, and more. Authentic pieces sourced and delivered with care.",
+    heroSubtitle: "Your personal gateway to Cartier, Van Cleef & Arpels, Rolex, and more. Sourced and delivered with care.",
     shopCollection: "Shop Collection",
     exploreBrands: "Explore Brands",
     discoverOurCollection: "Discover Our Collection",
@@ -1198,7 +1198,7 @@ export const translations = {
     // New Homepage sections
     luxuryPersonalShopper: "jWleria",
     heroTitle: "Lujo Curado de las Mejores Maisons del Mundo",
-    heroSubtitle: "Tu acceso personal a Cartier, Van Cleef & Arpels, Rolex y más. Piezas auténticas seleccionadas y entregadas con cuidado.",
+    heroSubtitle: "Tu acceso personal a Cartier, Van Cleef & Arpels, Rolex y más. Seleccionadas y entregadas con cuidado.",
     shopCollection: "Ver Colección",
     exploreBrands: "Explorar Marcas",
     discoverOurCollection: "Descubre Nuestra Colección",
@@ -2510,7 +2510,7 @@ export const translations = {
     // New Homepage sections
     luxuryPersonalShopper: "jWleria",
     heroTitle: "Luxe Sélectionné des Plus Grandes Maisons du Monde",
-    heroSubtitle: "Votre passerelle personnelle vers Cartier, Van Cleef & Arpels, Rolex et plus. Pièces authentiques sélectionnées et livrées avec soin.",
+    heroSubtitle: "Votre passerelle personnelle vers Cartier, Van Cleef & Arpels, Rolex et plus. Sélectionnées et livrées avec soin.",
     shopCollection: "Voir la Collection",
     exploreBrands: "Explorer les Marques",
     discoverOurCollection: "Découvrez Notre Collection",
