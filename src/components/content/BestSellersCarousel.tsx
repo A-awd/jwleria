@@ -51,7 +51,7 @@ const BestSellersCarousel = () => {
         </div>
 
         {/* Scrollable horizontal list */}
-        <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide pb-4 -mx-4 px-4 md:mx-0 md:px-0">
+        <div className="flex gap-4 md:gap-6 overflow-x-auto scrollbar-hide scroll-smooth-touch pb-4 -mx-4 px-4 md:mx-0 md:px-0">
           {bestSellers.map((product) => (
             <div 
               key={product.id} 
