@@ -35,6 +35,7 @@ import AdminCategories from "./pages/admin/AdminCategories";
 import AdminProductForm from "./pages/admin/AdminProductForm";
 import AdminBrandForm from "./pages/admin/AdminBrandForm";
 import AdminCategoryForm from "./pages/admin/AdminCategoryForm";
+import ImportProducts from "./pages/admin/ImportProducts";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
                       <Route path="categories" element={<AdminCategories />} />
                       <Route path="categories/new" element={<AdminCategoryForm />} />
                       <Route path="categories/:id" element={<AdminCategoryForm />} />
+                      <Route path="import" element={<ImportProducts />} />
                     </Route>
                     <Route path="*" element={<NotFound />} />
                   </Routes>
