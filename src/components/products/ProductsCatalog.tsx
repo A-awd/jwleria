@@ -5,6 +5,7 @@ import ProductModal from "./ProductModal";
 import CategoryFilter from "./CategoryFilter";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductItem {
   title: string;
@@ -12,9 +13,6 @@ interface ProductItem {
   tags: { tagName: string }[];
   time_stamp: number;
 }
-
-const API_BASE = "https://api.allorigins.win/get?url=";
-const STORE_URL = "https://A2018011207583011294.szwego.com/weshop/goods/all?%26albumId=_ZMAqfyWVgeIJzxk_lFSY2lWup1lK3tSA";
 
 function cleanTitle(title: string): string {
   return title.replace(/^\d+[\d.\s]*/g, "").trim();
@@ -24,36 +22,36 @@ const ProductsCatalog = () => {
   const [products, setProducts] = useState<ProductItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [lastTimestamp, setLastTimestamp] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
 
-  const fetchProducts = useCallback(async (pageTimestamp?: number) => {
+  const fetchProducts = useCallback(async (isLoadMore = false) => {
     try {
-      let url = STORE_URL;
-      if (pageTimestamp) {
-        url += `&pageTimestamp=${pageTimestamp}`;
-      }
+      const { data, error: fnError } = await supabase.functions.invoke('szwego-scrape', {
+        body: { pageTimestamp: isLoadMore ? page : undefined },
+      });
 
-      const res = await fetch(API_BASE + encodeURIComponent(url));
-      const wrapper = await res.json();
-      const data = JSON.parse(wrapper.contents);
-      const items: ProductItem[] = data.result?.items || [];
-      const isLoadMore = data.result?.pagination?.isLoadMore ?? false;
+      if (fnError) throw fnError;
 
-      if (items.length > 0) {
-        setLastTimestamp(items[items.length - 1].time_stamp);
-      }
-      setHasMore(isLoadMore);
-      return items;
+      const items: ProductItem[] = data?.products || [];
+      // Filter out logo/non-product items
+      const filtered = items.filter(p => 
+        p.title !== 'luxuwine' && 
+        !p.imgsSrc?.[0]?.includes('i1678896712_8689_0')
+      );
+
+      setHasMore(filtered.length > 10);
+      setPage(prev => prev + 1);
+      return filtered;
     } catch (err) {
       console.error("Failed to fetch products:", err);
       setError("Failed to load products. Please try again.");
       return [];
     }
-  }, []);
+  }, [page]);
 
   useEffect(() => {
     const load = async () => {
@@ -63,19 +61,24 @@ const ProductsCatalog = () => {
       setLoading(false);
     };
     load();
-  }, [fetchProducts]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const loadMore = async () => {
-    if (!lastTimestamp || loadingMore) return;
+    if (loadingMore) return;
     setLoadingMore(true);
-    const items = await fetchProducts(lastTimestamp);
+    const items = await fetchProducts(true);
     setProducts((prev) => [...prev, ...items]);
     setLoadingMore(false);
   };
 
-  // Extract unique categories
+  // Extract unique categories from product titles
   const categories = Array.from(
-    new Set(products.map((p) => p.tags?.[0]?.tagName).filter(Boolean))
+    new Set(
+      products
+        .map((p) => p.tags?.[0]?.tagName)
+        .filter(Boolean)
+    )
   );
 
   const filteredProducts =
