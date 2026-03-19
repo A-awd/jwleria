@@ -11,31 +11,113 @@ Deno.serve(async (req) => {
   try {
     const { pageTimestamp } = await req.json().catch(() => ({}));
 
-    const baseUrl = `https://A2018011207583011294.szwego.com/weshop/goods/all?&albumId=_ZMAqfyWVgeIJzxk_lFSY2lWup1lK3tSA${pageTimestamp ? `&pageTimestamp=${pageTimestamp}` : ''}`;
+    const apiKey = Deno.env.get('FIRECRAWL_API_KEY');
+    if (!apiKey) {
+      return new Response(
+        JSON.stringify({ success: false, error: 'Firecrawl not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
-    console.log('Fetching Szwego API:', baseUrl);
+    let targetUrl = 'https://a2018011207583011294.szwego.com/weshop/store/_ZMAqfyWVgeIJzxk_lFSY2lWup1lK3tSA';
+    if (pageTimestamp) {
+      targetUrl += `?pageTimestamp=${pageTimestamp}`;
+    }
 
-    const response = await fetch(baseUrl, {
+    console.log('Scraping Szwego store:', targetUrl);
+
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://a2018011207583011294.szwego.com/',
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        url: targetUrl,
+        formats: ['html'],
+        waitFor: 5000,
+        onlyMainContent: false,
+      }),
     });
 
     const data = await response.json();
 
-    console.log(`Got ${data?.result?.items?.length || 0} items, isLoadMore: ${data?.result?.pagination?.isLoadMore}`);
+    if (!response.ok) {
+      console.error('Firecrawl error:', data);
+      return new Response(
+        JSON.stringify({ success: false, error: data.error || 'Scrape failed' }),
+        { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const html = data.data?.html || data.html || '';
+    const products = parseProducts(html);
+
+    console.log(`Extracted ${products.length} products`);
 
     return new Response(
-      JSON.stringify(data),
+      JSON.stringify({ success: true, products, hasMore: products.length >= 20 }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
+
+function parseProducts(html: string) {
+  const products: any[] = [];
+  
+  // Look for JSON data embedded in script tags
+  const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
+  
+  for (const script of scriptMatches) {
+    const content = script.replace(/<\/?script[^>]*>/gi, '');
+    const stateMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/) ||
+                       content.match(/window\.__PRELOADED_STATE__\s*=\s*({[\s\S]*?});/) ||
+                       content.match(/"items"\s*:\s*\[([\s\S]*?)\]/);
+    if (stateMatch) {
+      try {
+        const parsed = JSON.parse(stateMatch[1]);
+        if (Array.isArray(parsed)) {
+          products.push(...parsed);
+        } else if (parsed.items) {
+          products.push(...parsed.items);
+        }
+      } catch {}
+    }
+  }
+
+  // Fallback: extract from HTML elements
+  if (products.length === 0) {
+    const imgPattern = /src="(https:\/\/xcimg\.szwego\.com\/[^"]+)"/g;
+    const titlePattern = /class="[^"]*title[^"]*"[^>]*>([^<]+)</gi;
+    
+    const images: string[] = [];
+    const titles: string[] = [];
+    
+    let match;
+    while ((match = imgPattern.exec(html)) !== null) {
+      if (!images.includes(match[1]) && !match[1].includes('icon_') && !match[1].includes('logo')) {
+        images.push(match[1]);
+      }
+    }
+    while ((match = titlePattern.exec(html)) !== null) {
+      titles.push(match[1].trim());
+    }
+    
+    for (let i = 0; i < Math.max(images.length, titles.length); i++) {
+      products.push({
+        title: titles[i] || `Product ${i + 1}`,
+        imgsSrc: [images[i] || '/placeholder.svg'],
+        tags: [{ tagName: '' }],
+        time_stamp: Date.now() - i * 1000,
+      });
+    }
+  }
+
+  return products;
+}

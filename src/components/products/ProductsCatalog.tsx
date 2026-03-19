@@ -36,23 +36,23 @@ const ProductsCatalog = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  const loadProducts = useCallback(async (timestamp = "") => {
+  const loadProducts = useCallback(async (pageTimestamp?: number) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
 
-    const isInitial = !timestamp;
+    const isInitial = !pageTimestamp;
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
     try {
       const { data, error: fnError } = await supabase.functions.invoke('szwego-scrape', {
-        body: { pageTimestamp: timestamp || undefined },
+        body: { pageTimestamp: pageTimestamp || undefined },
       });
 
       if (fnError) throw fnError;
 
-      const items: ProductItem[] = data?.result?.items || [];
-      const canLoadMore = data?.result?.pagination?.isLoadMore ?? false;
+      const items: ProductItem[] = data?.products || [];
+      const canLoadMore = data?.hasMore ?? false;
 
       // Filter out logo/non-product items
       const filtered = items.filter(
@@ -86,7 +86,7 @@ const ProductsCatalog = () => {
         if (entries[0].isIntersecting && hasMore && !loadingRef.current && products.length > 0) {
           const lastProduct = products[products.length - 1];
           if (lastProduct?.time_stamp) {
-            loadProducts(String(lastProduct.time_stamp));
+            loadProducts(lastProduct.time_stamp);
           }
         }
       },
