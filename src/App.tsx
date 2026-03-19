@@ -26,6 +26,7 @@ import Favorites from "./pages/Favorites";
 import HowItWorks from "./pages/HowItWorks";
 import RefundPolicy from "./pages/RefundPolicy";
 import Contact from "./pages/Contact";
+import Products from "./pages/Products";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminHome from "./pages/admin/AdminHome";
@@ -61,6 +62,7 @@ const App = () => (
                     <Route path="/product/:productId" element={<ProductDetailNew />} />
                     <Route path="/how-it-works" element={<HowItWorks />} />
                     <Route path="/contact" element={<Contact />} />
+                    <Route path="/products" element={<Products />} />
                     <Route path="/about/our-story" element={<OurStory />} />
                     <Route path="/about/sustainability" element={<Sustainability />} />
                     <Route path="/about/size-guide" element={<SizeGuide />} />
