@@ -50,14 +50,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Parse the HTML to extract product data
     const html = data.data?.html || data.html || '';
     const products = parseProducts(html);
 
     console.log(`Extracted ${products.length} products`);
 
     return new Response(
-      JSON.stringify({ success: true, products }),
+      JSON.stringify({ success: true, products, hasMore: products.length >= 20 }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
@@ -72,13 +71,11 @@ Deno.serve(async (req) => {
 function parseProducts(html: string) {
   const products: any[] = [];
   
-  // Szwego renders product cards with goods data. Try to extract from script tags or data attributes
-  // Look for JSON data embedded in the page
+  // Look for JSON data embedded in script tags
   const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi) || [];
   
   for (const script of scriptMatches) {
     const content = script.replace(/<\/?script[^>]*>/gi, '');
-    // Look for goods data in window.__INITIAL_STATE__ or similar patterns
     const stateMatch = content.match(/window\.__INITIAL_STATE__\s*=\s*({[\s\S]*?});/) ||
                        content.match(/window\.__PRELOADED_STATE__\s*=\s*({[\s\S]*?});/) ||
                        content.match(/"items"\s*:\s*\[([\s\S]*?)\]/);
@@ -94,9 +91,8 @@ function parseProducts(html: string) {
     }
   }
 
-  // If no JSON data found, try to extract from HTML elements
+  // Fallback: extract from HTML elements
   if (products.length === 0) {
-    // Extract image URLs and titles from product card elements
     const imgPattern = /src="(https:\/\/xcimg\.szwego\.com\/[^"]+)"/g;
     const titlePattern = /class="[^"]*title[^"]*"[^>]*>([^<]+)</gi;
     
@@ -113,7 +109,6 @@ function parseProducts(html: string) {
       titles.push(match[1].trim());
     }
     
-    // Pair images with titles
     for (let i = 0; i < Math.max(images.length, titles.length); i++) {
       products.push({
         title: titles[i] || `Product ${i + 1}`,

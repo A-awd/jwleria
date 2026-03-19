@@ -5,6 +5,7 @@ import { Loader2, Search } from "lucide-react";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 import CategoryFilter from "./CategoryFilter";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ProductTag {
   tagName: string;
@@ -17,15 +18,6 @@ interface ProductItem {
   time_stamp: number;
   itemPrice?: string;
   goods_id?: string;
-}
-
-interface ApiResponse {
-  result?: {
-    items?: ProductItem[];
-    pagination?: {
-      isLoadMore?: boolean;
-    };
-  };
 }
 
 function cleanTitle(title: string): string {
@@ -44,25 +36,23 @@ const ProductsCatalog = () => {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const loadingRef = useRef(false);
 
-  const fetchProducts = useCallback(async (timestamp = "") => {
-    const baseUrl = `https://A2018011207583011294.szwego.com/weshop/goods/all?&albumId=_ZMAqfyWVgeIJzxk_lFSY2lWup1lK3tSA${timestamp ? `&pageTimestamp=${timestamp}` : ""}`;
-    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(baseUrl)}`);
-    const data: ApiResponse = await res.json();
-    return data;
-  }, []);
-
-  const loadProducts = useCallback(async (timestamp = "") => {
+  const loadProducts = useCallback(async (pageTimestamp?: number) => {
     if (loadingRef.current) return;
     loadingRef.current = true;
-    
-    const isInitial = !timestamp;
+
+    const isInitial = !pageTimestamp;
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
     try {
-      const data = await fetchProducts(timestamp);
-      const items: ProductItem[] = data?.result?.items || [];
-      const canLoadMore = data?.result?.pagination?.isLoadMore ?? false;
+      const { data, error: fnError } = await supabase.functions.invoke('szwego-scrape', {
+        body: { pageTimestamp: pageTimestamp || undefined },
+      });
+
+      if (fnError) throw fnError;
+
+      const items: ProductItem[] = data?.products || [];
+      const canLoadMore = data?.hasMore ?? false;
 
       // Filter out logo/non-product items
       const filtered = items.filter(
@@ -80,7 +70,7 @@ const ProductsCatalog = () => {
       setLoadingMore(false);
       loadingRef.current = false;
     }
-  }, [fetchProducts]);
+  }, []);
 
   // Initial load
   useEffect(() => {
@@ -96,7 +86,7 @@ const ProductsCatalog = () => {
         if (entries[0].isIntersecting && hasMore && !loadingRef.current && products.length > 0) {
           const lastProduct = products[products.length - 1];
           if (lastProduct?.time_stamp) {
-            loadProducts(String(lastProduct.time_stamp));
+            loadProducts(lastProduct.time_stamp);
           }
         }
       },
