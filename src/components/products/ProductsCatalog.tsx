@@ -1,17 +1,31 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Loader2, Search } from "lucide-react";
 import ProductCard from "./ProductCard";
 import ProductModal from "./ProductModal";
 import CategoryFilter from "./CategoryFilter";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+
+interface ProductTag {
+  tagName: string;
+}
 
 interface ProductItem {
   title: string;
   imgsSrc: string[];
-  tags: { tagName: string }[];
+  tags: ProductTag[];
   time_stamp: number;
+  itemPrice?: string;
+  goods_id?: string;
+}
+
+interface ApiResponse {
+  result?: {
+    items?: ProductItem[];
+    pagination?: {
+      isLoadMore?: boolean;
+    };
+  };
 }
 
 function cleanTitle(title: string): string {
@@ -25,80 +39,121 @@ const ProductsCatalog = () => {
   const [hasMore, setHasMore] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedProduct, setSelectedProduct] = useState<ProductItem | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [page, setPage] = useState(0);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
 
-  const fetchProducts = useCallback(async (isLoadMore = false) => {
+  const fetchProducts = useCallback(async (timestamp = "") => {
+    const baseUrl = `https://A2018011207583011294.szwego.com/weshop/goods/all?&albumId=_ZMAqfyWVgeIJzxk_lFSY2lWup1lK3tSA${timestamp ? `&pageTimestamp=${timestamp}` : ""}`;
+    const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(baseUrl)}`);
+    const data: ApiResponse = await res.json();
+    return data;
+  }, []);
+
+  const loadProducts = useCallback(async (timestamp = "") => {
+    if (loadingRef.current) return;
+    loadingRef.current = true;
+    
+    const isInitial = !timestamp;
+    if (isInitial) setLoading(true);
+    else setLoadingMore(true);
+
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('szwego-scrape', {
-        body: { pageTimestamp: isLoadMore ? page : undefined },
-      });
+      const data = await fetchProducts(timestamp);
+      const items: ProductItem[] = data?.result?.items || [];
+      const canLoadMore = data?.result?.pagination?.isLoadMore ?? false;
 
-      if (fnError) throw fnError;
-
-      const items: ProductItem[] = data?.products || [];
       // Filter out logo/non-product items
-      const filtered = items.filter(p => 
-        p.title !== 'luxuwine' && 
-        !p.imgsSrc?.[0]?.includes('i1678896712_8689_0')
+      const filtered = items.filter(
+        (p) => p.title !== "luxuwine" && !p.imgsSrc?.[0]?.includes("i1678896712_8689_0")
       );
 
-      setHasMore(filtered.length > 10);
-      setPage(prev => prev + 1);
-      return filtered;
+      setProducts((prev) => (isInitial ? filtered : [...prev, ...filtered]));
+      setHasMore(canLoadMore);
+      setError(null);
     } catch (err) {
       console.error("Failed to fetch products:", err);
       setError("Failed to load products. Please try again.");
-      return [];
-    }
-  }, [page]);
-
-  useEffect(() => {
-    const load = async () => {
-      setLoading(true);
-      const items = await fetchProducts();
-      setProducts(items);
+    } finally {
       setLoading(false);
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      setLoadingMore(false);
+      loadingRef.current = false;
+    }
+  }, [fetchProducts]);
 
-  const loadMore = async () => {
-    if (loadingMore) return;
-    setLoadingMore(true);
-    const items = await fetchProducts(true);
-    setProducts((prev) => [...prev, ...items]);
-    setLoadingMore(false);
-  };
+  // Initial load
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
-  // Extract unique categories from product titles
+  // Infinite scroll with IntersectionObserver
+  useEffect(() => {
+    if (!sentinelRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingRef.current && products.length > 0) {
+          const lastProduct = products[products.length - 1];
+          if (lastProduct?.time_stamp) {
+            loadProducts(String(lastProduct.time_stamp));
+          }
+        }
+      },
+      { rootMargin: "200px" }
+    );
+
+    observer.observe(sentinelRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, products, loadProducts]);
+
+  // Extract unique categories
   const categories = Array.from(
     new Set(
       products
         .map((p) => p.tags?.[0]?.tagName)
-        .filter(Boolean)
+        .filter((t): t is string => Boolean(t))
     )
   );
 
-  const filteredProducts =
-    selectedCategory === "all"
-      ? products
-      : products.filter((p) => p.tags?.[0]?.tagName === selectedCategory);
+  // Filter by category and search
+  const filteredProducts = products.filter((p) => {
+    const matchesCategory =
+      selectedCategory === "all" || p.tags?.[0]?.tagName === selectedCategory;
+    const cleaned = cleanTitle(p.title).toLowerCase();
+    const tag = (p.tags?.[0]?.tagName || "").toLowerCase();
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || cleaned.includes(q) || tag.includes(q);
+    return matchesCategory && matchesSearch;
+  });
 
   if (error && products.length === 0) {
     return (
       <div className="text-center py-20 text-muted-foreground">
         <p>{error}</p>
-        <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
+        <button
+          className="mt-4 px-4 py-2 border border-border rounded-md text-sm hover:bg-secondary transition-colors"
+          onClick={() => window.location.reload()}
+        >
           Retry
-        </Button>
+        </button>
       </div>
     );
   }
 
   return (
     <div>
+      {/* Search */}
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="Search products..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
       {/* Category Filter */}
       {categories.length > 0 && (
         <CategoryFilter
@@ -124,7 +179,7 @@ const ProductsCatalog = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.map((product, idx) => (
               <ProductCard
-                key={`${product.time_stamp}-${idx}`}
+                key={`${product.goods_id || product.time_stamp}-${idx}`}
                 image={product.imgsSrc?.[0] || "/placeholder.svg"}
                 title={cleanTitle(product.title)}
                 category={product.tags?.[0]?.tagName || ""}
@@ -137,25 +192,21 @@ const ProductsCatalog = () => {
             <p className="text-center text-muted-foreground py-16">No products found.</p>
           )}
 
-          {/* Load More */}
-          {hasMore && selectedCategory === "all" && (
-            <div className="flex justify-center mt-10">
-              <Button
-                variant="outline"
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="min-w-[180px]"
-              >
-                {loadingMore ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  "Load More"
-                )}
-              </Button>
+          {/* Sentinel for infinite scroll */}
+          <div ref={sentinelRef} className="h-1" />
+
+          {/* Loading more spinner */}
+          {loadingMore && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
+          )}
+
+          {/* End message */}
+          {!hasMore && products.length > 0 && !searchQuery && (
+            <p className="text-center text-muted-foreground py-8 text-sm">
+              تم عرض جميع المنتجات
+            </p>
           )}
         </>
       )}
