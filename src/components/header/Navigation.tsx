@@ -178,6 +178,9 @@ const Navigation = () => {
                 {item.name}
               </Link>
             </div>)}
+          <Link to="/products" className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-light py-6 block">
+            Products
+          </Link>
         </div>
 
         {/* Center logo - absolute on all screens */}
@@ -319,6 +322,9 @@ const Navigation = () => {
                        </Link>)}
                    </div>
                 </div>)}
+              <Link to="/products" className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-base font-light block py-1.5 mt-4" onClick={() => setIsMobileMenuOpen(false)}>
+                Products
+              </Link>
             </div>
             
             {/* Favorites Button for Mobile */}
