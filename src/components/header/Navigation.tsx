@@ -1,4 +1,5 @@
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";
@@ -215,7 +216,7 @@ const Navigation = () => {
             className="p-1.5 md:p-2 text-[#25D366] hover:text-[#20bd5a] transition-colors duration-200" 
             aria-label="Contact on WhatsApp"
           >
-            <MessageCircle className="w-5 h-5" />
+            <WhatsAppIcon className="w-5 h-5" />
           </button>
         </div>
       </div>
@@ -337,7 +338,7 @@ const Navigation = () => {
                 }}
                 className="flex items-center gap-2 text-[#25D366] hover:text-[#20bd5a] transition-colors duration-200 text-base font-light py-1.5 w-full"
               >
-                <MessageCircle className="w-5 h-5" />
+                <WhatsAppIcon className="w-5 h-5" />
                 <span>{t("contactOnWhatsApp")}</span>
               </button>
             </div>

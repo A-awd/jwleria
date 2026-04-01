@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { Heart, MessageCircle, X } from "lucide-react";
+import { Heart, X } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getWhatsAppLink, STORE_CONFIG } from "@/config/store";
@@ -103,7 +104,7 @@ const QuickViewModal = ({ product, isOpen, onClose }: QuickViewModalProps) => {
                 onClick={handleWhatsAppClick}
                 className="w-full h-11 bg-[#25D366] hover:bg-[#128C7E] text-white transition-colors"
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
+                <WhatsAppIcon className="h-4 w-4 mr-2" />
                 {t("orderOnWhatsApp")}
               </Button>
 

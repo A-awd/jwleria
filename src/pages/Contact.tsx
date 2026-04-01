@@ -1,7 +1,8 @@
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MessageCircle, Mail, Clock } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { STORE_CONFIG, getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
 
@@ -34,7 +35,7 @@ const Contact = () => {
             {/* WhatsApp */}
             <div className="bg-muted/20 border border-border p-8 text-center">
               <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-[#25D366]/10 flex items-center justify-center">
-                <MessageCircle className="w-6 h-6 text-[#25D366]" />
+                <WhatsAppIcon className="w-6 h-6 text-[#25D366]" />
               </div>
               <h3 className="text-lg font-medium text-foreground mb-2">WhatsApp</h3>
               <p className="text-sm text-muted-foreground mb-4">
@@ -44,7 +45,7 @@ const Contact = () => {
                 onClick={handleWhatsAppClick}
                 className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-6 py-2 text-sm font-medium transition-colors"
               >
-                <MessageCircle className="w-4 h-4" />
+                <WhatsAppIcon className="w-4 h-4" />
                 {t("chatNow")}
               </button>
             </div>

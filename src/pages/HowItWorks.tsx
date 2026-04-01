@@ -1,7 +1,8 @@
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MessageCircle, Search, CreditCard, Package, CheckCircle } from "lucide-react";
+import { Search, CreditCard, Package, CheckCircle } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
 
@@ -20,7 +21,7 @@ const HowItWorks = () => {
       description: t("browseDescription"),
     },
     {
-      icon: MessageCircle,
+      icon: WhatsAppIcon,
       title: t("contactUsOnWhatsApp"),
       description: t("contactDescription"),
     },
@@ -124,7 +125,7 @@ const HowItWorks = () => {
               onClick={handleWhatsAppClick}
               className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#20bd5a] text-white px-8 py-4 text-lg font-medium transition-colors"
             >
-              <MessageCircle className="w-5 h-5" />
+              <WhatsAppIcon className="w-5 h-5" />
               {t("startShoppingNow")}
             </button>
           </div>
