@@ -178,6 +178,9 @@ const Navigation = () => {
                 {item.name}
               </Link>
             </div>)}
+          <Link to="/products" className="text-nav-foreground hover:text-nav-hover transition-colors duration-200 text-sm font-light py-6 block">
+            Products
+          </Link>
         </div>
 
         {/* Center logo - absolute on all screens */}
