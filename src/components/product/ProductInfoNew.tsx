@@ -203,7 +203,7 @@ const ProductInfoNew = ({ product, showBreadcrumb = true }: ProductInfoProps) =>
               className="w-full h-12 md:h-14 bg-[#25D366] hover:bg-[#128C7E] text-white font-medium rounded-sm text-base md:text-lg shadow-lg shadow-[#25D366]/20"
               onClick={handleWhatsAppClick}
             >
-              <MessageCircle className="h-5 w-5 mr-2" />
+              <WhatsAppIcon className="h-5 w-5 mr-2" />
               {t("orderOnWhatsApp")}
             </Button>
           </motion.div>

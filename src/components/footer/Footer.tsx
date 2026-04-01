@@ -61,7 +61,7 @@ const Footer = () => {
             className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors mb-4"
             aria-label={t("contactOnWhatsApp")}
           >
-            <MessageCircle size={16} aria-hidden="true" />
+            <WhatsAppIcon className="w-4 h-4" aria-hidden="true" />
             {t("contactOnWhatsApp")}
           </button>
         </div>
@@ -170,7 +170,7 @@ const Footer = () => {
                 className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1da851] text-[#0a2e14] px-4 py-2 text-sm font-medium transition-colors"
                 aria-label={t("contactOnWhatsApp")}
               >
-                <MessageCircle size={16} aria-hidden="true" />
+                <WhatsAppIcon className="w-4 h-4" aria-hidden="true" />
                 {t("contactOnWhatsApp")}
               </button>
             </div>
