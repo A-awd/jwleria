@@ -43,7 +43,7 @@ const Category = () => {
     }
     
     return filtered.length;
-  }, [searchQuery, selectedBrands, selectedCategories]);
+  }, [searchQuery, selectedBrands, selectedCategories, allMergedProducts]);
 
   return (
     <div className="min-h-screen bg-background">

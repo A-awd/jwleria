@@ -49,8 +49,11 @@ const BrandDetail = () => {
     "patek-philippe": "Patek Philippe",
   };
 
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
+  const allMergedProducts = mergeProducts(supabaseProducts);
+
   const brandName = brandNameMap[brandId || ""] || "";
-  const products = getProductsByBrand(brandName);
+  const products = allMergedProducts.filter(p => p.brand.toLowerCase() === brandName.toLowerCase());
   const metadata = brandMetadata[brandName];
 
   if (!brandName || !metadata) {

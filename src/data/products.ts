@@ -895,3 +895,17 @@ export const allProducts: Product[] = [
     }
   },
 ];
+
+// Merge function for combining hardcoded + Supabase products
+export const mergeProducts = (supabaseProducts: Product[]): Product[] => {
+  const merged = [...allProducts];
+  for (const sp of supabaseProducts) {
+    const exists = merged.some(
+      (p) => p.name.toLowerCase() === sp.name.toLowerCase() && p.brand.toLowerCase() === sp.brand.toLowerCase()
+    );
+    if (!exists) {
+      merged.push(sp);
+    }
+  }
+  return merged;
+};
