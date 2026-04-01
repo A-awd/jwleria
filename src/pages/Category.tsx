@@ -23,7 +23,7 @@ const Category = () => {
 
   // Calculate filtered product count
   const filteredCount = useMemo(() => {
-    let filtered = [...allProducts];
+    let filtered = [...allMergedProducts];
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
