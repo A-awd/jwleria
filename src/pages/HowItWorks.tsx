@@ -1,7 +1,8 @@
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MessageCircle, Search, CreditCard, Package, CheckCircle } from "lucide-react";
+import { Search, CreditCard, Package, CheckCircle } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
 

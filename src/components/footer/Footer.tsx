@@ -1,5 +1,6 @@
 import { useLanguage } from "@/i18n/LanguageContext";
-import { Instagram, MessageCircle } from "lucide-react";
+import { Instagram } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { STORE_CONFIG, getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
 import Logo from "@/components/ui/Logo";

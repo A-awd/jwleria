@@ -1,4 +1,5 @@
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import LanguageSwitcher from "./LanguageSwitcher";

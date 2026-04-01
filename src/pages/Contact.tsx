@@ -1,7 +1,8 @@
 import Header from "@/components/header/Header";
 import Footer from "@/components/footer/Footer";
 import { useLanguage } from "@/i18n/LanguageContext";
-import { MessageCircle, Mail, Clock } from "lucide-react";
+import { Mail, Clock } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { STORE_CONFIG, getGeneralWhatsAppLink } from "@/config/store";
 import { trackWhatsAppClick } from "@/lib/analytics";
 

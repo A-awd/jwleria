@@ -9,7 +9,8 @@ import {
   BreadcrumbPage, 
   BreadcrumbSeparator 
 } from "@/components/ui/breadcrumb";
-import { Heart, MessageCircle, Truck, Shield, Clock } from "lucide-react";
+import { Heart, Truck, Shield, Clock } from "lucide-react";
+import WhatsAppIcon from "@/components/ui/WhatsAppIcon";
 import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
