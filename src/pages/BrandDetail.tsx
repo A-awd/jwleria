@@ -6,7 +6,8 @@ import { useCurrency } from "@/i18n/CurrencyContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { getProductsByBrand, luxuryBrands } from "@/data/products";
+import { getProductsByBrand, luxuryBrands, mergeProducts } from "@/data/products";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 import organicEarring from "@/assets/organic-earring.png";
 import linkBracelet from "@/assets/link-bracelet.png";
 
