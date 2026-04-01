@@ -4,16 +4,19 @@ import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart, Eye, ArrowRight } from "lucide-react";
-import { allProducts, Product } from "@/data/products";
+import { allProducts, Product, mergeProducts } from "@/data/products";
 import QuickViewModal from "@/components/product/QuickViewModal";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 
 const BestSellersCarousel = () => {
   const { convertPrice } = useCurrency();
   const { t, direction } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
+  const allMergedProducts = mergeProducts(supabaseProducts);
   
   // Get best sellers (higher-priced items)
-  const bestSellers = [...allProducts]
+  const bestSellers = [...allMergedProducts]
     .sort((a, b) => b.priceEUR - a.priceEUR)
     .slice(0, 8);
   

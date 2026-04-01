@@ -5,9 +5,12 @@ import Footer from "../components/footer/Footer";
 import CategoryHeader from "../components/category/CategoryHeader";
 import FilterSortBar from "../components/category/FilterSortBar";
 import ProductGrid from "../components/category/ProductGrid";
-import { allProducts } from "@/data/products";
+import { allProducts, mergeProducts } from "@/data/products";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 
 const Category = () => {
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
+  const allMergedProducts = mergeProducts(supabaseProducts);
   const { category, brandId } = useParams();
   const [searchParams] = useSearchParams();
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -20,7 +23,7 @@ const Category = () => {
 
   // Calculate filtered product count
   const filteredCount = useMemo(() => {
-    let filtered = [...allProducts];
+    let filtered = [...allMergedProducts];
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -40,7 +43,7 @@ const Category = () => {
     }
     
     return filtered.length;
-  }, [searchQuery, selectedBrands, selectedCategories]);
+  }, [searchQuery, selectedBrands, selectedCategories, allMergedProducts]);
 
   return (
     <div className="min-h-screen bg-background">
