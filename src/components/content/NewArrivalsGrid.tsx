@@ -3,15 +3,18 @@ import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart, ArrowRight } from "lucide-react";
-import { allProducts, Product } from "@/data/products";
+import { allProducts, Product, mergeProducts } from "@/data/products";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 
 const NewArrivalsGrid = () => {
   const { convertPrice } = useCurrency();
   const { t, direction } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
+  const allMergedProducts = mergeProducts(supabaseProducts);
 
   // Get new arrivals
-  const newArrivals = allProducts.filter(p => p.isNew).slice(0, 6);
+  const newArrivals = allMergedProducts.filter(p => p.isNew).slice(0, 6);
 
   return (
     <section className="w-full py-12 md:py-20 px-4 md:px-6">

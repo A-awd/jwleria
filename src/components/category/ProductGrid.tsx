@@ -5,8 +5,9 @@ import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart, Eye } from "lucide-react";
 import { useState } from "react";
 import Pagination from "./Pagination";
-import { allProducts, Product } from "@/data/products";
+import { allProducts, Product, mergeProducts } from "@/data/products";
 import QuickViewModal from "@/components/product/QuickViewModal";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 
 interface ProductGridProps {
   searchQuery?: string;
@@ -29,9 +30,10 @@ const ProductGrid = ({
   const { t } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
   
-  // Use local products data
-  let filteredProducts = [...allProducts];
+  // Use merged products data
+  let filteredProducts = [...mergeProducts(supabaseProducts)];
 
   // Search filter
   if (searchQuery.trim()) {

@@ -4,17 +4,20 @@ import { useCurrency } from "@/i18n/CurrencyContext";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
 import { Heart, Eye } from "lucide-react";
-import { allProducts, Product } from "@/data/products";
+import { allProducts, Product, mergeProducts } from "@/data/products";
 import QuickViewModal from "@/components/product/QuickViewModal";
+import { useSupabaseProducts } from "@/hooks/useSupabaseProducts";
 
 const CuratedPicks = () => {
   const { convertPrice } = useCurrency();
   const { t } = useLanguage();
   const { toggleFavorite, isFavorite } = useFavorites();
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
+  const { data: supabaseProducts = [] } = useSupabaseProducts();
+  const allMergedProducts = mergeProducts(supabaseProducts);
 
   // Get curated picks (higher-priced items as featured)
-  const curatedPicks = [...allProducts]
+  const curatedPicks = [...allMergedProducts]
     .sort((a, b) => b.priceEUR - a.priceEUR)
     .slice(0, 4);
 
