@@ -1,21 +1,23 @@
-# AGENTS.md
+# Agent instructions
 
-This repository participates in the A-awd GitHub-first AI operating system.
+These instructions apply equally to Claude, Codex, ChatGPT, Hermes, and future launchers.
 
-## Repository Role
+## Session start
 
-`jwleria` is a Lovable-generated React/Vite app with Supabase dependencies. Treat generated code carefully: preserve working user-facing behavior and add structure around it before major rewrites.
+1. Open `A-awd/jwleria`.
+2. Inspect the latest GitHub branch and commit state.
+3. Read `README.md`, this file, `STATE.md`, and `HANDOFF.md`.
+4. Read relevant entries in `DECISIONS.md` and `decisions/`.
+5. Consult `A-awd/ai-operating-system` only for global rules.
 
-## AI Role Contract
+The latest approved GitHub state wins over platform-local memory.
 
-- Claude: product architecture and UX direction.
-- Codex: implementation, tests, Supabase safety, repo hardening.
-- Gemini: research, brand and product critique, second-pass review.
+## Scope and public boundary
 
-## Operating Rules
+Work only with public-safe code and documentation for the jewelry commerce experience and its generic storefront integrations. Do not add business secrets, credentials, tokens, customer or order data, supplier records, private assets, financial records, production configuration, or raw conversations.
 
-- Read `docs/ai/OPERATING_MODEL.md` before substantial work.
-- Never commit Supabase service keys, auth secrets, customer data, or private business data.
-- Prefer small deterministic changes and visible tests.
-- Preserve Lovable compatibility unless explicitly changing ownership model.
-- Use GitHub issues/PRs as durable memory.
+Do not copy or merge content from `jwleria-s-gembox` until a read-only forensic comparison identifies provenance, licensing, sensitivity, and unique useful history. Do not change repository visibility or archive a repository without separate authorization.
+
+## Session end
+
+Update `STATE.md` and `HANDOFF.md`, record durable public-safe decisions in `DECISIONS.md`, and commit and push only when authorized. Leave the migration branch unmerged while its blockers remain.
