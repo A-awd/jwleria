@@ -13,11 +13,12 @@
 
 ## Blockers
 
-- A forensic, history-preserving comparison of `jwleria` and `jwleria-s-gembox` is incomplete.
+- A read-only commit-history comparison confirms that `jwleria-s-gembox` imported the canonical source and then diverged with later Arabic-only, catalog, price-display, currency, and integration changes. A complete tree/content comparison is still incomplete.
+- The duplicate history reports a hardcoded Supabase public client key. No value is copied here; security review and credential replacement are required before any integration.
 - The public repository cannot receive private operational memory.
 
 ## Next action
 
-Perform a read-only repository and history comparison, classify unique public-safe content, and document an approved consolidation and visibility decision. Do not merge this migration branch until both blockers are resolved.
+Perform a complete secret-aware tree comparison, classify the divergent changes, replace exposed client configuration outside the migration, and document an approved history-preserving consolidation and visibility decision. Do not merge this migration branch until all gates are resolved.
 
 Last updated: 2026-07-17
