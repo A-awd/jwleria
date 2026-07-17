@@ -1,73 +1,26 @@
-# Welcome to your Lovable project
+# jwleria
 
-## Project info
+Canonical project repository for the public-safe documentation and code of the Jwleria jewelry commerce project.
 
-**URL**: https://lovable.dev/projects/a8e59680-e4fc-4735-a797-36af2f7e2875
+## One Brain status
 
-## How can I edit this code?
+- Canonical name: `jwleria`
+- Type: business project
+- Status: active; migration merge blocked pending repository reconciliation
+- Current repository visibility: public
+- GitHub disposition: canonical project repository
 
-There are several ways of editing your application.
+GitHub is the permanent source of truth for approved public-safe material. Platform-local chats and memories are non-authoritative.
 
-**Use Lovable**
+## Start here
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a8e59680-e4fc-4735-a797-36af2f7e2875) and start prompting.
+1. Read [AGENTS.md](AGENTS.md).
+2. Review [STATE.md](STATE.md) and [HANDOFF.md](HANDOFF.md).
+3. Consult [DECISIONS.md](DECISIONS.md) and the latest GitHub branch and commit.
+4. Use [LAUNCHER.md](LAUNCHER.md) with any supported AI agent.
 
-Changes made via Lovable will be committed automatically to this repo.
+See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) and [migration/MIGRATION-REPORT.md](migration/MIGRATION-REPORT.md).
 
-**Use your preferred IDE**
+## Merge gate
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/a8e59680-e4fc-4735-a797-36af2f7e2875) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+The private duplicate repository `jwleria-s-gembox` requires a forensic, history-preserving comparison before any unique useful content can be consolidated. Because this repository is public, no private business or operational memory may be added. These two conditions block merging the One Brain migration branch until resolved.
