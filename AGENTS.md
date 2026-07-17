@@ -21,3 +21,9 @@ Do not copy or merge content from `jwleria-s-gembox` until a read-only forensic 
 ## Session end
 
 Update `STATE.md` and `HANDOFF.md`, record durable public-safe decisions in `DECISIONS.md`, and commit and push only when authorized. Leave the migration branch unmerged while its blockers remain.
+
+## Canonical authority and entry contract
+
+GitHub is the only permanent source of truth for approved, sanitized project state. Platform-local memory, chat history, launcher text, caches, and unpushed work are non-authoritative.
+
+At session start, read `README.md`, `AGENTS.md`, `STATE.md`, `HANDOFF.md`, `DECISIONS.md`, and `LAUNCHER.md`, plus relevant linked decisions and workflows. Continue only from the latest verified GitHub branch and commit.
