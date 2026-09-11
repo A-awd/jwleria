@@ -1,3 +1,11 @@
+## Instruction reconciliation — 2026-09-11
+
+Consolidated duplicated session instructions while preserving project-specific safeguards, current decisions, and implementation history. Preserved the approved migration ref and its unmerged gates.
+
+Prepared on `docs/easy-life-instructions-20260911`; canonical-ref adoption is pending. This checkpoint changes documentation only. Existing operational evidence and unfinished work below remain valid within their dated scope; refresh live facts before acting. No historical files, platform projects, settings, or production systems were changed.
+
+---
+
 # Project state
 
 - Canonical project: `jwleria`

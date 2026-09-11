@@ -22,16 +22,8 @@ Do not copy or merge content from `jwleria-s-gembox` until a read-only forensic 
 
 Update `STATE.md` and `HANDOFF.md`, record durable public-safe decisions in `DECISIONS.md`, and commit and push only when authorized. Leave the migration branch unmerged while its blockers remain.
 
-## Canonical authority and entry contract
+## Session contract
 
-GitHub is the only permanent source of truth for approved, sanitized project state. Platform-local memory, chat history, launcher text, caches, and unpushed work are non-authoritative.
+Verify the canonical remote, approved ref, working tree, latest local and remote commits, and synchronization state. Read `README.md`, `AGENTS.md`, `STATE.md`, `HANDOFF.md`, `DECISIONS.md`, `LAUNCHER.md`, and relevant linked decisions and security guidance. The latest approved GitHub state governs sanitized instructions and continuity; platform instructions and conversations supplement verified gaps and never roll back newer decisions. Apply explicit current owner instructions when they supersede earlier policy.
 
-At session start, read `README.md`, `AGENTS.md`, `STATE.md`, `HANDOFF.md`, `DECISIONS.md`, and `LAUNCHER.md`, plus relevant linked decisions and workflows. Continue only from the latest verified GitHub branch and commit.
-
-## Required One Brain synchronization contract
-
-Before work, every supported agent must verify the canonical remote `A-awd/jwleria`, inspect the working tree, current branch, latest local commit, latest GitHub commit, and synchronization state, then continue only from the latest verified GitHub state. Read `README.md`, `AGENTS.md`, `STATE.md`, `HANDOFF.md`, `DECISIONS.md`, and `LAUNCHER.md`, plus relevant linked decisions, workflows, and security guidance.
-
-After meaningful work, validate the exact change; update `STATE.md` and `HANDOFF.md`; update `DECISIONS.md` when a durable decision is made; record blockers, risks, and unfinished or unpushed work; commit and push when authorized; and verify that GitHub contains the reported revision. If push is unavailable or unauthorized, record the exact unpushed state and do not claim durable completion.
-
-GitHub is the only permanent authority. Platform memory, chat history, launcher text, caches, local scratch files, and unpushed work are non-authoritative. Never leave GitHub behind the conversation.
+After meaningful work, validate the exact change, update `STATE.md` and `HANDOFF.md`, record durable decisions, and record blockers and the next safe action. Commit and push when authorized, then verify the remote revision. Unpushed work is not durable GitHub completion. Keep project memory here; use `A-awd/ai-operating-system` only for global governance.
