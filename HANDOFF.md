@@ -1,3 +1,24 @@
+## Live runtime handoff — 2026-09-14
+
+The repository/runtime comparison is complete enough to stop treating the two
+repositories as equal deployment candidates. `jwleria` owns the reachable live
+catalog backend; Gembox points to a non-resolving Supabase hostname and remains
+a feature source only. Neither has a verified production deployment. The
+Lovable surface observed today is a public demo preview with placeholder
+content, and the connected Vercel account has no Jwleria project.
+
+Resume from `docs/LIVE-RUNTIME-AUDIT-2026-09-14.md`. Ask only for the remaining
+commercial choice: price-hidden WhatsApp catalog or SAR price display. Then
+reimplement the chosen Gembox behavior in a reviewed `jwleria` branch, replace
+placeholder identity/contact content, and verify a preview against the reachable
+catalog. Keep checkout disabled because the committed order tables are absent
+from the live REST schema cache.
+
+No production, Supabase, Lovable, Vercel, repository setting, visibility,
+archive, routing, or data change occurred during this audit.
+
+---
+
 ## Instruction reconciliation — 2026-09-11
 
 Consolidated duplicated session instructions while preserving project-specific safeguards, current decisions, and implementation history. Preserved the approved migration ref and its unmerged gates.
