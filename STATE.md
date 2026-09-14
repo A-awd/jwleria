@@ -1,3 +1,31 @@
+## Live runtime audit — 2026-09-14
+
+Read-only verification resolved the main technical ambiguity. The canonical
+Supabase project is reachable and exposes 17 active brands, 84 active
+categories, and 37 active products. No profiles, user roles, or inactive catalog
+rows were visible anonymously. The committed order tables are absent from the
+live REST schema cache, so checkout/order persistence is not a verified runtime.
+
+The Supabase hostname embedded in `jwleria-s-gembox` does not resolve. The
+connected AWD Vercel account has no Jwleria project, GitHub has no public
+`jwleria` deployment records, and the available Lovable surface is a public
+English/EUR demo preview with placeholder content. Production deployment remains
+unverified.
+
+The technical recommendation is now specific: converge by selectively
+reimplementing Gembox behavior into `jwleria`; never merge the unrelated
+histories. Recommend an Arabic-first RTL WhatsApp catalog for the first release,
+with checkout disabled. The owner still needs to choose price-hidden versus SAR
+price display. Evidence: `docs/LIVE-RUNTIME-AUDIT-2026-09-14.md`; proposal:
+`decisions/0002-convergence-destination-proposal.md`.
+
+Exact next action: obtain the single price-display decision, then prepare a
+reviewed `jwleria` preview using the live catalog and real public-safe brand
+identity. Preserve both repositories and make no production, database,
+visibility, routing, or lifecycle change before preview acceptance.
+
+---
+
 ## Instruction reconciliation — 2026-09-11
 
 Consolidated duplicated session instructions while preserving project-specific safeguards, current decisions, and implementation history. Preserved the approved migration ref and its unmerged gates.
