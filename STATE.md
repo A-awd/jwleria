@@ -1,3 +1,15 @@
+## Official product acquisition is executing — 2026-10-04
+
+Corrected the previously unexecuted content acquisition. The dedicated verified database checkpoint holds 771 private, source-backed product candidates across twelve official brand origins, rather than local demo products. The records preserve exact variant references, official names, image URLs, original concise bilingual factual descriptions, structured specifications and provenance. Public catalog count remains zero; no brand media license, image publication approval or current supplier availability was inferred. All 771 checkpoint records have Arabic names and bilingual factual descriptions. Four records have identity-only summaries with missing technical facts; a generated factual description alone is not full content acceptance.
+
+Applied the registered candidate-enrichment migration and verified real private ingestion. Local migration filenames and SQL checksums now match the actual remote migration versions (foundation and enrichment); no migration was reapplied for this alignment. The existing n8n normalization draft was updated without changing its credentials/connections, and execution 56689 returned the same enriched candidates as local normalization. It remains inactive. A source-specific Longchamp adapter reads exact official SKU, collection, material, dimensions and gallery metadata and rejects identity mismatches. Its collector saves private resumable snapshots and stops on access refusal or challenges. Source/head checks preserve the distinction between a reachable image URL and verified image usage.
+
+Full inventories are still running on the execution Mac: Rolex has 1,465 discovered variant URLs and Longchamp has 1,445 discovered product URLs. These are inventory counts, not validated or published counts. Private progress/snapshots remain outside Git; do not restart an already-running acquisition process. Other brand records and access refusals are being reconciled. Bulk Firecrawl execution returned service HTTP 429; the normal public collector remains subject to official robots rules and per-origin pacing. No access bypass was attempted.
+
+The storefront adapter with factual descriptions was deployed and the domain Arabic page and catalog endpoint returned HTTPS 200. Current deployment revision is aad7d48b-858b-47a1-91bf-b63fe4e89b4b. The public endpoint still returns zero products.
+
+Next: ingest new validated snapshots incrementally; finish source inventory reconciliation and missing translations; resolve actual image usage evidence and visual verification before publishing products. WhatsApp number remains pending. Project goal is active and not complete.
+
 ## Domain cutover saved; new HTTPS storefront verified — 2026-10-04
 
 The owner completed Squarespace email verification. Saved the assigned Cloudflare nameservers and verified the registrar confirmation, COM parent delegation, authoritative DNS, public recursive resolution and an active Free Website zone. Both apex and www are attached to the deployed storefront Worker. The registrar remains Squarespace.

@@ -1,4 +1,4 @@
-const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,images,published_at';
+const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,published_at';
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const integer = (n, fallback, max) => Number.isFinite(Number(n)) && Number(n) >= 1 ? Math.min(Math.floor(Number(n)), max) : fallback;
 
@@ -22,7 +22,7 @@ export function publicProduct(row) {
     collectionSlug: row.collection_slug,
     collection: { ar: row.collection_ar, en: row.collection_en },
     name: { ar: row.name_ar, en: row.name_en },
-    summary: { ar: `${row.name_ar} — ${row.collection_ar}`, en: `${row.name_en} — ${row.collection_en}` }, image: row.images[0], images: [...row.images],
+    summary: { ar: row.description_ar || `${row.name_ar} — ${row.collection_ar}`, en: row.description_en || `${row.name_en} — ${row.collection_en}` }, image: row.images[0], images: [...row.images],
     mediaKind: 'verified-product', isPreview: false, addedAt: row.published_at,
   };
 }

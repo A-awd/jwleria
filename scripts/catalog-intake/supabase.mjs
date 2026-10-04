@@ -31,7 +31,8 @@ export async function publish(review, config, fetcher = fetch) {
   if (!Array.isArray(review.images) || !review.images.length || review.images.some(s=>{try{const u=new URL(s);return u.protocol!=='https:'||u.username||u.password;}catch{return true;}})) throw new Error('Invalid publication images');
   const product = {
     slug:slug('slug'),reference:text('reference'),brand_slug:slug('brand_slug'),brand_name:text('brand_name'),brand_tier:text('brand_tier'),category_slug:slug('category_slug'),collection_slug:slug('collection_slug'),
-    collection_ar:text('collection_ar'),collection_en:text('collection_en'),name_ar:text('name_ar'),name_en:text('name_en'),images:[...review.images],
+    collection_ar:text('collection_ar'),collection_en:text('collection_en'),name_ar:text('name_ar'),name_en:text('name_en'),
+    description_ar:text('description_ar'),description_en:text('description_en'),images:[...review.images],
   };
   if(!['luxury','accessible','contemporary'].includes(product.brand_tier))throw new Error('Invalid brand tier');
   product.search_text=normalizeSearch([product.reference,product.brand_slug,product.collection_ar,product.collection_en,product.name_ar,product.name_en].join(' '));

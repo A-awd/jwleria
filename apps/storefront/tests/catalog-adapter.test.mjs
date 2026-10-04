@@ -20,9 +20,15 @@ test('Catalog failures stay failures and invalid image URLs are rejected',async(
   assert.throws(()=>publicProduct({...row,images:['javascript:alert(1)']}),/images/);
   assert.equal(await readProduct(config,'not/a/slug',()=>{throw Error('must not fetch')}),undefined);
 });
+test('Public summaries use approved factual descriptions without leaking source marketing',()=>{
+  const product=publicProduct({...row,description_ar:'فولاذ، 41 مم.',description_en:'Steel, 41 mm.',source_description:'Private source copy',provenance:{secret:'private'}});
+  assert.equal(product.summary.ar,'فولاذ، 41 مم.');assert.equal(product.summary.en,'Steel, 41 mm.');
+  assert.ok(!('source_description' in product)&&!('provenance' in product));
+});
 test('Source extraction requires variant identity and collection; offers never enter candidates',()=>{
-  const html='<script type="application/ld+json">'+JSON.stringify({'@graph':[{'@type':'Product',sku:'variant-1',mpn:'model-1',name:'Piece',image:'https://example.com/image.webp',offers:{price:900}}]})+'</script>';
+  const html='<script type="application/ld+json">invalid JSON</script><script type="application/ld+json">'+JSON.stringify({'@graph':[{'@type':'Product',sku:'variant-1',mpn:'model-1',name:'Piece',image:'https://example.com/image.webp',material:'stainless steel',description:'Source advertising text',offers:{price:900}}]})+'</script>';
   const source={id:'source',brand:'Brand',page_url:'https://example.com/product',collection_slug:'collection',collections:{collection:'Collection'}};
   const result=extractProducts(html,source);assert.equal(result.length,1);assert.equal(result[0].external_id,'variant-1');assert.ok(!('offers' in result[0])&&!('price' in result[0]));
+  assert.equal(result[0].source_description,'Source advertising text');assert.match(result[0].description_en,/Material: stainless steel/);assert.doesNotMatch(result[0].description_en,/advertising/);
   assert.throws(()=>extractProducts(html,{...source,collections:{}}),/mapping/);
 });

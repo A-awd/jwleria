@@ -59,6 +59,8 @@ create table public.jwl_catalog (
   collection_en text not null check (length(trim(collection_en)) > 0),
   name_ar text not null check (length(trim(name_ar)) > 0),
   name_en text not null check (length(trim(name_en)) > 0),
+  description_ar text not null default '',
+  description_en text not null default '',
   images jsonb not null check (jsonb_typeof(images) = 'array' and jsonb_array_length(images) > 0),
   search_text text not null,
   published_at timestamptz not null default now(),
@@ -114,7 +116,11 @@ begin
     if split_part(r->>'source_url','/',1)||'//'||split_part(r->>'source_url','/',3) <> s.origin then raise exception 'Source origin mismatch'; end if;
     if coalesce(r->>'external_id','')='' or coalesce(r->>'brand','')='' or coalesce(r->>'collection','')='' or coalesce(r->>'product_name','')='' then raise exception 'Missing catalog fields'; end if;
     if jsonb_typeof(r->'image_urls') is distinct from 'array' or jsonb_array_length(r->'image_urls')=0 then raise exception 'Missing images'; end if;
-    clean:=jsonb_build_object('brand',r->>'brand','collection',r->>'collection','product_name',r->>'product_name','image_urls',r->'image_urls','source_url',r->>'source_url');
+    if (r ? 'source_description' and jsonb_typeof(r->'source_description') not in ('string','null')) or (r ? 'facts' and jsonb_typeof(r->'facts') <> 'array') then raise exception 'Invalid candidate enrichment'; end if;
+    clean:=jsonb_build_object('brand',r->>'brand','collection',r->>'collection','product_name',r->>'product_name','image_urls',r->'image_urls','source_url',r->>'source_url',
+      'source_description',r->'source_description','facts',coalesce(r->'facts','[]'::jsonb),
+      'name_ar',r->>'name_ar','name_en',r->>'name_en','description_ar',r->>'description_ar','description_en',r->>'description_en',
+      'translation_state',r->>'translation_state','provenance',r->'provenance','extraction',r->'extraction','image_reference_checks',r->'image_reference_checks');
     select revision_hash into previous from jwl_internal.candidates where candidate_id=r->>'candidate_id';
     if previous is distinct from r->>'revision_hash' then changed:=changed+1; end if;
     insert into jwl_internal.candidates(candidate_id,source_id,external_id,revision_hash,content)
@@ -141,9 +147,11 @@ begin
   if jsonb_typeof(product->'images') is distinct from 'array' or jsonb_array_length(product->'images')=0 then raise exception 'Missing publication images'; end if;
   if product->'images' is distinct from approval.approved_images then raise exception 'Images differ from approved media'; end if;
   if exists(select 1 from jsonb_array_elements_text(product->'images') i where i !~ '^https://[^/@]+/' or i ~ '^https://[^/]*@') then raise exception 'Invalid image destination'; end if;
-  insert into public.jwl_catalog(id,slug,reference,brand_slug,brand_name,brand_tier,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,images,search_text)
-    values(candidate,product->>'slug',product->>'reference',product->>'brand_slug',product->>'brand_name',product->>'brand_tier',product->>'category_slug',product->>'collection_slug',product->>'collection_ar',product->>'collection_en',product->>'name_ar',product->>'name_en',product->'images',product->>'search_text')
-    on conflict(id) do update set slug=excluded.slug,reference=excluded.reference,brand_slug=excluded.brand_slug,brand_name=excluded.brand_name,brand_tier=excluded.brand_tier,category_slug=excluded.category_slug,collection_slug=excluded.collection_slug,collection_ar=excluded.collection_ar,collection_en=excluded.collection_en,name_ar=excluded.name_ar,name_en=excluded.name_en,images=excluded.images,search_text=excluded.search_text,active=true;
+  if coalesce(trim(product->>'description_ar'),'')='' or coalesce(trim(product->>'description_en'),'')='' then raise exception 'Factual descriptions missing'; end if;
+  if product->>'description_ar' is distinct from c.content->>'description_ar' or product->>'description_en' is distinct from c.content->>'description_en' then raise exception 'Descriptions differ from current candidate'; end if;
+  insert into public.jwl_catalog(id,slug,reference,brand_slug,brand_name,brand_tier,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,search_text)
+    values(candidate,product->>'slug',product->>'reference',product->>'brand_slug',product->>'brand_name',product->>'brand_tier',product->>'category_slug',product->>'collection_slug',product->>'collection_ar',product->>'collection_en',product->>'name_ar',product->>'name_en',product->>'description_ar',product->>'description_en',product->'images',product->>'search_text')
+    on conflict(id) do update set slug=excluded.slug,reference=excluded.reference,brand_slug=excluded.brand_slug,brand_name=excluded.brand_name,brand_tier=excluded.brand_tier,category_slug=excluded.category_slug,collection_slug=excluded.collection_slug,collection_ar=excluded.collection_ar,collection_en=excluded.collection_en,name_ar=excluded.name_ar,name_en=excluded.name_en,description_ar=excluded.description_ar,description_en=excluded.description_en,images=excluded.images,search_text=excluded.search_text,active=true;
   insert into jwl_internal.published_revisions(catalog_id,candidate_id,revision_hash) values(candidate,candidate,revision)
     on conflict(catalog_id) do update set revision_hash=excluded.revision_hash;
   return candidate;
