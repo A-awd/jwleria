@@ -13,3 +13,9 @@ Run `pnpm install`, `pnpm dev`, then open `http://127.0.0.1:4321/ar/`. Validate 
 The approved visual direction uses El Messiri headings, Noto Sans Arabic body, Cormorant Garamond Latin display and a warm-white palette. Font files and original OFL licenses are local. Generated editorial artwork is separate from real product photography.
 
 Background ingestion, image storage and publication tools are in `scripts/catalog-intake`; native n8n workflow sources are in `workflows/n8n`. Remote database application, permitted-source scheduling, actual approved media, business WhatsApp and domain delivery remain blocked until their required inputs/access exist.
+
+## Cloudflare deployment
+
+`pnpm build:cloudflare` uses the pinned official Cloudflare adapter without changing Astro or the presentation. `pnpm deploy:cloudflare` builds and deploys using the authenticated official Wrangler CLI. The generated entry/config lives under ignored `dist-cloudflare/server`; uploaded assets are the client build only. Configure `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` as Worker runtime secrets. Supply the public release/WhatsApp inputs at build time. Sessions are disabled and no KV or Cloudflare Images service is provisioned. The default Node build remains available.
+
+The owner-created dedicated database now has the foundation migration applied and actual public read/private write boundaries verified. Exact deployment identifiers, keys, DNS backups and environment values remain private. OAuth authorization and actual domain/HTTPS delivery remain pending.

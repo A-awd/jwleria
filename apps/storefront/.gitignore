@@ -1,7 +1,7 @@
-node_modules/
-dist/
-.astro/
-.env
-.env.*
-!.env.example
-*.log
+dist-cloudflare/
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Supabase CLI local discovery cache
+supabase/.temp/

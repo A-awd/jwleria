@@ -8,9 +8,13 @@
     "build": "astro build",
     "preview": "astro preview --host 127.0.0.1 --port 4321",
     "check": "astro check",
-    "test:public": "node tests/public-boundary.mjs"
+    "test:public": "node tests/public-boundary.mjs",
+    "build:cloudflare": "JWL_DEPLOY_TARGET=cloudflare astro build",
+    "preview:cloudflare": "JWL_DEPLOY_TARGET=cloudflare astro preview --host 127.0.0.1 --port 8787",
+    "deploy:cloudflare": "pnpm build:cloudflare && wrangler deploy"
   },
   "dependencies": {
+    "@astrojs/cloudflare": "14.3.3",
     "@astrojs/node": "11.1.6",
     "astro": "7.3.5",
     "robots-parser": "3.0.1"
@@ -19,6 +23,7 @@
     "@astrojs/check": "0.9.10",
     "@electric-sql/pglite": "0.5.8",
     "@types/node": "24.0.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "wrangler": "4.147.0"
   }
 }

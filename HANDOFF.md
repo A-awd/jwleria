@@ -1,3 +1,11 @@
+## Database connected; domain delivery in progress — 2026-10-04
+
+The owner created a new dedicated Jwleria Supabase project. Its healthy status and empty schema were verified; the prepared catalog foundation migration was applied successfully. Actual Data API reads work with the dedicated publishable key, anonymous ingestion is denied, private tables are inaccessible, and a rolled-back ingestion/history probe passed without leaving test data. The historical inaccessible target is no longer the deployment target. Private runtime configuration stays outside Git.
+
+The existing Squarespace domain and its website DNS were inspected and saved privately before any changes. It still directs to the previous website. No mail records or DNSSEC delegation were found in the public pre-change DNS. The signed-in Cloudflare account is available; a supported Workers deployment is being prepared while keeping the Node development path. OAuth deployment authorization is pending on the prepared browser page. No DNS records or nameservers have been changed yet.
+
+Next: receive the pending official deployment authorization, deploy and verify the actual storefront with its new database, configure the dedicated domain zone, preserve existing unrelated records and connect the domain in Squarespace. Verify DNS and HTTPS against the actual rendered deployment. Product/media permissions and verified WhatsApp remain separate unfinished catalog launch inputs. Do not report full launch or imported products.
+
 ## Current execution checkpoint — 2026-10-04
 
 Official n8n MCP access now works through an owner-approved OAuth grant and a persistent private SDK bridge. Workflow creation, update, execution and output readback succeeded. Catalog normalization and social-draft preparation exist in the owner's existing Jwleria folder and passed cloud execution. They are unpublished helper workflows; permitted-source scheduling, storage and automatic public publication are not running yet. Private tokens, account identifiers, exact execution outputs and bridge configuration stay outside Git.

@@ -29,3 +29,6 @@ dist-ssr
 !.env.example
 .astro
 .jwl-private/
+
+# Supabase CLI local discovery cache
+supabase/.temp/

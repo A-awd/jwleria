@@ -40,7 +40,7 @@ async function request(config, query, fetcher) {
   const headers = { apikey: config.key, Prefer: 'count=exact', Accept: 'application/json' };
   // New publishable keys aren't JWTs; legacy anon JWTs also need Authorization.
   if (!config.key.startsWith('sb_publishable_')) headers.Authorization = `Bearer ${config.key}`;
-  const response = await fetcher(endpoint, { headers, signal: AbortSignal.timeout(8000), redirect: 'error' });
+  const response = await fetcher(endpoint, { headers, signal: AbortSignal.timeout(8000), redirect: 'manual' });
   if (response.status===416) {
     const count=response.headers.get('content-range')?.split('/')[1];
     if(count && /^\d+$/.test(count))return {rows:[],total:Number(count)};
@@ -84,7 +84,7 @@ export async function listCollections(config, brand, fetcher = fetch) {
   url.search = new URLSearchParams({select:'collection_slug,collection_ar,collection_en',brand_slug:`eq.${brand}`,order:'collection_en.asc',limit:'200'}).toString();
   const headers = {apikey:config.key};
   if (!config.key.startsWith('sb_publishable_')) headers.Authorization = `Bearer ${config.key}`;
-  const response = await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'error'});
+  const response = await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'manual'});
   if (!response.ok) throw new Error(`Collections read failed (${response.status})`);
   const rows = await response.json();
   if (!Array.isArray(rows) || rows.some(r=>!slugPattern.test(r.collection_slug) || typeof r.collection_ar !== 'string' || typeof r.collection_en !== 'string')) throw new Error('Invalid collection response');
@@ -96,7 +96,7 @@ export async function listPublishedBrands(config,fetcher=fetch) {
   url.search=new URLSearchParams({select:'brand_slug,brand_name,brand_tier',order:'brand_slug.asc',limit:'500'}).toString();
   const headers={apikey:config.key};
   if(!config.key.startsWith('sb_publishable_'))headers.Authorization=`Bearer ${config.key}`;
-  const response=await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'error'});
+  const response=await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'manual'});
   if(!response.ok)throw new Error(`Brand directory read failed (${response.status})`);
   const rows=await response.json();
   if(!Array.isArray(rows)||rows.some(r=>!slugPattern.test(r.brand_slug)||typeof r.brand_name!=='string'||!['luxury','accessible','contemporary'].includes(r.brand_tier)))throw new Error('Invalid brand directory');
