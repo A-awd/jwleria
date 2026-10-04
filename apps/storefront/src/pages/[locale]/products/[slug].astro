@@ -1,0 +1,73 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { getBrand, getCategory, getProduct, getRelatedProducts } from '../../../server/catalog';
+import { href, isLocale, t } from '../../../i18n/ui';
+import { artClass, productInquiry } from '../../../components/view';
+
+const { locale, slug } = Astro.params;
+const product = await getProduct(slug ?? '');
+if (!isLocale(locale) || !product) return Astro.redirect('/404/');
+const s = t(locale);
+const brand = await getBrand(product.brandSlug);
+const category = getCategory(product.categorySlug);
+const related = await getRelatedProducts(product, 4);
+const inquiry = productInquiry(locale, product);
+const views = product.images.map((src, i) => ({src, label: s.product.views[i] ?? s.product.details}));
+---
+<BaseLayout locale={locale} title={product.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} image={product.image}>
+  <div class="wrap">
+    <nav class="crumb" style="padding-top:1.5rem">
+      <a href={href(locale, '/catalog/')}>{s.nav.catalog}</a>
+      {category && <> / <a href={href(locale, `/categories/${category.slug}/`)}>{category.name[locale]}</a></>}
+    </nav>
+
+    <article class="pdp">
+      <div class="pdp__gallery" aria-label={product.name[locale]}>
+        {views.map((v, i) => (
+          <figure>
+            <div class="media">
+              <img class={i === 0 ? artClass(product.image, product.categorySlug, product.reference) : 'art'} src={v.src} alt={product.name[locale]} width="1200" height="1500" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" />
+              {product.isPreview && i === 0 && <span class="badge">{s.preview}</span>}
+            </div>
+            <figcaption>{v.label}</figcaption>
+          </figure>
+        ))}
+      </div>
+
+      <div class="pdp__info">
+        {brand
+          ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
+          : <p class="pdp__brand">{s.brands.ownTitle}</p>}
+        <h1>{product.name[locale]}</h1>
+        <p>{product.summary[locale]}</p>
+        {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
+        <dl class="specs">
+          <dt>{s.reference}</dt><dd><bdi>{product.reference}</bdi></dd>
+          {brand && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
+          {category && <><dt>{s.product.category}</dt><dd>{category.name[locale]}</dd></>}
+        </dl>
+        <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
+          <h2 id="h-how">{s.product.how}</h2>
+          <p>{product.isPreview ? s.dialog.explain : s.product.confirm}</p>
+          <blockquote>{s.dialog.product(product.name[locale], product.reference)}</blockquote>
+        </section>
+      </div>
+
+      <div class="pdp__cta">
+        {inquiry ? <a class="cta cta--solid" href={inquiry.href} {...inquiry.attrs}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
+          {s.cta}
+        </a> : <button class="cta cta--solid" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
+        <p class="note">{s.product.confirm}</p>
+      </div>
+    </article>
+
+    {related.length > 0 && (
+      <section class="section" aria-labelledby="h-related">
+        <div class="section-head"><h2 id="h-related">{s.product.related}</h2></div>
+        <div class="grid grid--4">{related.map((p) => <ProductCard product={p} locale={locale} />)}</div>
+      </section>
+    )}
+  </div>
+</BaseLayout>

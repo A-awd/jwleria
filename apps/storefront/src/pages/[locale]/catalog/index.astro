@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { getBrands, getCategories, getProducts, getCollections } from '../../../server/catalog';
+import { href, isLocale, t } from '../../../i18n/ui';
+import Pagination from '../../../components/Pagination.astro';
+
+const { locale } = Astro.params;
+if (!isLocale(locale)) return Astro.redirect('/404/');
+const s = t(locale);
+const params = Astro.url.searchParams;
+const search = (params.get('q') ?? '').slice(0, 200);
+const brand = params.get('brand') ?? '';
+const category = params.get('category') ?? '';
+const collection = params.get('collection') ?? '';
+const result = await getProducts({search,brand,category,collection,page:Number(params.get('page'))});
+const categories = getCategories();
+const brands = (await getBrands());
+const collections = brand ? await getCollections(brand) : [];
+---
+<BaseLayout locale={locale} title={s.catalog.title} description={s.catalog.lead} path="/catalog/">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{s.catalog.title}</h1>
+      <p class="lead">{s.catalog.lead}</p>
+    </header>
+
+    <form class="filters" action={href(locale, '/catalog/')} method="get" role="search" data-filters>
+      <div class="field">
+        <label for="q">{s.catalog.q}</label>
+        <input id="q" name="q" type="search" autocomplete="off" enterkeyhint="search" value={search} />
+      </div>
+      <div class="field">
+        <label for="category">{s.catalog.category}</label>
+        <select id="category" name="category">
+          <option value="">{s.catalog.any}</option>
+          {categories.map((c) => <option value={c.slug} selected={c.slug === category}>{c.name[locale]}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for="brand">{locale === 'ar' ? 'العلامة' : 'Brand'}</label>
+        <select id="brand" name="brand">
+          <option value="">{locale === 'ar' ? 'كل العلامات' : 'All brands'}</option>
+          {brands.map(b => <option value={b.slug} selected={b.slug === brand}>{b.name}</option>)}
+        </select>
+      </div>
+      {collections.length > 0 && <div class="field">
+        <label for="collection">{s.product.collection}</label>
+        <select id="collection" name="collection">
+          <option value="">{locale === 'ar' ? 'كل المجموعات' : 'All collections'}</option>
+          {collections.map(c => <option value={c.slug} selected={c.slug === collection}>{c.name[locale]}</option>)}
+        </select>
+      </div>}
+      <button class="btn btn--solid" type="submit">{s.catalog.apply}</button>
+      <a class="btn" href={href(locale, '/catalog/')}>{s.catalog.clear}</a>
+    </form>
+    <p class="status" role="status" aria-live="polite">{result.total ? s.catalog.results(result.total) : s.catalog.none}</p>
+    <div class="grid grid--4 section section--tight">
+      {result.items.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} />)}
+    </div>
+    <Pagination locale={locale} result={result} url={Astro.url} />
+  </div>
+</BaseLayout>

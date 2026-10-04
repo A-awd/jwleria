@@ -1,0 +1,78 @@
+---
+import '../../styles/global.css';
+import WhatsAppContact from '../../components/WhatsAppContact.astro';
+import { href, isLocale, t } from '../../i18n/ui';
+
+const { locale } = Astro.params;
+if (!isLocale(locale)) throw new Error('Unknown locale');
+const arabic = locale === 'ar';
+const choices = [
+  { id: 'amiri', family: 'Amiri', name: 'أميري', note: 'كلاسيكي بحضور هادئ' },
+  { id: 'el-messiri', family: 'El Messiri', name: 'المسيري', note: 'معاصر بخطوط ناعمة' },
+  { id: 'aref-ruqaa', family: 'Aref Ruqaa', name: 'عارف رقعة', note: 'طابع خطّي أكثر زخرفة' },
+];
+---
+<!doctype html>
+<html lang={locale} dir={arabic ? 'rtl' : 'ltr'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{arabic ? 'مقارنة الخطوط' : 'Font comparison'} · Jwleria</title>
+    <link rel="stylesheet" href="/fonts/preview-fonts.css" />
+  </head>
+  <body class="font-comparison">
+    <header class="comparison-header wrap">
+      <a class="wordmark" href={href(locale)} aria-label="Jwleria">JWLERIA</a>
+      <a class="link-quiet" href={href(locale)}>{arabic ? 'العودة إلى الموقع' : 'Back to the site'}</a>
+    </header>
+    <main class="wrap">
+      <div class="comparison-intro">
+        <h1>{arabic ? 'ثلاثة خطوط، على نفس العنوان' : 'Three fonts, one headline'}</h1>
+        <p>{arabic ? 'المسيري هو الخط المعتمد للعناوين. الخيارات الأخرى متاحة للمعاينة.' : 'El Messiri is the selected headline font. The other options remain available for comparison.'}</p>
+      </div>
+      <div class="font-options">
+        {choices.map((font, index) => (
+          <article class:list={['font-option', { 'font-option--selected': font.id === 'el-messiri' }]} dir="rtl" lang="ar" style={`--sample-font: '${font.family}'`}>
+            <div class="font-option__name">
+              <span>{index + 1} — {font.name}</span>
+              <span lang="en" dir="ltr">{font.family}</span>
+            </div>
+            <div class="font-option__sample">
+              <h2>{t('ar').hero.title}</h2>
+              <p>{t('ar').hero.lead}</p>
+            </div>
+            <p class="font-option__note">{font.id === 'el-messiri' ? `${font.note} · الخط المعتمد` : font.note}</p>
+            <a class="btn" href={`${href(locale)}?font=${font.id}`}>{arabic ? `معاينة ${font.name} في الموقع` : `Preview ${font.family} in the site`}</a>
+          </article>
+        ))}
+      </div>
+      <section class="comparison-contact">
+        <h2>{arabic ? 'زر واتساب' : 'WhatsApp contact'}</h2>
+        <p>{arabic ? 'يفتح المحادثة مباشرة عند تجهيز الرقم. يظهر الآن بحالة «قيد التجهيز».' : 'Opens the conversation directly once the number is ready. It currently shows a coming-soon state.'}</p>
+        <WhatsAppContact locale={locale} />
+      </section>
+    </main>
+  </body>
+</html>
+
+<style>
+  .font-comparison { --text: 'Noto Sans Arabic', Tahoma, sans-serif; --serif-latin: 'Cormorant Garamond', Georgia, serif; font-synthesis: none; padding-bottom: 3rem; }
+  .comparison-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 1.5rem; border-bottom: 1px solid var(--line); }
+  .comparison-intro { padding-block: 2.25rem 1.25rem; }
+  .comparison-intro h1 { font: 400 clamp(1.3rem, 2vw, 1.8rem)/1.6 var(--text); margin-bottom: .5rem; }
+  .comparison-intro p { color: var(--muted); font-size: .9rem; }
+  .font-options { display: grid; gap: 1.25rem; }
+  .font-option { display: flex; flex-direction: column; padding: 1.5rem; border: 1px solid var(--line); background: var(--paper); }
+  .font-option--selected { border-color: var(--ink); }
+  .font-option__name { display: flex; justify-content: space-between; gap: 1rem; font-size: .85rem; padding-bottom: 1rem; border-bottom: 1px solid var(--line); color: var(--muted); }
+  .font-option__sample { padding-block: 1.5rem; flex: 1; }
+  .font-option__sample h2 { font: 400 clamp(2.25rem, 3.1vw, 3rem)/1.6 var(--sample-font), serif; margin-bottom: .65rem; }
+  .font-option__sample p { font: 400 .9rem/1.9 'Noto Sans Arabic', Tahoma, sans-serif; margin: 0; }
+  .font-option__note { font-size: .8rem; color: var(--muted); }
+  .font-option .btn { font-size: .8rem; }
+  .comparison-contact { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+  .comparison-contact h2 { font: 400 1.1rem/1.5 var(--text); }
+  .comparison-contact p { font-size: .85rem; color: var(--muted); }
+  @media (min-width: 64rem) { .font-options { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+</style>

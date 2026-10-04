@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getBrand, getBrands, getProducts } from '../../../server/catalog';
+import { href, isLocale, t } from '../../../i18n/ui';
+import { OWN_COLLECTION, TIERS } from '../../../components/view';
+
+
+const { locale } = Astro.params;
+if (!isLocale(locale)) throw new Error('Unknown locale');
+const s = t(locale);
+const world = (await getBrands()).filter((b) => b.slug !== OWN_COLLECTION);
+const groups = TIERS.map((tier) => ({ tier, items: world.filter((b) => b.tier === tier).sort((a, b) => a.name.localeCompare(b.name)) })).filter((g) => g.items.length);
+const own = await getBrand(OWN_COLLECTION);
+const ownCover = own ? (await getProducts({brand:OWN_COLLECTION,pageSize:1})).items[0] : undefined;
+---
+<BaseLayout locale={locale} title={s.brands.title} description={s.brands.lead} path="/brands/">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{s.brands.title}</h1>
+      <p class="lead">{s.brands.lead}</p>
+    </header>
+
+    {own && ownCover && (
+      <a class="feature" href={href(locale, `/brands/${own.slug}/`)}>
+        <span class="media"><img class="art art--0" src={ownCover.image} alt="" width="1600" height="1000" loading="lazy" decoding="async" /><span class="badge">{s.preview}</span></span>
+        <div>
+          <p class="eyebrow">{s.brands.ownTitle}</p>
+          <h2 class="brand-name" lang="en" dir="ltr">{own.name}</h2>
+          <p>{s.brands.ownLead}</p>
+        </div>
+      </a>
+    )}
+
+    <nav class="chips" aria-label={s.brands.title} data-tier-nav>
+      <a class="chip" href="#directory" data-tier="all" aria-current="true">{s.brands.all} · {s.brands.count(world.length)}</a>
+      {groups.map((g) => <a class="chip" href={`#tier-${g.tier}`} data-tier={g.tier}>{s.tiers[g.tier]}</a>)}
+    </nav>
+
+    <div id="directory">
+      {groups.map((g) => (
+        <section class="tier" id={`tier-${g.tier}`} data-tier-section={g.tier} aria-labelledby={`h-${g.tier}`}>
+          <div class="tier__head">
+            <h2 id={`h-${g.tier}`}>{s.tiers[g.tier]}</h2>
+            <span>{s.brands.count(g.items.length)}</span>
+          </div>
+          <ul class="dir-list">
+            {g.items.map((b) => <li><a href={href(locale, `/brands/${b.slug}/`)} lang="en" dir="ltr">{b.name}</a></li>)}
+          </ul>
+        </section>
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const nav = document.querySelector<HTMLElement>('[data-tier-nav]');
+  const sections = [...document.querySelectorAll<HTMLElement>('[data-tier-section]')];
+  const showTier = (tier: string) => {
+    const valid = tier === 'all' || sections.some((sec) => sec.dataset.tierSection === tier);
+    const selected = valid ? tier : 'all';
+    nav?.querySelectorAll<HTMLElement>('[data-tier]').forEach((c) => c.setAttribute('aria-current', String(c.dataset.tier === selected)));
+    sections.forEach((sec) => { sec.hidden = selected !== 'all' && sec.dataset.tierSection !== selected; });
+  };
+  const restoreTier = () => showTier(location.hash.replace(/^#tier-/, '') || 'all');
+  restoreTier();
+  window.addEventListener('hashchange', restoreTier);
+  nav?.addEventListener('click', (event) => {
+    const chip = (event.target as Element).closest<HTMLAnchorElement>('[data-tier]');
+    if (!chip) return;
+    event.preventDefault();
+    const tier = chip.dataset.tier ?? 'all';
+    showTier(tier);
+    history.replaceState(null, '', tier === 'all' ? location.pathname : `#tier-${tier}`);
+  });
+</script>

@@ -1,0 +1,33 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Pagination from '../../../components/Pagination.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { getCategories, getCategory, getProducts } from '../../../server/catalog';
+import { href, isLocale, t } from '../../../i18n/ui';
+
+
+const { locale, slug } = Astro.params;
+const category = getCategory(slug ?? '');
+if (!isLocale(locale) || !category) return Astro.redirect('/404/');
+const s = t(locale);
+const result = await getProducts({ category: category.slug, page: Number(Astro.url.searchParams.get('page')) });
+const products = result.items;
+const others = getCategories().filter((c) => c.slug !== category.slug);
+---
+<BaseLayout locale={locale} title={category.name[locale]} description={`${category.name[locale]} — ${s.categories.lead}`} path={`/categories/${category.slug}/`} image={category.image}>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="crumb"><a href={href(locale, '/categories/')}>{s.nav.categories}</a></p>
+      <h1>{category.name[locale]}</h1>
+      <p class="lead">{s.catalog.results(result.total)}</p>
+    </header>
+    {products.length > 0
+      ? <div class="grid grid--4">{products.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} />)}</div>
+      : <div class="pending"><p>{s.categories.empty}</p></div>}
+    <Pagination locale={locale} result={result} url={Astro.url} />
+    <section class="section" aria-labelledby="h-other">
+      <h2 id="h-other" class="eyebrow">{s.categories.other}</h2>
+      <nav class="chips">{others.map((c) => <a class="chip" href={href(locale, `/categories/${c.slug}/`)}>{c.name[locale]}</a>)}</nav>
+    </section>
+  </div>
+</BaseLayout>

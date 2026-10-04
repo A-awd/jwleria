@@ -1,0 +1,65 @@
+---
+import type { Locale } from '../contracts/catalog';
+import { t } from '../i18n/ui';
+
+interface Props { locale: Locale }
+const s = t(Astro.props.locale);
+---
+<dialog id="inquiry-dialog" class="inquiry" aria-labelledby="inquiry-title" data-copied={s.dialog.copied} data-failed={s.dialog.failed}>
+  <div class="inquiry__panel">
+    <form method="dialog" class="inquiry__close">
+      <button class="icon-btn" aria-label={s.dialog.close}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19" /></svg>
+      </button>
+    </form>
+    <p class="eyebrow">{s.preview}</p>
+    <h2 id="inquiry-title">{s.dialog.title}</h2>
+    <p data-subject hidden></p>
+    <p data-ref-row hidden>{s.reference}: <bdi data-ref></bdi></p>
+    <p>{s.dialog.explain}</p>
+    <label class="field">
+      <span class="note">{s.dialog.label}</span>
+      <textarea data-message readonly rows="4">{s.dialog.general}</textarea>
+    </label>
+    <div class="actions">
+      <button type="button" class="btn btn--solid" data-copy>{s.dialog.copy}</button>
+      <form method="dialog"><button class="btn">{s.dialog.close}</button></form>
+    </div>
+    <p class="note" role="status" aria-live="polite" data-status></p>
+  </div>
+</dialog>
+
+<script>
+  const dialog = document.getElementById('inquiry-dialog') as HTMLDialogElement | null;
+  if (dialog && typeof dialog.showModal === 'function') {
+    const q = <T extends Element>(sel: string) => dialog.querySelector(sel) as T;
+    const text = q<HTMLTextAreaElement>('[data-message]');
+    const status = q<HTMLElement>('[data-status]');
+
+    document.addEventListener('click', (event) => {
+      const trigger = (event.target as Element | null)?.closest<HTMLElement>('[data-inquiry]');
+      if (!trigger) return;
+      event.preventDefault();
+      const { inqMessage: message = text.defaultValue, inqRef: ref = '', inqSubject: subject = '' } = trigger.dataset;
+      text.value = message;
+      q<HTMLElement>('[data-ref]').textContent = ref;
+      q<HTMLElement>('[data-ref-row]').hidden = !ref;
+      q<HTMLElement>('[data-subject]').textContent = subject;
+      q<HTMLElement>('[data-subject]').hidden = !subject;
+      status.textContent = '';
+      dialog.showModal();
+    });
+
+    dialog.addEventListener('click', (event) => { if (event.target === dialog) dialog.close(); });
+
+    q<HTMLButtonElement>('[data-copy]').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(text.value);
+        status.textContent = dialog.dataset.copied ?? '';
+      } catch {
+        text.select();
+        status.textContent = dialog.dataset.failed ?? '';
+      }
+    });
+  }
+</script>

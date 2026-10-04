@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Private runtime configuration and source exports
+.env
+.env.*
+!.env.example
+.astro
+.jwl-private/

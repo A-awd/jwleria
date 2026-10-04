@@ -1,0 +1,121 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import WhatsAppContact from '../../components/WhatsAppContact.astro';
+import { getBrands, getCategories, getLatestProducts } from '../../server/catalog';
+import { href, isLocale, t } from '../../i18n/ui';
+import { OWN_COLLECTION, TIERS, artClass } from '../../components/view';
+
+
+const { locale } = Astro.params;
+if (!isLocale(locale)) return new Response('Not found', {status:404});
+const s = t(locale);
+const brands = (await getBrands())
+  .filter((b) => b.slug !== OWN_COLLECTION)
+  .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || a.name.localeCompare(b.name));
+const categories = getCategories();
+const latest = await getLatestProducts(6);
+---
+<BaseLayout locale={locale} title={s.tagline} description={s.hero.lead} path="/">
+  <section class="hero">
+    <img class="hero__img" src="/images/hero-editorial.webp" alt="" width="1672" height="941" fetchpriority="high" decoding="async" />
+    <div class="hero__copy">
+      {s.hero.eyebrow && <p class="eyebrow reveal">{s.hero.eyebrow}</p>}
+      <h1 class="reveal reveal--2">{s.hero.title}</h1>
+      <p class="hero__lead reveal reveal--3">{s.hero.lead}</p>
+      <div class="actions reveal reveal--3">
+        <a class="btn btn--solid" href={href(locale, '/brands/')}>{s.hero.primary}</a>
+        <a class="btn" href={href(locale, '/catalog/')}>{s.hero.secondary}</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="h-brands">
+    <div class="wrap section-head">
+      <div>
+        <h2 id="h-brands">{s.brands.title}</h2>
+        <p>{s.brands.lead}</p>
+      </div>
+      <div class="brand-actions">
+        <button
+          class="icon-btn brand-motion"
+          type="button"
+          data-brand-motion
+          aria-controls="brand-strip"
+          aria-pressed="false"
+          aria-label={locale === 'ar' ? 'إيقاف حركة العلامات' : 'Pause brand movement'}
+          data-pause-label={locale === 'ar' ? 'إيقاف حركة العلامات' : 'Pause brand movement'}
+          data-play-label={locale === 'ar' ? 'تشغيل حركة العلامات' : 'Resume brand movement'}
+        >
+          <svg class="brand-motion__pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M8 5v14M16 5v14" /></svg>
+          <svg class="brand-motion__play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m9 5 10 7-10 7Z" /></svg>
+        </button>
+        <a class="link-quiet" href={href(locale, '/brands/')}>{s.viewAll}</a>
+      </div>
+    </div>
+    <nav id="brand-strip" class="brand-strip" aria-labelledby="h-brands" data-paused="false">
+      <div class="brand-strip__track" dir="ltr">
+        <div class="brand-strip__group">
+          {brands.map((b) => <a href={href(locale, `/brands/${b.slug}/`)} lang="en" dir="ltr">{b.name}</a>)}
+        </div>
+        <div class="brand-strip__group" aria-hidden="true">
+          {brands.map((b) => <a href={href(locale, `/brands/${b.slug}/`)} lang="en" dir="ltr" tabindex="-1">{b.name}</a>)}
+        </div>
+      </div>
+    </nav>
+  </section>
+
+  <section class="section section--tight" aria-labelledby="h-cats">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2 id="h-cats">{s.categories.title}</h2>
+          <p>{s.categories.lead}</p>
+        </div>
+      </div>
+      <div class="tiles">
+        {categories.map((c) => (
+          <a class="tile" href={href(locale, `/categories/${c.slug}/`)}>
+            <span class="media"><img class={artClass(c.image, c.slug)} src={c.image} alt="" width="800" height="1000" loading="lazy" decoding="async" /></span>
+            <span class="tile__name">{c.name[locale]}<span aria-hidden="true">{locale === 'ar' ? '←' : '→'}</span></span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight" aria-labelledby="h-latest">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <h2 id="h-latest">{s.latest.title}</h2>
+          <p>{s.latest.lead}</p>
+        </div>
+        <a class="link-quiet" href={href(locale, '/catalog/')}>{s.viewAll}</a>
+      </div>
+      <div class="grid">
+        {latest.map((p) => <ProductCard product={p} locale={locale} />)}
+      </div>
+    </div>
+  </section>
+
+  <section class="band" aria-labelledby="h-concierge">
+    <div class="wrap">
+      <h2 id="h-concierge">{s.concierge.title}</h2>
+      <p>{s.concierge.text}</p>
+      <WhatsAppContact locale={locale} variant="light" />
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const strip = document.getElementById('brand-strip');
+  const motion = document.querySelector<HTMLButtonElement>('[data-brand-motion]');
+  motion?.addEventListener('click', () => {
+    if (!strip) return;
+    const paused = motion.getAttribute('aria-pressed') !== 'true';
+    strip.dataset.paused = String(paused);
+    motion.setAttribute('aria-pressed', String(paused));
+    motion.setAttribute('aria-label', (paused ? motion.dataset.playLabel : motion.dataset.pauseLabel) ?? '');
+  });
+</script>

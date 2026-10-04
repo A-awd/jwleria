@@ -1,0 +1,24 @@
+---
+import type { Locale } from '../contracts/catalog';
+import { t } from '../i18n/ui';
+import { inquiryChannel, inquiryLink } from './view';
+
+interface Props { locale: Locale; variant?: 'button' | 'light' | 'icon' | 'menu'; class?: string; message?: string }
+const { locale, variant = 'button', class: extraClass = '', message } = Astro.props;
+const s = t(locale);
+const live = inquiryChannel().live;
+const link = live ? inquiryLink(locale, message ?? s.dialog.general, '/') : undefined;
+const classes = `whatsapp-contact ${variant === 'icon' ? 'icon-btn' : variant === 'menu' ? '' : variant === 'light' ? 'btn btn--light' : 'btn btn--solid'} ${extraClass}`;
+const label = live ? s.whatsapp.contact : `${s.whatsapp.contact} — ${s.whatsapp.pending}`;
+---
+{link ? (
+  <a class={classes} href={link.href} {...link.attrs} aria-label={variant === 'icon' ? label : undefined}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 20 1.2-4A8.5 8.5 0 1 1 9 19.4Z"/><path d="m9 7-1 1.5c.7 2.4 3 4.7 5.4 5.4L15 13l-2-1.3-.8.8a7 7 0 0 1-2.6-2.6l.8-.8Z"/></svg>
+    {variant !== 'icon' && <span>{s.whatsapp.contact}</span>}
+  </a>
+) : (
+  <button class={`${classes} whatsapp-contact--pending`} type="button" disabled aria-label={label} title={s.whatsapp.pendingDescription}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 20 1.2-4A8.5 8.5 0 1 1 9 19.4Z"/><path d="m9 7-1 1.5c.7 2.4 3 4.7 5.4 5.4L15 13l-2-1.3-.8.8a7 7 0 0 1-2.6-2.6l.8-.8Z"/></svg>
+    {variant !== 'icon' && <><span>{s.whatsapp.contact}</span><span class="whatsapp-contact__status">{s.whatsapp.pending}</span></>}
+  </button>
+)}

@@ -1,0 +1,16 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { href, t } from '../i18n/ui';
+const ar = t('ar');
+const en = t('en');
+---
+<BaseLayout locale="ar" title={ar.notFound.title} description={ar.notFound.title} path="/">
+  <div class="wrap page-head">
+    <h1>{ar.notFound.title}</h1>
+    <p class="lead" lang="en" dir="ltr">{en.notFound.title}</p>
+    <p class="actions">
+      <a class="btn btn--solid" href={href('ar')}>{ar.notFound.home}</a>
+      <a class="btn" href={href('en')} lang="en">{en.notFound.home}</a>
+    </p>
+  </div>
+</BaseLayout>

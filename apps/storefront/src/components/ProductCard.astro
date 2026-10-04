@@ -1,0 +1,30 @@
+---
+import type { Locale, PublicProduct } from '../contracts/catalog';
+import { getBrand } from '../server/catalog';
+import { href, t } from '../i18n/ui';
+import { artClass, productInquiry } from './view';
+
+interface Props { product: PublicProduct; locale: Locale; eager?: boolean }
+const { product: p, locale, eager = false } = Astro.props;
+const s = t(locale);
+const url = href(locale, `/products/${p.slug}/`);
+const brand = await getBrand(p.brandSlug);
+const inquiry = productInquiry(locale, p);
+---
+<article class="card" data-brand={p.brandSlug} data-category={p.categorySlug}>
+  <a class="media" href={url} tabindex="-1" aria-hidden="true">
+    <img class={artClass(p.image, p.categorySlug, p.reference)} src={p.image} alt="" width="800" height="1000" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+    {p.isPreview && <span class="badge">{s.preview}</span>}
+  </a>
+  <div class="card__body">
+    <p class="card__brand">{brand?.name ?? s.brands.ownTitle}</p>
+    <h3 class="card__name"><a href={url}>{p.name[locale]}</a></h3>
+    <p class="card__ref">{s.reference} <bdi>{p.reference}</bdi></p>
+    <div class="card__cta">
+      {inquiry ? <a class="cta" href={inquiry.href} {...inquiry.attrs}>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
+        {s.cta}
+      </a> : <button class="cta" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
+    </div>
+  </div>
+</article>

@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { isLocale, t } from '../../i18n/ui';
+import { inquiryChannel } from '../../components/view';
+import WhatsAppContact from '../../components/WhatsAppContact.astro';
+
+const { locale } = Astro.params;
+if (!isLocale(locale)) throw new Error('Unknown locale');
+const s = t(locale);
+---
+<BaseLayout locale={locale} title={s.about.title} description={s.about.lead} path="/about/">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{s.about.title}</h1>
+      <p class="lead">{s.about.lead}</p>
+    </header>
+    <div class="prose section section--tight">
+      <h2>{s.about.stepsTitle}</h2>
+      <ol class="steps">{s.about.steps.map((step) => <li>{step}</li>)}</ol>
+      <h2>{s.about.whyTitle}</h2>
+      <p>{s.about.why}</p>
+      <h2 id="contact">{s.about.contactTitle}</h2>
+      {!inquiryChannel().live && <p>{s.about.contact}</p>}
+      <WhatsAppContact locale={locale} />
+      <p class="note" style="margin-top:2rem">{s.footer.rights}</p>
+    </div>
+  </div>
+</BaseLayout>

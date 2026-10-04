@@ -1,0 +1,34 @@
+---
+import type { Locale } from '../contracts/catalog';
+import { catalogMode, getCategories } from '../server/catalog';
+import { href, otherLocale, t } from '../i18n/ui';
+
+interface Props { locale: Locale; path: string }
+const { locale, path } = Astro.props;
+const s = t(locale);
+const other = otherLocale(locale);
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <p class="wordmark" aria-hidden="true">JWLERIA</p>
+        <p>{s.tagline}</p>
+        <p class="fine">{s.footer.rights}</p>
+      </div>
+      <ul class="footer-nav">
+        <li><a href={href(locale, '/brands/')}>{s.nav.brands}</a></li>
+        <li><a href={href(locale, '/catalog/')}>{s.nav.catalog}</a></li>
+        <li><a href={href(locale, '/about/')}>{s.nav.about}</a></li>
+        <li><a href={href(other, path)} hreflang={other} lang={other}>{t(other).langName}</a></li>
+      </ul>
+      <ul class="footer-nav">
+        {getCategories().map((c) => <li><a href={href(locale, `/categories/${c.slug}/`)}>{c.name[locale]}</a></li>)}
+      </ul>
+    </div>
+    <div class="footer-base">
+      {catalogMode() === 'preview' && <p class="fine">{s.footer.preview}</p>}
+      <p class="fine">© Jwleria</p>
+    </div>
+  </div>
+</footer>

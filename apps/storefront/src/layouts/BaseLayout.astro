@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import { env } from 'node:process';
+import { inquiryChannel } from '../components/view';
+import { catalogMode } from '../server/catalog';
+import type { Locale } from '../contracts/catalog';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import InquiryDialog from '../components/InquiryDialog.astro';
+import { dirOf, href, t } from '../i18n/ui';
+
+interface Props { locale: Locale; title: string; description: string; path: string; image?: string }
+const { locale, title, description, path, image = '/images/hero-editorial.webp' } = Astro.props;
+const fullTitle = `${title} · Jwleria`;
+const live = (env.PUBLIC_RELEASE || import.meta.env.PUBLIC_RELEASE) === 'live';
+const origin = env.PUBLIC_SITE_ORIGIN || import.meta.env.PUBLIC_SITE_ORIGIN;
+if (live && (catalogMode() !== 'live' || !inquiryChannel().live || !origin)) throw new Error('Live release requires the genuine catalog, verified WhatsApp and site origin');
+let site: URL | undefined;
+if (origin) {
+  site = new URL(origin);
+  if (site.protocol !== 'https:' || site.username || site.password || site.pathname !== '/' || site.search || site.hash) throw new Error('Invalid site origin');
+}
+const absolute = (value: string) => site ? new URL(value, site).href : value;
+const canonical = absolute(href(locale, path));
+---
+<!doctype html>
+<html lang={locale} dir={dirOf(locale)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={live ? 'index, follow' : 'noindex, nofollow'} />
+    {live && <link rel="canonical" href={canonical} />}
+    <meta name="theme-color" content="#fcfaf6" />
+    <link rel="stylesheet" href="/fonts/preview-fonts.css" />
+    <script is:inline>
+      {
+        const font = new URLSearchParams(location.search).get('font');
+        if (font && ['amiri', 'el-messiri', 'aref-ruqaa'].includes(font)) {
+          document.documentElement.dataset.fontPreview = font;
+        }
+      }
+    </script>
+    <link rel="alternate" hreflang="ar" href={absolute(href('ar', path))} />
+    <link rel="alternate" hreflang="en" href={absolute(href('en', path))} />
+    <link rel="alternate" hreflang="x-default" href={absolute(href('ar', path))} />
+    {live && <meta property="og:url" content={canonical} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Jwleria" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={absolute(image)} />
+    <meta property="og:locale" content={locale === 'ar' ? 'ar_SA' : 'en_GB'} />
+  </head>
+  <body>
+    <a class="skip" href="#main">{t(locale).skip}</a>
+    <Header locale={locale} path={path} />
+    <main id="main" tabindex="-1"><slot /></main>
+    <Footer locale={locale} path={path} />
+    <InquiryDialog locale={locale} />
+  </body>
+</html>

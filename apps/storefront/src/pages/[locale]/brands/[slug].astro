@@ -1,0 +1,58 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import WhatsAppContact from '../../../components/WhatsAppContact.astro';
+import Pagination from '../../../components/Pagination.astro';
+import ProductCard from '../../../components/ProductCard.astro';
+import { getBrand, getBrands, getCategories, getProducts, getCollections } from '../../../server/catalog';
+import { href, isLocale, t } from '../../../i18n/ui';
+import { OWN_COLLECTION } from '../../../components/view';
+
+const { locale, slug } = Astro.params;
+const brand = await getBrand(slug ?? '');
+if (!isLocale(locale) || !brand) return Astro.redirect('/404/');
+const s = t(locale);
+const result = await getProducts({ brand: brand.slug, page: Number(Astro.url.searchParams.get('page')) });
+const products = result.items;
+const collections = await getCollections(brand.slug);
+const isOwn = brand.slug === OWN_COLLECTION;
+const peers = (await getBrands()).filter((b) => b.tier === brand.tier && b.slug !== brand.slug && b.slug !== OWN_COLLECTION).slice(0, 8);
+---
+<BaseLayout locale={locale} title={brand.name} description={brand.summary[locale]} path={`/brands/${brand.slug}/`}>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="crumb"><a href={href(locale, '/brands/')}>{s.brands.back}</a></p>
+      <p class="eyebrow">{isOwn ? s.brands.ownTitle : s.tiers[brand.tier]}</p>
+      <h1 class="brand-name" lang="en" dir="ltr">{brand.name}</h1>
+      <p class="lead">{brand.summary[locale]}</p>
+    </header>
+
+    {collections.length > 0 && <nav class="chips" aria-label={s.product.collection}>
+      {collections.map(c => <a class="chip" href={href(locale, `/catalog/?brand=${brand.slug}&collection=${c.slug}`)}>{c.name[locale]}</a>)}
+    </nav>}
+    {products.length > 0 ? (
+      <section class="section section--tight" aria-label={brand.name}>
+        <div class="grid grid--4">{products.map((p) => <ProductCard product={p} locale={locale} />)}</div>
+      </section>
+    ) : (
+      <section class="pending" aria-labelledby="h-pending">
+        <h2 id="h-pending">{s.brands.pendingTitle}</h2>
+        <p>{s.brands.pendingText}</p>
+        <WhatsAppContact locale={locale} message={s.dialog.brand(brand.name)} />
+      </section>
+    )}
+
+    <Pagination locale={locale} result={result} url={Astro.url} />
+    <section class="section section--tight" aria-labelledby="h-browse">
+      <h2 id="h-browse" class="eyebrow">{s.categories.title}</h2>
+      <nav class="chips">
+        {getCategories().map((c) => <a class="chip" href={href(locale, `/categories/${c.slug}/`)}>{c.name[locale]}</a>)}
+      </nav>
+      {peers.length > 0 && (
+        <>
+          <h2 class="eyebrow">{s.brands.sameTier}</h2>
+          <ul class="dir-list">{peers.map((b) => <li><a href={href(locale, `/brands/${b.slug}/`)} lang="en" dir="ltr">{b.name}</a></li>)}</ul>
+        </>
+      )}
+    </section>
+  </div>
+</BaseLayout>
