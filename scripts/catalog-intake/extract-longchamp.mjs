@@ -1,7 +1,7 @@
 import { normalizeBatch } from './normalize.mjs';
 
 const plain = x => typeof x === 'string' ? x.replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim() : '';
-const types = [['Extensible travel bag','حقيبة سفر قابلة للتوسعة'],['Travel bag','حقيبة سفر'],['Tote bag','حقيبة كتف'],['Handbag','حقيبة يد'],['Crossbody bag','حقيبة كروس بودي'],['Shoulder bag','حقيبة كتف'],['Bucket bag','حقيبة باكيت'],['Basket bag','حقيبة سلة'],['Camera bag','حقيبة كاميرا'],['Briefcase','حقيبة مستندات'],['Carry-on','حقيبة سفر للمقصورة'],['Backpack','حقيبة ظهر'],['Pouch','حقيبة صغيرة'],['Coin purse','محفظة نقود معدنية'],['Wallet','محفظة'],['Card holder','حافظة بطاقات'],['Cardholder','حافظة بطاقات'],['Ballerinas','حذاء باليرينا'],['Boots','حذاء بوت'],['Candle','شمعة'],['Belt','حزام']];
+const types = [['Extensible travel bag','حقيبة سفر قابلة للتوسعة'],['Travel bag','حقيبة سفر'],['Tote bag','حقيبة كتف'],['Handbag','حقيبة يد'],['Crossbody bag','حقيبة كروس بودي'],['Shoulder bag','حقيبة كتف'],['Bucket bag','حقيبة باكيت'],['Basket bag','حقيبة سلة'],['Camera bag','حقيبة كاميرا'],['Briefcase','حقيبة مستندات'],['Carry-on','حقيبة سفر للمقصورة'],['Garment cover','حافظة ملابس'],['Eyewear case','حافظة نظارات'],['Backpack','حقيبة ظهر'],['Pouch','حقيبة صغيرة'],['Coin purse','محفظة نقود معدنية'],['Wallet','محفظة'],['Card holder','حافظة بطاقات'],['Cardholder','حافظة بطاقات'],['Ballerinas','حذاء باليرينا'],['Flat sandals','صندل مسطح'],['Derby','حذاء ديربي'],['Boots','حذاء بوت'],['Candle','شمعة'],['Belt bag','حقيبة خصر'],['Belt','حزام']];
 const sizes = {XS:'صغير جدًا',S:'صغير',M:'متوسط',L:'كبير',XL:'كبير جدًا'};
 const colors = {Black:'أسود',Navy:'كحلي',Paper:'ورقي',Mocha:'موكا',Olive:'زيتوني',Cognac:'كونياك',Pebble:'حصوي',Fawn:'بني فاتح',Strawberry:'فراولة',White:'أبيض',Blue:'أزرق',Green:'أخضر'};
 
