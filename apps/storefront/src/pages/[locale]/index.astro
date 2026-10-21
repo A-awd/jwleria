@@ -94,7 +94,7 @@ const categories = getCategories();
         <a class="link-quiet" href={href(locale, '/catalog/')}>{s.viewAll}</a>
       </div>
       <div class="grid">
-        {latest.map((p) => <ProductCard product={p} locale={locale} />)}
+        {latest.map((p) => <ProductCard product={p} locale={locale} columns={3} />)}
       </div>
     </div>
   </section>

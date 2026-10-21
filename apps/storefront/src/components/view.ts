@@ -1,6 +1,7 @@
 import { env as runtime } from 'node:process';
 import type { Locale, PublicProduct, BrandTier as Tier } from '../contracts/catalog';
 import { href, t } from '../i18n/ui';
+import { productInquiryMessage } from './inquiry-message.mjs';
 
 export const OWN_COLLECTION = 'jwleria-edit';
 export const TIERS: Tier[] = ['luxury', 'accessible', 'contemporary'];
@@ -34,7 +35,10 @@ export function inquiryLink(l: Locale, message: string, fallback: string, ref = 
   return { href: href(l, fallback), attrs: { 'data-inquiry': '', 'aria-controls': 'inquiry-dialog', 'aria-haspopup': 'dialog', 'data-inq-message': message, 'data-inq-ref': ref, 'data-inq-subject': subject } };
 }
 
-export function productInquiry(l: Locale, p: PublicProduct) {
+export function productInquiry(l: Locale, p: PublicProduct, publicOrigin: string) {
   if (!p.isPreview && !inquiryChannel().live) return undefined;
-  return inquiryLink(l, t(l).dialog.product(p.name[l], p.reference), `/products/${p.slug}/#inquiry`, p.reference, p.name[l]);
+  const text = t(l).dialog.product(p.name[l], p.reference);
+  const origin = runtime.PUBLIC_SITE_ORIGIN || import.meta.env.PUBLIC_SITE_ORIGIN || publicOrigin;
+  const message = p.isPreview ? text : productInquiryMessage(text, origin, l, p.slug);
+  return inquiryLink(l, message, `/products/${p.slug}/#inquiry`, p.reference, p.name[l]);
 }

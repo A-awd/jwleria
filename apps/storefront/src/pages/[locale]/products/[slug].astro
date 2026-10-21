@@ -4,6 +4,7 @@ import ProductCard from '../../../components/ProductCard.astro';
 import { getBrand, getCategory, getProduct, getRelatedProducts } from '../../../server/catalog';
 import { href, isLocale, t } from '../../../i18n/ui';
 import { artClass, productInquiry } from '../../../components/view';
+import { productMedia } from '../../../components/product-media.mjs';
 
 const { locale, slug } = Astro.params;
 const product = await getProduct(slug ?? '');
@@ -12,7 +13,7 @@ const s = t(locale);
 const brand = await getBrand(product.brandSlug);
 const category = getCategory(product.categorySlug);
 const related = await getRelatedProducts(product, 4);
-const inquiry = productInquiry(locale, product);
+const inquiry = productInquiry(locale, product, Astro.url.origin);
 const views = product.images.map((src, i) => ({src, label: s.product.views[i] ?? s.product.details}));
 ---
 <BaseLayout locale={locale} title={product.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} image={product.image}>
@@ -27,7 +28,7 @@ const views = product.images.map((src, i) => ({src, label: s.product.views[i] ??
         {views.map((v, i) => (
           <figure>
             <div class="media">
-              <img class={i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} src={v.src} alt={product.name[locale]} width="1200" height="1500" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" />
+              <img class={i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} {...productMedia(product,i,'detail')} alt={product.name[locale]} loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" />
               {product.isPreview && i === 0 && <span class="badge">{s.preview}</span>}
             </div>
             <figcaption>{v.label}</figcaption>

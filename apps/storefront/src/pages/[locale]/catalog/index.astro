@@ -58,7 +58,7 @@ const categories = getCategories();
     </form>
     <p class="status" role="status" aria-live="polite">{result.total ? s.catalog.results(result.total) : s.catalog.none}</p>
     <div class="grid grid--4 section section--tight">
-      {result.items.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} />)}
+      {result.items.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} priority={i===0} />)}
     </div>
     <Pagination locale={locale} result={result} url={Astro.url} />
   </div>

@@ -20,6 +20,13 @@ export interface Category {
   image: string;
 }
 
+export interface ResponsiveProductImage {
+  src: string;
+  width: number;
+  height: number;
+  variants: {src:string; width:number; height:number; bytes:number}[];
+}
+
 export interface PublicProduct {
   id: string;
   slug: string;
@@ -32,6 +39,7 @@ export interface PublicProduct {
   collection: LocalizedText;
   collectionSlug: string;
   images: string[];
+  imageVariants?: ResponsiveProductImage[];
   mediaKind: 'synthetic-preview' | 'verified-product' | 'facts-only';
   isPreview: boolean;
   addedAt: string;

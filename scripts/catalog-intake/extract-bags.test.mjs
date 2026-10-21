@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,unlink,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {extractBagPage,bagSourceProfile,sitemapLocations,repairPradaTechnicalFacts,pradaGalleryEvidence} from './extract-bags.mjs';
+import {extractBagPage,bagSourceProfile,sitemapLocations,repairPradaTechnicalFacts,pradaGalleryEvidence,prepareBagArabicName} from './extract-bags.mjs';
 import {collectBagInventory} from './collect-bags.mjs';
 
 const ld=data=>`<script type="application/ld+json">${JSON.stringify(data)}</script>`;
@@ -25,7 +25,7 @@ test('LOEWE parses public JSON literal without executing scripts or including al
  const product={id:'SYNTHETIC-100',name:'Small Hammock bag',shortDescription:'Synthetic calfskin detail',customAttributes:{c_LW_collection:['Hammock'],c_LW_colorLabel:'Blue',c_LW_measures:'10X20X30 cm',c_allImages:[{src:'/images/SYNTHETIC-100_1.jpg'}]}};
  const html=`<script>window['__pid_SYNTHETIC-100'] = ${JSON.stringify({data:product})}; throw new Error('must never execute');</script>`;
  const result=extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/hammock/SYNTHETIC-100.html'});
- assert.equal(result.candidate.collection,'Hammock');assert.equal(result.candidate.name_ar,'حقيبة هاموك صغيرة');assert.match(result.candidate.image_urls[0],/SYNTHETIC-100/);
+ assert.equal(result.candidate.collection,'Hammock');assert.match(result.candidate.name_ar,/Hammock/);assert.match(result.candidate.name_ar,/صغير/);assert.match(result.candidate.image_urls[0],/SYNTHETIC-100/);
  assert.throws(()=>extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/hammock/OTHER-200.html'}),/page\/variant reference mismatch/);
  product.customAttributes.c_allImages=[{src:'/images/OTHER-200.jpg'}];
  assert.throws(()=>extractBagPage(`<script>window['__pid_SYNTHETIC-100'] = ${JSON.stringify({data:product})};</script>`,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/test'}),/mismatch/);
@@ -75,4 +75,35 @@ test('Collector persists resumable records, honors spacing and stops source afte
   const before=requests.length;await assert.rejects(collectBagInventory(config,deps),/http_403/);assert.equal(requests.length,before);
   assert.equal(requests.filter(u=>u.endsWith('/sitemap_index_0.xml')).length,1);assert.equal(requests.filter(u=>u.endsWith('/sitemap_product_AE_en_0.xml')).length,1);
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('Prada handbag names become Arabic without replacing the official model or adding facts',()=>{
+ const html=ld({'@type':'Product',sku:'NAME123',name:'Prada Bonnie medium leather handbag',image:'https://example.com/NAME123.jpg',description:'Synthetic technical detail'});
+ const {candidate}=extractBagPage(html,{brand:'prada',source_id:'synthetic',page_url:'https://www.prada.com/ae/en/p/handbag/NAME123'});
+ assert.equal(candidate.translation_state,'provided');assert.match(candidate.name_ar,/حقيبة يد/);assert.match(candidate.name_ar,/Prada Bonnie/);assert.match(candidate.name_ar,/متوسط/);assert.match(candidate.name_ar,/جلد/);assert.equal(candidate.facts.length,1);assert.equal(candidate.media_rights_state,'unverified');
+});
+test('LOEWE purse and backpack names preserve source model and material distinctions',()=>{
+ const build=name=>`window['__pid_NAME-100'] = ${JSON.stringify({data:{id:'NAME-100',name,customAttributes:{c_LW_collection:['Flamenco'],c_LW_materialDescription:'Nappa lambskin',c_allImages:[{src:'/images/NAME-100.jpg'}]}}})};`;
+ for(const name of ['Medium Flamenco purse in mellow nappa lambskin','Flamenco backpack in shiny supple calfskin']){
+ const {candidate}=extractBagPage(build(name),{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/flamenco/NAME-100.html'});
+ assert.equal(candidate.translation_state,'provided');assert.match(candidate.name_ar,/Flamenco/);assert.match(candidate.name_ar,name.includes('backpack')?/حقيبة ظهر/:/حقيبة/);assert.match(candidate.name_ar,name.includes('lambskin')?/جلد حمل/:/جلد عجل/);assert.equal(candidate.facts.length,1);
+ }
+});
+
+test('Bag name translation preserves model numbers rather than mistaking them for unknown claims',()=>{
+ const r=prepareBagArabicName('Amazona 180 duffle in nubuck');assert.equal(r.translation_state,'provided');assert.match(r.name_ar,/Amazona 180/);assert.match(r.name_ar,/دافل/);assert.match(r.name_ar,/نوبوك/);
+});
+test('Saffiano buckle name does not invent a leather body material',()=>{
+ const r=prepareBagArabicName('Saffiano belt buckle');assert.equal(r.translation_state,'provided');assert.match(r.name_ar,/مشبك حزام/);assert.match(r.name_ar,/بتشطيب سافيانو/);assert.doesNotMatch(r.name_ar,/جلد|من سافيانو/);
+});
+test('Unknown ordinary descriptors stay pending instead of being silently omitted from an Arabic name',()=>{
+ const r=prepareBagArabicName('Mini Flamenco purse in pinched nappa calfskin');assert.equal(r.translation_state,'name_pending');assert.equal(r.name_ar,null);assert.deepEqual(r.remaining_terms,['pinched']);
+});
+test('Prada model Buckle is not confused with the product type or its double-belt feature',()=>{
+ const r=prepareBagArabicName('Prada Buckle medium leather and crocodile handbag with double belt');assert.equal(r.translation_state,'provided');assert.match(r.name_ar,/حقيبة يد Prada Buckle/);assert.match(r.name_ar,/جلد تمساح/);assert.match(r.name_ar,/بحزام مزدوج/);assert.doesNotMatch(r.name_ar,/مشبك حزام/);
+});
+
+test('Buckle technical repair cannot turn an unknown product-name descriptor into a completed translation',()=>{
+ const html=ld({'@type':'Product',sku:'NAME456',name:'UnverifiedFeature metal belt buckle',image:'https://example.com/NAME456.jpg',description:'Synthetic detail'})+ld({'@type':'BreadcrumbList',itemListElement:[{item:{name:'Home'}},{item:{name:'Custom belts'}},{item:{name:'UnverifiedFeature metal belt buckle'}}]});
+ const {candidate}=extractBagPage(html,{brand:'prada',source_id:'synthetic',page_url:'https://www.prada.com/ae/en/p/belt-buckle/NAME456'});assert.equal(candidate.translation_state,'name_pending');
 });

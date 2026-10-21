@@ -22,7 +22,7 @@ const others = getCategories().filter((c) => c.slug !== category.slug);
       <p class="lead">{s.catalog.results(result.total)}</p>
     </header>
     {products.length > 0
-      ? <div class="grid grid--4">{products.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} />)}</div>
+      ? <div class="grid grid--4">{products.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} priority={i===0} />)}</div>
       : <div class="pending"><p>{s.categories.empty}</p></div>}
     <Pagination locale={locale} result={result} url={Astro.url} />
     <section class="section" aria-labelledby="h-other">

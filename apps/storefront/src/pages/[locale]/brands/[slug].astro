@@ -30,7 +30,7 @@ const peers = directory.filter((b) => b.tier === brand.tier && b.slug !== brand.
     </nav>}
     {products.length > 0 ? (
       <section class="section section--tight" aria-label={brand.name}>
-        <div class="grid grid--4">{products.map((p) => <ProductCard product={p} locale={locale} brand={brand} />)}</div>
+        <div class="grid grid--4">{products.map((p,i) => <ProductCard product={p} locale={locale} brand={brand} eager={i<2} priority={i===0} />)}</div>
       </section>
     ) : (
       <section class="pending" aria-labelledby="h-pending">

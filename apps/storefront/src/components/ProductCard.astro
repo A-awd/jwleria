@@ -3,17 +3,19 @@ import type { Brand, Locale, PublicProduct } from '../contracts/catalog';
 import { getBrand } from '../server/catalog';
 import { href, t } from '../i18n/ui';
 import { artClass, productInquiry } from './view';
+import { productMedia } from './product-media.mjs';
 
-interface Props { product: PublicProduct; locale: Locale; eager?: boolean; brand?: Brand }
+interface Props { product: PublicProduct; locale: Locale; eager?: boolean; priority?: boolean; brand?: Brand; columns?: 3 | 4 }
 const { product: p, locale, eager = false } = Astro.props;
 const s = t(locale);
 const url = href(locale, `/products/${p.slug}/`);
 const brand = Astro.props.brand ?? await getBrand(p.brandSlug);
-const inquiry = productInquiry(locale, p);
+const inquiry = productInquiry(locale, p, Astro.url.origin);
+const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefined;
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>
   {p.image && <a class="media" href={url} tabindex="-1" aria-hidden="true">
-    <img class={artClass(p.image, p.categorySlug, p.reference)} src={p.image} alt="" width="800" height="1000" loading={eager ? 'eager' : 'lazy'} decoding="async" />
+    <img class={artClass(p.image, p.categorySlug, p.reference)} {...media} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={Astro.props.priority ? 'high' : 'auto'} decoding="async" />
     {p.isPreview && <span class="badge">{s.preview}</span>}
   </a>}
   <div class="card__body">
