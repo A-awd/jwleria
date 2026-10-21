@@ -11,11 +11,14 @@ const { locale, slug } = Astro.params;
 const brand = await getBrand(slug ?? '');
 if (!isLocale(locale) || !brand) return Astro.redirect('/404/');
 const s = t(locale);
-const result = await getProducts({ brand: brand.slug, page: Number(Astro.url.searchParams.get('page')) });
+const [result, collections, directory] = await Promise.all([
+  getProducts({ brand: brand.slug, page: Number(Astro.url.searchParams.get('page')) }),
+  getCollections(brand.slug),
+  getBrands(),
+]);
 const products = result.items;
-const collections = await getCollections(brand.slug);
 const isOwn = brand.slug === OWN_COLLECTION;
-const peers = (await getBrands()).filter((b) => b.tier === brand.tier && b.slug !== brand.slug && b.slug !== OWN_COLLECTION).slice(0, 8);
+const peers = directory.filter((b) => b.tier === brand.tier && b.slug !== brand.slug && b.slug !== OWN_COLLECTION).slice(0, 8);
 ---
 <BaseLayout locale={locale} title={brand.name} description={brand.summary[locale]} path={`/brands/${brand.slug}/`}>
   <div class="wrap">

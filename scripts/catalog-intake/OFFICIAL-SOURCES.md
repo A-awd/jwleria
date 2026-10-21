@@ -43,6 +43,19 @@ validated product counts; duplicate variants collapse into stable source/SKU
 identities. This flag does not prove every worldwide product is represented,
 current availability, image rights, Arabic editorial review or publication.
 Unsupported categories stay pending rather than acquiring an incorrect type.
+`prepareOfficialCandidates(rows)` corrects acquired snapshots without another
+network request: it binds each record to its actual source SKU, retains existing
+facts and only adds technical facts explicitly stated in the retained source
+description. Arabic names are our faithful renderings of observed product names,
+not official brand translations. Full-word matching prevents model substrings
+from corrupting unrelated terms. Remaining source-language terms are flagged;
+even complete Arabic renderings retain an editorial review requirement.
+
+Robots access and the owner's collection request do not prove source permission
+or override published source terms. When actual terms require written permission
+for automated acquisition, stop that source and set `acquisition_allowed: false`
+until such permission is demonstrated. Keep the partial inventory and evidence
+private; never infer public image rights from accessible image URLs.
 
 Synthetic regression inputs in `extract-official-brands.test.mjs` verify
 identity binding, technical facts, category boundaries and immediate refusal.

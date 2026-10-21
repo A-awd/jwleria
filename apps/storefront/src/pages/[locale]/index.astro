@@ -10,11 +10,11 @@ import { OWN_COLLECTION, TIERS, artClass } from '../../components/view';
 const { locale } = Astro.params;
 if (!isLocale(locale)) return new Response('Not found', {status:404});
 const s = t(locale);
-const brands = (await getBrands())
+const [directory, latest] = await Promise.all([getBrands(), getLatestProducts(6)]);
+const brands = directory
   .filter((b) => b.slug !== OWN_COLLECTION)
   .sort((a, b) => TIERS.indexOf(a.tier) - TIERS.indexOf(b.tier) || a.name.localeCompare(b.name));
 const categories = getCategories();
-const latest = await getLatestProducts(6);
 ---
 <BaseLayout locale={locale} title={s.tagline} description={s.hero.lead} path="/">
   <section class="hero">

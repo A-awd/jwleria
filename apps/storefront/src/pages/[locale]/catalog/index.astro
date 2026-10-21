@@ -13,10 +13,12 @@ const search = (params.get('q') ?? '').slice(0, 200);
 const brand = params.get('brand') ?? '';
 const category = params.get('category') ?? '';
 const collection = params.get('collection') ?? '';
-const result = await getProducts({search,brand,category,collection,page:Number(params.get('page'))});
+const [result, brands, collections] = await Promise.all([
+  getProducts({search,brand,category,collection,page:Number(params.get('page'))}),
+  getBrands(),
+  brand ? getCollections(brand) : Promise.resolve([]),
+]);
 const categories = getCategories();
-const brands = (await getBrands());
-const collections = brand ? await getCollections(brand) : [];
 ---
 <BaseLayout locale={locale} title={s.catalog.title} description={s.catalog.lead} path="/catalog/">
   <div class="wrap">

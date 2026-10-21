@@ -8,7 +8,7 @@
 
 - Prada: AE English product sitemap chunks; URLs naming bags, wallets, belts, luggage and leather accessories. Leather footwear is excluded. This keyword selection cannot prove every bag or every worldwide variant.
 - Bottega Veneta: GB English variants from the advertised product/general chunks. The sitemap can contain old variants without usable image metadata; these remain incomplete.
-- LOEWE: international English bags, wallets and small-leather-goods routes from advertised product chunks. Collection or explicit product-line metadata supplies the grouping; unrelated alternate-color images are rejected.
+- LOEWE: international English bags, wallets and small-leather-goods routes from advertised product chunks. Collection or explicit product-line metadata supplies the grouping; unrelated alternate-color images and a page whose declared product reference differs from its URL are rejected. Generic category breadcrumbs are never promoted into an asserted collection; affected variants remain incomplete.
 
 Each `inventory.json` states the scope, actual URLs, visited sitemap graph and discovery errors. `state.json` distinguishes discovered, processed, acquired, incomplete, blocked and paused work. `inventory_acquisition_complete` requires successful discovery and acquisition of every URL in that scope. `worldwide_brand_complete` is always false.
 

@@ -223,13 +223,22 @@ html[lang="ar"] .steps li::before { content: counter(s, arabic-indic); }
   .brand-strip:focus-within .brand-strip__track { animation: none; }
   @keyframes brand-loop { to { transform: translateX(-50%); } }
   @view-transition { navigation: auto; }
-  .reveal { animation: rise 1.1s var(--ease) both; }
-  .reveal--2 { animation-delay: .12s; }
-  .reveal--3 { animation-delay: .24s; }
-  .hero__img { animation: settle 2.6s var(--ease) both; }
+  .reveal { animation: rise .225s var(--ease) both; }
+  .hero__img { animation: settle .6s var(--ease) both; }
   .inquiry[open] .inquiry__panel { animation: rise .4s var(--ease) both; }
   @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
   @keyframes settle { from { scale: 1.06; } }
 }
 
 .pagination{display:flex;gap:1.5rem;align-items:center;justify-content:center;padding:2rem 0}.filters{flex-wrap:wrap}
+
+/* Verified product facts remain readable while photography is unavailable. */
+.card--facts { border-block: 1px solid var(--line); min-height: 20rem; }
+.card--facts .card__body { padding: 1.75rem .25rem; gap: .7rem; }
+.card--facts .card__brand { font-size: 1rem; }
+.card--facts .card__name { font-family: var(--display); font-size: var(--s1); }
+.card__collection { margin: 0; color: var(--muted); font-size: var(--s-1); }
+.card__summary { margin: 0 0 .5rem; font-size: var(--s-1); line-height: 1.8; }
+.pdp.pdp--facts { max-width: 56rem; margin-inline: auto; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'info' 'cta'; grid-template-rows: auto auto; }
+.pdp--facts .pdp__info { padding-block: 1.5rem; }
+.pdp--facts .pdp__info h1 { max-width: 24ch; }

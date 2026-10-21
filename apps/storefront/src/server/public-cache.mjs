@@ -1,0 +1,60 @@
+// Only anonymous public HTML is shared. Search, APIs, auth and media approval stay fresh.
+const TTL_SECONDS = 60;
+const route = /^\/(?:ar|en)\/(?:$|(?:brands|categories)\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?|catalog\/|about\/|products\/[a-z0-9]+(?:-[a-z0-9]+)*\/)$/;
+function shareableRequest(request) {
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || !route.test(url.pathname) || request.headers.has('Authorization') || request.headers.has('Cookie')) return false;
+  for (const [key, value] of url.searchParams) {
+    if (url.searchParams.getAll(key).length !== 1) return false;
+    if (key === 'page' || key === 'pageSize') {
+      if (!/^[1-9]\d{0,4}$/.test(value)) return false;
+    } else if (['brand', 'category', 'collection'].includes(key)) {
+      if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) return false;
+    } else return false;
+  }
+  return true;
+}
+function shareableResponse(response) {
+  return response.status === 200 && /^text\/html(?:;|$)/i.test(response.headers.get('Content-Type') ?? '')
+    && !response.headers.has('Set-Cookie') && !/(?:private|no-store|no-cache)/i.test(response.headers.get('Cache-Control') ?? '')
+    && !response.headers.get('Vary')?.split(',').some(value => !['accept-encoding'].includes(value.trim().toLowerCase()));
+}
+function outward(response, state, duration, age = 0) {
+  const headers = new Headers(response.headers);
+  headers.delete('X-JWL-Stored-At');
+  headers.set('X-JWL-Cache', state);
+  headers.set('Server-Timing', `page;dur=${duration};desc="${state}"`);
+  headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  if (state === 'HIT') headers.set('Age', String(age));
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+}
+/**
+ * @param {Request} request
+ * @param {() => Promise<Response>} next
+ * @param {{cache?: Pick<Cache, 'match' | 'put'>, waitUntil?: (task: Promise<unknown>) => void, build?: string, now?: () => number}} options
+ */
+export async function publicPageResponse(request, next, { cache, waitUntil, build, now = Date.now } = {}) {
+  if (!cache || !build || !shareableRequest(request)) return next();
+  const start = now();
+  const url = new URL(request.url);
+  url.searchParams.sort();
+  url.searchParams.set('__jwl_release', build);
+  const key = new Request(url, { method: 'GET' });
+  try {
+    const cached = await cache.match(key);
+    if (cached) {
+      const storedAt = Number(cached.headers.get('X-JWL-Stored-At'));
+      const age = (now() - storedAt) / 1000;
+      if (storedAt > 0 && age >= 0 && age < TTL_SECONDS) return outward(cached, 'HIT', now() - start, Math.floor(age));
+    }
+  } catch { return next(); }
+  const response = await next();
+  if (!shareableResponse(response)) return response;
+  const headers = new Headers(response.headers);
+  headers.set('Cache-Control', `public, max-age=${TTL_SECONDS}`);
+  headers.set('X-JWL-Stored-At', String(now()));
+  const stored = new Response(response.clone().body, { status: response.status, headers });
+  const write = cache.put(key, stored).catch(() => {});
+  if (waitUntil) waitUntil(write); else await write;
+  return outward(response, 'MISS', now() - start);
+}

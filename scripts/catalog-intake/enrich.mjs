@@ -14,9 +14,14 @@ const arabicValues = new Map([
 ]);
 export function factualDescriptions({brand, collection, external_id, facts = [], name_ar, name_en, product_name}) {
   // Unknown values stay as source terminology rather than an invented translation.
-  const supported = [...new Map(facts.filter(f => labels[f.key] && f.value.length<=120).map(f => [f.key,f])).values()];
-  const en = supported.map(f => `${labels[f.key][1]}: ${f.value}`).join('; ');
-  const ar = supported.map(f => `${labels[f.key][0]}: ${arabicValues.get(f.value.toLowerCase()) ?? f.value}`).join('؛ ');
+  const grouped = new Map();
+  for (const fact of facts.filter(f => labels[f.key] && f.value.length<=120)) {
+    const values = grouped.get(fact.key) ?? new Set();
+    values.add(fact.value);
+    grouped.set(fact.key, values);
+  }
+  const en = [...grouped].map(([key, values]) => `${labels[key][1]}: ${[...values].join(', ')}`).join('; ');
+  const ar = [...grouped].map(([key, values]) => `${labels[key][0]}: ${[...values].map(value => arabicValues.get(value.toLowerCase()) ?? value).join('، ')}`).join('؛ ');
   return {
     name_ar: name_ar || product_name,
     name_en: name_en || product_name,

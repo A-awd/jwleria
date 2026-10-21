@@ -9,7 +9,7 @@ import Footer from '../components/Footer.astro';
 import InquiryDialog from '../components/InquiryDialog.astro';
 import { dirOf, href, t } from '../i18n/ui';
 
-interface Props { locale: Locale; title: string; description: string; path: string; image?: string }
+interface Props { locale: Locale; title: string; description: string; path: string; image?: string | null }
 const { locale, title, description, path, image = '/images/hero-editorial.webp' } = Astro.props;
 const fullTitle = `${title} · Jwleria`;
 const live = (env.PUBLIC_RELEASE || import.meta.env.PUBLIC_RELEASE) === 'live';
@@ -50,7 +50,7 @@ const canonical = absolute(href(locale, path));
     <meta property="og:site_name" content="Jwleria" />
     <meta property="og:title" content={fullTitle} />
     <meta property="og:description" content={description} />
-    <meta property="og:image" content={absolute(image)} />
+    {image && <meta property="og:image" content={absolute(image)} />}
     <meta property="og:locale" content={locale === 'ar' ? 'ar_SA' : 'en_GB'} />
   </head>
   <body>

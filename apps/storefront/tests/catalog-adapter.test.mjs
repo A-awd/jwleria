@@ -20,6 +20,12 @@ test('Catalog failures stay failures and invalid image URLs are rejected',async(
   assert.throws(()=>publicProduct({...row,images:['javascript:alert(1)']}),/images/);
   assert.equal(await readProduct(config,'not/a/slug',()=>{throw Error('must not fetch')}),undefined);
 });
+test('Facts-only products have no substituted image and cannot claim licensed media',()=>{
+  const product=publicProduct({...row,images:[],media_state:'facts_only'});
+  assert.equal(product.image,null);assert.deepEqual(product.images,[]);assert.equal(product.mediaKind,'facts-only');assert.equal(product.isPreview,false);
+  assert.throws(()=>publicProduct({...row,images:[]}),/images/);
+  assert.throws(()=>publicProduct({...row,media_state:'facts_only'}),/images/);
+});
 test('Public summaries use approved factual descriptions without leaking source marketing',()=>{
   const product=publicProduct({...row,description_ar:'فولاذ، 41 مم.',description_en:'Steel, 41 mm.',source_description:'Private source copy',provenance:{secret:'private'}});
   assert.equal(product.summary.ar,'فولاذ، 41 مم.');assert.equal(product.summary.en,'Steel, 41 mm.');

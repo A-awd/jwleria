@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0009 — Interim factual publication and bounded public caching](decisions/0009-factual-publication-and-bounded-cache.md)
+
 - [0008 — Minimal catalog without an owner dashboard](decisions/0008-minimal-catalog-without-owner-dashboard.md)
 
 - [0007 — Lighter storefront palette](decisions/0007-lighter-storefront-palette.md)

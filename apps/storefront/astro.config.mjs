@@ -7,6 +7,7 @@ const adapter = cloudflareTarget
   : node({ mode: 'standalone' });
 
 export default defineConfig({
+  vite: { define: { __JWL_CACHE_BUILD__: JSON.stringify(Date.now().toString(36)) } },
   output: 'server',
   adapter,
   ...(cloudflareTarget ? { outDir: './dist-cloudflare/' } : {}),

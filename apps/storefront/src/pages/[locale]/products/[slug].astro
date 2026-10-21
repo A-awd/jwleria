@@ -22,18 +22,18 @@ const views = product.images.map((src, i) => ({src, label: s.product.views[i] ??
       {category && <> / <a href={href(locale, `/categories/${category.slug}/`)}>{category.name[locale]}</a></>}
     </nav>
 
-    <article class="pdp">
-      <div class="pdp__gallery" aria-label={product.name[locale]}>
+    <article class:list={['pdp', { 'pdp--facts': !product.image }]}>
+      {product.image && <div class="pdp__gallery" aria-label={product.name[locale]}>
         {views.map((v, i) => (
           <figure>
             <div class="media">
-              <img class={i === 0 ? artClass(product.image, product.categorySlug, product.reference) : 'art'} src={v.src} alt={product.name[locale]} width="1200" height="1500" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" />
+              <img class={i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} src={v.src} alt={product.name[locale]} width="1200" height="1500" loading={i === 0 ? 'eager' : 'lazy'} fetchpriority={i === 0 ? 'high' : 'auto'} decoding="async" />
               {product.isPreview && i === 0 && <span class="badge">{s.preview}</span>}
             </div>
             <figcaption>{v.label}</figcaption>
           </figure>
         ))}
-      </div>
+      </div>}
 
       <div class="pdp__info">
         {brand

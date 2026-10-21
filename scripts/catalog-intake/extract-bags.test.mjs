@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtemp,readFile,writeFile,unlink,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {extractBagPage,bagSourceProfile,sitemapLocations} from './extract-bags.mjs';
+import {extractBagPage,bagSourceProfile,sitemapLocations,repairPradaTechnicalFacts,pradaGalleryEvidence} from './extract-bags.mjs';
 import {collectBagInventory} from './collect-bags.mjs';
 
 const ld=data=>`<script type="application/ld+json">${JSON.stringify(data)}</script>`;
@@ -26,6 +26,7 @@ test('LOEWE parses public JSON literal without executing scripts or including al
  const html=`<script>window['__pid_SYNTHETIC-100'] = ${JSON.stringify({data:product})}; throw new Error('must never execute');</script>`;
  const result=extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/hammock/SYNTHETIC-100.html'});
  assert.equal(result.candidate.collection,'Hammock');assert.equal(result.candidate.name_ar,'حقيبة هاموك صغيرة');assert.match(result.candidate.image_urls[0],/SYNTHETIC-100/);
+ assert.throws(()=>extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/hammock/OTHER-200.html'}),/page\/variant reference mismatch/);
  product.customAttributes.c_allImages=[{src:'/images/OTHER-200.jpg'}];
  assert.throws(()=>extractBagPage(`<script>window['__pid_SYNTHETIC-100'] = ${JSON.stringify({data:product})};</script>`,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/test'}),/mismatch/);
 });
@@ -33,6 +34,19 @@ test('LOEWE preserves an explicit product line when collection field is absent a
  const product={id:'SYNTHETIC-200',name:'Slit pochette bag',shortDescription:'Synthetic technical detail',customAttributes:{c_LW_lineTXTDescription:'Slit',c_LW_materialDescription:'Raffia/calf',c_allImages:[{src:'/images/SYNTHETIC-200.jpg'}]}};
  const {candidate,evidence}=extractBagPage(`window['__pid_SYNTHETIC-200'] = ${JSON.stringify({data:product})};`,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/baskets/SYNTHETIC-200.html'});
  assert.equal(candidate.collection,'Slit');assert.equal(evidence.grouping_kind,'explicit_product_line_field');assert.equal(candidate.facts.find(f=>f.key==='material').value,'Raffia/calf');
+});
+test('LOEWE requires observed collection or line instead of guessing from generic category breadcrumbs',()=>{
+ const product={id:'SYNTHETIC-300',name:'Drawstring bucket in synthetic material',customAttributes:{c_pdpBreadcrumbs:[{name:'Baskets & summer bags'}],c_allImages:[{src:'/images/SYNTHETIC-300.jpg'}]}};
+ assert.throws(()=>extractBagPage(`window['__pid_SYNTHETIC-300'] = ${JSON.stringify({data:product})};`,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/baskets/SYNTHETIC-300.html'}),/Missing LOEWE variant\/collection/);
+});
+test('Prada retained buckle repair uses explicit source facts without treating logo material as body material',()=>{
+ const raw={brand:'Prada',source_url:'https://www.prada.com/ae/en/p/synthetic-belt/SYNTHETIC',product_name:'Saffiano belt buckle',source_description:'Metal lettering logo---Belt not included',facts:[]};
+ const fixed=repairPradaTechnicalFacts(raw);assert.ok(!fixed.facts.some(f=>f.key==='material'));assert.ok(fixed.facts.some(f=>f.key==='logo_material'&&f.value==='metal'));assert.ok(fixed.facts.some(f=>f.key==='belt_included'&&f.value==='No'));assert.equal(fixed.name_ar,'مشبك حزام سافيانو');
+ const metal=repairPradaTechnicalFacts({...raw,product_name:'Enameled-metal belt buckle'});assert.ok(metal.facts.some(f=>f.key==='material'&&f.value==='metal'));assert.deepEqual(repairPradaTechnicalFacts(metal),metal);
+});
+test('Prada gallery evidence retains actual responsive URLs without guessing dimensions or granting media rights',()=>{
+ const html='<source srcset="https://www.prada.com/images/SYNTHETIC123.jpg/renditions/2400.2400.jpg 2x, https://www.prada.com/images/OTHER.jpg 1x, https://evil.invalid/SYNTHETIC123.jpg 3x">';
+ const gallery=pradaGalleryEvidence(html,'SYNTHETIC123');assert.equal(gallery.length,1);assert.equal(gallery[0].markup_density,'2x');assert.equal(gallery[0].rendition_name,'2400.2400.jpg');assert.equal(gallery[0].pixel_dimensions_verified,false);assert.equal(gallery[0].media_usage_verified,false);
 });
 test('Regional profiles exclude foreign sitemaps and declare limited coverage honestly',()=>{
  const robots='Sitemap: https://www.prada.com/sitemap_index_0.xml\nSitemap: https://www.prada.cn/sitemap_index_0.xml';

@@ -29,6 +29,35 @@ function pradaFacts(product,html){
   return facts;
 }
 
+/** Actual responsive gallery URLs from source markup; rendition names are not a pixel verification. */
+export function pradaGalleryEvidence(html,reference){
+  const results=new Map();
+  for(const attr of html.matchAll(/srcset=["']([^"']+)["']/gi))for(const entry of attr[1].split(',')){
+    const match=/^\s*(https:\/\/\S+?)(?:\s+([\d.]+[wx]))?\s*$/.exec(entry);
+    if(!match||!match[1].includes(reference))continue;
+    const url=canonical(match[1].replace(/&amp;/g,'&'));if(new URL(url).origin!=='https://www.prada.com')continue;
+    results.set(url,{url,markup_density:match[2]??null,rendition_name:url.split('/').at(-1).split('?')[0],pixel_dimensions_verified:false,media_usage_verified:false});
+  }
+  return [...results.values()];
+}
+
+/** Repair technical buckle facts from retained official names/technical text; never infer body material from a logo. */
+export function repairPradaTechnicalFacts(input){
+  if(input.brand!=='Prada'||new URL(input.source_url).origin!=='https://www.prada.com')throw Error('Prada retained source mismatch');
+  const raw={...input,facts:[...(input.facts??[])]},name=plain(input.product_name),description=plain(input.source_description);
+  const add=(key,value)=>{if(!raw.facts.some(f=>f.key===key&&f.value===value))raw.facts.push({key,value});};
+  if(/\bbelt buckle\b/i.test(name)){
+    add('product_type','belt buckle');
+    if(/\bmetal\b/i.test(name))add('material','metal');
+    if(/enameled[ -]metal/i.test(name))add('finish','enameled');
+    if(/\bSaffiano\b/i.test(name))add('finish','Saffiano');
+    if(/metal lettering logo/i.test(description))add('logo_material','metal');
+    if(/belt(?: strap)? not included/i.test(description))add('belt_included','No');
+    raw.name_ar=raw.name_ar??(/enameled[ -]metal/i.test(name)?'مشبك حزام معدني مطلي بالمينا':/\bmetal\b/i.test(name)?'مشبك حزام معدني':'مشبك حزام سافيانو');
+  }
+  return raw;
+}
+
 /** Parse one official product page. No script execution, guessed images, prices or public reuse grant. */
 export function extractBagPage(html,{brand,source_id,page_url}){
   if(!['prada','bottega-veneta','loewe'].includes(brand))throw Error('Unsupported bag source');
@@ -44,7 +73,8 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     images.push(...data.filter(d=>d['@type']==='ImageObject'&&typeof d.contentUrl==='string'&&d.contentUrl.includes(product.sku)).map(d=>d.contentUrl));
     if(!images.length||images.some(u=>!u.includes(product.sku)))throw Error('Prada image/variant reference mismatch');
     raw={source_id,external_id:product.sku,source_url:page,brand:'Prada',collection:family,product_name:product.name,name_ar:arabicBagName(product.name,family),name_en:product.name,image_urls:images.map(canonical),source_description:plain(product.description),facts:pradaFacts(product,html),provenance:{method:'structured-page',language:/[\u0600-\u06ff]/.test(product.name)?'ar':'en'}};
-    evidence={reference:product.sku,grouping_kind:named?'official_named_product_family':'official_breadcrumb_group',grouping:family,breadcrumbs,image_binding:'Explicit Product/ImageObject variant references'};
+    raw=repairPradaTechnicalFacts(raw);
+    evidence={reference:product.sku,grouping_kind:named?'official_named_product_family':'official_breadcrumb_group',grouping:family,breadcrumbs,image_binding:'Explicit Product/ImageObject variant references',responsive_gallery:pradaGalleryEvidence(html,product.sku),visual_quality_verified:false};
   }
   if(brand==='bottega-veneta'){
     const product=data.find(d=>[d['@type']].flat().includes('Product'));
@@ -63,6 +93,8 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     const literal=/window\['__pid_[^']+'\]\s*=\s*(\{[\s\S]*?\});/.exec(html)?.[1];if(!literal)throw Error('Missing public LOEWE product literal');
     const product=JSON.parse(literal).data,a=product?.customAttributes;
     if(!product?.id||!product.name||!a||!(Array.isArray(a.c_LW_collection)&&a.c_LW_collection.length===1)&&!plain(a.c_LW_lineTXTDescription))throw Error('Missing LOEWE variant/collection');
+    const leaf=decodeURIComponent(new URL(page).pathname.split('/').at(-1));
+    if(leaf.endsWith('.html')&&leaf.slice(0,-5)!==product.id)throw Error('LOEWE page/variant reference mismatch');
     const images=a.c_allImages?.map(i=>canonical(new URL(i.src,page).href));
     if(!images?.length||images.some(u=>!decodeURIComponent(u).includes(product.id)))throw Error('LOEWE image/reference mismatch');
     const hasCollection=Array.isArray(a.c_LW_collection)&&a.c_LW_collection.length===1;

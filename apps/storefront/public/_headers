@@ -1,0 +1,25 @@
+# Unversioned font assets may change; revalidate after one day.
+/fonts/*
+  Cache-Control: public, max-age=86400
+
+# Existing editorial WebP assets may change; revalidate after one hour.
+/images/accessories.webp
+  Cache-Control: public, max-age=3600
+/images/bracelet.webp
+  Cache-Control: public, max-age=3600
+/images/catalog-still-life.webp
+  Cache-Control: public, max-age=3600
+/images/clothing.webp
+  Cache-Control: public, max-age=3600
+/images/handbag.webp
+  Cache-Control: public, max-age=3600
+/images/hero-editorial.webp
+  Cache-Control: public, max-age=3600
+/images/leather-goods.webp
+  Cache-Control: public, max-age=3600
+/images/luggage.webp
+  Cache-Control: public, max-age=3600
+/images/shoes.webp
+  Cache-Control: public, max-age=3600
+/images/watch.webp
+  Cache-Control: public, max-age=3600

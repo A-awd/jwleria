@@ -1,4 +1,4 @@
-const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,published_at';
+const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,media_state,published_at';
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const integer = (n, fallback, max) => Number.isFinite(Number(n)) && Number(n) >= 1 ? Math.min(Math.floor(Number(n)), max) : fallback;
 
@@ -9,7 +9,8 @@ export function normalizeSearch(s = '') {
 /** @returns {import('../contracts/catalog').PublicProduct} */
 export function publicProduct(row) {
   if (!row || !slugPattern.test(row.slug) || !slugPattern.test(row.brand_slug) || !slugPattern.test(row.category_slug) || !slugPattern.test(row.collection_slug)) throw new Error('Invalid published catalog identity');
-  if (!Array.isArray(row.images) || !row.images.length || row.images.some(s => {
+  const factsOnly = row.media_state === 'facts_only';
+  if (!Array.isArray(row.images) || (!row.images.length && !factsOnly) || (factsOnly && row.images.length > 0) || row.images.some(s => {
     if (typeof s !== 'string') return true;
     try { const u = new URL(s); return u.protocol !== 'https:' || Boolean(u.username || u.password); } catch { return true; }
   })) throw new Error('Invalid published catalog images');
@@ -22,8 +23,8 @@ export function publicProduct(row) {
     collectionSlug: row.collection_slug,
     collection: { ar: row.collection_ar, en: row.collection_en },
     name: { ar: row.name_ar, en: row.name_en },
-    summary: { ar: row.description_ar || `${row.name_ar} — ${row.collection_ar}`, en: row.description_en || `${row.name_en} — ${row.collection_en}` }, image: row.images[0], images: [...row.images],
-    mediaKind: 'verified-product', isPreview: false, addedAt: row.published_at,
+    summary: { ar: row.description_ar || `${row.name_ar} — ${row.collection_ar}`, en: row.description_en || `${row.name_en} — ${row.collection_en}` }, image: row.images[0] ?? null, images: [...row.images],
+    mediaKind: factsOnly ? 'facts-only' : 'verified-product', isPreview: false, addedAt: row.published_at,
   };
 }
 

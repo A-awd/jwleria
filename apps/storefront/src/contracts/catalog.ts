@@ -28,11 +28,11 @@ export interface PublicProduct {
   categorySlug: string;
   name: LocalizedText;
   summary: LocalizedText;
-  image: string;
+  image: string | null;
   collection: LocalizedText;
   collectionSlug: string;
   images: string[];
-  mediaKind: 'synthetic-preview' | 'verified-product';
+  mediaKind: 'synthetic-preview' | 'verified-product' | 'facts-only';
   isPreview: boolean;
   addedAt: string;
 }
