@@ -2,7 +2,8 @@
 const labels = {
   material: ['المادة', 'Material'], diameter: ['القطر', 'Diameter'],
   dimensions: ['الأبعاد', 'Dimensions'], color: ['اللون', 'Color'],
-  movement: ['آلية الحركة', 'Movement'], water_resistance: ['مقاومة الماء', 'Water resistance'],
+  movement: ['آلية الحركة', 'Movement'], calibre: ['العيار', 'Calibre'],
+  water_resistance: ['مقاومة الماء', 'Water resistance'],
   finish: ['التشطيب', 'Finish'], logo_material: ['مادة الشعار', 'Logo material'],
   compatible_strap_material: ['مادة شريط الحزام المتوافق', 'Compatible belt strap material'],
   belt_included: ['الحزام مرفق', 'Belt included'], strap_included: ['شريط الحزام مرفق', 'Belt strap included'],
@@ -14,7 +15,7 @@ const arabicValues = new Map([
   ['leather', 'جلد'], ['calfskin', 'جلد عجل'], ['canvas', 'قماش كانفاس'],
   ['recycled canvas', 'قماش معاد تدويره'],
   ['black', 'أسود'], ['white', 'أبيض'], ['blue', 'أزرق'], ['green', 'أخضر'],
-  ['automatic', 'أوتوماتيكية'], ['quartz', 'كوارتز'],
+  ['automatic', 'أوتوماتيكية'], ['quartz', 'كوارتز'], ['manual winding', 'تعبئة يدوية'],
   ['suede', 'شمواه'], ['cotton tape', 'شريط قطني'], ['metal', 'معدن'], ['no', 'لا'], ['enameled', 'مطلي بالمينا'],
 ]);
 export function factualDescriptions({brand, collection, collection_kind, external_id, facts = [], name_ar, name_en, product_name}) {

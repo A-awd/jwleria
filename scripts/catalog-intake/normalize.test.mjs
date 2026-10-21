@@ -94,7 +94,8 @@ test('Restricted n8n helper and local importer produce identical enriched candid
   const start=workflow.indexOf('jsCode:')+7,end=workflow.indexOf('}},output:',start);
   const code=JSON.parse(workflow.slice(start,end));
   const records=[{...fixture,source_description:'Private source text',facts:[{key:'material',value:'leather'}]},
-    {...fixture,external_id:'group-test',collection_kind:'source_group',facts:[{key:'finish',value:'enameled'},{key:'strap_included',value:'No'}]}];
+    {...fixture,external_id:'group-test',collection_kind:'source_group',facts:[{key:'finish',value:'enameled'},{key:'strap_included',value:'No'}]},
+    {...fixture,external_id:'movement-test',facts:[{key:'movement',value:'Manual winding'},{key:'calibre',value:'847'}]}];
   const output=runInNewContext(`(function(){${code}\n})()`,{require:()=>({createHash}),$input:{all:()=>[{json:{records}}]}});
   assert.deepEqual(JSON.parse(JSON.stringify(output.map(i=>i.json))),normalizeBatch(records));
 });

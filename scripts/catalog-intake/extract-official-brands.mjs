@@ -97,6 +97,47 @@ export function exactReferenceApFacts(html,reference,sourceUrl){
  return facts;
 }
 
+// Scope labelled fields using balanced source elements, without executing page scripts.
+function elementAt(html,tag,start){
+ const tokens=new RegExp('</?'+tag+'\\b[^>]*>','gi');tokens.lastIndex=start;let depth=0;
+ for(let match;(match=tokens.exec(html));){
+  depth+=match[0].startsWith('</')?-1:1;
+  if(depth===0)return {html:html.slice(start,tokens.lastIndex),start,end:tokens.lastIndex};
+ }
+ return null;
+}
+function uniqueElement(html,tag,predicate){
+ const matches=[...html.matchAll(new RegExp('<'+tag+'\\b[^>]*>','gi'))].filter(match=>predicate(match[0]));
+ return matches.length===1?elementAt(html,tag,matches[0].index):null;
+}
+const hasClass=(tag,cls)=>(attribute(tag,'class')||'').split(/\s+/).includes(cls);
+
+/** Only exact primary-SKU JLC movement fields; calibre thickness is never a case measurement. */
+export function exactReferenceJlcMovementFacts(html,reference,sourceUrl){
+ const identity=officialVariantIdentity('jaeger-lecoultre-official',sourceUrl),ref=String(reference).toUpperCase();
+ if(!/^Q[A-Z0-9]+$/.test(ref)||identity?.external_id.toUpperCase()!==ref)return [];
+ const clean=html.replace(/<(script|style)\b[^>]*>[\s\S]*?<\/\1\s*>|<!--[\s\S]*?-->/gi,'');
+ const main=uniqueElement(clean,'main',tag=>attribute(tag,'id')==='main-content');if(!main)return [];
+ const primary=uniqueElement(main.html,'div',tag=>attribute(tag,'data-cy')==='product-page-details');if(!primary)return [];
+ const accordion=uniqueElement(primary.html,'ul',tag=>hasClass(tag,'product-page-details__description-accordion'));if(!accordion)return [];
+ const description=uniqueElement(accordion.html,'div',tag=>attribute(tag,'id')==='product-accordion-tab-description');
+ const movement=uniqueElement(accordion.html,'div',tag=>attribute(tag,'id')==='product-accordion-tab-movement');
+ if(!description||!movement||description.start>=movement.start)return [];
+ const referenceText=text(description.html.match(/<h[1-6]\b[^>]*>\s*Internal reference\s*<\/h[1-6]>\s*<div\b[^>]*>([\s\S]*?)<\/div>/i)?.[1]);
+ if(!referenceText||!new RegExp('^JL'+ref+'\\s*\\(\\s*'+ref+'\\s*\\)$','i').test(referenceText))return [];
+ const calibres=[...movement.html.matchAll(/<h5\b([^>]*)>([\s\S]*?)<\/h5>/gi)]
+  .filter(match=>hasClass('<h5 '+match[1]+'>','product-page-details__infos_subtitle'))
+  .map(match=>text(match[2])?.match(/^Jaeger-LeCoultre Calibre ([A-Z0-9.-]{1,40})$/i)?.[1]).filter(Boolean);
+ if(calibres.length!==1)return [];
+ const energy=uniqueElement(movement.html,'div',tag=>attribute(tag,'data-tooltip-key')==='ProductPage.specification.standardizedEnergy.tooltip'&&hasClass(tag,'product-page-details__infos_start'));
+ if(!energy||!/<h5\b[^>]*>\s*MOVEMENT TYPE\s*<\/h5>/i.test(energy.html))return [];
+ const after=movement.html.slice(energy.end),next=/^\s*(<div\b[^>]*>)/i.exec(after);
+ if(!next||!hasClass(next[1],'product-page-details__infos_text'))return [];
+ const value=elementAt(after,'div',next[0].length-next[1].length),movementType=text(value?.html);
+ if(!/^(?:Manual winding|Automatic|Quartz)$/i.test(movementType||''))return [];
+ return [{key:'movement',value:movementType,source_url:sourceUrl},{key:'calibre',value:calibres[0],source_url:sourceUrl}];
+}
+
 function additionalFacts(entity,source,title){const facts=[];const add=(key,value)=>facts.push({key,value,source_url:source.page_url});if(source.id==='audemars-piguet-official')facts.push(...exactReferenceApFacts(source.html||'',entity.sku,source.page_url));const description=text(entity.description)||'';if(source.id==='van-cleef-and-arpels-official'){for(const material of['white gold','yellow gold','rose gold','platinum','chalcedony','carnelian','mother-of-pearl','onyx'])if(description.toLowerCase().includes(material))add('material',material);}if(source.id==='cartier-official'){for(const material of['white gold','yellow gold','rose gold','platinum','steel','ceramic','leather'])if(description.toLowerCase().includes(material))add('material',material);for(const movement of['quartz','automatic'])if(description.toLowerCase().includes(movement))add('movement',movement);if(/manual (?:movement|winding)/i.test(description))add('movement','Manual winding');const diameter=description.match(/^(\d+(?:\.\d+)?)\s*mm/i)?.[1];if(diameter)add('diameter',diameter+' mm');}if(source.id==='piaget-official'){for(const [phrase,material]of[['or blanc','White gold'],['or rose','Rose gold'],['or jaune','Yellow gold'],['acier','Steel']])if(description.toLowerCase().includes(phrase))add('material',material);const mm=description.match(/(\d+(?:\.\d+)?)\s*mm/i)?.[1];if(mm)add('diameter',mm+' mm');if(/quartz/i.test(description))add('movement','Quartz');else if(/remontage automatique/i.test(description))add('movement','Automatic');else if(/remontage manuel/i.test(description))add('movement','Manual winding');}if(['panerai-official','jaeger-lecoultre-official'].includes(source.id)){for(const material of['Stainless Steel','Pink Gold','Platinum'])if(title.toLowerCase().includes(material.toLowerCase()))add('material',material);const mm=title.match(/(\d+(?:\.\d+)?)\s*mm/i)?.[1];if(mm)add('diameter',mm+' mm');if(/automatic/i.test(title))add('movement','Automatic');else if(/manual wind/i.test(title))add('movement','Manual winding');else if(/quartz/i.test(title))add('movement','Quartz');}return facts;}
 
 export function officialCategory(name,url){return /bracelet/i.test(name)?'bracelets':/\/(?:jewelry|jewellery|high-jewellery)\//.test(url)?'jewelry':/\/(?:watches|watch-collection)\//.test(url)?'watches':/\/bags-and-accessories\//.test(url)?(/bag|tote|clutch|backpack/i.test(name)?'handbags':'leather-goods'):null;}
@@ -123,4 +164,4 @@ export function prepareOfficialCandidates(rows){return rows.map(row=>{
 export function extractOfficialProducts(html,source){const adapter=officialAdapters[source.id];if(!adapter||source.brand&&source.brand!==adapter.brand)throw Error('Official source brand mismatch');const identity=officialVariantIdentity(source.id,source.page_url);if(!identity)throw Error('Unsupported variant URL');const data=structured(html);const title=text(html.match(/<title[^>]*>(.*?)<\/title>/si)?.[1])||'';const expected=identity.external_id.toLowerCase();let products=data.filter(entity=>type(entity,'Product')&&String(entity.sku||entity.productID||'').toLowerCase()===expected);let method='json-ld';
 if(!products.length&&source.id==='jaeger-lecoultre-official'){const breadcrumbs=data.find(entity=>type(entity,'BreadcrumbList'));const last=breadcrumbs?.itemListElement?.at(-1);const h1=text(html.match(/<h1[^>]*>(.*?)<\/h1>/si)?.[1]);const meta=[...html.matchAll(/<meta[^>]*>/g)].map(m=>m[0]).find(tag=>attribute(tag,'property')==='og:image');if(String(last?.name).toLowerCase()===expected&&h1&&meta){products=[{sku:last.name,name:h1,image:attribute(meta,'content')}];identity.collection=breadcrumbs.itemListElement.at(-2).name;method='structured-page';}}
 if(!products.length&&source.id==='audemars-piguet-official'){const parts=title.split(' - ');const imgs=[...html.matchAll(/<img[^>]*>/g)].map(m=>m[0]).filter(tag=>attribute(tag,'alt')?.startsWith('Standup image of the watch'));if(parts.length===3&&parts[1].toLowerCase()===expected&&parts[2]===adapter.brand&&imgs.length){products=[{sku:parts[1],name:parts[0]+' '+parts[1],image:imgs.map(tag=>attribute(tag,'data-src')).filter(Boolean)}];identity.collection=parts[0];method='structured-page';}}
-if(!products.length)throw Error('Complete page-associated variant facts unavailable');return products.map(entity=>{const images=[entity.image].flat().filter(Boolean).map(image=>typeof image==='string'?image:image.url||image.contentUrl).filter(Boolean);const facts=[...factsFrom(entity,source.page_url),...additionalFacts(entity,{...source,html},title)];const uniqueFacts=[...new Map(facts.map(f=>[f.key+'\0'+f.value,f])).values()];const name=text(entity.name);const ar=originalArabicName(name);const record=normalizeBatch([{source_id:source.id,brand:adapter.brand,external_id:String(entity.sku||entity.productID),collection:identity.collection,product_name:name,image_urls:images,source_url:source.page_url,source_description:text(entity.description),facts:uniqueFacts,name_ar:ar,name_en:name,translation_state:ar?'provided':'name_pending',provenance:{method,language:source.language||'en'}}])[0];record.category_slug=officialCategory(name,source.page_url);record.category_mapping_state=record.category_slug?'source_path':'requires_review';record.availability_state='unverified';record.arabic_name_review_state=ar?(/[A-Za-zÀ-ž]/.test(ar)?'untranslated_source_terms':'own_translation_requires_review'):'source_name_retained';return record;});}
+if(!products.length)throw Error('Complete page-associated variant facts unavailable');return products.map(entity=>{const images=[entity.image].flat().filter(Boolean).map(image=>typeof image==='string'?image:image.url||image.contentUrl).filter(Boolean);const facts=[...factsFrom(entity,source.page_url),...additionalFacts(entity,{...source,html},title),...(source.id==='jaeger-lecoultre-official'?exactReferenceJlcMovementFacts(html,String(entity.sku||entity.productID),source.page_url):[])];const uniqueFacts=[...new Map(facts.map(f=>[f.key+'\0'+f.value,f])).values()];const name=text(entity.name);const ar=originalArabicName(name);const record=normalizeBatch([{source_id:source.id,brand:adapter.brand,external_id:String(entity.sku||entity.productID),collection:identity.collection,product_name:name,image_urls:images,source_url:source.page_url,source_description:text(entity.description),facts:uniqueFacts,name_ar:ar,name_en:name,translation_state:ar?'provided':'name_pending',provenance:{method,language:source.language||'en'}}])[0];record.category_slug=officialCategory(name,source.page_url);record.category_mapping_state=record.category_slug?'source_path':'requires_review';record.availability_state='unverified';record.arabic_name_review_state=ar?(/[A-Za-zÀ-ž]/.test(ar)?'untranslated_source_terms':'own_translation_requires_review'):'source_name_retained';return record;});}
