@@ -9,3 +9,5 @@ The owner subsequently required navigation speed to be fixed before expanding ca
 Known curated brand identity should not require another remote request per product card. Fetch independent public projections concurrently. Cache unversioned fonts for one day and existing unversioned editorial WebPs for one hour; reserve immutable caching for content-versioned assets.
 
 Future product photos need approved source/usage evidence and responsive derivatives; do not substitute generated or unrelated pictures. Detailed product zoom must retain source detail while list cards should receive only their display size. No paid image service, account permission expansion or scheduled job was adopted by this decision.
+
+Cold-brand follow-up on 21 October: use one read-only active-public snapshot for brand products/count, collections and directory rather than three remote reads. Retain SECURITY INVOKER/RLS, explicit public fields, maximum48 cards, curated empty-brand navigation and visible error handling. HTTP timing improvement is not evidence of completed image-loaded mobile performance.

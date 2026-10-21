@@ -1,14 +1,14 @@
 ---
-import type { Locale, PublicProduct } from '../contracts/catalog';
+import type { Brand, Locale, PublicProduct } from '../contracts/catalog';
 import { getBrand } from '../server/catalog';
 import { href, t } from '../i18n/ui';
 import { artClass, productInquiry } from './view';
 
-interface Props { product: PublicProduct; locale: Locale; eager?: boolean }
+interface Props { product: PublicProduct; locale: Locale; eager?: boolean; brand?: Brand }
 const { product: p, locale, eager = false } = Astro.props;
 const s = t(locale);
 const url = href(locale, `/products/${p.slug}/`);
-const brand = await getBrand(p.brandSlug);
+const brand = Astro.props.brand ?? await getBrand(p.brandSlug);
 const inquiry = productInquiry(locale, p);
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>

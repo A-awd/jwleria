@@ -1,3 +1,17 @@
+## Brand-page round-trip reduction and media boundary — 2026-10-21
+
+Published the additive read-only public brand-page RPC and deployed Worker `af346733-a8ed-4e26-9679-5b08355fc399`. The remote migration is `20261021090207_jwleria_public_brand_page`, aligned with its committed filename. Brand products, exact pagination, collections and published directory metadata now arrive in one HTTP read. Curated empty brands and all existing peer/filter links remain; cards reuse the already loaded brand. Existing public data/media validation, RLS and uncached API behavior remain.
+
+Live HTTP observations: Rolex MISS 1.514s and HIT 0.105s; watches MISS 0.412s; home MISS 1.072s. Cache-bypassing samples varied from 0.420–1.619s for Rolex, so first visits are still variable and not fully accepted as optimized. The measured Rolex server-render duration improved from the previous observation of 1,410ms to 887ms; this is not a controlled user benchmark. Read `docs/STOREFRONT-PERFORMANCE-2026-10-21.md` for bounded evidence and image-release requirements. Actual in-app brand pagination rendered distinct genuine references. SQL/client regression, existing regression suite, Astro check and deployment build passed.
+
+The live catalog still has 1,044 public factual watch records and zero product images; 3,838 private candidates are a separate count. A newly prepared private review contains 3,700 normalized ready rows, including 1,927 non-watch rows, with 417 unique excluded candidates. These are prepared payloads, not newly ingested or published products, and their local-ledger revision advice requires live DB verification. No catalog expansion was performed during this performance checkpoint.
+
+The owning database has zero media approvals and zero Storage buckets/objects. No exact-SKU photo set with demonstrated usage permission was established in the bounded verified-project check. Specific owner originals or written exact-asset website-use permission remain an external dependency. Keep the photographed-catalog requirement; do not substitute generated pictures, assume permission or call the photo-free catalog complete.
+
+Corrected only the Cartier and Van Cleef automated-acquisition flags to false using saved source evidence, pending permission/review. Their enabled/publication flags were preserved. The transaction compared the complete public projection before and after and would roll back on any change; all existing public facts remained unchanged. No new source retrieval occurred. See `docs/SOURCE-ACQUISITION-GATE-REVIEW-2026-10-21.md` for evidence dates and limitations.
+
+Next: accept cold/mobile performance and implement responsive derivatives from actual permitted photos before media expansion; verify remaining prepared rows against current DB revisions before factual publication. WhatsApp number, photo/source inputs and durable inactive-draft scheduling remain unfinished. Goal active and incomplete. Save continuity in GitHub only; Easy Life remains stopped.
+
 ## Storefront performance repair deployed — 2026-10-21
 
 Owner priority is measured navigation speed before further catalog/media expansion. Current live verification finds 1,044 public factual watch entries, zero product images, and 3,838 private candidate records. These are separate counts; the site is not a complete photographed catalog. No additional catalog content was published during this performance repair.

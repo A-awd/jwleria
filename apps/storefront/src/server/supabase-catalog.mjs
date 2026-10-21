@@ -100,6 +100,34 @@ export async function listPublishedBrands(config,fetcher=fetch) {
   const response=await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'manual'});
   if(!response.ok)throw new Error(`Brand directory read failed (${response.status})`);
   const rows=await response.json();
-  if(!Array.isArray(rows)||rows.some(r=>!slugPattern.test(r.brand_slug)||typeof r.brand_name!=='string'||!['luxury','accessible','contemporary'].includes(r.brand_tier)))throw new Error('Invalid brand directory');
+  return publishedBrands(rows);
+}
+
+/** @returns {import('../contracts/catalog').Brand[]} */
+function publishedBrands(rows) {
+  if(!Array.isArray(rows)||rows.some(r=>!r||!slugPattern.test(r.brand_slug)||typeof r.brand_name!=='string'||!r.brand_name.trim()||!['luxury','accessible','contemporary'].includes(r.brand_tier)))throw new Error('Invalid brand directory');
   return rows.map(r=>({id:`brand-${r.brand_slug}`,slug:r.brand_slug,name:r.brand_name,tier:r.brand_tier,summary:{ar:`مختارات ${r.brand_name}. التفاصيل والتوفر عبر واتساب.`,en:`${r.brand_name} selections. Details and availability via WhatsApp.`}}));
+}
+
+// One database snapshot avoids waiting for three separate metadata round trips.
+// This public read is not cached here; the existing HTML-only cache owns staleness.
+/** @returns {Promise<{result: import('../contracts/catalog').ProductPage, collections: {slug: string, name: import('../contracts/catalog').LocalizedText}[], brands: import('../contracts/catalog').Brand[], brand: import('../contracts/catalog').Brand | undefined}>} */
+export async function readBrandPage(config, brand, query = {}, fetcher = fetch) {
+  if(!slugPattern.test(brand))throw new Error('Invalid brand page identity');
+  const url = new URL('/rest/v1/rpc/jwl_brand_page',configuration(config));
+  url.search = new URLSearchParams({p_brand:brand,p_page:String(integer(query.page,1,10000)),p_page_size:String(integer(query.pageSize,12,48))}).toString();
+  const headers={apikey:config.key,Accept:'application/json'};
+  if(!config.key.startsWith('sb_publishable_'))headers.Authorization=`Bearer ${config.key}`;
+  const response=await fetcher(url,{headers,signal:AbortSignal.timeout(8000),redirect:'manual'});
+  if(!response.ok)throw new Error(`Brand page read failed (${response.status})`);
+  const data=await response.json();
+  if(!data||!Array.isArray(data.items)||!Array.isArray(data.collections)||data.collections.length>200||!Array.isArray(data.brands)||data.brands.length>500)throw new Error('Invalid brand page response');
+  for(const field of ['total','page','pageSize','pages'])if(!Number.isSafeInteger(data[field])||data[field]<0)throw new Error('Invalid brand page pagination');
+  if(data.pageSize<1||data.pageSize>48||data.pages!==Math.ceil(data.total/data.pageSize)||data.page<1||data.page>Math.max(1,data.pages)||data.items.length>data.pageSize||data.items.some(row=>row.brand_slug!==brand))throw new Error('Invalid brand page pagination');
+  const items=data.items.map(publicProduct);
+  if(data.collections.some(r=>!r||!slugPattern.test(r.collection_slug)||typeof r.collection_ar!=='string'||typeof r.collection_en!=='string'))throw new Error('Invalid collection response');
+  const brands=publishedBrands(data.brands);
+  const target=data.brand===null?undefined:publishedBrands([data.brand])[0];
+  if(target&&target.slug!==brand)throw new Error('Invalid brand page identity');
+  return {result:{items,total:data.total,page:data.page,pageSize:data.pageSize,pages:data.pages},collections:data.collections.map(r=>({slug:r.collection_slug,name:{ar:r.collection_ar,en:r.collection_en}})),brands,brand:target};
 }

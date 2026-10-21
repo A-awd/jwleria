@@ -1,3 +1,13 @@
+## Current handoff — performance and remaining real catalog — 2026-10-21
+
+Resume the current working branch, not the historical empty-catalog or foundation-only instructions below. The deployed Worker is `af346733-a8ed-4e26-9679-5b08355fc399`; the matching new database migration is `20261021090207_jwleria_public_brand_page`. Brand pages use one public read with bounded pagination and unchanged public/media restrictions. Browser readback confirms actual first/next-page products. Read the top STATE checkpoint and `docs/STOREFRONT-PERFORMANCE-2026-10-21.md`.
+
+Performance improved but first visits remain variable: Rolex MISS1.514s/HIT0.105s in one live run; explicit bypass samples0.420–1.619s. Do not promise universal subsecond loading or treat HTTP timing as mobile Core Web Vitals. Continue measuring actual image-loaded mobile behavior before scale. Responsive product derivatives remain required, not deployed.
+
+Public catalog remains1,044 facts-only watches, zero product images; private candidates3,838. The private readiness payload has3,700 rows (1,927 non-watch) and417 exclusions; none were newly published. Verify exact live candidate revisions/content before any batch and preserve newer private data. Do not ingest old seeds over enriched records. Both Cartier/VCA acquisition flags are now false pending permission; this correction left every public row unchanged.
+
+No permitted SKU-bound photo set or live image approval was established; Storage has no buckets/objects. Exact owner/supplier rights-backed originals are still needed, followed by visual/variant verification and responsive derivative publication. WhatsApp number remains unprepared. n8n cloud helper remains inactive and older than current local normalization; no durable schedule is claimed. The entire project remains incomplete. Do not invoke stopped Easy Life routines or runtime checkpoints.
+
 ## Storefront performance repair deployed — 2026-10-21
 
 Owner priority is measured navigation speed before further catalog/media expansion. Current live verification finds 1,044 public factual watch entries, zero product images, and 3,838 private candidate records. These are separate counts; the site is not a complete photographed catalog. No additional catalog content was published during this performance repair.

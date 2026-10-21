@@ -1,7 +1,7 @@
 import { env } from 'node:process';
 import type { ProductPage, ProductQuery, PublicProduct } from '../contracts/catalog';
 import * as fixtures from './fixtures';
-import { queryCatalog, readProduct, listCollections, listPublishedBrands } from './supabase-catalog.mjs';
+import { queryCatalog, readProduct, listCollections, listPublishedBrands, readBrandPage } from './supabase-catalog.mjs';
 import { findDirectoryBrand } from './catalog-directory.mjs';
 
 export function catalogMode(): 'preview' | 'live' | 'empty' {
@@ -43,6 +43,16 @@ export async function getBrands() {
 export const getCategories = fixtures.getCategories;
 export const getCategory = fixtures.getCategory;
 export async function getBrand(slug: string) { return findDirectoryBrand(slug, getDirectoryBrands(), getBrands); }
+
+export async function getBrandPage(slug: string, query: ProductQuery = {}) {
+  const directory=getDirectoryBrands();
+  const known=directory.find(b=>b.slug===slug);
+  if(catalogMode()!=='live')return {brand:known,result:await getProducts({...query,brand:slug}),collections:[],directory};
+  const page=await readBrandPage(config(),slug,query);
+  const merged=new Map(directory.map(b=>[b.slug,b]));
+  for(const brand of page.brands)merged.set(brand.slug,brand);
+  return {brand:known??page.brand,result:page.result,collections:page.collections,directory:[...merged.values()]};
+}
 
 export async function getProducts(query: ProductQuery = {}): Promise<ProductPage> {
   if (catalogMode() === 'preview') return fixtures.getProducts(query);

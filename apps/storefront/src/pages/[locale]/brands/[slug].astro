@@ -3,19 +3,15 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import WhatsAppContact from '../../../components/WhatsAppContact.astro';
 import Pagination from '../../../components/Pagination.astro';
 import ProductCard from '../../../components/ProductCard.astro';
-import { getBrand, getBrands, getCategories, getProducts, getCollections } from '../../../server/catalog';
+import { getBrandPage, getCategories } from '../../../server/catalog';
 import { href, isLocale, t } from '../../../i18n/ui';
 import { OWN_COLLECTION } from '../../../components/view';
 
 const { locale, slug } = Astro.params;
-const brand = await getBrand(slug ?? '');
-if (!isLocale(locale) || !brand) return Astro.redirect('/404/');
+if (!isLocale(locale) || !slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return Astro.redirect('/404/');
+const {brand,result,collections,directory}=await getBrandPage(slug,{page:Number(Astro.url.searchParams.get('page'))});
+if (!brand) return Astro.redirect('/404/');
 const s = t(locale);
-const [result, collections, directory] = await Promise.all([
-  getProducts({ brand: brand.slug, page: Number(Astro.url.searchParams.get('page')) }),
-  getCollections(brand.slug),
-  getBrands(),
-]);
 const products = result.items;
 const isOwn = brand.slug === OWN_COLLECTION;
 const peers = directory.filter((b) => b.tier === brand.tier && b.slug !== brand.slug && b.slug !== OWN_COLLECTION).slice(0, 8);
@@ -34,7 +30,7 @@ const peers = directory.filter((b) => b.tier === brand.tier && b.slug !== brand.
     </nav>}
     {products.length > 0 ? (
       <section class="section section--tight" aria-label={brand.name}>
-        <div class="grid grid--4">{products.map((p) => <ProductCard product={p} locale={locale} />)}</div>
+        <div class="grid grid--4">{products.map((p) => <ProductCard product={p} locale={locale} brand={brand} />)}</div>
       </section>
     ) : (
       <section class="pending" aria-labelledby="h-pending">
