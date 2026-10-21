@@ -21,7 +21,7 @@ const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefi
   <div class="card__body">
     <p class="card__brand">{brand?.name ?? s.brands.ownTitle}</p>
     <h3 class="card__name"><a href={url}>{p.name[locale]}</a></h3>
-    {!p.image && <><p class="card__collection">{p.collection[locale]}</p><p class="card__summary">{p.summary[locale]}</p></>}
+    {!p.image && <>{p.collectionKind !== 'source-group' && <p class="card__collection">{p.collection[locale]}</p>}<p class="card__summary">{p.summary[locale]}</p></>}
     <p class="card__ref">{s.reference} <bdi>{p.reference}</bdi></p>
     <div class="card__cta">
       {inquiry ? <a class="cta" href={inquiry.href} {...inquiry.attrs}>

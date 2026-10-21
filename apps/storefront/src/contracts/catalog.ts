@@ -38,6 +38,8 @@ export interface PublicProduct {
   image: string | null;
   collection: LocalizedText;
   collectionSlug: string;
+  /** Source category groupings are not manufacturer collection names. */
+  collectionKind?: 'collection' | 'source-group';
   images: string[];
   imageVariants?: ResponsiveProductImage[];
   mediaKind: 'synthetic-preview' | 'verified-product' | 'facts-only';

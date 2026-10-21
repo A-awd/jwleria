@@ -45,7 +45,7 @@ const views = product.images.map((src, i) => ({src, label: s.product.views[i] ??
         {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
         <dl class="specs">
           <dt>{s.reference}</dt><dd><bdi>{product.reference}</bdi></dd>
-          {brand && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
+          {brand && product.collectionKind !== 'source-group' && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
           {category && <><dt>{s.product.category}</dt><dd>{category.name[locale]}</dd></>}
         </dl>
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">

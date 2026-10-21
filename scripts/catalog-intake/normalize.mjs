@@ -36,6 +36,8 @@ export function normalizeBatch(rows) {
     const externalId = requiredText(row.external_id, 'external_id');
     const brand = requiredText(row.brand, 'brand');
     const collection = requiredText(row.collection, 'collection');
+    const collectionKind = optionalText(row.collection_kind, 'collection_kind', 30);
+    if (collectionKind && !['collection','source_group'].includes(collectionKind)) throw new Error('Invalid collection_kind');
     const name = requiredText(row.product_name, 'product_name');
     if (!Array.isArray(row.image_urls) || !row.image_urls.length) throw new Error('Missing image_urls');
     const images = [...new Set(row.image_urls.map(url => httpsUrl(url, 'image_url')))];
@@ -49,7 +51,7 @@ export function normalizeBatch(rows) {
     if (facts.some(f => f.key.length > 80 || f.value.length > 400)) throw new Error('Invalid fact length');
     const sourceDescription = optionalText(row.source_description, 'source_description', 12000);
     const providedNames = {name_ar:row.translation_state === 'name_pending' ? null : optionalText(row.name_ar, 'name_ar'),name_en:optionalText(row.name_en, 'name_en')};
-    const copy = factualDescriptions({brand,collection,external_id:externalId,product_name:name,facts,...providedNames});
+    const copy = factualDescriptions({brand,collection,collection_kind:collectionKind,external_id:externalId,product_name:name,facts,...providedNames});
     const method = row.provenance?.method ?? 'source-export';
     if (!['json-ld','structured-page','source-export','api','feed'].includes(method)) throw new Error('Invalid extraction method');
     const checks = images.map(url => {
@@ -58,7 +60,7 @@ export function normalizeBatch(rows) {
         http_status:Number.isInteger(evidence?.http_status) ? evidence.http_status : null,
         content_type:optionalText(evidence?.content_type, 'image content_type', 100)};
     });
-    const content = { brand, collection, product_name: name, image_urls: images, source_url: sourceUrl,
+    const content = { brand, collection, ...(collectionKind ? {collection_kind:collectionKind} : {}), product_name: name, image_urls: images, source_url: sourceUrl,
       source_description:sourceDescription, facts, ...copy,
       provenance:{source_url:sourceUrl,method,language:optionalText(row.provenance?.language, 'source language', 20)},
       extraction:{identity:'complete',images:'referenced',description:sourceDescription ? 'captured' : 'missing',facts:facts.length ? 'captured' : 'missing'},

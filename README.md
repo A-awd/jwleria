@@ -27,4 +27,4 @@ The private duplicate repository `jwleria-s-gembox` requires a forensic, history
 
 ## Storefront implementation
 
-The current inquiry-only Arabic/English storefront is in `apps/storefront`. It connects to the owner-created dedicated Supabase catalog, with no public prices, visitor accounts or owner product dashboard. The Node development path and Cloudflare Workers deployment path are supported. See [storefront setup](apps/storefront/README.md). The domain cutover and genuine media/WhatsApp launch dependencies remain open; project reconciliation still gates merging the foundation branch.
+The current inquiry-only Arabic/English storefront is in `apps/storefront`. It connects to the owner-created dedicated Supabase catalog, with no public prices, visitor accounts or owner product dashboard. The Node development path and Cloudflare Workers deployment path are supported. See [storefront setup](apps/storefront/README.md). The live domain is connected to the storefront. Genuine product media, WhatsApp delivery and remaining launch dependencies are still incomplete; project reconciliation still gates merging the foundation branch.

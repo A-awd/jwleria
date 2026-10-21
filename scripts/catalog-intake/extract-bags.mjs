@@ -12,6 +12,8 @@ function structured(html){
 }
 // Controlled vocabulary observed in retained source names. Unknown ordinary words stay pending.
 const bagNameModels=[
+  'Prada Promenade','Prada Brique','Prada Double','Prada Aimée','Prada Aimèe','Prada Mariner',
+  'Prada Traveller','Prada Wish','Prada Cross','Prada Duet','Monolith','Prada',
   'Prada Re-Edition','Prada Jardinière','Prada Galleria','Prada Darling','Prada Liaison',
   'Prada Bonnie','Prada Buckle','Prada Cleo','Prada Arqué','Prada Symbole','Prada Panier',
   'Lion Intarsio','Diamond Square','Lion Beads','Treasure Bako','Puzzle Edge','Pebble Dice',
@@ -19,6 +21,7 @@ const bagNameModels=[
   'Pebble','Cupido','Robot','Scarf','Shell','Twisted','Pleats','Panta','Braid','Goya','Loop','Flex','Coil',
 ];
 const bagNameMaterials=[
+ ['lizard skin','جلد السحلية'],['Sheepskin','جلد الغنم'],['ostrich','جلد النعام'],['wicker','نسج ويكر'],
  ['shiny supple calfskin','جلد عجل ليّن لامع'],['supple grained calfskin','جلد عجل ليّن ومحبّب'],
  ['soft grained calfskin','جلد عجل محبّب ناعم'],['fine grained calfskin','جلد عجل ناعم الحبيبات'],
  ['mellow nappa lambskin','جلد حمل نابا ناعم'],['nappa calfskin and check intarsio','جلد عجل نابا وIntarsio بنقشة مربعات'],
@@ -42,6 +45,16 @@ const bagNameMaterials=[
  ['crochet','الكروشيه'],['velvet','المخمل'],['suede','الشمواه'],['leather','الجلد'],['metal','المعدن'],
 ];
 const bagNameTypes=[
+ ['pouch keychain charm','تعليقة مفاتيح بحافظة صغيرة'],['combat boots','حذاء بوت قتالي'],['boots','حذاء بوت'],
+ ['travel pouch','حافظة سفر'],['work bag','حقيبة عمل'],['hand bag','حقيبة يد'],
+ ["men's bag",'حقيبة رجالية'],['toiletry bag','حقيبة أدوات العناية الشخصية'],
+ ['pet bag','حقيبة للحيوانات الأليفة'],['baby bag','حقيبة لمستلزمات الطفل'],
+ ['crossbody camera bag','حقيبة كاميرا تُحمل عبر الجسم'],
+ ['tote bag','حقيبة توت'],['shoulder bag','حقيبة كتف'],['messenger bag','حقيبة ماسنجر'],
+ ['bucket bag','حقيبة باكيت'],['basket bag','حقيبة باسكت'],['hobo bag','حقيبة هوبو'],
+ ['duffle bag','حقيبة دافل'],['duffel bag','حقيبة دافل'],['sling bag','حقيبة سلينغ'],
+ ['travel bag','حقيبة سفر'],['belt bag','حقيبة خصر'],['shopping bag','حقيبة تسوق'],
+ ['crossbody bag','حقيبة تُحمل عبر الجسم'],['camera bag','حقيبة كاميرا'],
  ['passport cover','غلاف جواز سفر'],['card holder','حافظة بطاقات'],['coin purse','محفظة عملات معدنية'],
  ['eyeglasses case','حافظة نظارات'],['glasses case','حافظة نظارات'],['headphone case','حافظة سماعات الرأس'],
  ['smartphone case','حافظة هاتف'],['key case','حافظة مفاتيح'],['keychain charm','تعليقة مفاتيح'],
@@ -49,10 +62,12 @@ const bagNameTypes=[
  ['bumbag','حقيبة خصر'],['handbag','حقيبة يد'],['messenger','حقيبة ماسنجر'],['minaudiere','حقيبة مينوديير'],
  ['keychain','ميدالية مفاتيح'],['sling','حقيبة سلينغ'],['duffle','حقيبة دافل'],['basket','حقيبة باسكت'],
  ['bucket','حقيبة باكيت'],['clutch','حقيبة كلاتش'],['cabas','حقيبة كاباس'],['hobo','حقيبة هوبو'],
- ['purse','حقيبة'],['pocket','حقيبة بوكيت'],['wallet','محفظة'],['pouch','حقيبة صغيرة'],['tote','حقيبة توت'],
+ ['purse','حقيبة'],['pocket','حقيبة بوكيت'],['wallet','محفظة'],['pouch','حافظة'],['tote','حقيبة توت'],
  ['belt','حزام'],['bag','حقيبة'],
 ];
 const bagNameQualifiers=[
+ ['with coin purse','مع محفظة للعملات المعدنية'],['with pouch','مع حقيبة صغيرة'],['with bow','بفيونكة'],
+ ['zip around','بسحاب محيطي'],['zipper','بسحاب'],
  ['with double belt','بحزام مزدوج'],['with shoulder strap','بحزام كتف'],['with keychain','مع ميدالية مفاتيح'],
  ['with belt','بحزام'],['Oversized Logo','بشعار كبير الحجم'],['roll-top','بتصميم علوي قابل للّف'],
  ['reversible','بتصميم قابل للعكس'],['padded','بتبطين'],['narrow','بتصميم ضيّق'],['thin','بتصميم رفيع'],
@@ -60,9 +75,38 @@ const bagNameQualifiers=[
 ];
 const phraseRegex=phrase=>new RegExp(`(?<![\\p{L}\\p{N}])${phrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}(?![\\p{L}\\p{N}])`,'giu');
 
+const exactObservedArabicNames=new Map([
+ ['watering can bag in raffia and calfskin','حقيبة Watering Can من الرافيا وجلد العجل'],
+ ['playing cards with leather case','أوراق لعب مع حافظة جلدية'],
+ ['re-nylon and saffiano leather hand weights carry case','حافظة لحمل الأوزان اليدوية من Re-Nylon وجلد سافيانو'],
+]);
+
+/** Narrow case taxonomy from complete retained names plus declared material; no included-content inference. */
+export function classifyBagCaseCategory({product_name,facts=[]}){
+  const name=plain(product_name),materials=facts.filter(f=>f.key==='material').map(f=>plain(f.value));
+  if(!materials.some(value=>/^(?:Saffiano leather|leather|Re-Nylon)$/i.test(value)))return null;
+  let category=null;
+  if(/^Playing cards with leather case$/i.test(name))category='accessories';
+  else if(/^(?:Saffiano leather|Crocodile leather|Re-Nylon and Saffiano leather) (?:eyeglasses|glasses|key|smartphone) case$/i.test(name)
+    ||/^Re-Nylon and Saffiano leather hand weights carry case$/i.test(name))category='leather-goods';
+  return category?{category_slug:category,method:'exact_source_case_name_and_material',official_name:name,material_values:materials}:null;
+}
+
+/** The main product takes priority over an accessory pouch; carry bags/cases never become footwear. */
+export function classifyBagProductCategory(input,evidence={}){
+  const name=plain(input.product_name),breadcrumbs=Array.isArray(evidence.breadcrumbs)?evidence.breadcrumbs.map(plain):[];
+  if(/^Monolith (?:brushed )?leather and Re-Nylon (?:combat )?boots with pouch$/i.test(name)
+    &&breadcrumbs.some(value=>/^(?:Ankle boots and boots|Boots)$/i.test(value))){
+    return {category_slug:'shoes',method:'explicit_main_boot_product_and_source_category',official_name:name,breadcrumbs};
+  }
+  return classifyBagCaseCategory(input);
+}
+
 /** A name translation only: technical facts, collections, images and permissions are never changed. */
 export function prepareBagArabicName(sourceName,{source_url=''}={}){
   const original=plain(sourceName);
+  const exactCase=exactObservedArabicNames.get(original.toLowerCase());
+  if(exactCase)return {name_ar:exactCase,translation_state:'provided',remaining_terms:[]};
   if(/[\u0600-\u06ff]/.test(original))return {name_ar:original.replace(/[\u200e\u200f]/g,''),translation_state:'provided',remaining_terms:[]};
   let rest=original;const models=[],materials=[],qualifiers=[];let kind=null,size=null;
   const consume=(phrases,out)=>{
@@ -70,7 +114,7 @@ export function prepareBagArabicName(sourceName,{source_url=''}={}){
   };
   consume(bagNameModels.map(m=>[m,null]),models);
   for(const model of models)model.value=model.source;
-  const sizes=[['extra-large','كبير جداً'],['small','صغير'],['medium','متوسط'],['large','كبير'],['mini','ميني'],['nano','نانو'],['XL','XL']];
+  const sizes=[['extra-large','كبير جداً'],['small','صغير'],['medium','متوسط'],['large','كبير'],['mini','ميني'],['micro','ميكرو'],['nano','نانو'],['XL','XL']];
   for(const [term,value] of sizes)if(phraseRegex(term).test(rest)){size=value;rest=rest.replace(phraseRegex(term),' ');break;}
   consume(bagNameQualifiers,qualifiers);
   const forStrap=/^\s*Buckle for\s+(.+?)\s+belt strap\s*$/i.exec(rest);
@@ -122,19 +166,30 @@ export function pradaGalleryEvidence(html,reference){
   return [...results.values()];
 }
 
-/** Repair technical buckle facts from retained official names/technical text; never infer body material from a logo. */
+/** Repair belt/strap/buckle facts from retained official names and technical text; component materials stay distinct. */
 export function repairPradaTechnicalFacts(input){
   if(input.brand!=='Prada'||new URL(input.source_url).origin!=='https://www.prada.com')throw Error('Prada retained source mismatch');
   const raw={...input,facts:[...(input.facts??[])]},name=plain(input.product_name),description=plain(input.source_description);
   const add=(key,value)=>{if(!raw.facts.some(f=>f.key===key&&f.value===value))raw.facts.push({key,value});};
-  if(/\bbelt buckle\b/i.test(name)){
+  const compatibleSuedeStrap=/^Buckle for suede belt strap$/i.test(name);
+  if(/\bbelt buckle\b/i.test(name)||compatibleSuedeStrap){
     add('product_type','belt buckle');
+    if(compatibleSuedeStrap)add('compatible_strap_material','suede');
     if(/\bmetal\b/i.test(name))add('material','metal');
     if(/enameled[ -]metal/i.test(name))add('finish','enameled');
     if(/\bSaffiano\b/i.test(name))add('finish','Saffiano');
     if(/metal lettering logo/i.test(description))add('logo_material','metal');
     if(/belt(?: strap)? not included/i.test(description))add('belt_included','No');
+    if(/\bStrap not included\b/i.test(description))add('strap_included','No');
     if(!raw.name_ar&&/^(?:Saffiano|(?:Enameled[ -])?metal) belt buckle$/i.test(name))raw.name_ar=(/enameled[ -]metal/i.test(name)?'مشبك حزام معدني مطلي بالمينا':/\bmetal\b/i.test(name)?'مشبك حزام معدني':'مشبك حزام سافيانو');
+  }
+  // Match the complete retained product name: material on a compatible accessory is not body material.
+  const belt=/^(Suede|Cotton tape) belt( strap)?$/i.exec(name);
+  if(belt){
+    add('product_type',belt[2]?'belt strap':'belt');
+    add('material',belt[1].toLowerCase());
+    if(!belt[2]&&/\bMetal buckle\b/i.test(description))add('buckle_material','metal');
+    if(/\bBuckle not included\b/i.test(description))add('buckle_included','No');
   }
   return raw;
 }
@@ -155,6 +210,7 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     if(!images.length||images.some(u=>!u.includes(product.sku)))throw Error('Prada image/variant reference mismatch');
     raw={source_id,external_id:product.sku,source_url:page,brand:'Prada',collection:family,product_name:product.name,name_ar:arabicBagName(product.name,family,{brand:'Prada',source_url:page}),name_en:product.name,image_urls:images.map(canonical),source_description:plain(product.description),facts:pradaFacts(product,html),provenance:{method:'structured-page',language:/[\u0600-\u06ff]/.test(product.name)?'ar':'en'}};
     raw=repairPradaTechnicalFacts(raw);
+    if(!named)raw.collection_kind='source_group';
     evidence={reference:product.sku,grouping_kind:named?'official_named_product_family':'official_breadcrumb_group',grouping:family,breadcrumbs,image_binding:'Explicit Product/ImageObject variant references',responsive_gallery:pradaGalleryEvidence(html,product.sku),visual_quality_verified:false};
   }
   if(brand==='bottega-veneta'){
@@ -184,8 +240,13 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     else if(/\bcalfskin\b/i.test(product.name+' '+plain(product.shortDescription)))facts.push({key:'material',value:'calfskin'});
     if(a.c_LW_colorLabel)facts.push({key:'color',value:plain(a.c_LW_colorLabel)});if(a.c_LW_measures)facts.push({key:'dimensions',value:plain(a.c_LW_measures)});
     raw={source_id,external_id:product.id,source_url:page,brand:'LOEWE',collection:family,product_name:product.name,name_ar:arabicBagName(product.name,family,{brand:'LOEWE',source_url:page}),name_en:product.name,image_urls:images,source_description:plain(product.shortDescription),facts,provenance:{method:'structured-page',language:'en'}};
+    if(/^(?:Others|Baskets)$/i.test(family))raw.collection_kind='source_group';
     evidence={reference:product.id,grouping_kind:hasCollection?'explicit_collection_field':'explicit_product_line_field',grouping:family,breadcrumbs:a.c_pdpBreadcrumbs?.map(b=>b.name)??[],image_binding:'Exact selected variant c_allImages; no alternative colors'};
   }
+  const productCategory=classifyBagProductCategory(raw,evidence);
+  if(productCategory)evidence.product_category=productCategory;
+  const caseCategory=classifyBagCaseCategory(raw);
+  if(caseCategory)evidence.case_category=caseCategory;
   return {raw,candidate:normalizeBatch([raw])[0],evidence:{...evidence,source_url:page}};
 }
 

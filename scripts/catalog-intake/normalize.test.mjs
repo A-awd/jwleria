@@ -64,6 +64,17 @@ test('Source material terminology is translated without adding composition claim
   assert.match(candidate.description_en,/Recycled canvas/);
   assert.doesNotMatch(candidate.description_ar,/100%|جلد|عضوي/);
 });
+test('source category groupings remain traceable without becoming manufacturer collections',()=>{
+  const original=normalizeBatch([{...fixture,name_ar:'قطعة اختبار',facts:[{key:'finish',value:'enameled'},{key:'compatible_strap_material',value:'suede'},{key:'belt_included',value:'No'}]}])[0];
+  assert.ok(!('collection_kind' in original));
+  const grouped=normalizeBatch([{...original,collection_kind:'source_group'}])[0];
+  assert.equal(grouped.collection,fixture.collection);assert.equal(grouped.collection_kind,'source_group');
+  assert.doesNotMatch(grouped.description_en,/collection/);assert.doesNotMatch(grouped.description_ar,/مجموعة/);
+  assert.match(grouped.description_en,/Finish: enameled/);assert.match(grouped.description_en,/Compatible belt strap material: suede/);
+  assert.match(grouped.description_ar,/الحزام مرفق: لا/);assert.doesNotMatch(grouped.description_en,/(?:^|; )Material: suede/);
+  assert.notEqual(original.revision_hash,grouped.revision_hash);assert.deepEqual(normalizeBatch([grouped])[0],grouped);
+  assert.throws(()=>normalizeBatch([{...fixture,collection_kind:'guessed'}]),/collection_kind/);
+});
 test('Image references use HEAD, reject foreign origins and never treat HTML/redirect as verified imagery',async()=>{
   let calls=0;
   await assert.rejects(checkImageReferences(['https://foreign.test/a.webp'],{origins:['https://example.com']},()=>{calls++;}),/origin/);
@@ -82,7 +93,8 @@ test('Restricted n8n helper and local importer produce identical enriched candid
   const workflow=readFileSync(new URL('../../workflows/n8n/catalog-normalization.js',import.meta.url),'utf8');
   const start=workflow.indexOf('jsCode:')+7,end=workflow.indexOf('}},output:',start);
   const code=JSON.parse(workflow.slice(start,end));
-  const records=[{...fixture,source_description:'Private source text',facts:[{key:'material',value:'leather'}]}];
+  const records=[{...fixture,source_description:'Private source text',facts:[{key:'material',value:'leather'}]},
+    {...fixture,external_id:'group-test',collection_kind:'source_group',facts:[{key:'finish',value:'enameled'},{key:'strap_included',value:'No'}]}];
   const output=runInNewContext(`(function(){${code}\n})()`,{require:()=>({createHash}),$input:{all:()=>[{json:{records}}]}});
   assert.deepEqual(JSON.parse(JSON.stringify(output.map(i=>i.json))),normalizeBatch(records));
 });

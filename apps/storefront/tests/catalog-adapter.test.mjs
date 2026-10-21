@@ -12,6 +12,7 @@ test('Server query is bounded and filtered without requesting private fields',as
   });
   assert.equal(requested.searchParams.get('limit'),'48');assert.equal(requested.searchParams.get('offset'),'48');
   assert.equal(requested.searchParams.get('brand_slug'),'eq.test-brand');assert.equal(requested.searchParams.get('collection_slug'),'eq.test-collection');
+  assert.equal(requested.searchParams.get('collection_kind'),'eq.collection');
   assert.ok(!requested.searchParams.get('select').includes('price'));
   assert.equal(result.pages,2);assert.equal(result.items[0].isPreview,false);assert.ok(!('price' in result.items[0])&&!('secret' in result.items[0]));
 });
@@ -30,6 +31,12 @@ test('Public summaries use approved factual descriptions without leaking source 
   const product=publicProduct({...row,description_ar:'فولاذ، 41 مم.',description_en:'Steel, 41 mm.',source_description:'Private source copy',provenance:{secret:'private'}});
   assert.equal(product.summary.ar,'فولاذ، 41 مم.');assert.equal(product.summary.en,'Steel, 41 mm.');
   assert.ok(!('source_description' in product)&&!('provenance' in product));
+});
+test('source groups stay qualified in public data and cannot impersonate named collections',()=>{
+  assert.equal(publicProduct(row).collectionKind,'collection');
+  const grouped=publicProduct({...row,collection_kind:'source_group',description_ar:'قطعة بمواصفات موثقة.',description_en:'A factual product.'});
+  assert.equal(grouped.collectionKind,'source-group');assert.equal(grouped.summary.en,'A factual product.');
+  assert.throws(()=>publicProduct({...row,collection_kind:'unknown'}),/collection kind/);
 });
 test('Source extraction requires variant identity and collection; offers never enter candidates',()=>{
   const html='<script type="application/ld+json">invalid JSON</script><script type="application/ld+json">'+JSON.stringify({'@graph':[{'@type':'Product',sku:'variant-1',mpn:'model-1',name:'Piece',image:'https://example.com/image.webp',material:'stainless steel',description:'Source advertising text',offers:{price:900}}]})+'</script>';
