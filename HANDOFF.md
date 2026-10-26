@@ -1,3 +1,11 @@
+## Current handoff — dedicated environment saved, session not launched — 2026-10-26
+
+The owner specifically approved dedicated Jwleria cloud environment creation with Full any-host outbound networking plus one new conversation, preserving Opus5.5 Max, current provider connector scopes, shared Default, credentials and Mac/OS permissions. Codex saved it; the UI now shows `Environment: Jwleria`, `Opus5.5 Max` and `Permissions: Auto`. This supersedes the prior pending choice below. It does not authorize new credentials, broader provider/security modes or production/media/scheduling actions.
+
+The new conversation is still unsent/unlaunched. Finish only the approved repository/branch and current-connector preparation, use the private English brief aligned with the approved Full scope, then launch that one conversation and record its actual result/URL. Do not re-request the settled network/environment approval or change shared Default. Saved configuration is not proof of source egress, a working runner or four-stage completion; verify those in the future session. No new credential, photo, production write, app source or test change occurred during this setup.
+
+Preserve Claude implementation/testing/review ownership, latest implementation preflight3fa1d2d, normal history merges and every separately gated source/media/publication, upload credential and schedule approval. Existing applied migration20261026114541 must not be repeated. Keep private draft/location/account identifiers out of this public repository. Historical pending notes below remain only as the earlier state; Easy Life stays stopped.
+
 ## Current handoff — dedicated environment decision pending — 2026-10-26
 
 Continue from Claude preflight `3fa1d2d08f94c14c64f5f5765b4ea7346b8aef20` on `claude/pensive-mccarthy-40nrlc`, which preserves continuation pointer1bb3c161 through a normal merge. The existing session is confirmed Opus5.5 Max. Keep that model/Max selection and ordinary Auto permissions unchanged.

@@ -1,3 +1,11 @@
+## Dedicated Jwleria environment created; conversation launch pending — 2026-10-26
+
+The owner explicitly approved creating a dedicated cloud environment named Jwleria with Full networking (any outbound host) and one new conversation using the same Opus5.5 Max and current connectors. The stated scope leaves shared Default, provider scopes, credentials and Mac/OS permissions unchanged. This exact approval supersedes the earlier pending proposal below; it is not an inferred general superuser authorization.
+
+Codex saved the new-environment form. Direct UI readback now shows the saved/selected `Environment: Jwleria`, `Opus5.5 Max` and ordinary `Permissions: Auto`. The new conversation has NOT been sent or launched; repository/branch and selected-connector preparation is still underway. No new credential, provider permission expansion, product photo, production write or application change occurred in this setup. The existing applied migration and all separate source/media/publication/credential/scheduling gates remain unchanged.
+
+The private English continuation brief has been aligned with this approved dedicated Full environment. Do not ask again for the already-approved creation/network scope or modify Default. Verify real egress and required tool operation in the future session rather than treating saved configuration as runner success. Claude remains implementation/tests/review owner; Codex coordinates. No new session URL or completed four-stage execution is established yet. Earlier pending entries below preserve the temporal record.
+
 ## Dedicated-environment proposal — approval pending — 2026-10-26
 
 Latest verified Claude preflight head is `claude/pensive-mccarthy-40nrlc` at `3fa1d2d08f94c14c64f5f5765b4ea7346b8aef20`, including the normal merge of continuation pointer1bb3c161. Direct UI readback confirms the current session uses Opus5.5 Max. Its existing `Default` environment is shared, uses Limited networking and has an empty allowed-domain list; denied VM requests did not reach the brand origins. Connector operation remains separate from VM networking.
