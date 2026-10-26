@@ -72,8 +72,9 @@ export async function uploadDerivatives(bundle,{output_directory,storage:config,
   const files=await approvedFiles(bundle,{output_directory,approval_receipt,public_prefix:new URL(`/storage/v1/object/public/${buckets.published}/`,url).href});
   const published=[];
   for(const file of files) {
-    // Content-addressed paths never change meaning, so they may be cached immutably.
-    const response=await fetcher(new URL(`/storage/v1/object/${buckets.published}/${file.path}`,url),{method:'POST',headers:{...headers,'Content-Type':'image/webp','x-upsert':'false','cache-control':'public, max-age=31536000, immutable'},body:file.bytes,redirect:'error',signal:AbortSignal.timeout(20000)});
+    // Content-addressed paths never change meaning, so they need no revalidation; the lifetime stays one day so a
+    // revoked grant's deleted files stop being served from caches soon after revocation.
+    const response=await fetcher(new URL(`/storage/v1/object/${buckets.published}/${file.path}`,url),{method:'POST',headers:{...headers,'Content-Type':'image/webp','x-upsert':'false','cache-control':'public, max-age=86400, immutable'},body:file.bytes,redirect:'error',signal:AbortSignal.timeout(20000)});
     if(!response.ok) {
       const detail=await response.text().catch(()=>'');
       if(response.status!==409&&!/duplicate|already exists/i.test(detail))throw new Error(`Media storage operation failed (${response.status})`);

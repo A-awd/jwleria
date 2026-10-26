@@ -32,10 +32,13 @@ test('gallery binding requires the exact bounded reference; a URL alone is never
   assert.equal(readiness.sources['synthetic-official'].awaiting_permission,1);
 });
 
-test('grant evaluation rejects open licenses, wrong scope, restricted sources and incomplete or lapsed rights',()=>{
+test('grant evaluation rejects incomplete open licenses, wrong scope, restricted sources and incomplete or lapsed rights',()=>{
   const decide=(grant,extra={})=>evaluateMediaGrant(grant,{candidate,asset_url:asset,now:Date.parse('2026-10-26T00:00:00Z'),...extra});
   assert.equal(decide(written).state,'permitted');
-  assert.deepEqual(decide({...written,kind:'open_license'}).reasons,['open_license_requires_attribution_support_and_owner_decision']);
+  // Relabelling a written grant is not an open licence: no owner decision, licence, Commons file or credit.
+  const relabelled=decide({...written,kind:'open_license'});
+  assert.equal(relabelled.state,'rejected');
+  for(const reason of ['owner_decision_reference_missing','license_not_allowed','attribution_creator_missing','original_not_an_allowlisted_commons_file','open_license_names_one_file_not_origins','asset_not_the_granted_original'])assert(relabelled.reasons.includes(reason),reason);
   assert(decide({...written,media_origins:['https://other.test']}).reasons.includes('asset_origin_not_granted'));
   assert(decide(written,{asset_url:'https://media.example.test/other.png'}).reasons.includes('asset_not_in_exact_candidate_gallery'));
   assert(decide({...written,resize:false}).reasons.includes('usage_rights_incomplete'));
@@ -125,10 +128,10 @@ test('end to end: permitted original → private derivatives → verification �
     const tampered=structuredClone(bundle);tampered.evidence[0].public_sha256='0'.repeat(64);
     await assert.rejects(recordMediaApproval(tampered,config,rpc),/check constraint|differs/);
 
-    const stored=new Map();
+    const stored=new Map(),cacheHeaders=new Set();
     const storage=async(url,init={})=>{
       const href=String(url);
-      if(init.method==='POST'){const key=href.split('/object/jwl-product-media/')[1];if(stored.has(key))return new Response('{"error":"Duplicate"}',{status:400});stored.set(key,Buffer.from(init.body));return new Response('{}');}
+      if(init.method==='POST'){cacheHeaders.add(init.headers['cache-control']);const key=href.split('/object/jwl-product-media/')[1];if(stored.has(key))return new Response('{"error":"Duplicate"}',{status:400});stored.set(key,Buffer.from(init.body));return new Response('{}');}
       if(init.method==='DELETE'){for(const key of JSON.parse(init.body).prefixes)stored.delete(key);return new Response('[]');}
       const key=href.split('/object/public/jwl-product-media/')[1];return stored.has(key)?new Response(stored.get(key)):new Response('',{status:404});
     };
@@ -136,6 +139,7 @@ test('end to end: permitted original → private derivatives → verification �
     assert.equal(stored.size,0,'nothing becomes public without a recorded approval');
     const uploaded=await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage);
     assert.deepEqual(uploaded.sort(),bundle.evidence.map(e=>e.public_url).sort());
+    assert.deepEqual([...cacheHeaders],['public, max-age=86400, immutable'],'content-addressed files, cached for one day so revocation cleanup takes effect');
     assert.deepEqual((await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage)).length,4,'re-upload verifies identical existing objects');
     await assert.rejects(uploadDerivatives({...bundle,evidence:bundle.evidence.slice(1)},{output_directory:root,storage:config,approval_receipt:{...receipt,evidence_rows:3}},storage),/differs from approved evidence/);
 
