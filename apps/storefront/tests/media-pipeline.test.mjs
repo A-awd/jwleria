@@ -32,10 +32,13 @@ test('gallery binding requires the exact bounded reference; a URL alone is never
   assert.equal(readiness.sources['synthetic-official'].awaiting_permission,1);
 });
 
-test('grant evaluation rejects open licenses, wrong scope, restricted sources and incomplete or lapsed rights',()=>{
+test('grant evaluation rejects incomplete open licenses, wrong scope, restricted sources and incomplete or lapsed rights',()=>{
   const decide=(grant,extra={})=>evaluateMediaGrant(grant,{candidate,asset_url:asset,now:Date.parse('2026-10-26T00:00:00Z'),...extra});
   assert.equal(decide(written).state,'permitted');
-  assert.deepEqual(decide({...written,kind:'open_license'}).reasons,['open_license_requires_attribution_support_and_owner_decision']);
+  // Relabelling a written grant is not an open licence: no owner decision, licence, Commons file or credit.
+  const relabelled=decide({...written,kind:'open_license'});
+  assert.equal(relabelled.state,'rejected');
+  for(const reason of ['owner_decision_reference_missing','license_not_allowed','attribution_creator_missing','original_not_an_allowlisted_commons_file','open_license_names_one_file_not_origins','asset_not_the_granted_original'])assert(relabelled.reasons.includes(reason),reason);
   assert(decide({...written,media_origins:['https://other.test']}).reasons.includes('asset_origin_not_granted'));
   assert(decide(written,{asset_url:'https://media.example.test/other.png'}).reasons.includes('asset_not_in_exact_candidate_gallery'));
   assert(decide({...written,resize:false}).reasons.includes('usage_rights_incomplete'));

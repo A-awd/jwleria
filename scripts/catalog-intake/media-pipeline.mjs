@@ -15,6 +15,51 @@ const formats={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/a
 const maxBytes=15728640;
 const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const verificationChecks=['exact_reference','color_and_variant','authentic_product_photo','not_generated_or_altered','clear_product_view'];
+// Media requests name the site they serve, as Wikimedia's user-agent policy asks of every client.
+const mediaAgent=agent+' (+https://jwleria.com)';
+const credit=(value,max)=>text(value)&&value.length<=max&&!/\p{Cc}/u.test(value);
+const licence=(label,url)=>Object.freeze({label,url});
+
+/**
+ * The only open licences an open_license grant may cite (SPDX id → visible label and canonical deed), mirrored
+ * by jwl_internal.open_licenses() in the proposed migration. Never NC or ND; ported versions need review.
+ */
+export const openLicenses=Object.freeze({
+  'CC0-1.0':licence('CC0 1.0','https://creativecommons.org/publicdomain/zero/1.0/'),
+  'CC-BY-4.0':licence('CC BY 4.0','https://creativecommons.org/licenses/by/4.0/'),
+  'CC-BY-3.0':licence('CC BY 3.0','https://creativecommons.org/licenses/by/3.0/'),
+  'CC-BY-2.0':licence('CC BY 2.0','https://creativecommons.org/licenses/by/2.0/'),
+  'CC-BY-SA-4.0':licence('CC BY-SA 4.0','https://creativecommons.org/licenses/by-sa/4.0/'),
+  'CC-BY-SA-3.0':licence('CC BY-SA 3.0','https://creativecommons.org/licenses/by-sa/3.0/'),
+  'CC-BY-SA-2.0':licence('CC BY-SA 2.0','https://creativecommons.org/licenses/by-sa/2.0/'),
+});
+
+/**
+ * Whether original_url is the untouched Wikimedia Commons original of the file page page_url: canonical URLs,
+ * the same file name and MediaWiki's md5 hash directories. Checked offline; brand origins never qualify.
+ */
+export function commonsOriginal(page_url,original_url){
+  const page=/^https:\/\/commons\.wikimedia\.org\/wiki\/File:([^/?#\s"<>\\]+)$/.exec(page_url??'');
+  const file=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#\s"<>\\]+)$/.exec(original_url??'');
+  if(!page||!file||page_url.length>2048||original_url.length>2048||new URL(page_url).href!==page_url||new URL(original_url).href!==original_url)return false;
+  let name;try{name=decodeURIComponent(file[3]);if(decodeURIComponent(page[1])!==name)return false;}catch{return false;}
+  const hash=createHash('md5').update(name).digest('hex');
+  return /\.(jpe?g|png|webp)$/i.test(file[3])&&file[1]===hash[0]&&file[2]===hash.slice(0,2);
+}
+function openLicenseGaps(grant){
+  const reasons=[],deed=Object.hasOwn(openLicenses,grant.license_code??'')?openLicenses[grant.license_code]:null;
+  if(!/^[a-z0-9][a-z0-9._:/-]{2,120}$/.test(grant.owner_decision_reference??''))reasons.push('owner_decision_reference_missing');
+  if(!deed)reasons.push('license_not_allowed');else if(grant.license_url!==deed.url)reasons.push('license_url_mismatch');
+  if(!credit(grant.creator,300))reasons.push('attribution_creator_missing');
+  if(!credit(grant.attribution_text,500)||!grant.attribution_text.includes(grant.creator))reasons.push('attribution_text_missing');
+  if(!commonsOriginal(grant.source_page_url,grant.original_url))reasons.push('original_not_an_allowlisted_commons_file');
+  if(Array.isArray(grant.media_origins)&&grant.media_origins.length)reasons.push('open_license_names_one_file_not_origins');
+  return reasons;
+}
+/** The visible credit of an open-licence image, exactly as the proposed migration re-derives it from the grant. */
+export function openLicenseAttribution(grant,changes){
+  return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:grant.source_page_url,changes};
+}
 
 /**
  * Whether each gallery URL itself names the exact variant reference (bounded by non-alphanumerics).
@@ -31,11 +76,14 @@ export function galleryBinding(candidate){
     exact_gallery:images.length>0&&images.every(image=>image.binding==='reference_in_asset_url'),images};
 }
 
-/** An official image URL is never permission. Only an exact recorded grant can permit media use. */
+/**
+ * An official image URL is never permission. Only an exact recorded grant can permit media use. An open_license
+ * grant also needs the owner's recorded decision and complete attribution; the database refuses that kind until
+ * the proposed open-licence migration is approved and applied.
+ */
 export function evaluateMediaGrant(grant,{candidate,asset_url,now=Date.now()}={}){
   if(!grant)return {state:'awaiting_permission',reasons:['no_media_grant']};
-  if(grant.kind==='open_license')return {state:'rejected',reasons:['open_license_requires_attribution_support_and_owner_decision']};
-  if(!['owner_original','written_permission'].includes(grant.kind))return {state:'rejected',reasons:['unsupported_grant_kind']};
+  if(!['owner_original','written_permission','open_license'].includes(grant.kind))return {state:'rejected',reasons:['unsupported_grant_kind']};
   const reasons=[];
   if(!/^[a-z0-9][a-z0-9._-]{2,80}$/.test(grant.grant_reference??''))reasons.push('invalid_grant_reference');
   if(!text(grant.evidence_reference))reasons.push('permission_evidence_missing');
@@ -46,6 +94,13 @@ export function evaluateMediaGrant(grant,{candidate,asset_url,now=Date.now()}={}
   if(grant.kind==='owner_original'){
     if(grant.candidate_id!==candidate?.candidate_id)reasons.push('owner_original_must_name_exact_product');
     if(grant.declared_reference!==candidate?.external_id)reasons.push('declared_reference_mismatch');
+  }else if(grant.kind==='open_license'){
+    if(grant.candidate_id!==candidate?.candidate_id)reasons.push('open_license_must_name_exact_product');
+    if(grant.source_id!==candidate?.source_id)reasons.push('grant_covers_another_source');
+    if(recordedSourceStops[candidate?.source_id])reasons.push('source_acquisition_restricted');
+    reasons.push(...openLicenseGaps(grant));
+    // One grant covers one Commons original; the brand gallery is never a download target here.
+    if(asset_url!==undefined&&asset_url!==grant.original_url)reasons.push('asset_not_the_granted_original');
   }else{
     if(grant.source_id!==candidate?.source_id)reasons.push('grant_covers_another_source');
     // Restricted sources stay closed to downloads until a reviewed code change lifts the stop.
@@ -65,7 +120,7 @@ export function mediaReadiness(candidates,{grants=[]}={}){
     row.candidates++;
     galleryBinding(candidate).exact_gallery?row.exact_reference_gallery++:row.unbound_gallery++;
     const grant=grants.find(g=>g.candidate_id===candidate.candidate_id)??grants.find(g=>!g.candidate_id&&g.source_id===candidate.source_id);
-    const decision=evaluateMediaGrant(grant,{candidate,asset_url:candidate.image_urls?.[0]});
+    const decision=evaluateMediaGrant(grant,{candidate,asset_url:grant?.kind==='open_license'?grant.original_url:candidate.image_urls?.[0]});
     row[decision.state]++;for(const reason of decision.reasons)row.reasons[reason]=(row.reasons[reason]??0)+1;
   }
   return {sources:bySource,approved_photo_library:false};
@@ -92,10 +147,6 @@ async function boundedBytes(response){
 }
 
 /**
- * Downloads one exact gallery original under a permitted written grant. Robots, refusals, rate limits
- * and redirects stop the transfer; the untouched original is preserved privately by checksum.
- */
-/**
  * Per-origin pacing and robots cache shared by every download made through one pacer, so a caller
  * looping over many assets still spaces requests to each media origin.
  */
@@ -114,13 +165,18 @@ export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600
 }
 const defaultPacer=createMediaPacer();
 
+/**
+ * Downloads one exact original: a gallery file under a permitted written grant, or the one Commons original
+ * an open-licence grant names. Robots, refusals, rate limits and redirects stop the transfer; the untouched
+ * original is preserved privately by checksum.
+ */
 export async function acquireOriginal({candidate,asset_url,grant,output_directory},{fetcher=fetch,pacer=defaultPacer}={}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
-  if(decision.state!=='permitted'||grant.kind!=='written_permission')throw Error('Permitted written media grant required: '+decision.reasons.join(','));
+  if(decision.state!=='permitted'||!['written_permission','open_license'].includes(grant.kind))throw Error('Permitted written or open-licence media grant required: '+decision.reasons.join(','));
   const root=await privateRoot(output_directory),url=new URL(asset_url);
   const request=async target=>{
     await pacer.wait(url.origin);
-    const response=await fetcher(target,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});
+    const response=await fetcher(target,{headers:{'User-Agent':mediaAgent},redirect:'manual',signal:AbortSignal.timeout(20000)});
     if([401,403].includes(response.status)){pacer.stop(url.origin);throw Error(`Media source refused access (${response.status})`);}
     if(response.status===429){const v=response.headers.get('retry-after'),s=Number(v);pacer.stop(url.origin,v==null?null:Number.isFinite(s)?pacer.now()+s*1000:Date.parse(v)||null);throw Error('Media source rate limited (429)');}
     if(response.status>=300&&response.status<400)throw Error('Media redirect requires review');
@@ -165,8 +221,10 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
   // The source's own publication flag stays a separate owner decision; it is passed through, never set here.
-  const view={...source,media_permission_reference:grant.grant_reference,media_origins:grant.media_origins??[]};
-  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate,asset,output_directory,
+  // An open-licence original is outside the brand gallery: the binding sees only the one file its grant names.
+  const open=grant.kind==='open_license';
+  const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(grant.original_url).origin]:grant.media_origins??[]};
+  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[grant.original_url]}:candidate,asset,output_directory,
     grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
       revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
       website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode}});
@@ -209,7 +267,14 @@ export function approvalBundle({candidate,grant,items,public_base_url}){
     });
     const canonical=variants.find(v=>v.width===manifest.detail.width);
     if(!variants.some(v=>v.width<=960)||variants.length>8)throw Error('Responsive variants must include a card size and stay bounded');
-    entries.push({src:canonical.src,width:canonical.width,height:canonical.height,variants});
+    const entry={src:canonical.src,width:canonical.width,height:canonical.height,variants};
+    if(grant.kind==='open_license'){
+      // The credit states exactly what the recorded processing did: uncropped, not enlarged, colours unchanged.
+      const p=manifest.processing,visual=manifest.original?.visual_width;
+      if(p?.crop!==false||p.upscale!==false||p.color_adjustments!==false||!Number.isInteger(visual))throw Error('Open-licence derivatives must be recorded uncropped resizes');
+      entry.attribution=openLicenseAttribution(grant,files.some(file=>file.width<visual)?'resized and converted to WebP':'converted to WebP');
+    }
+    entries.push(entry);
   }
   if(new Set(entries.map(e=>e.src)).size!==entries.length)throw Error('Duplicate approved image');
   return {

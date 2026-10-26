@@ -18,7 +18,8 @@ export function currentCandidate(row){
 /**
  * Exact media pilot, in separately reviewable phases. Nothing here records, uploads or publishes without
  * the previous phase's private output and the approvals between phases:
- * - originals: checks the recorded grant and preserves each untouched original by checksum (owner file or granted URL)
+ * - originals: checks the recorded grant and preserves each untouched original by checksum (owner file, granted URL,
+ *   or the one Commons original of an open-licence grant, which stays refused by the database until its migration)
  * - bundle: requires a complete visual verification per original, prepares bounded responsive derivatives and
  *   writes the approval bundle plus the exact connector statement that records it (run only after approval)
  * - upload: after the database receipt, uploads through the approval-bound function and verifies every public file
@@ -31,6 +32,7 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:input.originals?.[0]?.asset_url});
     if(decision.state!=='permitted')throw Error('Recorded grant does not permit this exact product: '+decision.reasons.join(','));
     if(!Array.isArray(input.originals)||!input.originals.length||input.originals.length>20)throw Error('Between one and twenty originals required');
+    if(grant.kind==='open_license'&&input.originals.length!==1)throw Error('An open-licence grant covers exactly one original file');
     const kept=[];
     for(const item of input.originals){
       kept.push(grant.kind==='owner_original'
@@ -55,7 +57,8 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url});
     await save(join(out,'approval-bundle.json'),bundle);
     await writeFile(join(out,'record-approval.sql'),mediaApprovalSql(bundle)+'\n',{mode:0o600});
-    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,uploaded:0,published:0};
+    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,
+      attributed_images:bundle.approval.approved_image_variants.filter(entry=>entry.attribution).length,uploaded:0,published:0};
   }
   if(phase==='upload'){
     const bundle=JSON.parse(await readFile(join(out,'approval-bundle.json'),'utf8'));
