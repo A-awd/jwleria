@@ -1,3 +1,11 @@
+## Current handoff — dedicated environment decision pending — 2026-10-26
+
+Continue from Claude preflight `3fa1d2d08f94c14c64f5f5765b4ea7346b8aef20` on `claude/pensive-mccarthy-40nrlc`, which preserves continuation pointer1bb3c161 through a normal merge. The existing session is confirmed Opus5.5 Max. Keep that model/Max selection and ordinary Auto permissions unchanged.
+
+The owner wants the four stages in one conversation with fewer repeated prompts. A dedicated Jwleria environment plus one future conversation is proposed because Default is shared, Limited and has no allowed domains. Full outbound networking is staged only in an UNSAVED new-environment form: it would allow any outbound host for the dedicated environment, not modify Default. Limited exact-host access remains an alternative. Specific approval for the chosen access is pending; do not infer it from a broad superuser question. No new environment/session, credential or access grant has been saved.
+
+Next dependent action is the owner's exact network/environment choice, followed by only its approved setup and a single continuation using the privately prepared English brief. Align that brief with the approved scope; keep raw prompt/private paths/account identifiers/screenshots outside this public repository. Do not promise approval-free operation, broaden tool/security modes or assume Mac/root/SSH access. Claude owns the four-stage implementation, tests and review; Codex coordinates. Preserve all existing media, WhatsApp, runner/upload, scheduling, source/publication and repository merge gates. No application merge, tests, production action or global/foundation routing change occurred in this preparation.
+
 ## Current handoff — continue from Claude's implementation checkpoint — 2026-10-26
 
 Read branch `claude/pensive-mccarthy-40nrlc` at `d76423ad7b9b1ef672707e504b516ce75a857c4d`, especially its top STATE/HANDOFF and decision0011. This verified remote head contains documentation c342964 and Claude's concurrent-source, missing-only-intake and exact-media-evidence work. Claude owns implementation, tests and self-review. Codex records the pointer and relays results; no application merge into this continuation branch, foundation change or global routing update was performed.
