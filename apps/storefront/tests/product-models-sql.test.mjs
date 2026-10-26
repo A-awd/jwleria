@@ -26,6 +26,8 @@ const tote=(code,color,ar,extra={})=>({source:'longchamp-official',ref:'L1899089
   name_ar:`حقيبة كتف Le Pliage Original، مقاس كبير، ${ar}`,facts:{color,dimensions:'31 x 30 x 19 cm',material:'Recycled canvas',weight:'0.2 kg',...extra}});
 const puzzle=(code,color,extra={})=>({source:'loewe-official',ref:'328.24.W10-'+code,collection:'Puzzle',name_en:'Small Puzzle bag in classic calfskin',name_ar:'حقيبة Puzzle، مقاس صغير، من جلد عجل كلاسيكي',
   facts:{color,dimensions:'24 x 16.5 x 10.5 cm',material:'Classic calfskin',...extra}});
+const fold=(ref,color,ar)=>({source:'loewe-official',ref,collection:'Puzzle',name_en:'Puzzle Fold tote in shiny calfskin - '+ref,name_ar:ar+' - '+ref,
+  facts:{color,dimensions:'34 x 30 x 12 cm',material:'Shiny calfskin'}});
 const fixtures=[
   // As in the captured data, one variant's Arabic name omits the shared case diameter.
   {...datejust('m126200-0001','Silver',jubilee),name_ar:'ساعة رولكس ديت جست'},datejust('m126200-0002','Silver',oyster),datejust('m126200-0005','Bright blue',jubilee),
@@ -45,6 +47,9 @@ const fixtures=[
   tote('001','Black','أسود'),tote('556','Navy','كحلي'),tote('P59','Paper','ورقي'),
   {...tote('001','Black','أسود'),ref:'L2605089001',name_en:'Le Pliage Original M Handbag — Black',name_ar:'حقيبة يد Le Pliage Original، مقاس متوسط، أسود'},
   {...tote('545','Cognac','كونياك'),ref:'L2605089545',name_en:'Le Pliage Original M Handbag — Cognac',name_ar:'حقيبة يد Le Pliage Original، مقاس متوسط، لون آخر'},
+  // Arabic names that end in their own reference: identical without it, and otherwise different.
+  fold('328.25.A11-1100','Black','حقيبة Puzzle Fold'),fold('328.25.A11-2100','White','حقيبة Puzzle Fold'),
+  fold('328.26.B12-1100','Black','حقيبة Puzzle Fold صغيرة'),fold('328.26.B12-2435','Tan','حقيبة Puzzle Fold، مقاس صغير'),
   {source:'bottega-veneta-official',ref:'498478VG0HH2725',collection:'Andiamo',name_en:'Small Andiamo',name_ar:'حقيبة Andiamo صغيرة',facts:{color:'Black',material:'leather',leather_type:'Intrecciato'}},
   {source:'bottega-veneta-official',ref:'498478VG0HH8803',collection:'Andiamo',name_en:'Small Andiamo',name_ar:'حقيبة Andiamo صغيرة',facts:{color:'Fondant',material:'leather',leather_type:'Intrecciato'}},
   {source:'bottega-veneta-official',ref:'498478VG0HH9041',collection:'Andiamo',name_en:'Small Andiamo',name_ar:'حقيبة Andiamo صغيرة',facts:{material:'leather',leather_type:'Intrecciato'}},
@@ -103,7 +108,12 @@ test('grouping follows official model codes, consistency and distinguishable opt
     assert.deepEqual(members('loewe-official:328.24.W10'),['328.24.W10-1100','328.24.W10-2435']);
     for(const ref of ['A510S72X02-1100','A510S72X02-2530'])assert.deepEqual(m.get(ref).basis.mismatched,['dimensions']);
     assert.deepEqual(members('longchamp-official:L1899089'),['L1899089001','L1899089556','L1899089P59']);
-    assert.deepEqual(members('longchamp-official:L2605089'),['L2605089001','L2605089545']);
+    assert.deepEqual(members('loewe-official:328.25.A11'),['328.25.A11-1100','328.25.A11-2100']);
+    for(const ref of ['L2605089001','L2605089545','328.26.B12-1100','328.26.B12-2435']){
+      assert.equal(m.get(ref).rule,'single:arabic-name-mismatch',ref+': its Arabic name differs in a way no reviewed rule explains');
+      assert.equal(m.get(ref).model_key,`${m.get(ref).model_key.split(':')[0]}:${ref}`);
+      assert.equal(m.get(ref).basis.arabic_name,'unresolved');assert.deepEqual(m.get(ref).options,[]);
+    }
     assert.deepEqual(members('bottega-veneta-official:498478VG0HH'),['498478VG0HH2725','498478VG0HH8803']);
     assert.equal(m.get('498478VG0HH9041').rule,'single:missing-option','a variant without a colour fact is not guessed into the colour options');
     for(const ref of ['1BA038_2CX9_F0018_V_8OM','B4084600','B4084700']){assert.equal(m.get(ref).rule,'single:no-linking-evidence');assert.deepEqual(m.get(ref).options,[]);}
@@ -130,8 +140,18 @@ test('positions, primaries and model names are deterministic and never invented'
       'the Arabic model name keeps the diameter every member shares, even when the primary variant name omits it');
     assert.equal(m.get('m126200-0006').basis.arabic_name,'shared_size');
     assert.deepEqual(m.get('L1899089556').model_name,{ar:'حقيبة كتف Le Pliage Original، مقاس كبير',en:'Le Pliage Original L Tote bag'});
-    assert.deepEqual(m.get('L2605089545').model_name,{ar:'حقيبة يد Le Pliage Original، مقاس متوسط، أسود',en:'Le Pliage Original M Handbag'},
-      'an Arabic tail that is not the recorded colour keeps the primary variant name');
+    assert.deepEqual(m.get('L2605089545').model_name,{ar:'حقيبة يد Le Pliage Original، مقاس متوسط، لون آخر',en:'Le Pliage Original M Handbag — Cognac'},
+      'an Arabic tail that is not the recorded colour leaves each row its own names, never another variant\'s colour');
+    assert.deepEqual(m.get('328.25.A11-2100').model_name,{ar:'حقيبة Puzzle Fold',en:'Puzzle Fold tote in shiny calfskin'},'the reference is removed from both names');
+    assert.deepEqual(m.get('328.26.B12-2435').model_name,{ar:'حقيبة Puzzle Fold، مقاس صغير - 328.26.B12-2435',en:'Puzzle Fold tote in shiny calfskin - 328.26.B12-2435'},
+      'a single keeps its own reference and never another variant\'s');
+    for(const [key,list] of models){
+      if(list.length<2)continue;
+      const {ar,en}=list[0].model_name,refs=[...m].filter(([,r])=>r.model_key===key).map(([ref])=>ref);
+      for(const ref of refs)assert.ok(!ar.includes(ref)&&!en.includes(ref),`${key} names no variant reference`);
+      for(const o of list.flatMap(r=>r.options).filter(o=>['dial','colour'].includes(o.kind)))
+        assert.ok(!ar.includes(o.value.ar)&&!ar.includes(o.value.en),`${key} Arabic name carries no ${o.kind} value (${o.value.en})`);
+    }
     assert.deepEqual(m.get('328.24.W10-2435').model_name,{ar:'حقيبة Puzzle، مقاس صغير، من جلد عجل كلاسيكي',en:'Small Puzzle bag in classic calfskin'});
     assert.deepEqual(m.get('m126200-0005').model_name,{ar:'ساعة رولكس ديت جست، 36 مم',en:'Rolex Datejust 36 watch: Oystersteel - m126200-0005'},'a single keeps its existing names');
   }finally{await db.close();await reversed.close();}
@@ -252,7 +272,7 @@ test('derivation writes nothing; only service_role applies it, atomically and re
     for(const role of ['anon','authenticated'])await assert.rejects(as(db,role,()=>db.query('select jwl_internal.apply_product_variants()')),/permission denied/);
     assert.deepEqual(await snapshot(db),start);
     const first=await apply(db);
-    assert.equal(first.rules['rolex-model-number'],8);assert.equal(first.rules['single:ambiguous-options'],2);
+    assert.equal(first.rules['rolex-model-number'],8);assert.equal(first.rules['single:ambiguous-options'],2);assert.equal(first.rules['single:arabic-name-mismatch'],4);
     const mapped=await snapshot(db);
     assert.deepEqual(await apply(db),first,'a replay recomputes the same mapping');
     assert.deepEqual(await snapshot(db),mapped);

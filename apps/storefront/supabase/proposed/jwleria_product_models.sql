@@ -274,17 +274,19 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
     then left(g.noref_ar,length(g.noref_ar)-length(g.shown->'diameter'->>'ar')-2) else g.noref_ar end unsized_ar
   from grouped g
 ), names as (
-  -- Model-level Arabic name: identical names, the same name with or without the shared diameter, or one
-  -- shared base whose only differing tail is the colour. Otherwise the primary variant's own name.
+  -- Model-level Arabic name, always an existing name without its reference: identical names, the same
+  -- name with or without the shared diameter, or one shared base whose only differing tail is each
+  -- member's recorded colour. Any other difference may be a variant's colour or reference, so the
+  -- group is not formed and its rows stay single (single:arabic-name-mismatch).
   select g.source_id,g.code,min(g.core_en) en,
     case when count(distinct g.noref_ar)=1 then 'shared'
       when count(distinct g.unsized_ar)=1 and bool_and(g.shown ? 'diameter') and count(distinct g.shown->'diameter'->>'ar')=1 then 'shared_size'
       when v.kinds='{color}'::text[] and count(distinct substring(g.noref_ar from '^(.*\S)، [^،]+$'))=1
         and bool_and(coalesce(substring(g.noref_ar from '^.*\S، ([^،]+)$')=g.shown->'color'->>'ar'
           or lower(substring(g.noref_ar from '^.*\S، ([^،]+)$'))=lower((g.shown->'color'->>'en') collate "C"),false))
-        then 'colour_tail' else 'primary' end ar_source,
+        then 'colour_tail' end ar_source,
     min(g.noref_ar) shared_ar,min(g.noref_ar) filter (where g.unsized_ar<>g.noref_ar) sized_ar,
-    min(substring(g.noref_ar from '^(.*\S)، [^،]+$')) base_ar,(array_agg(g.name_ar order by g.pos))[1] primary_ar
+    min(substring(g.noref_ar from '^(.*\S)، [^،]+$')) base_ar
   from sized g join vary3 v on v.source_id=g.source_id and v.code=g.code
   group by g.source_id,g.code,v.kinds
 ), specs as (
@@ -294,13 +296,14 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
   cross join lateral (select k.kind,k.label_ar,k.label_en,k.ord from kinds k where k.fact=d.fact and (k.source_id is null or k.source_id=d.source_id) order by k.source_id nulls last limit 1) l
   group by d.id
 )
+-- n is joined only for a group whose Arabic model name is established; any other row is a single.
 select s.id,
-  case when g.id is not null then s.source_id||':'||s.code else coalesce(s.source_id,'unbound')||':'||s.reference end,
-  coalesce(g.pos,0)=0,coalesce(g.pos,0)::integer,
-  case when g.id is null then jsonb_build_object('ar',s.name_ar,'en',s.name_en)
-    else jsonb_build_object('ar',case n.ar_source when 'shared' then n.shared_ar when 'shared_size' then n.sized_ar when 'colour_tail' then n.base_ar else n.primary_ar end,'en',n.en) end,
-  coalesce(o.o,'[]'::jsonb),coalesce(sp.s,'[]'::jsonb),
-  case when g.id is not null then s.grule
+  case when n.code is not null then s.source_id||':'||s.code else coalesce(s.source_id,'unbound')||':'||s.reference end,
+  coalesce(case when n.code is not null then g.pos end,0)=0,coalesce(case when n.code is not null then g.pos end,0)::integer,
+  case when n.code is null then jsonb_build_object('ar',s.name_ar,'en',s.name_en)
+    else jsonb_build_object('ar',case n.ar_source when 'shared' then n.shared_ar when 'shared_size' then n.sized_ar else n.base_ar end,'en',n.en) end,
+  case when n.code is not null then coalesce(o.o,'[]'::jsonb) else '[]'::jsonb end,coalesce(sp.s,'[]'::jsonb),
+  case when n.code is not null then s.grule
     when not s.bound then 'single:unbound-revision'
     when s.grule is null then 'single:no-linking-evidence'
     when s.code is null then 'single:unrecognised-reference'
@@ -308,9 +311,11 @@ select s.id,
     when c.gsize=1 then 'single:only-variant'
     when cp.id is null then 'single:missing-option'
     when u.dup>1 then 'single:ambiguous-options'
+    when g.id is not null then 'single:arabic-name-mismatch'
     else 'single:only-variant' end,
   s.candidate_id,s.revision_hash,coalesce(cmp.v,'{}'::jsonb),
-  jsonb_strip_nulls(jsonb_build_object('model_code',s.code,'code_group_size',c.gsize,'mismatched',m.keys,'option_facts',to_jsonb(v3.kinds),'group_size',g.kept_n,'arabic_name',n.ar_source))
+  jsonb_strip_nulls(jsonb_build_object('model_code',s.code,'code_group_size',c.gsize,'mismatched',m.keys,'option_facts',to_jsonb(v3.kinds),
+    'group_size',case when n.code is not null then g.kept_n end,'arabic_name',case when n.code is not null then n.ar_source when g.id is not null then 'unresolved' end))
 from stripped s
 left join coded c on c.id=s.id
 left join compared cmp on cmp.id=s.id
@@ -318,8 +323,8 @@ left join mismatch m on m.source_id=s.source_id and m.code=s.code
 left join complete cp on cp.id=s.id
 left join unique_options u on u.id=s.id
 left join grouped g on g.id=s.id
-left join vary3 v3 on g.id is not null and v3.source_id=s.source_id and v3.code=s.code
-left join names n on g.id is not null and n.source_id=s.source_id and n.code=s.code
+left join names n on g.id is not null and n.source_id=s.source_id and n.code=s.code and n.ar_source is not null
+left join vary3 v3 on n.code is not null and v3.source_id=s.source_id and v3.code=s.code
 left join options o on o.id=s.id
 left join specs sp on sp.id=s.id
 $$;
