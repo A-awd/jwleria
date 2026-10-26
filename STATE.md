@@ -17,7 +17,7 @@ Claude Code implemented, tested and self-reviewed the remaining background-proce
   - owner-original derivatives and a required complete visual-verification record;
   - an approval bundle, with the approval recorded before upload (upload needs the database receipt);
   - content-addressed upload, `image_variants` in publish, and revoked-file cleanup.
-- Migration `apps/storefront/supabase/migrations/20261026120000_jwleria_media_evidence_and_missing_intake.sql`:
+- Migration `apps/storefront/supabase/migrations/20261026114541_jwleria_media_evidence_and_missing_intake.sql` (applied; see below):
   - append-only `media_grants`/`media_assets` evidence;
   - an approval trigger binding every file to its grant kind, its exact gallery URL and granted origin or owner original, its reference and its dimensions;
   - final revocation cascading to withdrawal, plus a publish-time live-grant check;
@@ -33,7 +33,19 @@ Claude Code implemented, tested and self-reviewed the remaining background-proce
 - **GitHub:** clone, fetch and push to the work branch work.
 - **Supabase:** reads work. Live readback today: 4,097 active public factual rows, 4,150 private candidates, 6,877 revisions, 0 media approvals, 0 storage buckets, 6 registered migrations.
   - Gallery binding: 3,103 candidates have every gallery URL naming the exact reference (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 372, Bottega 8). 1,047 do not (Cartier, VCA, AP, IWC, JLC, Panerai, Piaget, 19 Longchamp). This is identity evidence only; no media permission exists.
-  - Migration `20261026120000_jwleria_media_evidence_and_missing_intake` is **NOT APPLIED**. The exact blocker: the Claude Code auto-mode classifier denied `mcp__Supabase__apply_migration` on project `saymzvrvtfrjftmtqtor` with reason `[Production Deploy]`. No approval card was offered, and Codex observed the same denial. A follow-up read-only `execute_sql` check was also denied in that context and was not retried. `list_migrations` afterwards still returned exactly the same 6 migrations (latest `20261021101140_jwleria_collection_kind`), so no partial change occurred. Permission modes and allow rules were not changed. Applying it needs a specific owner production-approval exception, which Codex will present.
+  - Migration history:
+    - The first attempt was denied by the Claude Code auto-mode classifier as `[Production Deploy]`. No card was offered, and nothing was applied (6 migrations remained). Permission modes and allow rules were not changed, and no `execute_sql` workaround was used.
+    - The owner then explicitly approved this exact production update, relayed by Codex: project `saymzvrvtfrjftmtqtor`, migration `jwleria_media_evidence_and_missing_intake`, file SHA-256 `0a09c65e…999b24` at commit `3036d7a`.
+    - The pre-check listed 6 migrations, so it was not a duplicate. `apply_migration` succeeded. Its statements were the file's, minus the outer `begin;`/`commit;`, because the tool supplies its own transaction.
+    - The registered version is `20261026114541`, and the repository file was renamed to match.
+  - **Post-apply readback:**
+    - `list_migrations` shows 7 migrations.
+    - Existing data is unchanged against the pre-apply baseline: public projection hash `f929f0974933890b08574e2d19038803`, candidate hash `0c7944b68e67530c850a51125b0daa84`, source registry hash `46121b5982fbb98645f91d0367f69f32`.
+    - Counts are unchanged: 4,097 active, 4,150 candidates, 6,877 revisions, 0 approvals, 0 published revisions. New tables hold 0 grants and 0 assets.
+    - Anonymous and signed-in users have no privilege on the new tables or functions. The service role can read and insert evidence and set only `revoked_at`; it cannot update or delete evidence, and it can run the four RPCs.
+    - The 4 new triggers are installed and enabled. Anonymous visitors can still run `jwl_brand_page`.
+    - Security advisor: only the informational "RLS enabled, no policy" notes (9 = 7 existing + the 2 intended new private tables).
+    - Performance advisor: 6 informational unindexed-foreign-key notes, 3 of them on the new, empty tables. They are acceptable at zero volume; add indexes before media volume grows.
 - **Cloudflare:** `jwleria-storefront` Worker read works. The connector has no Worker upload/deploy tool and the container has no deploy credential, so no deployment is possible from this session.
 - **n8n:** search and read work.
   - The inactive "Jwleria — Catalog candidate normalization" draft was stale (no `collection_kind` or calibre support), so its code node alone was synced to the repository normalizer.
