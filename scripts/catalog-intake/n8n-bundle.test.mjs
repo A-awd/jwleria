@@ -7,15 +7,23 @@ import {originPlan,robotsStep,sitemapStep,collect} from './n8n-intake.mjs';
 import {pageStep} from './n8n-intake-page.mjs';
 
 const nodeRequire=createRequire(import.meta.url);
-// Mirrors the observed n8n Code-node sandbox: no URL/URLSearchParams/structuredClone, only crypto requirable.
+// Mirrors the observed n8n Code-node sandbox (2026-10-26): no URL/URLSearchParams/structuredClone, only crypto
+// requirable, Object.defineProperty(ies) replaced by `() => ({})` and Object.getPrototypeOf altered.
+const sandboxPatches='Object.defineProperty=()=>({});Object.defineProperties=()=>({});Object.getPrototypeOf=()=>({});';
+function sandbox(globals){
+  const context=vm.createContext(globals);
+  vm.runInContext(sandboxPatches,context);
+  return context;
+}
 function runNode(name,{input=[],nodes={},staticData={}}){
-  const context=vm.createContext({
+  const context=sandbox({
     require:id=>{if(id!=='crypto')throw Error(`Module '${id}' is disallowed`);return nodeRequire('crypto');},
     $input:{first:()=>input[0],all:()=>input},
     $:node=>{if(!nodes[node])throw Error('No data for '+node);return {first:()=>nodes[node][0],all:()=>nodes[node]};},
     $getWorkflowStaticData:()=>staticData,$execution:{id:'4242',mode:'test'},TextEncoder,TextDecoder,
   });
   assert.equal(vm.runInContext('typeof URL',context),'undefined');
+  assert.equal(vm.runInContext('const o={};Object.defineProperty(o,"a",{value:1});o.a',context),undefined,'the replica disables defineProperty like n8n');
   // n8n stores item JSON between nodes, so compare plain data as it would arrive.
   return vm.runInContext('(async()=>{'+codeNodes[name]+'\n})()',context).then(out=>JSON.parse(JSON.stringify(out)));
 }
@@ -82,14 +90,19 @@ test('a gate refusal, a missing reviewed sitemap and the schedule config fail cl
   for(const forbidden of ['SUPABASE_SECRET_KEY','sb_secret_','service_role'])assert(!source.includes(forbidden),forbidden);
   assert.doesNotMatch(source,/eyJ[A-Za-z0-9_-]{20,}\./,'no token of any kind');
   assert.throws(()=>scheduleWorkflow('bad id'),/sub-workflow id/);
-  assert.match(scheduleWorkflow('AbCdEf123456'),/value:"AbCdEf123456"/);
+  const schedule=scheduleWorkflow('AbCdEf123456');
+  assert.match(schedule,/value:"AbCdEf123456"/);
+  for(const generated of [source,schedule]){
+    const databaseNodes=generated.match(/type:'n8n-nodes-base\.postgres'[^\n]*/g);
+    assert(databaseNodes.length>=2&&databaseNodes.every(n=>n.includes('disabled:true')),'every database node is generated disabled');
+  }
 });
 
 test('an altered copy of a node library refuses to run',async()=>{
   const original=codeNodes['Plan origin'];
   const tampered=original.replace('reviewed_sitemap_missing','reviewed_sitemap_absent');
   assert.notEqual(tampered,original);
-  const context=vm.createContext({require:id=>nodeRequire(id==='crypto'?'crypto':'none'),$input:{first:()=>({json:{gate:{granted:false}}})},$:()=>({first:()=>({json:{config:{}}})})});
+  const context=sandbox({require:id=>nodeRequire(id==='crypto'?'crypto':'none'),$input:{first:()=>({json:{gate:{granted:false}}})},$:()=>({first:()=>({json:{config:{}}})})});
   await assert.rejects(vm.runInContext('(async()=>{'+tampered+'\n})()',context),/integrity check failed/);
   assert.deepEqual(JSON.parse(JSON.stringify(await vm.runInContext('(async()=>{'+original+'\n})()',context))),[]);
 });
