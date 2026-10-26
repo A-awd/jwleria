@@ -3,6 +3,7 @@ import type { Locale, PublicProduct } from '../contracts/catalog';
 import { t } from '../i18n/ui';
 import { artClass } from './view';
 import { productMedia } from './product-media.mjs';
+import ImageCredit from './ImageCredit.astro';
 
 // Only this variant's own approved images, bounded; a variant without one renders nothing here.
 const LIMIT = 8;
@@ -20,9 +21,7 @@ const views = product.images.slice(0, LIMIT).map((src, i) => ({ src, i, label: s
       </div>
       <figcaption>
         {v.label}
-        {v.credit && <span class="gallery-credit">
-          {s.variants.credit.photo}: <bdi>{v.credit.creator}</bdi> · <a href={v.credit.licenseUrl} rel="license nofollow"><bdi>{v.credit.license}</bdi></a> · <a href={v.credit.sourceUrl} rel="nofollow">{s.variants.credit.source}</a>{v.credit.changes && <> · {s.variants.credit.changes}: <bdi>{v.credit.changes}</bdi></>}
-        </span>}
+        {v.credit && <ImageCredit credit={v.credit} locale={locale} />}
       </figcaption>
     </figure>
   ))}

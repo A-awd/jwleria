@@ -144,10 +144,12 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       await Promise.all([noScript.waitForURL(`**/${locale}/products/preview-watch-ivory-five-link/`), noScript.locator('a[data-variant-link][data-option-key="five-link"]').click()]);
       assert.equal(await noScript.locator('[data-variant-reference]').textContent(), ref('preview-watch-ivory-five-link'));
       assert.equal(await noScript.locator('a[data-variant-link][aria-current="true"][data-option-key="five-link"]').count(), 1);
-      // A non-primary variant page names the model's primary variant as its canonical twin.
+      // A non-primary variant page names the model's primary variant as its canonical twin. The canonical
+      // link is emitted only on a live release, so here it is absent; it shares pageLinks() with these
+      // alternates, which the unit tests cover for the canonical URL too.
       const primary = `/${locale}/products/${model.primary.slug}/`;
       assert.ok((await noScript.locator(`link[rel="alternate"][hreflang="${locale}"]`).getAttribute('href')).endsWith(primary));
-      for (const canonical of await noScript.locator('link[rel="canonical"]').evaluateAll(ls => ls.map(l => l.getAttribute('href')))) assert.ok(canonical.endsWith(primary));
+      assert.equal(await noScript.locator('link[rel="canonical"]').count(), 0, 'a preview server is never a live release');
       await plain.close();
     }
   } finally { await browser.close(); }

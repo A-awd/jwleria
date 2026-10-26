@@ -2,7 +2,10 @@
 /** @typedef {import('../contracts/catalog').ProductVariant} Variant */
 /** @typedef {import('../contracts/catalog').LocalizedText} Text */
 
-const ORDER = ['dial', 'bracelet', 'colour', 'color', 'size', 'ring_size', 'bracelet_size', 'bag_size', 'case_size'];
+/** A product page reads at most this many variants of its model (the prepared jwl_product_model bound). */
+export const MODEL_PAGE_VARIANTS = 60;
+
+const ORDER = ['dial', 'bracelet', 'bracelet_material', 'colour', 'color', 'size', 'ring_size', 'bracelet_size', 'bag_size', 'case_size'];
 const rank = kind => (ORDER.indexOf(kind) + ORDER.length + 1) % (ORDER.length + 1);
 
 /** Known option kinds first, in a stable display order; others alphabetically after them. */

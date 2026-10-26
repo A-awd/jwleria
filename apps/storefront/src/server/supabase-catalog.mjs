@@ -1,9 +1,8 @@
 import {responsiveImages} from './responsive-media.mjs';
-import {assembleModel, orderOptionKinds, singleModel} from '../components/variant-selection.mjs';
+import {MODEL_PAGE_VARIANTS, assembleModel, orderOptionKinds, singleModel} from '../components/variant-selection.mjs';
 
 const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_kind,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,image_variants,media_state,published_at';
 const MODEL_FIELDS = `${FIELDS},model_key,model_name,variant_count,options_summary`;
-const MAX_VARIANTS = 60;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const kindPattern = /^[a-z][a-z0-9_]{0,39}$/;
 // Model text is never stricter than the row it comes from, or applying the migration would break pages
@@ -204,7 +203,7 @@ export function publicVariant(row) {
  */
 export function productModel(data, slug) {
   if (data === null) return undefined;
-  if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.variants) || data.variants.length > MAX_VARIANTS) throw new Error('Invalid product model response');
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.variants) || data.variants.length > MODEL_PAGE_VARIANTS) throw new Error('Invalid product model response');
   const product = publicProduct(data.product);
   if (product.slug !== slug) throw new Error('Invalid product model identity');
   if (data.model_key === null || data.model_key === undefined || !data.variants.length) return singleModel(product);

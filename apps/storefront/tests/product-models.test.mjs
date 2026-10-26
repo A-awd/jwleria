@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync,readFileSync,readdirSync} from 'node:fs';
 import {queryModels,readProductModel,readBrandModelsPage,productModel,publicProduct} from '../src/server/supabase-catalog.mjs';
+import {shareImage} from '../src/components/product-media.mjs';
 
 // Each test uses its own project URL: the "feature missing" memory is per isolate and per configuration.
 let n=0;
@@ -157,6 +158,10 @@ test('open-licence attribution is carried only as a validated credit on its own 
  assert.deepEqual(publicProduct({...approved,image_variants:[{...image,attribution:credit}]}).imageVariants[0].attribution,{creator:'A. Photographer',license:'CC BY 4.0',licenseUrl:credit.license_url,sourceUrl:credit.source_url,changes:'Resized and encoded as WebP'});
  for(const bad of [{...credit,creator:''},{...credit,license_url:'javascript:alert(1)'},{...credit,source_url:'http://insecure.example.org/'},{...credit,grant_reference:'private'},null])
   assert.throws(()=>publicProduct({...approved,image_variants:[{...image,attribution:bad}]}),/attribution/);
+ // A share preview cannot show the credit, so a credited first image is never the og:image.
+ assert.equal(shareImage(publicProduct({...approved,image_variants:[image]})),src);
+ assert.equal(shareImage(publicProduct({...approved,image_variants:[{...image,attribution:credit}]})),null);
+ assert.equal(shareImage(publicProduct(row)),null,'a facts-only row has no share image');
 });
 
 // After the prepared migration is merged, its signatures must match what this adapter sends; a mismatch

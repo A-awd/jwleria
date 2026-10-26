@@ -4,6 +4,10 @@ const cardSizes=`(min-width: 100rem) 344px, (min-width: 80rem) calc((100vw - cla
 const detailSizes='(min-width: 100rem) 840px, (min-width: 60rem) 54vw, 86vw';
 const secondaryDetailSizes='(min-width: 100rem) 414px, (min-width: 60rem) calc(27vw - .375rem), 86vw';
 
+/** The share image (og:image): the first image, unless it needs a visible credit, which a share preview cannot carry.
+ * @param {import('../contracts/catalog').PublicProduct} product */
+export const shareImage=product=>product.image&&!product.imageVariants?.[0]?.attribution?product.image:null;
+
 /** @param {import('../contracts/catalog').PublicProduct} product */
 export function productMedia(product,index=0,kind='card',columns=4){
  const src=product.images[index];

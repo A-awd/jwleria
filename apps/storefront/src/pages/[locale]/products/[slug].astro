@@ -5,8 +5,9 @@ import ProductGallery from '../../../components/ProductGallery.astro';
 import VariantSelector from '../../../components/VariantSelector.astro';
 import VariantText from '../../../components/VariantText.astro';
 import { getBrand, getCategory, getProductModel, getRelatedProducts } from '../../../server/catalog';
-import { href, isLocale, t } from '../../../i18n/ui';
+import { href, isLocale, optionLabel, t } from '../../../i18n/ui';
 import { productInquiry } from '../../../components/view';
+import { shareImage } from '../../../components/product-media.mjs';
 
 const { locale, slug } = Astro.params;
 if (!isLocale(locale)) return Astro.redirect('/404/');
@@ -20,7 +21,7 @@ const [brand, related] = await Promise.all([getBrand(product.brandSlug), getRela
 const category = getCategory(product.categorySlug);
 const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
 ---
-<BaseLayout locale={locale} title={grouped ? `${model.name[locale]} — ${product.reference}` : model.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} canonicalPath={`/products/${model.primary.slug}/`} image={product.image}>
+<BaseLayout locale={locale} title={grouped ? `${model.name[locale]} — ${product.reference}` : model.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} canonicalPath={`/products/${model.primary.slug}/`} image={shareImage(product)}>
   <div class="wrap">
     <nav class="crumb" style="padding-top:1.5rem">
       <a href={href(locale, '/catalog/')}>{s.nav.catalog}</a>
@@ -43,7 +44,7 @@ const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
           <dt>{s.reference}</dt><dd><bdi data-variant-reference>{product.reference}</bdi></dd>
           {brand && product.collectionKind !== 'source-group' && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
           {category && <><dt>{s.product.category}</dt><dd>{category.name[locale]}</dd></>}
-          {product.specs.map((spec) => <><dt>{spec.label[locale]}</dt><dd><VariantText text={spec.value[locale]} lang={spec.valueLang} /></dd></>)}
+          {product.specs.map((spec) => <><dt>{optionLabel(locale, spec.kind, spec.label)}</dt><dd><VariantText text={spec.value[locale]} lang={spec.valueLang} /></dd></>)}
         </dl>
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
           <h2 id="h-how">{s.product.how}</h2>

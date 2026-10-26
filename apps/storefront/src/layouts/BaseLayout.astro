@@ -7,7 +7,7 @@ import type { Locale } from '../contracts/catalog';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import InquiryDialog from '../components/InquiryDialog.astro';
-import { dirOf, href, t } from '../i18n/ui';
+import { dirOf, pageLinks, t } from '../i18n/ui';
 
 /** canonicalPath names the page's canonical twin (a model's primary variant); path stays the visited page. */
 interface Props { locale: Locale; title: string; description: string; path: string; canonicalPath?: string; image?: string | null }
@@ -22,7 +22,7 @@ if (origin) {
   if (site.protocol !== 'https:' || site.username || site.password || site.pathname !== '/' || site.search || site.hash) throw new Error('Invalid site origin');
 }
 const absolute = (value: string) => site ? new URL(value, site).href : value;
-const canonical = absolute(href(locale, canonicalPath));
+const links = pageLinks(locale, canonicalPath, site);
 ---
 <!doctype html>
 <html lang={locale} dir={dirOf(locale)}>
@@ -32,7 +32,7 @@ const canonical = absolute(href(locale, canonicalPath));
     <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={live ? 'index, follow' : 'noindex, nofollow'} />
-    {live && <link rel="canonical" href={canonical} />}
+    {live && <link rel="canonical" href={links.canonical} />}
     <meta name="theme-color" content="#fcfaf6" />
     <link rel="stylesheet" href="/fonts/preview-fonts.css" />
     <script is:inline>
@@ -43,10 +43,8 @@ const canonical = absolute(href(locale, canonicalPath));
         }
       }
     </script>
-    <link rel="alternate" hreflang="ar" href={absolute(href('ar', canonicalPath))} />
-    <link rel="alternate" hreflang="en" href={absolute(href('en', canonicalPath))} />
-    <link rel="alternate" hreflang="x-default" href={absolute(href('ar', canonicalPath))} />
-    {live && <meta property="og:url" content={canonical} />}
+    {links.alternates.map(([lang, url]) => <link rel="alternate" hreflang={lang} href={url} />)}
+    {live && <meta property="og:url" content={links.canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Jwleria" />
     <meta property="og:title" content={fullTitle} />
