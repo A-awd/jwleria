@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import ProductGallery from '../../../components/ProductGallery.astro';
 import VariantSelector from '../../../components/VariantSelector.astro';
+import VariantText from '../../../components/VariantText.astro';
 import { getBrand, getCategory, getProductModel, getRelatedProducts } from '../../../server/catalog';
 import { href, isLocale, t } from '../../../i18n/ui';
 import { productInquiry } from '../../../components/view';
@@ -42,7 +43,7 @@ const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
           <dt>{s.reference}</dt><dd><bdi data-variant-reference>{product.reference}</bdi></dd>
           {brand && product.collectionKind !== 'source-group' && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
           {category && <><dt>{s.product.category}</dt><dd>{category.name[locale]}</dd></>}
-          {product.specs.map((spec) => <><dt>{spec.label[locale]}</dt><dd>{spec.valueLang ? <bdi lang={spec.valueLang} dir="ltr">{spec.value[locale]}</bdi> : spec.value[locale]}</dd></>)}
+          {product.specs.map((spec) => <><dt>{spec.label[locale]}</dt><dd><VariantText text={spec.value[locale]} lang={spec.valueLang} /></dd></>)}
         </dl>
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
           <h2 id="h-how">{s.product.how}</h2>

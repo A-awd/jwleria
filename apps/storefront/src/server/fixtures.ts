@@ -172,7 +172,8 @@ const products: readonly PublicProduct[] = productSeeds.map(
 );
 
 // Synthetic model groups exercise variant selection; every reference, value and fact is a labelled preview.
-type OptionSeed = { label: LocalizedText; values: Record<string, LocalizedText> };
+// valueLang 'en' marks a value with no reviewed Arabic translation, kept in English as live data can be.
+type OptionSeed = { label: LocalizedText; values: Record<string, LocalizedText & { valueLang?: 'en' }> };
 type ModelSeed = {
   key: string;
   categorySlug: string;
@@ -201,7 +202,7 @@ const modelSeeds: readonly ModelSeed[] = [
       bracelet: { label: { ar: 'السوار', en: 'Bracelet' }, values: {
         'three-link': { ar: 'سوار ثلاثي تجريبي', en: 'Preview three-link' },
         'five-link': { ar: 'سوار خماسي تجريبي', en: 'Preview five-link' },
-        leather: { ar: 'حزام جلدي تجريبي', en: 'Preview leather strap' },
+        leather: { ar: 'Preview leather strap', en: 'Preview leather strap', valueLang: 'en' },
       } },
     },
     specs: [
@@ -251,7 +252,10 @@ const modelSeeds: readonly ModelSeed[] = [
 ];
 
 const modelVariants = new Map(modelSeeds.map((model, index): [string, ProductVariant[]] => [model.key, model.variants.map(([sequence, slug, chosen, images], position) => {
-  const options = Object.entries(chosen).map(([kind, key]) => ({ kind, key, label: model.options[kind].label, value: model.options[kind].values[key] }));
+  const options = Object.entries(chosen).map(([kind, key]) => {
+    const { valueLang, ...value } = model.options[kind].values[key];
+    return { kind, key, label: model.options[kind].label, value, ...(valueLang ? { valueLang } : {}) };
+  });
   const words = (l: 'ar' | 'en') => [model.name[l], ...options.map((o) => o.value[l])].join(l === 'ar' ? '، ' : ', ');
   return {
     id: `4c4a0000-2026-4003-8000-${String(sequence).padStart(12, '0')}`,
@@ -269,7 +273,7 @@ const modelVariants = new Map(modelSeeds.map((model, index): [string, ProductVar
     isPreview: true,
     addedAt: `2026-10-26T09:${String(sequence - 100).padStart(2, '0')}:00.000Z`,
     options,
-    specs: [...model.specs, ...options.map(({ kind, label, value }) => ({ kind, label, value }))],
+    specs: [...model.specs, ...options.map(({ kind, label, value, valueLang }) => ({ kind, label, value, ...(valueLang ? { valueLang } : {}) }))],
     position,
     isPrimary: position === 0,
   };

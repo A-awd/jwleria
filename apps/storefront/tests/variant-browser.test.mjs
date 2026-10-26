@@ -103,6 +103,8 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       const green = link('dial', 'green');
       const note = page.locator(`[id="${await green.getAttribute('aria-describedby')}"]`);
       assert.ok((await note.textContent()).includes(spec('preview-watch-green-leather', 'bracelet')), 'the value names the bracelet it changes to');
+      // The leather strap has no reviewed Arabic translation: its English text is marked on chip and note alike.
+      for (const value of [link('bracelet', 'leather'), note]) assert.equal(await value.locator('bdi[lang="en"][dir="ltr"]').textContent(), 'Preview leather strap');
       await green.tap();
       await shown(ref('preview-watch-green-leather'));
       s = await state();

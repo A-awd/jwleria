@@ -37,7 +37,12 @@ export function englishCount(kind: string, n: number) {
   const [one, other] = EN_COUNTS[countKind(kind, EN_COUNTS)];
   return `${n} ${n === 1 ? one : other}`;
 }
-type Change = { label: string; value: string };
+/** One changed option in a note; valueLang 'en' marks a value kept in its English source text. */
+type Change = { label: string; value: string; valueLang?: 'en' };
+/** A note in reading order: plain text, and the changed options whose values the selector marks by language. */
+type ChangeNote = (string | Change)[];
+const changeNote = (lead: string, separator: string, item: (label: string) => string) => (changes: Change[]): ChangeNote =>
+  [lead, ...changes.flatMap((c, i) => [...(i ? [separator] : []), item(c.label), c])];
 
 const ar = {
   langName: 'العربية',
@@ -104,7 +109,7 @@ const ar = {
     group: 'خيارات هذا الطراز',
     kinds: { dial: 'لون الميناء', bracelet: 'السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
     count: arabicCount,
-    changes: (changes: Change[]) => `يغيّر ${changes.map((c) => `${c.label} إلى ${c.value}`).join('، ')}`,
+    changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
     credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات' },
   },
@@ -204,7 +209,7 @@ const en: typeof ar = {
     group: 'Options for this model',
     kinds: { dial: 'Dial', bracelet: 'Bracelet', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter' },
     count: englishCount,
-    changes: (changes: Change[]) => `Changes ${changes.map((c) => `${c.label.charAt(0).toLowerCase()}${c.label.slice(1)} to ${c.value}`).join(', ')}`,
+    changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
     showing: (ref: string) => `Showing reference ${ref}`,
     credit: { photo: 'Photo', source: 'Source', changes: 'Changes' },
   },

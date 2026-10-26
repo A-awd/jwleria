@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const {arabicCount,englishCount,optionCounts,optionLabel,resultCount,t}=await import('../src/i18n/ui.ts');
+const plain=parts=>parts.map(p=>typeof p==='string'?p:p.value).join('');
 
 test('Arabic option counts use the grammatical form for each number',()=>{
  assert.deepEqual([1,2,3,10,11,26,100,103,111].map(n=>arabicCount('dial',n)),['لون ميناء واحد','لونا ميناء','3 ألوان ميناء','10 ألوان ميناء','11 لون ميناء','26 لون ميناء','100 لون ميناء','103 ألوان ميناء','111 لون ميناء']);
@@ -26,8 +27,12 @@ test('option labels come from the reviewed i18n strings, falling back to the cat
  assert.equal(optionLabel('ar','dial',{ar:'x',en:'x'}),'لون الميناء');assert.equal(optionLabel('en','dial',{ar:'x',en:'x'}),'Dial');
  assert.equal(optionLabel('ar','bracelet',{ar:'x',en:'x'}),'السوار');assert.equal(optionLabel('en','colour',{ar:'x',en:'x'}),'Colour');
  assert.equal(optionLabel('ar','ring_size',{ar:'x',en:'x'}),'مقاس الخاتم');assert.equal(optionLabel('en','strap_width',{ar:'عرض الحزام',en:'Strap width'}),'Strap width');
- assert.equal(t('ar').variants.changes([{label:'السوار',value:'جلد'}]),'يغيّر السوار إلى جلد');
- assert.equal(t('en').variants.changes([{label:'Bracelet',value:'Leather'}]),'Changes bracelet to Leather');
+ assert.equal(plain(t('ar').variants.changes([{label:'السوار',value:'جلد'}])),'يغيّر السوار إلى جلد');
+ assert.equal(plain(t('en').variants.changes([{label:'Bracelet',value:'Leather'}])),'Changes bracelet to Leather');
+ const oyster={label:'السوار',value:'Oyster, three-piece solid links',valueLang:'en'};
+ const note=t('ar').variants.changes([oyster,{label:'لون الميناء',value:'أزرق'}]);
+ assert.equal(plain(note),'يغيّر السوار إلى Oyster, three-piece solid links، لون الميناء إلى أزرق');
+ assert.deepEqual(note.filter(p=>typeof p!=='string').map(p=>p.valueLang),['en',undefined],'each value stays its own part, so an English one can be marked');
 });
 
 test('listing totals name what they count: models from the model projection, catalog rows otherwise',()=>{

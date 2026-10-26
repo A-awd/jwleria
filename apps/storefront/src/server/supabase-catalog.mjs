@@ -6,7 +6,13 @@ const MODEL_FIELDS = `${FIELDS},model_key,model_name,variant_count,options_summa
 const MAX_VARIANTS = 60;
 const slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const kindPattern = /^[a-z][a-z0-9_]{0,39}$/;
-const text = (value, max) => typeof value === 'string' && value.trim().length > 0 && value.length <= max && !/[\u0000-\u001f\u007f]/.test(value);
+// Model text is never stricter than the row it comes from, or applying the migration would break pages
+// that render today: model names copy or shorten the row's names (publicProduct accepts any length),
+// option and spec values join the row's facts (intake allows 40 of up to 400 characters each), and
+// option keys are derived from those values. Text is checked for presence, identifiers also for
+// control characters.
+const present = value => typeof value === 'string' && value.trim().length > 0;
+const identifier = value => present(value) && !/[\u0000-\u001f\u007f]/.test(value);
 const integer = (n, fallback, max) => Number.isFinite(Number(n)) && Number(n) >= 1 ? Math.min(Math.floor(Number(n)), max) : fallback;
 
 export function normalizeSearch(s = '') {
@@ -99,14 +105,19 @@ async function request(config, query, fetcher, relation = 'jwl_catalog', feature
 }
 
 const localized = (value, message) => {
-  if (!value || typeof value !== 'object' || Array.isArray(value) || !text(value.ar, 300) || !text(value.en, 300)) throw new Error(message);
+  if (!value || typeof value !== 'object' || Array.isArray(value) || !present(value.ar) || !present(value.en)) throw new Error(message);
   return {ar: value.ar, en: value.en};
+};
+// A value without a reviewed Arabic translation keeps its English text and is marked as English.
+const valueLang = (value, message) => {
+  if (![undefined, null, 'ar', 'en'].includes(value)) throw new Error(message);
+  return value === 'en' ? {valueLang: /** @type {'en'} */ ('en')} : {};
 };
 
 /** @returns {import('../contracts/catalog').ModelSummary | undefined} */
 function modelSummary(row) {
   if (row.model_key === null || row.model_key === undefined) return undefined;
-  if (!text(row.model_key, 300)) throw new Error('Invalid model identity');
+  if (!identifier(row.model_key)) throw new Error('Invalid model identity');
   const name = localized(row.model_name, 'Invalid model name');
   const count = row.variant_count;
   const summary = row.options_summary ?? {};
@@ -166,17 +177,17 @@ function variantOptions(value) {
   if (!Array.isArray(value) || value.length > 8) throw new Error('Invalid variant options');
   const kinds = new Set();
   return value.map(o => {
-    if (!o || typeof o !== 'object' || !kindPattern.test(o.kind) || kinds.has(o.kind) || !text(o.key, 120)) throw new Error('Invalid variant options');
+    if (!o || typeof o !== 'object' || !kindPattern.test(o.kind) || kinds.has(o.kind) || !identifier(o.key)) throw new Error('Invalid variant options');
     kinds.add(o.kind);
-    return {kind: o.kind, key: o.key, label: localized(o.label, 'Invalid variant options'), value: localized(o.value, 'Invalid variant options')};
+    return {kind: o.kind, key: o.key, label: localized(o.label, 'Invalid variant options'), value: localized(o.value, 'Invalid variant options'), ...valueLang(o.value_lang, 'Invalid variant options')};
   });
 }
 
 function variantSpecs(value) {
   if (!Array.isArray(value) || value.length > 40) throw new Error('Invalid variant specs');
   return value.map(s => {
-    if (!s || typeof s !== 'object' || !kindPattern.test(s.kind) || ![undefined, null, 'ar', 'en'].includes(s.value_lang)) throw new Error('Invalid variant specs');
-    return {kind: s.kind, label: localized(s.label, 'Invalid variant specs'), value: localized(s.value, 'Invalid variant specs'), ...(s.value_lang === 'en' ? {valueLang: 'en'} : {})};
+    if (!s || typeof s !== 'object' || !kindPattern.test(s.kind)) throw new Error('Invalid variant specs');
+    return {kind: s.kind, label: localized(s.label, 'Invalid variant specs'), value: localized(s.value, 'Invalid variant specs'), ...valueLang(s.value_lang, 'Invalid variant specs')};
   });
 }
 
@@ -197,7 +208,7 @@ export function productModel(data, slug) {
   const product = publicProduct(data.product);
   if (product.slug !== slug) throw new Error('Invalid product model identity');
   if (data.model_key === null || data.model_key === undefined || !data.variants.length) return singleModel(product);
-  if (!text(data.model_key, 300)) throw new Error('Invalid product model identity');
+  if (!identifier(data.model_key)) throw new Error('Invalid product model identity');
   const name = localized(data.model_name, 'Invalid model name');
   const variants = data.variants.map(publicVariant);
   if (new Set(variants.map(v => v.slug)).size !== variants.length || new Set(variants.map(v => v.id)).size !== variants.length || variants.some(v => v.brandSlug !== product.brandSlug)) throw new Error('Invalid product model variants');

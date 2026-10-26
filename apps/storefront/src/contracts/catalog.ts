@@ -68,12 +68,13 @@ export interface PublicProduct {
   model?: ModelSummary;
 }
 
-/** One real option value of a variant (for example its dial colour). */
+/** One real option value of a variant (for example its dial colour); valueLang as on VariantSpec. */
 export interface VariantOption {
   kind: string;
   key: string;
   label: LocalizedText;
   value: LocalizedText;
+  valueLang?: 'en';
 }
 
 /** A translated fact; valueLang 'en' marks a value that keeps its English source text. */

@@ -15,19 +15,23 @@ export const optionKey = (variant, kind) => variant.options.find(o => o.kind ===
 /** @param {Variant} variant */
 export const optionSignature = variant => variant.options.map(o => `${o.kind}=${o.key}`).sort().join('|');
 
+/** @typedef {{key: string, value: Text, valueLang?: 'en'}} Value valueLang 'en' marks a value kept in its English source text */
+/** @param {import('../contracts/catalog').VariantOption} option @returns {Value} */
+const valueOf = ({key, value, valueLang}) => ({key, value, ...(valueLang ? {valueLang} : {})});
+
 /**
  * Option kinds with at least two distinct real values, in the order the variants carry them.
  * @param {Variant[]} variants ordered by position
- * @returns {{kind: string, label: Text, values: {key: string, value: Text}[]}[]}
+ * @returns {{kind: string, label: Text, values: Value[]}[]}
  */
 export function optionAxes(variants) {
   const axes = new Map();
   for (const variant of variants) for (const option of variant.options) {
     if (!axes.has(option.kind)) axes.set(option.kind, {kind: option.kind, label: option.label, values: new Map()});
     const values = axes.get(option.kind).values;
-    if (!values.has(option.key)) values.set(option.key, option.value);
+    if (!values.has(option.key)) values.set(option.key, valueOf(option));
   }
-  return [...axes.values()].filter(a => a.values.size > 1).map(a => ({kind: a.kind, label: a.label, values: [...a.values].map(([key, value]) => ({key, value}))}));
+  return [...axes.values()].filter(a => a.values.size > 1).map(a => ({kind: a.kind, label: a.label, values: [...a.values.values()]}));
 }
 
 const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
@@ -63,12 +67,12 @@ export function selectorAxes(variants, selected) {
     const currentKey = optionKey(selected, axis.kind);
     return {
       kind: axis.kind, label: axis.label,
-      current: axis.values.find(v => v.key === currentKey)?.value,
-      values: axis.values.map(({key, value}) => {
-        const target = key === currentKey ? selected : closestVariant(variants, selected, axis.kind, key, axes);
+      current: axis.values.find(v => v.key === currentKey),
+      values: axis.values.map(value => {
+        const target = value.key === currentKey ? selected : closestVariant(variants, selected, axis.kind, value.key, axes);
         const changes = axes.filter(a => a.kind !== axis.kind && optionKey(target, a.kind) !== optionKey(selected, a.kind))
-          .flatMap(a => { const option = target.options.find(o => o.kind === a.kind); return option ? [{kind: a.kind, label: a.label, value: option.value}] : []; });
-        return {key, value, slug: target.slug, reference: target.reference, current: target === selected, changes};
+          .flatMap(a => { const option = target.options.find(o => o.kind === a.kind); return option ? [{kind: a.kind, label: a.label, ...valueOf(option)}] : []; });
+        return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes};
       }),
     };
   });

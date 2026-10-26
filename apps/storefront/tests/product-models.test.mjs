@@ -35,6 +35,37 @@ test('listings read one bounded, counted model page with the same filters and se
   await assert.rejects(queryModels(config(),{},async()=>page([{...modelRow,...bad}],1)),/model/i);
 });
 
+test('model text is never stricter than the catalog row it comes from',async()=>{
+ // Intake accepts names and fact values of up to 400 characters (names derived from product_name have no
+ // bound) and one kind may join several facts; publicProduct renders any non-empty name today.
+ const long=n=>'x'.repeat(n-1)+'y';
+ const named={...row,name_en:long(1000),name_ar:long(1000),reference:`m${long(400)}`,slug:'m126334-0001'};
+ assert.equal(publicProduct(named).name.en.length,1000,'today\'s read renders the long name');
+ const listed=await queryModels(config(),{},async()=>page([{...named,model_key:`unbound:${named.reference}`,model_name:{ar:named.name_ar,en:named.name_en},variant_count:1,options_summary:{}}],1));
+ assert.equal(listed.items[0].model.name.en.length,1000,'the same row through the model view');
+ const joined=`${long(400)}, ${long(400)}`;
+ const big=[
+  variant('m126334-0001',0,[{...option('dial',long(409),long(400),long(400)),value_lang:'en'}],{specs:[{kind:'material',label:{ar:'المادة',en:'Material'},value:{ar:joined,en:joined},value_lang:'en'},{kind:'lining',label:{ar:'البطانة',en:'Lining'},value:{ar:long(400),en:long(400)}}]}),
+  variant('m126334-0002',1,[option('dial','blue','أزرق','Blue')]),
+ ];
+ const model=productModel({...envelope('m126334-0001'),model_name:{ar:named.name_ar,en:named.name_en},variants:big},'m126334-0001');
+ assert.equal(model.name.ar.length,1000);assert.equal(model.selected.options[0].key.length,409);assert.equal(model.selected.specs[0].value.en.length,802);
+ assert.deepEqual(model.selected.specs.map(s=>s.valueLang),['en',undefined]);
+ for(const bad of [{model_name:{ar:'  ',en:'x'}},{model_key:''},{model_key:'rolex:\u0007'}])
+  assert.throws(()=>productModel({...envelope(),...bad},'m126334-0002'),/model/i);
+ for(const key of ['',' ','dial\nblue'])
+  assert.throws(()=>productModel({...envelope(),variants:[{...variants[0],options:[option('dial',key,'أزرق','Blue')]},...variants.slice(1)]},'m126334-0002'),/options/);
+});
+
+test('an option value kept in its English source text is marked as English, like a spec value',()=>{
+ const english=[{...variants[0],options:[{...option('dial','candy-pink','Candy pink','Candy pink'),value_lang:'en'},option('bracelet','jubilee','جوبيلي','Jubilee')]},...variants.slice(1)];
+ const model=productModel({...envelope('m126334-0001'),variants:english},'m126334-0001');
+ assert.deepEqual(model.selected.options[0],{kind:'dial',key:'candy-pink',label:{ar:'لون الميناء',en:'Dial'},value:{ar:'Candy pink',en:'Candy pink'},valueLang:'en'});
+ assert.equal('valueLang' in model.selected.options[1],false,'a translated value carries no marker');
+ assert.equal('valueLang' in productModel({...envelope(),variants:[{...variants[0],options:[{...option('dial','blue','أزرق','Blue'),value_lang:'ar'}]},...variants.slice(1)]},'m126334-0002').variants[0].options[0],false);
+ assert.throws(()=>productModel({...envelope(),variants:[{...variants[0],options:[{...option('dial','blue','أزرق','Blue'),value_lang:'fr'}]},...variants.slice(1)]},'m126334-0002'),/options/);
+});
+
 test('a missing model view falls back to today\'s catalog read and is remembered briefly',async()=>{
  const c=config();const calls=[];
  const fetcher=async url=>{calls.push(url.pathname);return url.pathname.endsWith('jwl_catalog_models')?missing('PGRST205','jwl_catalog_models'):page([row],1);};
