@@ -30,3 +30,30 @@ Native n8n SDK workflow sources are under `workflows/n8n`. Both helper workflows
 `collect-longchamp.mjs PRIVATE_INVENTORY.json PRIVATE_OUTPUT_DIRECTORY` collects a reviewed official-origin inventory with fresh robots checks, two-second-or-longer spacing, resume snapshots, and a stop on access refusal, rate limit, unreviewed redirect or challenge. Output must stay outside this tracked repository. URL discovery is not content validation; failed or incomplete records remain excluded. No image download, media license, publication or source approval is granted by running the collector.
 
 The JLC movement fallback requires the same official URL SKU, the exact internal reference in the primary product details, and its labelled movement feature block. It recovers movement type and calibre only; navigation calibres and movement thickness never become case specifications. A retained exact-page recovery must preserve the current gallery/provenance and pass the current-revision and content-invariant guards before any private correction or factual publication.
+
+## Concurrent per-origin queues and incremental intake (2026-10-26)
+
+`source-queue.mjs PRIVATE_QUEUE_CONFIG.json` runs one queue per official origin, concurrently (default up to 8). Each origin keeps its own pacing (at least 2 seconds, the larger of config, database `min_interval_seconds` and robots crawl-delay), fresh robots, resumable private state, URL/identity deduplication and bounded transient retry with exponential backoff. One origin's stop never halts another:
+
+- 401/403, a challenge page or repeated redirects → `blocked`; the origin is not contacted again until a reviewer copies the recorded `review_token` into `resume_after_review`.
+- 429 → `rate_limited` with `not_before` = the later of Retry-After and a 15-minute minimum; later runs return `deferred` without a request.
+- 5xx/network errors → retried up to `max_attempts` per run and `max_total_attempts` overall, then `failed: transient_exhausted`; consecutive failures pause an unhealthy origin.
+- robots refusal, a single redirect, 404/410 or an extraction failure → explicit per-URL failure; nothing is followed or guessed.
+
+Cartier, Van Cleef & Arpels, CELINE and RIMOWA are refused in code (`recordedSourceStops`); a config flag cannot restart them. A `registry` snapshot of `jwl_internal.sources` narrows (never widens) local permissions. State, journals and outputs must be outside this repository.
+
+Each newly validated record is handed to `incremental.mjs` as soon as it is extracted. It compares it with a fresh `candidate_id → revision_hash` export (`select jsonb_object_agg(candidate_id,revision_hash) from jwl_internal.candidates`): `missing` records may be ingested, `unchanged` ones are skipped and `changed_requires_review` ones are written to `review-required.ndjson` and never overwritten, because guarded name repairs and live rows depend on the current revision. With `ingest_missing: true` and server credentials in the environment, missing records go in batches through `jwl_ingest_missing_batch`, which re-checks existence in the database. Publication readiness (facts, Arabic name, factual summary, approved category) is reported separately and still goes through the current-revision factual guard. Nothing is published and no image bytes are fetched by the queue.
+
+## Exact authentic-media path
+
+`media-pipeline.mjs` reports gallery binding (`reference_in_asset_url` only when the URL contains the exact reference between non-alphanumeric boundaries) and permission readiness. An official image URL is never permission. Supported grants are `written_permission` (rights holder or authorized distributor: source, media origins, website publication, resize and WebP encoding, private evidence reference) and `owner_original` (the owner's own photograph of one exact product with a declared reference). Open licenses are rejected until attribution display and an owner decision exist; restricted sources stay closed to downloads.
+
+Order of operations, each bound to the exact candidate revision:
+
+1. `acquireOriginal` (written permission: robots, refusal, redirect and type stops; untouched original preserved privately by SHA-256) or `keepOwnerOriginal` (no network).
+2. `prepareGrantedMedia` → existing responsive helper (320/640/960 card sizes plus ≤1600 detail, lossless WebP, no crop or upscale). The source's own publication flag remains a separate owner decision and is never set by these tools.
+3. `requireVerification`: a recorded visual check of that exact original — reference, colour/variant, authentic photo, not generated or altered, clear view. Code never creates a passing record.
+4. `approvalBundle` → exact public URLs, one evidence row per file and the approval; `uploadDerivatives` uploads content-addressed files (immutable cache) and verifies any existing object byte-for-byte.
+5. `recordMediaApproval` (`jwl_record_media_approval`) stores evidence and approval atomically; the database trigger re-checks every file's grant, reference and dimensions. `publish` then sends `image_variants`; revoking or expiring a grant withdraws the product.
+
+Migration `20261026120000_jwleria_media_evidence_and_missing_intake.sql` adds the append-only `media_grants`/`media_assets` evidence tables, the approval trigger, grant expiry/revocation cascade and the missing-only intake RPC. It creates no grant, asset, approval or publication.
