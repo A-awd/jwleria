@@ -6,6 +6,8 @@
 begin;
 
 -- One row per public catalog row once mapped. A row without a mapping is shown as its own model.
+-- model_key is '<source>:<model code>' for a grouped model and '<source>:ref:<reference>' for a single.
+-- No model code contains ':', so a single can never take a grouped model's key.
 create table public.jwl_product_variants (
   product_id text primary key references public.jwl_catalog(id) on delete cascade,
   model_key text not null check (model_key ~ '^[a-z0-9]+(-[a-z0-9]+)*:.' and length(model_key)<=200),
@@ -157,7 +159,7 @@ language sql stable security invoker set search_path='' as $$
 with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
   -- Official model number: m126334-0001 -> 126334; letters stay part of it (126610LN differs from 126610LV).
   ('rolex-official','rolex-model-number','^m([0-9]+[A-Za-z]*)-[0-9]{4}$',array['diameter','material','movement','water_resistance','power_reserve'],array['color','bracelet_type','bracelet_material']),
-  ('loewe-official','loewe-style-code','^(.+)-[0-9]{4}$',array['dimensions','material'],array['color']),
+  ('loewe-official','loewe-style-code','^([^:]+)-[0-9]{4}$',array['dimensions','material'],array['color']),
   ('longchamp-official','longchamp-model-code','^([A-Z0-9]{8})[A-Z0-9]{3}$',array['dimensions','material'],array['color']),
   ('bottega-veneta-official','bottega-style-material','^([0-9]{6}[A-Z0-9]{5})[0-9]{4}$',array['material','leather_type'],array['color'])
 ), kinds(fact,source_id,kind,label_ar,label_en,ord) as (values
@@ -298,7 +300,7 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
 )
 -- n is joined only for a group whose Arabic model name is established; any other row is a single.
 select s.id,
-  case when n.code is not null then s.source_id||':'||s.code else coalesce(s.source_id,'unbound')||':'||s.reference end,
+  case when n.code is not null then s.source_id||':'||s.code else coalesce(s.source_id,'unbound')||':ref:'||s.reference end,
   coalesce(case when n.code is not null then g.pos end,0)=0,coalesce(case when n.code is not null then g.pos end,0)::integer,
   case when n.code is null then jsonb_build_object('ar',s.name_ar,'en',s.name_en)
     else jsonb_build_object('ar',case n.ar_source when 'shared' then n.shared_ar when 'shared_size' then n.sized_ar else n.base_ar end,'en',n.en) end,

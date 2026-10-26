@@ -47,6 +47,11 @@ const fixtures=[
   tote('001','Black','أسود'),tote('556','Navy','كحلي'),tote('P59','Paper','ورقي'),
   {...tote('001','Black','أسود'),ref:'L2605089001',name_en:'Le Pliage Original M Handbag — Black',name_ar:'حقيبة يد Le Pliage Original، مقاس متوسط، أسود'},
   {...tote('545','Cognac','كونياك'),ref:'L2605089545',name_en:'Le Pliage Original M Handbag — Cognac',name_ar:'حقيبة يد Le Pliage Original، مقاس متوسط، لون آخر'},
+  // An eight-character reference equals the model code of L1899089001 and the others; it is not that group.
+  {...tote('','Black','أسود'),ref:'L1899089'},
+  {...puzzle('','Black'),ref:'X10-1234-5678'},{...puzzle('','Tan'),ref:'X10-1234-9999'},{...puzzle('','Black'),ref:'X10-1234'},
+  // A model code never contains ':', so no group can take the key of the single 'Q7'.
+  {...puzzle('','Black'),ref:'ref:Q7-1100'},{...puzzle('','Tan'),ref:'ref:Q7-2435'},{...puzzle('','Black'),ref:'Q7'},
   // Arabic names that end in their own reference: identical without it, and otherwise different.
   fold('328.25.A11-1100','Black','حقيبة Puzzle Fold'),fold('328.25.A11-2100','White','حقيبة Puzzle Fold'),
   fold('328.26.B12-1100','Black','حقيبة Puzzle Fold صغيرة'),fold('328.26.B12-2435','Tan','حقيبة Puzzle Fold، مقاس صغير'),
@@ -99,19 +104,26 @@ test('grouping follows official model codes, consistency and distinguishable opt
     const members=key=>[...m].filter(([,r])=>r.model_key===key).map(([ref])=>ref).sort();
     assert.deepEqual(members('rolex-official:126200'),['m126200-0001','m126200-0002','m126200-0006','m126200-0010']);
     for(const ref of ['m126200-0005','m126200-0029'])assert.equal(m.get(ref).rule,'single:ambiguous-options',ref+' shares dial and bracelet with another variant');
-    assert.equal(m.get('m126200-0005').model_key,'rolex-official:m126200-0005');
+    assert.equal(m.get('m126200-0005').model_key,'rolex-official:ref:m126200-0005');
     assert.deepEqual(members('rolex-official:126334'),['m126334-0001','m126334-0003']);
     for(const ref of ['m126300-0001','m126300-0002']){assert.equal(m.get(ref).rule,'single:inconsistent');assert.deepEqual(m.get(ref).basis.mismatched,['diameter']);}
     assert.deepEqual(members('rolex-official:278274'),['m278274-0001','m278274-0002'],'another recorded fact tells identical dial/bracelet apart');
     assert.deepEqual(m.get('m278274-0001').options.map(o=>o.kind),['bracelet_material']);
-    for(const ref of ['m126610ln-0001','m126610lv-0002']){assert.equal(m.get(ref).rule,'single:only-variant');assert.equal(m.get(ref).model_key,'rolex-official:'+ref);}
+    for(const ref of ['m126610ln-0001','m126610lv-0002']){assert.equal(m.get(ref).rule,'single:only-variant');assert.equal(m.get(ref).model_key,'rolex-official:ref:'+ref);}
     assert.deepEqual(members('loewe-official:328.24.W10'),['328.24.W10-1100','328.24.W10-2435']);
     for(const ref of ['A510S72X02-1100','A510S72X02-2530'])assert.deepEqual(m.get(ref).basis.mismatched,['dimensions']);
     assert.deepEqual(members('longchamp-official:L1899089'),['L1899089001','L1899089556','L1899089P59']);
+    assert.equal(m.get('L1899089').rule,'single:unrecognised-reference');
+    assert.equal(m.get('L1899089').model_key,'longchamp-official:ref:L1899089','a single never takes the key of the group its reference resembles');
+    assert.deepEqual(members('loewe-official:X10-1234'),['X10-1234-5678','X10-1234-9999']);
+    assert.equal(m.get('X10-1234').rule,'single:only-variant');assert.equal(m.get('X10-1234').model_key,'loewe-official:ref:X10-1234');
+    for(const ref of ['ref:Q7-1100','ref:Q7-2435','Q7'])assert.equal(m.get(ref).rule,'single:unrecognised-reference',ref);
+    const groupKeys=new Set([...m.values()].filter(r=>!r.rule.startsWith('single:')).map(r=>r.model_key));
+    for(const [ref,r] of m)if(r.rule.startsWith('single:'))assert.ok(!groupKeys.has(r.model_key),ref+' has a key of its own');
     assert.deepEqual(members('loewe-official:328.25.A11'),['328.25.A11-1100','328.25.A11-2100']);
     for(const ref of ['L2605089001','L2605089545','328.26.B12-1100','328.26.B12-2435']){
       assert.equal(m.get(ref).rule,'single:arabic-name-mismatch',ref+': its Arabic name differs in a way no reviewed rule explains');
-      assert.equal(m.get(ref).model_key,`${m.get(ref).model_key.split(':')[0]}:${ref}`);
+      assert.equal(m.get(ref).model_key,`${m.get(ref).model_key.split(':')[0]}:ref:${ref}`);
       assert.equal(m.get(ref).basis.arabic_name,'unresolved');assert.deepEqual(m.get(ref).options,[]);
     }
     assert.deepEqual(members('bottega-veneta-official:498478VG0HH'),['498478VG0HH2725','498478VG0HH8803']);
@@ -216,7 +228,7 @@ test('the models view collapses each model to one card and the RPC returns the b
     assert.ok(big.variants.some(v=>v.reference==='A000X01-1062'),'the requested variant is always included');
     assert.deepEqual(big.variants.map(v=>v.position),[...big.variants.map(v=>v.position)].sort((a,b)=>a-b));
     const lone=await rpc(slugOf('B4084600'));
-    assert.equal(lone.model_key,'cartier-official:B4084600');assert.deepEqual(lone.variants.map(v=>v.reference),['B4084600']);
+    assert.equal(lone.model_key,'cartier-official:ref:B4084600');assert.deepEqual(lone.variants.map(v=>v.reference),['B4084600']);
     assert.equal(await rpc('no-such-product'),null);assert.equal(await rpc('Invalid Slug'),null);
   }finally{await db.close();}
 });
