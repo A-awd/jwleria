@@ -6,29 +6,23 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {officialAdapters,officialVariantIdentity,extractOfficialProducts,prepareOfficialCandidates} from './extract-official-brands.mjs';
 import {extractBagPage,bagSourceProfile} from './extract-bags.mjs';
 import {extractLongchamp} from './extract-longchamp.mjs';
+import {agent,recordedSourceStops,sourceChallenge,environmentDenial,sitemapLocations,declaredSitemaps,pickInventory,officialIdentity} from './intake-core.mjs';
+export {agent,recordedSourceStops,sourceChallenge,environmentDenial,sitemapLocations,declaredSitemaps};
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
-export const agent='JwleriaCatalog/1.0';
 const repository=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
 // Invalid numeric config must never disable pacing or bounds; it falls back to the safe default.
 const number=(value,fallback,min,max)=>{if(value==null)return fallback;const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;};
 const within=(root,path)=>{const tail=relative(root,path);return !tail||(!tail.startsWith('..'+sep)&&tail!=='..'&&!isAbsolute(tail));};
 
-/** Recorded permission/access boundaries. Lifting one needs a reviewed code change, never a config flag. */
-export const recordedSourceStops=Object.freeze({
-  'cartier-official':'acquisition_permission_restricted',
-  'van-cleef-and-arpels-official':'acquisition_permission_restricted',
-  'celine-official':'source_challenge_recorded',
-  'rimowa-official':'robots_refusal_recorded',
-});
 
 // Records pass through the same preparation as the existing captured inventory (e.g. Rolex Arabic names),
 // so an unchanged source page reproduces the stored revision instead of looking changed.
 const official=id=>{const a=officialAdapters[id];return {origin:a.origin,brand:a.brand,
   product:url=>{try{return Boolean(officialVariantIdentity(id,url));}catch{return false;}},
-  identity:url=>{try{return officialVariantIdentity(id,url)?.external_id??null;}catch{return null;}},
+  identity:url=>officialIdentity(id,url),
   extract:(html,url)=>prepareOfficialCandidates(extractOfficialProducts(html,{id,brand:a.brand,page_url:url,language:'en'}))};};
 const bag=(id,brand,origin)=>({origin,brand,profile:robots=>bagSourceProfile(brand,origin,robots),
   extract:(html,url)=>{
@@ -49,34 +43,11 @@ export const sourceAdapters=Object.freeze({
 
 class OriginStop extends Error{constructor(status,reason,detail={}){super(reason);this.status=status;this.reason=reason;this.detail=detail;}}
 class UrlFailure extends Error{constructor(reason,{transient=false,detail={}}={}){super(reason);this.reason=reason;this.transient=transient;this.detail=detail;}}
-export const sourceChallenge=html=>/<title[^>]*>[^<]*(?:captcha|access denied|just a moment|robot check)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container|verify you are (?:a )?human/i.test(html);
-/** A refusal written by the runner's egress proxy rather than the origin (observed body for denied hosts). */
-export const environmentDenial=body=>/^\s*Blocked by egress policy\s*$/i.test(String(body).slice(0,200));
-export function sitemapLocations(xml){return [...new Set([...xml.matchAll(/<loc\b[^>]*>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/loc>/g)].map(m=>m[1].trim().replace(/&amp;/g,'&')))];}
-/** Sitemaps declared in robots.txt, kept only when they are HTTPS on the official origin itself. */
-export function declaredSitemaps(urls,origin){
-  return [...new Set((urls??[]).map(value=>{try{const url=new URL(String(value).trim());return url.protocol==='https:'&&url.origin===origin&&!url.username&&!url.password&&!url.hash?url.href:null;}catch{return null;}}).filter(Boolean))];
-}
-/**
- * Picks a bounded inventory from discovered URLs without fetching them: identities the database does not
- * hold come first, then at most `controls` known identities to re-check parity. Identity is read from the
- * official URL and compared case-insensitively, so a case variant can never pass as missing.
- */
+/** Missing-first bounded selection over this adapter's URL identity (see pickInventory). */
 export function selectInventory(urls,{source_id,known_external_ids,max_missing=20,controls=0}={}){
   const adapter=sourceAdapters[source_id];
   if(!adapter?.identity)throw Error('Inventory selection needs an adapter with URL identity');
-  if(!(known_external_ids instanceof Set))throw Error('A fresh known-identity export is required');
-  const known=new Set([...known_external_ids].map(id=>String(id).toLowerCase()));
-  const missing=[],existing=[],identities=new Set();let unsupported=0,aliases=0;
-  for(const url of urls??[]){
-    const id=adapter.identity(url)?.toLowerCase();
-    if(!id){unsupported++;continue;}
-    if(identities.has(id)){aliases++;continue;}
-    identities.add(id);(known.has(id)?existing:missing).push(url);
-  }
-  const maxMissing=number(max_missing,20,0,1e6),maxControls=number(controls,0,0,1e6);
-  return {selected:[...missing.slice(0,maxMissing),...existing.slice(0,maxControls)],missing:missing.slice(0,maxMissing),controls:existing.slice(0,maxControls),
-    counts:{urls:(urls??[]).length,identities:identities.size,missing_total:missing.length,known_total:existing.length,alias_urls:aliases,unsupported_urls:unsupported}};
+  return pickInventory(urls,{identity:adapter.identity,known_external_ids,max_missing,controls});
 }
 
 export async function privateRoot(path){

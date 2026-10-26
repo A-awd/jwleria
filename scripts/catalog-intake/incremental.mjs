@@ -1,34 +1,10 @@
 import {readFile,appendFile,writeFile,rename} from 'node:fs/promises';
 import {join} from 'node:path';
 import {privateRoot} from './source-queue.mjs';
+import {approvedCategories,identityKey,assessCandidate} from './intake-core.mjs';
+export {approvedCategories,identityKey,assessCandidate};
 
-export const approvedCategories=Object.freeze(['watches','handbags','bracelets','jewelry','leather-goods','luggage','shoes','accessories','clothing']);
 const hash=/^[a-f0-9]{64}$/;
-
-/**
- * Private ingestion and public factual readiness are separate decisions. A known candidate with a
- * different revision is never overwritten here: guarded private repairs and live rows depend on it.
- */
-export const identityKey=(sourceId,externalId)=>String(sourceId)+'\u0000'+String(externalId).toLowerCase();
-export function assessCandidate(record,known,identities){
-  if(!hash.test(record?.candidate_id??'')||!hash.test(record?.revision_hash??''))return {ingest:'rejected',publication:'held',reasons:['invalid_identity']};
-  const missing=['source_id','external_id','brand','collection','product_name','source_url'].filter(f=>typeof record[f]!=='string'||!record[f].trim()).map(f=>'missing_'+f);
-  if(!Array.isArray(record.image_urls)||!record.image_urls.length)missing.push('gallery_reference_missing');
-  if(missing.length)return {ingest:'rejected',publication:'held',reasons:missing};
-  const previous=known?.get(record.candidate_id);
-  let ingest=!known?'baseline_unknown':previous===undefined?'missing':previous===record.revision_hash?'unchanged':'changed_requires_review';
-  // A partial revision export is paired with the complete identity list: an identity the database already
-  // holds (including a case variant of its reference) is never treated as missing.
-  if(ingest==='missing'&&identities?.has(identityKey(record.source_id,record.external_id)))ingest='known_identity_requires_review';
-  const held=[];
-  if(!Array.isArray(record.facts)||!record.facts.length)held.push('facts_missing');
-  if(record.translation_state!=='provided'||!record.name_ar)held.push('arabic_name_pending');
-  if(!record.description_ar||!record.description_en)held.push('factual_summary_missing');
-  if(!record.category_slug)held.push('category_requires_review');
-  else if(!approvedCategories.includes(record.category_slug))held.push('category_outside_approved_set');
-  // Readiness is only for review: publication still needs the current-revision factual guard.
-  return {ingest,publication:held.length?'held':'factual_review_ready',reasons:held};
-}
 
 /**
  * Processes each validated record as it arrives instead of waiting for every brand.
