@@ -14,7 +14,14 @@ Bounded read-only capability preflight before the four owner-requested stages: r
 - **Repository gap:** no factual-publication payload builder exists in the repository (earlier publications used private tooling); it is needed before the pilot can publish.
 - **Runner bridge:** no Remote Control or Mac runner session is connected, so a Mac runner is unproven.
 
-Proposed minimum for the first pilot: allow only `www.rolex.com` and `www.iwc.com`. Optionally allow `jwleria.com` and `www.jwleria.com` for read-only page verification. Collect in this session with the tested queue, and do the baseline export, missing-only ingestion and any factual publication through the Supabase connector, which does not use the VM network. Do not add the Supabase host or any secret for the pilot. Media CDN hosts, the Supabase host for uploads, n8n database credentials and activation are later, separately approved steps. Owner inputs still missing: permitted exact-product photos and the verified WhatsApp number.
+Environment facts (owner UI readback relayed by Codex, plus current documentation):
+- The session's environment is `Default`, the account's only cloud environment: network "Limited", no allowed domains, package managers on, no variables, no setup script.
+- It is shared by every cloud session of the account. The newest 50 sessions include 34 other cloud sessions, none connected now; more exist beyond that page.
+- Per the documentation, an allowed-domain change reaches running sessions within about a minute. Exact hostnames match only themselves, and only a leading `*.` matches subdomains.
+- A network secret is attached for every session in the environment, so a database key must never be stored as a secret on this shared environment.
+- The allowlist is enforced outside the VM, so root access cannot change it, and it must not be routed around.
+
+Proposed minimum for the first pilot: add only the exact hosts `www.rolex.com` and `www.iwc.com` to `Default` (no wildcards or apex, package managers kept on), time-boxed and removed after the pilot. The alternative with no change to the shared environment is to run the bounded fetches in n8n and ingest through the connector. Collect in this session with the tested queue, and do the baseline export, missing-only ingestion and any factual publication through the Supabase connector, which does not use the VM network. Do not add the Supabase host or any secret for the pilot. Media CDN hosts, the Supabase host for uploads, n8n database credentials and activation are later, separately approved steps. Owner inputs still missing: permitted exact-product photos and the verified WhatsApp number.
 
 ## Claude implementation pointer and applied migration — 2026-10-26
 

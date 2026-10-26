@@ -1,7 +1,7 @@
 ## Current handoff — four-stage preflight complete, setup approval pending — 2026-10-26
 
 Read the top STATE entry. Next action: the owner approves the consolidated setup request relayed by Codex. Until then do not collect, change configuration or write production data.
-- **Network:** allow `www.rolex.com` and `www.iwc.com` (optionally `jwleria.com`, `www.jwleria.com`) for the pilot window.
+- **Network:** add only the exact hosts `www.rolex.com` and `www.iwc.com` to the shared `Default` environment, then remove them when the pilot report is delivered or after 7 days. This affects every session in that environment. Never store a database key there as a network secret. The alternative with no shared change is n8n-run fetches.
 - **Pilot production writes:** missing-only private ingestion of the pilot records through `jwl_ingest_missing_batch`, and, separately, factual publication of review-ready pilot records.
 
 Then verify egress with one robots request per allowed origin. If the change does not reach this running session, report it rather than working around it. The pilot itself:
