@@ -39,7 +39,7 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
 - `jwl_internal.term_translations(kind, term_en, term_ar)` is a reviewed dictionary of distinct fact values.
 - `jwl_internal.derive_product_variants()` is a read-only function that computes the full mapping from the current candidates and public rows. The coordinator writes its output in one reversible transaction.
 - `public.jwl_catalog_models` view (`security_invoker`): active catalog rows that are primary or have no variant row. It has the same columns as `jwl_catalog`, plus `model_key`, `model_name`, `variant_count`, `options_summary` (for example `{"dial":26}`). Listings, search, categories and the catalog page read it.
-- `public.jwl_product_model(slug text) returns jsonb` gives, for any variant slug, `{product, model_key, model_name, variants:[...]}` in one round trip, bounded to at most 60 variants ordered by position. Each variant carries its catalog fields plus `options`, `specs`, `position` and `is_primary`. It returns null for an unknown slug.
+- `public.jwl_product_model(p_slug text) returns jsonb` gives, for any variant slug, `{product, model_key, model_name, variants:[...]}` in one round trip, bounded to at most 60 variants ordered by position. Each variant carries its catalog fields plus `options`, `specs`, `position` and `is_primary`. It returns null for an unknown slug.
 - `public.jwl_brand_models_page(...)` is the collapsed counterpart of `jwl_brand_page`, with the same arguments and shape.
 - Rollback is `drop` of the new objects and nothing else. Existing tables, functions and data are untouched.
 
