@@ -1,6 +1,6 @@
-## Current handoff — website-photo and variant steering is sent/running — 2026-10-26
+## Current handoff — website-photo and variant steering is acknowledged/running — 2026-10-26
 
-Continue the same active "Jwleria implementation continuation" Claude conversation on Opus5.5 Ultracode. Codex observed that selection before and after sending the owner's comprehensive English steering; no model-setting change was needed. The message was visibly submitted and Claude was actively thinking/responding, but a textual acknowledgement and implementation outcome had not yet been received. Record this as SENT/RUNNING only. Do not start another conversation or claim acceptance/completion from the sent message.
+Continue the same active "Jwleria implementation continuation" Claude conversation on Opus5.5 Ultracode. Codex observed that selection before and after sending the owner's comprehensive English steering; no model-setting change was needed. The message was visibly submitted. Claude then explicitly acknowledged the website-only target, real original photographs, genuine model variants and deferred streams, and began checking running work and actual delivery capabilities. Record this as ACKNOWLEDGED/RUNNING only, with no implementation or live-delivery result yet. Do not start another conversation or claim completion from this acknowledgement.
 
 The owner's current goal is website delivery: genuine original product photographs actually visible to visitors, and one product card/canonical page per genuine model with all verified colour/size choices represented as variants. Keep each variant's exact identity and matching photos; avoid duplicate variant cards and unsupported grouping of unrelated models. Prepared upload code, captured image URLs or a data-only catalog do not meet the photographed-site acceptance criterion.
 
@@ -8,7 +8,7 @@ Social and contact work are fully deferred and are not current blockers, accepta
 
 Claude owns all application programming, testing and technical review; Codex coordinates. Continue only within the established source, media-evidence and applicable production scopes: exact current revision/variant, valid usage evidence, original/derivative hashes and real visual verification. Do not infer rights from an official URL, substitute generated/editorial imagery, bypass source refusals or overwrite distinct product identities to simplify grouping.
 
-Next is Claude's actual response and concrete website execution evidence, followed by proportionate visitor-facing verification after any properly authorized release. No new real-photo publication, finished grouping implementation or live acceptance is established by this steering checkpoint. Keep raw prompts, private session/provider identifiers, screenshots, assets, credentials and usage details outside GitHub. Preserve the existing implementation checkpoint/history and record actual outcomes before claiming delivery.
+Next is Claude's concrete website execution evidence, followed by proportionate visitor-facing verification after any properly authorized release. No new real-photo publication, finished grouping implementation or live acceptance is established by this steering checkpoint. Keep raw prompts, private session/provider identifiers, screenshots, assets, credentials and usage details outside GitHub. Preserve the existing implementation checkpoint/history and record actual outcomes before claiming delivery.
 
 ## Current handoff — new Claude implementation conversation is running — 2026-10-26
 
