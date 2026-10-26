@@ -1,3 +1,9 @@
+## Dedicated Jwleria execution conversation launched — 2026-10-26
+
+After the exact environment/network/conversation approval recorded below, Codex launched one new Claude Code conversation titled "Jwleria — full execution". Reopening the saved Jwleria environment confirmed Full networking with no secrets or variables; shared Default was untouched. The selected repositories are global main and Jwleria's `claude/pensive-mccarthy-40nrlc` implementation branch, with only the existing Supabase, n8n and Cloudflare connectors selected. Opus5.5 Max and ordinary Auto permissions remain unchanged. Private session links/identifiers and the raw English command are not published here.
+
+The comprehensive four-stage command was sent and Claude began initial working-directory/repository discovery. This proves setup and start only: real VM egress, the factual pilot, authentic media upload/publication and durable scheduling are not yet established. Claude retains implementation/tests/review ownership and must refresh current continuation instructions with normal history preservation. Missing approved exact-product photos and the verified WhatsApp destination remain inputs. Separate production-write, media/publication, credential, activation and security-change gates remain; no new key, photo, pilot publication or schedule is claimed. Earlier launch-pending entries below are historical. Easy Life stays stopped.
+
 ## Dedicated Jwleria environment created; conversation launch pending — 2026-10-26
 
 The owner explicitly approved creating a dedicated cloud environment named Jwleria with Full networking (any outbound host) and one new conversation using the same Opus5.5 Max and current connectors. The stated scope leaves shared Default, provider scopes, credentials and Mac/OS permissions unchanged. This exact approval supersedes the earlier pending proposal below; it is not an inferred general superuser authorization.

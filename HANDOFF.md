@@ -1,3 +1,9 @@
+## Current handoff — dedicated execution conversation active — 2026-10-26
+
+The owner-approved single conversation "Jwleria — full execution" is launched and began initial directory/repository discovery after receiving the comprehensive English four-stage command. Saved Jwleria settings were reopened and confirmed Full network, no secrets/variables, Opus5.5 Max and unchanged Auto permissions; Default remains untouched. Global main and the Jwleria implementation branch are selected with only existing Supabase/n8n/Cloudflare connectors. Keep the private session URL/identifier, raw prompt and screenshots outside this public repository.
+
+Continue that active Claude conversation rather than create another. It owns implementation/tests/review; Codex coordinates and attends necessary specifically authorized requests. Refresh the latest continuation docs and preserve both histories with normal merges, never reset/force. Next is actual egress/runner verification, not a claim the pilot ran. Photos and WhatsApp remain missing; pilot production writes, exact media/publication, any new credential and durable schedule activation retain their separate gates. No migration reapplication, new key, product-photo publication, schedule or storefront deployment is established by this setup/start. Historical pending entries below are superseded for launch status only.
+
 ## Current handoff — dedicated environment saved, session not launched — 2026-10-26
 
 The owner specifically approved dedicated Jwleria cloud environment creation with Full any-host outbound networking plus one new conversation, preserving Opus5.5 Max, current provider connector scopes, shared Default, credentials and Mac/OS permissions. Codex saved it; the UI now shows `Environment: Jwleria`, `Opus5.5 Max` and `Permissions: Auto`. This supersedes the prior pending choice below. It does not authorize new credentials, broader provider/security modes or production/media/scheduling actions.
