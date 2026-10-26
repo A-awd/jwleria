@@ -10,7 +10,7 @@ import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-m
 import {keepOwnerOriginal,prepareGrantedMedia,approvalBundle} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {uploadThroughFunction,verifyPublishedDerivatives} from '../../../scripts/catalog-intake/media.mjs';
 import {mediaApprovalSql,mediaPublicationSql,productMediaBucketSql} from '../../../scripts/catalog-intake/supabase.mjs';
-import {handleUpload,approvalQuery,webpSize} from '../supabase/functions/jwl-media-upload/handler.js';
+import {handleUpload,approvalQuery,webpSize,derivativeCacheSeconds} from '../supabase/functions/jwl-media-upload/handler.js';
 import {mediaRun} from '../../../scripts/catalog-intake/media-run.mjs';
 
 const sharp=installedImageEngine();
@@ -124,6 +124,31 @@ test('owner original → derivatives → recorded approval → approval-bound up
   }finally{await db.close();await rm(root,{recursive:true,force:true});}
 });
 
+test('the bucket statement creates the public WebP bucket once and fails on an existing bucket with other settings',async()=>{
+  const db=new PGlite();
+  try{
+    // The columns of Supabase's storage.buckets that the statement reads and writes.
+    await db.exec('create schema storage; create table storage.buckets(id text primary key,name text not null,public boolean default false,file_size_limit bigint,allowed_mime_types text[])');
+    const run=async()=>(await db.exec(productMediaBucketSql)).at(-1).rows;
+    const expected=[{id:'jwl-product-media',public:true,file_size_limit:15728640,allowed_mime_types:['image/webp']}];
+    const normal=rows=>rows.map(r=>({...r,file_size_limit:Number(r.file_size_limit)}));
+    assert.deepEqual(normal(await run()),expected,'created');
+    assert.deepEqual(normal(await run()),expected,'an identical bucket is accepted as is');
+    for(const change of ['public=false','file_size_limit=52428800','file_size_limit=null',"allowed_mime_types=array['image/webp','image/png']",'allowed_mime_types=null']){
+      await db.exec(`update storage.buckets set ${change}`);
+      await assert.rejects(run(),/bucket settings differ/,change);
+      await db.exec("update storage.buckets set public=true,file_size_limit=15728640,allowed_mime_types=array['image/webp']");
+    }
+    assert.equal((await db.query('select count(*)::integer n from storage.buckets')).rows[0].n,1);
+  }finally{await db.close();}
+});
+
+test('the function caches public derivatives for one day, never a year, so revoked files stop being served soon',async()=>{
+  assert.equal(derivativeCacheSeconds,86400);
+  const entry=await readFile(new URL('../supabase/functions/jwl-media-upload/index.ts',import.meta.url),'utf8');
+  assert.match(entry,/cacheControl:String\(derivativeCacheSeconds\)/);
+  assert.doesNotMatch(entry,/31536000/);
+});
 
 test('the phased media runner needs a visual verification per original and a database receipt before any upload',async()=>{
   const root=await mkdtemp(join(tmpdir(),'jwl-media-run-'));

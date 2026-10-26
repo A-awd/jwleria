@@ -72,3 +72,9 @@ export const approvalQuery=`select 1 from jwl_internal.media_assets a
    and exists(select 1 from jsonb_array_elements(p.approved_image_variants) e cross join jsonb_array_elements(e->'variants') v
      where v @> jsonb_build_object('src',a.public_url,'bytes',$3::integer,'width',$4::integer,'height',$5::integer))
  limit 1`;
+
+/**
+ * Browser and CDN lifetime of a public derivative. Names are content-addressed, so the bytes behind a URL never
+ * change; the lifetime is kept short because a revoked grant's files must stop being served soon after deletion.
+ */
+export const derivativeCacheSeconds=86400;

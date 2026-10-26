@@ -3,7 +3,7 @@
 // passed by callers, stored in the repository or returned in a response.
 import postgres from 'npm:postgres@3.4.5';
 import {createClient} from 'npm:@supabase/supabase-js@2.46.1';
-import {handleUpload,approvalQuery} from './handler.js';
+import {handleUpload,approvalQuery,derivativeCacheSeconds} from './handler.js';
 
 const bucket='jwl-product-media';
 const projectUrl=Deno.env.get('SUPABASE_URL')!;
@@ -15,7 +15,7 @@ Deno.serve(request=>handleUpload(request,{
   public_base:new URL(`/storage/v1/object/public/${bucket}/`,projectUrl).href,
   approved:async(url:string,sha256:string,bytes:number,width:number,height:number)=>(await sql.unsafe(approvalQuery,[url,sha256,bytes,width,height])).length===1,
   put:async(path:string,bytes:Uint8Array)=>{
-    const {error}=await storage.upload(path,bytes,{contentType:'image/webp',cacheControl:'31536000',upsert:false});
+    const {error}=await storage.upload(path,bytes,{contentType:'image/webp',cacheControl:String(derivativeCacheSeconds),upsert:false});
     if(!error)return 'uploaded';
     if(/exists|duplicate/i.test(error.message))return 'exists';
     throw error;

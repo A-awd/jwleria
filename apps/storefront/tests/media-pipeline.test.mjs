@@ -128,10 +128,10 @@ test('end to end: permitted original → private derivatives → verification �
     const tampered=structuredClone(bundle);tampered.evidence[0].public_sha256='0'.repeat(64);
     await assert.rejects(recordMediaApproval(tampered,config,rpc),/check constraint|differs/);
 
-    const stored=new Map();
+    const stored=new Map(),cacheHeaders=new Set();
     const storage=async(url,init={})=>{
       const href=String(url);
-      if(init.method==='POST'){const key=href.split('/object/jwl-product-media/')[1];if(stored.has(key))return new Response('{"error":"Duplicate"}',{status:400});stored.set(key,Buffer.from(init.body));return new Response('{}');}
+      if(init.method==='POST'){cacheHeaders.add(init.headers['cache-control']);const key=href.split('/object/jwl-product-media/')[1];if(stored.has(key))return new Response('{"error":"Duplicate"}',{status:400});stored.set(key,Buffer.from(init.body));return new Response('{}');}
       if(init.method==='DELETE'){for(const key of JSON.parse(init.body).prefixes)stored.delete(key);return new Response('[]');}
       const key=href.split('/object/public/jwl-product-media/')[1];return stored.has(key)?new Response(stored.get(key)):new Response('',{status:404});
     };
@@ -139,6 +139,7 @@ test('end to end: permitted original → private derivatives → verification �
     assert.equal(stored.size,0,'nothing becomes public without a recorded approval');
     const uploaded=await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage);
     assert.deepEqual(uploaded.sort(),bundle.evidence.map(e=>e.public_url).sort());
+    assert.deepEqual([...cacheHeaders],['public, max-age=86400, immutable'],'content-addressed files, cached for one day so revocation cleanup takes effect');
     assert.deepEqual((await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage)).length,4,'re-upload verifies identical existing objects');
     await assert.rejects(uploadDerivatives({...bundle,evidence:bundle.evidence.slice(1)},{output_directory:root,storage:config,approval_receipt:{...receipt,evidence_rows:3}},storage),/differs from approved evidence/);
 

@@ -86,8 +86,17 @@ export function mediaPublicationSql(review) {
   if (!hex64.test(candidate) || !hex64.test(revision)) throw new Error('Exact candidate revision required');
   return `select public.jwl_publish_candidate('${candidate}','${revision}',${dollarQuote(JSON.stringify(product))}::jsonb) as published;`;
 }
-/** The one public bucket the derivatives need; creating it is a separately approved production change. */
-export const productMediaBucketSql=`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('jwl-product-media','jwl-product-media',true,15728640,array['image/webp']) on conflict(id) do nothing returning id,public,file_size_limit,allowed_mime_types;`;
+/**
+ * The one public bucket the derivatives need; creating it is a separately approved production change. An existing
+ * bucket is accepted only with exactly these settings: a different visibility, size limit or type list fails.
+ */
+export const productMediaBucketSql=`do $$ begin
+  insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('jwl-product-media','jwl-product-media',true,15728640,array['image/webp']) on conflict(id) do nothing;
+  if not exists(select 1 from storage.buckets where id='jwl-product-media' and public and file_size_limit=15728640 and allowed_mime_types=array['image/webp']) then
+    raise exception 'Existing jwl-product-media bucket settings differ from the media contract';
+  end if;
+end $$;
+select id,public,file_size_limit,allowed_mime_types from storage.buckets where id='jwl-product-media';`;
 
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   const [operation,input]=process.argv.slice(2);
