@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { publicPageResponse } from '../src/server/public-cache.mjs';
 
 const unhandled=[],warnings=[];process.on('unhandledRejection',error=>unhandled.push(error));console.warn=message=>warnings.push(message);
-// A real Response store substitutes only the remote Cloudflare cache service; like it, put reads the whole body.
+// A real Response store substitutes only the remote Cloudflare cache service. Like it, put reads the whole body and
+// every call settles on a later macrotask, so work deferred behind an awaited cache call is not hidden by microtasks.
+const io=()=>new Promise(resolve=>setImmediate(resolve));
 function harness(){
  const entries=new Map();let renders=0,waits=0,time=100000,gate=Promise.resolve();const pending=[];
- const cache={async match(key){return entries.get(key.url)?.clone();},async put(key,response){const body=await response.arrayBuffer();entries.set(key.url,new Response(body,{status:response.status,headers:response.headers}));},async delete(key){return entries.delete(key.url);}};
+ const cache={async match(key){await io();return entries.get(key.url)?.clone();},async put(key,response){const body=await response.arrayBuffer();await io();entries.set(key.url,new Response(body,{status:response.status,headers:response.headers}));},async delete(key){await io();return entries.delete(key.url);}};
  const options={cache,waitUntil:p=>{waits++;pending.push(p);},build:'test-release',now:()=>time};
  const render=async()=>{const n=++renders;await gate;return new Response('real catalog '+n,{headers:{'Content-Type':'text/html; charset=utf-8'}});};
  const flush=async()=>{while(pending.length)await Promise.all(pending.splice(0));};
@@ -53,9 +55,12 @@ test('after the fresh minute the copy is served while exactly one background ren
  await publicPageResponse(r,h.render,h.options);await h.flush();
  h.at(161000);const release=h.hold(),waits=h.waits();
  const stale=await publicPageResponse(r,h.render,h.options);
+ // Checked before anything else is awaited: the refresh render has already started and is owned by waitUntil when the
+ // stale copy is returned, so next() was never deferred behind cache I/O until after the middleware had answered.
+ assert.equal(h.renders(),2);assert.equal(h.waits(),waits+1);
  assert.equal(stale.headers.get('X-JWL-Cache'),'STALE');assert.equal(await stale.text(),'real catalog 1');assert.equal(stale.headers.get('Age'),'61');assert.match(stale.headers.get('Server-Timing'),/desc="STALE"/);assert.equal(stale.headers.get('Cache-Control'),'public, max-age=0, must-revalidate');assert.equal(stale.headers.has('X-JWL-Stored-At'),false);
- // The refresh render has already started and is owned by waitUntil before the stale copy is returned, and is still running.
- assert.equal(h.renders(),2);assert.equal(h.waits(),waits+1);assert.equal(await h.settled(),false);
+ // ...and it is still running.
+ assert.equal(await h.settled(),false);
  for(let i=0;i<3;i++){const again=await publicPageResponse(r,h.render,h.options);assert.equal(again.headers.get('X-JWL-Cache'),'STALE');assert.equal(await again.text(),'real catalog 1');}
  assert.equal(h.renders(),2);assert.equal(h.waits(),waits+1);
  release();await h.flush();h.at(162000);
@@ -107,6 +112,17 @@ test('a withdrawn, redirected or personalized refresh stops the stale copy and i
   assert.equal(h.entries.size,0);
   const next=await publicPageResponse(r,h.render,h.options);assert.equal(next.headers.get('X-JWL-Cache'),'MISS');assert.equal(h.renders(),2);await h.flush();
  }
+});
+test('a page withdrawn right after its copy was stored can be served until 600 s after the store time even when its refresh succeeds',async()=>{
+ const h=harness(),r=new Request('https://jwleria.com/ar/products/test-piece/');
+ await publicPageResponse(r,h.render,h.options);await h.flush();
+ // The piece is withdrawn at once; the next visitor to this colo arrives 599.999 s after the store time.
+ h.at(699999);let refreshes=0,finish;const withdrawn=()=>{refreshes++;return new Promise(resolve=>{finish=()=>resolve(new Response(null,{status:302,headers:{Location:'/404/'}}));});};
+ const first=await publicPageResponse(r,withdrawn,h.options);assert.equal(first.headers.get('X-JWL-Cache'),'STALE');assert.equal(first.headers.get('Age'),'599');assert.equal(await first.text(),'real catalog 1');
+ // Every request that arrives while that refresh runs still receives the withdrawn copy.
+ const during=await publicPageResponse(r,withdrawn,h.options);assert.equal(during.headers.get('X-JWL-Cache'),'STALE');assert.equal(await during.text(),'real catalog 1');assert.equal(refreshes,1);
+ finish();await h.flush();assert.equal(h.entries.size,0);
+ const after=await publicPageResponse(r,async()=>new Response(null,{status:302,headers:{Location:'/404/'}}),h.options);assert.equal(after.status,302);assert.equal(after.headers.has('X-JWL-Cache'),false);await h.flush();assert.equal(h.entries.size,0);
 });
 test('Astro\'s error render of a failed request never serves, refreshes or removes the page copy',async()=>{
  const h=harness(),r=new Request('https://jwleria.com/ar/catalog/');
