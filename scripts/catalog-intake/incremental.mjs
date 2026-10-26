@@ -52,6 +52,8 @@ export async function createIncrementalSink({output_directory,known_revisions_pa
     const acknowledged=new Set((await lines('ingestion-receipts.ndjson')).flatMap(r=>r.acknowledged??[]));
     const replay=new Map();for(const record of await lines('ingest-ready.ndjson'))if(!acknowledged.has(key(record)))replay.set(key(record),record);
     pending=[...replay.values()];counts.outbox_replayed=pending.length;
+    // A record the queue re-emits after a crash must not enter the batch twice.
+    for(const record of pending)seen.set(record.candidate_id,record.revision_hash);
   }
   const bump=(group,k)=>{group[k]=(group[k]??0)+1;};
   // A database failure never reaches the collection queues: the batch stays pending in the outbox.
@@ -81,7 +83,7 @@ export async function createIncrementalSink({output_directory,known_revisions_pa
     await appendFile(join(dir,'decisions.ndjson'),JSON.stringify(row)+'\n',{mode:0o600});
     if(decision.ingest==='missing'){
       await appendFile(join(dir,'ingest-ready.ndjson'),JSON.stringify(record)+'\n',{mode:0o600});
-      if(ingest){pending.push(record);if(pending.length>=size&&!suspended)await flush();}
+      if(ingest&&!pending.some(r=>key(r)===key(record))){pending.push(record);if(pending.length>=size&&!suspended)await flush();}
     }
     if(decision.ingest==='changed_requires_review')await appendFile(join(dir,'review-required.ndjson'),JSON.stringify({...row,known_revision:baseline.get(record.candidate_id),record})+'\n',{mode:0o600});
   };

@@ -105,7 +105,9 @@ export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600
     async wait(origin){
       // A refused or rate-limited origin is not contacted again through this pacer until its time.
       const until=stopped.get(origin);if(until!==undefined&&until>now())throw Error(`Media origin stopped until ${until===Infinity?'review':new Date(until).toISOString()}`);
-      const at=next.get(origin)??0;if(at>now())await sleep(at-now());next.set(origin,now()+interval);},
+      // Reserve the slot before sleeping so concurrent downloads queue behind each other.
+      const slot=Math.max(next.get(origin)??0,now());next.set(origin,slot+interval);
+      if(slot>now())await sleep(slot-now());},
     stop(origin,retryAfter){stopped.set(origin,retryAfter===undefined?Infinity:Math.max(retryAfter??0,now()+Math.max(60,rate_limit_min_seconds)*1000));},
     robots(origin){const hit=robots.get(origin);return hit&&hit.until>now()?hit.policy:null;},
     remember(origin,policy){robots.set(origin,{policy,until:now()+robots_ttl_seconds*1000});}};

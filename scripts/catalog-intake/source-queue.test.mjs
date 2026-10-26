@@ -315,3 +315,17 @@ test('an unhealthy pause still counts the URL attempts; body read errors are tra
   assert.equal(JSON.parse(await readFile(join(root,'rolex-official','state.json'),'utf8')).urls[rolex[1]].reason,'body_read_error');
   await rm(root,{recursive:true});
 });
+
+test('a record the queue re-emits after a crash is not ingested twice and cannot stall the outbox',async()=>{
+  const dir=await privateDir();
+  const a=candidate();let calls=0;
+  const failing=await createIncrementalSink({output_directory:dir,known:{},batch_size:2,ingest:async()=>{throw Error('down');}});
+  await failing.onRecord(a);await failing.close();
+  const ingest=async batch=>{calls++;return ingestMissing(batch,{url:'https://example.supabase.co',key:'synthetic-test-key'},async(url,init)=>{const ids=JSON.parse(init.body).records.map(r=>r.candidate_id);return new Response(JSON.stringify({inserted_ids:ids,skipped_existing_ids:[]}));});};
+  const next=await createIncrementalSink({output_directory:dir,known:{},batch_size:2,ingest});
+  await next.onRecord(a);
+  const summary=await next.close();
+  assert.deepEqual([summary.outbox_replayed,summary.replayed,summary.inserted,summary.pending_ingestion,summary.ingest_errors],[1,1,1,0,0]);
+  assert.equal(calls,1);
+  await rm(dir,{recursive:true});
+});

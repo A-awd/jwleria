@@ -119,7 +119,8 @@ test('end to end: permitted original → private derivatives → verification �
     await service(db,'select public.jwl_ingest_missing_batch($1::jsonb)',[JSON.stringify([candidate])]);
     const config={url:'https://project.supabase.co',key:'synthetic-test-key'};
     const rpc=rpcThrough(db);
-    assert.deepEqual(await recordMediaApproval(bundle,config,rpc),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,evidence_rows:4,published:0});
+    const receipt=await recordMediaApproval(bundle,config,rpc);
+    assert.deepEqual(receipt,{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,evidence_rows:4,published:0});
     assert.equal((await recordMediaApproval(bundle,config,rpc)).evidence_rows,4,'identical replay is idempotent');
     const tampered=structuredClone(bundle);tampered.evidence[0].public_sha256='0'.repeat(64);
     await assert.rejects(recordMediaApproval(tampered,config,rpc),/check constraint|differs/);
@@ -131,10 +132,12 @@ test('end to end: permitted original → private derivatives → verification �
       if(init.method==='DELETE'){for(const key of JSON.parse(init.body).prefixes)stored.delete(key);return new Response('[]');}
       const key=href.split('/object/public/jwl-product-media/')[1];return stored.has(key)?new Response(stored.get(key)):new Response('',{status:404});
     };
-    const uploaded=await uploadDerivatives(bundle,{output_directory:root,storage:config},storage);
+    await assert.rejects(uploadDerivatives(bundle,{output_directory:root,storage:config},storage),/Recorded approval receipt required/);
+    assert.equal(stored.size,0,'nothing becomes public without a recorded approval');
+    const uploaded=await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage);
     assert.deepEqual(uploaded.sort(),bundle.evidence.map(e=>e.public_url).sort());
-    assert.deepEqual((await uploadDerivatives(bundle,{output_directory:root,storage:config},storage)).length,4,'re-upload verifies identical existing objects');
-    await assert.rejects(uploadDerivatives({...bundle,evidence:bundle.evidence.slice(1)},{output_directory:root,storage:config},storage),/differs from approved evidence/);
+    assert.deepEqual((await uploadDerivatives(bundle,{output_directory:root,storage:config,approval_receipt:receipt},storage)).length,4,'re-upload verifies identical existing objects');
+    await assert.rejects(uploadDerivatives({...bundle,evidence:bundle.evidence.slice(1)},{output_directory:root,storage:config,approval_receipt:{...receipt,evidence_rows:3}},storage),/differs from approved evidence/);
 
     const review={candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,slug:'synthetic-submariner',reference:candidate.external_id,brand_slug:'synthetic',brand_name:'Synthetic',brand_tier:'luxury',category_slug:'watches',collection_slug:'submariner',collection_ar:'سابمارينر',collection_en:'Submariner',name_ar:candidate.name_ar,name_en:candidate.name_en,description_ar:candidate.description_ar,description_en:candidate.description_en,images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants};
     await assert.rejects(publish({...review,image_variants:[]},config,rpc),/differ from approved media/);
@@ -194,5 +197,19 @@ test('a refused or rate-limited media origin is not contacted again through the 
       await assert.rejects(acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{fetcher,pacer}),pattern);
       assert.equal(calls.length,count,'no further request to the stopped origin');
     }
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('concurrent downloads through one pacer queue behind each other per origin',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-media-concurrent-'));
+  try{
+    let t=0;const at=[];
+    const pacer=createMediaPacer({min_interval_seconds:2,sleep:async ms=>{await new Promise(r=>setTimeout(r,0));t+=ms;},now:()=>t});
+    const png=await sharp({create:{width:20,height:20,channels:3,background:'#789'}}).png().toBuffer();
+    const gallery=['https://media.example.test/watches/m126610ln-0001_c.png','https://media.example.test/watches/m126610ln-0001_d.png'];
+    pacer.remember('https://media.example.test',(await import('../node_modules/robots-parser/index.js')).default('https://media.example.test/robots.txt',''));
+    const fetcher=async()=>{at.push(t);return new Response(png,{headers:{'content-type':'image/png'}});};
+    await Promise.all(gallery.map(url=>acquireOriginal({candidate:{...candidate,image_urls:gallery},asset_url:url,grant:written,output_directory:root},{fetcher,pacer})));
+    assert.equal(at.length,2);assert(Math.abs(at[1]-at[0])>=2000,'the second concurrent download waits for its own slot');
   }finally{await rm(root,{recursive:true,force:true});}
 });

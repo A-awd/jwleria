@@ -66,8 +66,10 @@ export async function promoteMedia(review,receipts,config,fetcher=fetch) {
 }
 
 /** Uploads verified content-addressed derivatives; an object that already exists must match byte-for-byte. */
-export async function uploadDerivatives(bundle,{output_directory,storage:config},fetcher=fetch) {
+export async function uploadDerivatives(bundle,{output_directory,storage:config,approval_receipt},fetcher=fetch) {
   if(bundle?.publication_state!=='verified-not-uploaded'||!Array.isArray(bundle.uploads)||!bundle.uploads.length)throw new Error('Verified approval bundle required');
+  // Files become public only after the database accepted this exact approval and its evidence.
+  if(approval_receipt?.candidate_id!==bundle.approval?.candidate_id||approval_receipt?.revision_hash!==bundle.approval?.revision_hash||approval_receipt?.evidence_rows!==bundle.evidence?.length)throw new Error('Recorded approval receipt required before upload');
   const root=await realpath(output_directory);
   const expected=new Set(bundle.evidence.map(row=>row.public_url));
   const published=[];
