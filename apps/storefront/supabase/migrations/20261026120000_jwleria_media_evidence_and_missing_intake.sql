@@ -3,6 +3,7 @@
 begin;
 
 -- A permission record, not the permission document itself (that stays private outside Git).
+-- Written permission can never cover a source whose acquisition is restricted or blocked.
 create table jwl_internal.media_grants (
   grant_reference text primary key check (grant_reference ~ '^[a-z0-9][a-z0-9._-]{2,80}$'),
   kind text not null check (kind in ('owner_original','written_permission')),
@@ -14,9 +15,11 @@ create table jwl_internal.media_grants (
   webp_encode boolean not null check (webp_encode),
   evidence_reference text not null check (length(trim(evidence_reference))>0),
   recorded_at timestamptz not null default now(),
+  -- Recorded for evidence; an expiring grant cannot be used until a scheduled sweep exists.
   expires_at timestamptz,
   revoked_at timestamptz,
   check (kind<>'written_permission' or (source_id is not null and jsonb_array_length(media_origins)>0)),
+  check (kind<>'written_permission' or source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official')),
   check (kind<>'owner_original' or candidate_id is not null)
 );
 -- One row per public file: its private original, checksums, grant and exact-reference check.
@@ -34,16 +37,29 @@ create table jwl_internal.media_assets (
   verification_reference text not null check (length(trim(verification_reference))>0),
   recorded_at timestamptz not null default now(),
   primary key (candidate_id,revision_hash,public_url),
-  foreign key (candidate_id,revision_hash) references jwl_internal.candidate_revisions(candidate_id,revision_hash)
+  foreign key (candidate_id,revision_hash) references jwl_internal.candidate_revisions(candidate_id,revision_hash),
+  -- Public files are content-addressed, so a URL can never silently change meaning.
+  check (position(public_sha256 in public_url)>0)
 );
 alter table jwl_internal.media_grants enable row level security;
 alter table jwl_internal.media_assets enable row level security;
 revoke all on jwl_internal.media_grants,jwl_internal.media_assets from public,anon,authenticated,service_role;
--- Evidence is append-only; a grant can only be revoked or given an expiry, never rewritten.
+-- Evidence is append-only; a grant can only be revoked, once, never rewritten or restored.
 grant select,insert on jwl_internal.media_assets to service_role;
 grant select,insert on jwl_internal.media_grants to service_role;
-grant update(revoked_at,expires_at) on jwl_internal.media_grants to service_role;
+grant update(revoked_at) on jwl_internal.media_grants to service_role;
 
+create function jwl_internal.media_grant_revocation_is_final() returns trigger
+language plpgsql security invoker set search_path='' as $$
+begin
+  if old.revoked_at is not null and new.revoked_at is distinct from old.revoked_at then raise exception 'A revoked media grant cannot be restored or changed';end if;
+  return new;
+end $$;
+revoke all on function jwl_internal.media_grant_revocation_is_final() from public,anon,authenticated;
+create trigger jwl_media_grant_final before update on jwl_internal.media_grants
+  for each row execute function jwl_internal.media_grant_revocation_is_final();
+
+-- Every cited file must trace to an original permitted by this exact grant kind.
 create function jwl_internal.require_media_evidence() returns trigger
 language plpgsql security invoker set search_path='' as $$
 declare c jwl_internal.candidates; g jwl_internal.media_grants; entry jsonb; variant jsonb; a jwl_internal.media_assets;
@@ -52,7 +68,8 @@ begin
   select * into c from jwl_internal.candidates where candidate_id=new.candidate_id;
   if c.candidate_id is null or c.revision_hash<>new.revision_hash then raise exception 'Approval must bind the current candidate revision';end if;
   select * into g from jwl_internal.media_grants where grant_reference=new.media_reference;
-  if g.grant_reference is null or g.revoked_at is not null or (g.expires_at is not null and g.expires_at<=now()) then raise exception 'Media grant missing, revoked or expired';end if;
+  if g.grant_reference is null or g.revoked_at is not null then raise exception 'Media grant missing or revoked';end if;
+  if g.expires_at is not null then raise exception 'An expiring media grant needs a scheduled expiry sweep before use';end if;
   if (g.candidate_id is not null and g.candidate_id<>c.candidate_id) or (g.source_id is not null and g.source_id<>c.source_id) then raise exception 'Media grant covers another product or source';end if;
   if jsonb_typeof(new.approved_image_variants) is distinct from 'array' or jsonb_array_length(new.approved_image_variants)=0 then raise exception 'Responsive variants required for new media approval';end if;
   for entry in select value from jsonb_array_elements(new.approved_image_variants) loop
@@ -61,6 +78,13 @@ begin
         where m.candidate_id=new.candidate_id and m.revision_hash=new.revision_hash and m.public_url=variant->>'src';
       if a.public_url is null or a.grant_reference<>new.media_reference or a.verified_reference<>c.external_id then raise exception 'Approved image lacks exact private evidence';end if;
       if a.width<>(variant->>'width')::integer or a.height<>(variant->>'height')::integer then raise exception 'Approved image dimensions differ from evidence';end if;
+      if g.kind='owner_original' then
+        if a.original_source<>'owner-original:'||a.original_sha256 then raise exception 'Owner grant requires an owner original';end if;
+      else
+        -- An official gallery URL is only usable under written permission for its exact origin.
+        if not coalesce(c.content->'image_urls','[]'::jsonb) ? a.original_source then raise exception 'Original is not in the exact candidate gallery';end if;
+        if not g.media_origins ? (split_part(a.original_source,'/',1)||'//'||split_part(a.original_source,'/',3)) then raise exception 'Original origin is not granted';end if;
+      end if;
     end loop;
   end loop;
   return new;
@@ -69,11 +93,11 @@ revoke all on function jwl_internal.require_media_evidence() from public,anon,au
 create trigger jwl_media_evidence before insert or update on jwl_internal.publication_approvals
   for each row execute function jwl_internal.require_media_evidence();
 
--- Revoking or expiring a grant revokes its approvals, which withdraws the public rows.
+-- Revoking a grant revokes its approvals, which withdraws the public rows.
 create function jwl_internal.revoke_media_grant_approvals() returns trigger
 language plpgsql security invoker set search_path='' as $$
 begin
-  if new.revoked_at is not null or (new.expires_at is not null and new.expires_at<=now()) then
+  if new.revoked_at is not null then
     update jwl_internal.publication_approvals set revoked_at=coalesce(revoked_at,now())
       where media_reference=new.grant_reference and revoked_at is null;
   end if;
@@ -83,16 +107,37 @@ revoke all on function jwl_internal.revoke_media_grant_approvals() from public,a
 create trigger jwl_media_grant_revocation after update on jwl_internal.media_grants
   for each row execute function jwl_internal.revoke_media_grant_approvals();
 
-create function public.jwl_expire_media_grants() returns integer
+-- Publication re-checks the grant itself, independently of the approval row.
+create function jwl_internal.require_live_media_grant() returns trigger
 language plpgsql security invoker set search_path='' as $$
-declare expired integer;
 begin
-  update jwl_internal.media_grants set revoked_at=now() where revoked_at is null and expires_at<=now();
-  get diagnostics expired=row_count;
-  return expired;
+  if not exists(select 1 from jwl_internal.publication_approvals p join jwl_internal.media_grants g on g.grant_reference=p.media_reference
+    where p.candidate_id=new.candidate_id and p.revision_hash=new.revision_hash and p.image_verified and p.revoked_at is null and g.revoked_at is null and g.expires_at is null) then
+    raise exception 'Media publication needs a live approval and grant';
+  end if;
+  return new;
 end $$;
-revoke all on function public.jwl_expire_media_grants() from public,anon,authenticated;
-grant execute on function public.jwl_expire_media_grants() to service_role;
+revoke all on function jwl_internal.require_live_media_grant() from public,anon,authenticated;
+create trigger jwl_media_publication_grant before insert or update on jwl_internal.published_revisions
+  for each row execute function jwl_internal.require_live_media_grant();
+
+-- Public files of revoked grants, for the storage cleanup that must follow a revocation.
+create function public.jwl_revoked_media_files() returns jsonb
+language sql stable security invoker set search_path='' as $$
+  select coalesce(jsonb_agg(distinct a.public_url),'[]'::jsonb) from jwl_internal.media_assets a
+  join jwl_internal.media_grants g on g.grant_reference=a.grant_reference where g.revoked_at is not null;
+$$;
+revoke all on function public.jwl_revoked_media_files() from public,anon,authenticated;
+grant execute on function public.jwl_revoked_media_files() to service_role;
+
+-- The authoritative acquisition registry for queue runners; no permission text leaves the database.
+create function public.jwl_source_registry() returns jsonb
+language sql stable security invoker set search_path='' as $$
+  select coalesce(jsonb_object_agg(id,jsonb_build_object('origin',origin,'enabled',enabled,'acquisition_allowed',acquisition_allowed and permission_reference is not null,'min_interval_seconds',min_interval_seconds)),'{}'::jsonb)
+  from jwl_internal.sources;
+$$;
+revoke all on function public.jwl_source_registry() from public,anon,authenticated;
+grant execute on function public.jwl_source_registry() to service_role;
 
 -- Records the exact evidence rows and the verified approval in one transaction. Replays are
 -- idempotent only when every stored value is identical; the evidence trigger re-checks each file.
@@ -112,7 +157,8 @@ begin
   select count(*) into mismatched from jsonb_array_elements(evidence) e where not exists(
     select 1 from jwl_internal.media_assets m where m.candidate_id=e->>'candidate_id' and m.revision_hash=e->>'revision_hash' and m.public_url=e->>'public_url'
       and m.public_sha256=e->>'public_sha256' and m.width=(e->>'width')::integer and m.height=(e->>'height')::integer and m.original_source=e->>'original_source'
-      and m.original_sha256=e->>'original_sha256' and m.grant_reference=e->>'grant_reference' and m.verified_reference=e->>'verified_reference');
+      and m.original_sha256=e->>'original_sha256' and m.grant_reference=e->>'grant_reference' and m.verified_reference=e->>'verified_reference'
+      and m.verification_reference=e->>'verification_reference');
   if mismatched>0 then raise exception 'Stored media evidence differs from this approval';end if;
   insert into jwl_internal.publication_approvals(candidate_id,revision_hash,media_reference,image_verified,approved_images,approved_image_variants)
     values(approval->>'candidate_id',approval->>'revision_hash',approval->>'media_reference',true,approval->'approved_images',approval->'approved_image_variants')
