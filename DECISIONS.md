@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0011 — Per-origin queues, missing-only intake and exact media evidence](decisions/0011-per-origin-queues-and-exact-media-evidence.md)
+
 - [0010 — Claude owns implementation, tests and technical review](decisions/0010-claude-implementation-ownership.md)
 
 - [0009 — Interim factual publication, bounded public caching and responsive media](decisions/0009-factual-publication-and-bounded-cache.md)
