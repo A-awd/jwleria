@@ -3,7 +3,7 @@
 Continue from `claude/pensive-mccarthy-40nrlc` (top STATE entry and decision 0011). It fast-forwards the continuation branch; updating `codex/jwleria-architecture-2026-10-03` to it needs the owner's go-ahead because Claude's push authority is the work branch. Tests: `node --test scripts/catalog-intake/*.test.mjs` from the repo root (77) and `node --test tests/*.test.mjs` from `apps/storefront` (48, needs `pnpm install --frozen-lockfile`).
 
 Owner inputs and approvals still needed, in order:
-1. **Production migration approval.** Apply `20261026120000_jwleria_media_evidence_and_missing_intake.sql` to Supabase `saymzvrvtfrjftmtqtor`. It is additive, private and service-role-only, and touches no existing data, function or public read path. The session classifier denied it as a production deploy. After approval:
+1. **Production migration approval — NOT APPLIED.** Apply `20261026120000_jwleria_media_evidence_and_missing_intake.sql` to Supabase `saymzvrvtfrjftmtqtor`. It is additive, private and service-role-only, and touches no existing data, function or public read path. Exact blocker: the auto-mode classifier denied `mcp__Supabase__apply_migration` with reason `[Production Deploy]`, and no approval card exists. Do not retry it through `execute_sql` or broaden permission rules; it needs a specific owner production-approval exception (Codex presents it). After approval:
    - compare the public projection hash and candidate hash with the pre-apply baseline (public `f929f0974933890b08574e2d19038803`, candidates `0c7944b68e67530c850a51125b0daa84`, 4,097 active);
    - rename the local file to the registered version;
    - check the advisors (expect only the intended "RLS enabled, no policy" notes for the two new private tables).
