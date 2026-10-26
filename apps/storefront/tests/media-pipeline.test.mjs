@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
-import {galleryBinding,evaluateMediaGrant,mediaReadiness,acquireOriginal,keepOwnerOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {galleryBinding,evaluateMediaGrant,mediaReadiness,acquireOriginal,createMediaPacer,keepOwnerOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {uploadDerivatives} from '../../../scripts/catalog-intake/media.mjs';
 import {recordMediaApproval,publish} from '../../../scripts/catalog-intake/supabase.mjs';
 
@@ -54,7 +54,7 @@ test('original acquisition stops on robots, refusal, redirect or wrong type and 
   const root=await mkdtemp(join(tmpdir(),'jwl-media-'));
   try{
     const png=await sharp({create:{width:40,height:40,channels:3,background:'#123'}}).png().toBuffer();
-    const run=(routes)=>{const calls=[];return {calls,go:()=>acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{fetcher:async url=>{calls.push(url);return routes(url);}})};};
+    const run=(routes)=>{const calls=[],pacer=createMediaPacer({sleep:async()=>{}});return {calls,go:()=>acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{pacer,fetcher:async url=>{calls.push(url);return routes(url);}})};};
     let h=run(url=>url.endsWith('robots.txt')?new Response('User-agent: *\nDisallow: /watches/'):new Response(png,{headers:{'content-type':'image/png'}}));
     await assert.rejects(h.go(),/robots refused/);assert.equal(h.calls.length,1);
     h=run(url=>url.endsWith('robots.txt')?new Response('',{status:404}):new Response('no',{status:403}));
@@ -69,6 +69,7 @@ test('original acquisition stops on robots, refusal, redirect or wrong type and 
     const original=await h.go();
     assert.equal(original.sha256,sha(png));assert.equal(sha(await readFile(original.path)),sha(png));
     assert.equal((await h.go()).path,original.path,'replay is idempotent');
+    assert.equal(h.calls.filter(url=>url.endsWith('robots.txt')).length,1,'robots policy is cached per origin');
     await assert.rejects(acquireOriginal({candidate,asset_url:asset,grant:undefined,output_directory:root},{fetcher:async()=>{throw Error('must not fetch');}}),/no_media_grant/);
   }finally{await rm(root,{recursive:true,force:true});}
 });
@@ -105,7 +106,7 @@ test('end to end: permitted original → private derivatives → verification �
   const db=await catalogDatabase();
   try{
     const png=await sharp({create:{width:1200,height:1500,channels:3,background:{r:40,g:40,b:44}}}).png().toBuffer();
-    const original=await acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{fetcher:async url=>url.endsWith('robots.txt')?new Response('',{status:404}):new Response(png,{headers:{'content-type':'image/png'}})});
+    const original=await acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{pacer:createMediaPacer({sleep:async()=>{}}),fetcher:async url=>url.endsWith('robots.txt')?new Response('',{status:404}):new Response(png,{headers:{'content-type':'image/png'}})});
     await assert.rejects(prepareGrantedMedia({source:{...source,publication_allowed:false},candidate,asset:{...original,path:original.path},grant:written,output_directory:root}),/Explicit media grant required/,'source publication stays an owner decision');
     const prepared=await prepareGrantedMedia({source,candidate,asset:{path:original.path,source_url:original.source_url,sha256:original.sha256},grant:written,output_directory:root});
     assert.deepEqual(prepared.manifest.variants.map(v=>v.width),[320,640,960]);assert.equal(prepared.manifest.detail.width,1200);
@@ -155,5 +156,20 @@ test('owner originals bind to checksum and one exact product without any network
     const bundle=approvalBundle({candidate,grant:owner,items:[{asset:kept,manifest:prepared.manifest,verification:verification(kept)}],public_base_url:base});
     assert(bundle.evidence.every(e=>e.original_source===kept.source_url&&e.verified_reference===candidate.external_id));
     await assert.rejects(keepOwnerOriginal({candidate,grant:{...owner,declared_reference:'other'},local_path:local,output_directory:join(root,'private')}),/declared_reference_mismatch/);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('one pacer spaces every request to a media origin even across many assets',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-media-pace-'));
+  try{
+    let t=0;const at=[];
+    const pacer=createMediaPacer({min_interval_seconds:3,sleep:async ms=>{t+=ms;},now:()=>t});
+    const png=await sharp({create:{width:20,height:20,channels:3,background:'#456'}}).png().toBuffer();
+    const gallery=['https://media.example.test/watches/m126610ln-0001_a.png','https://media.example.test/watches/m126610ln-0001_b.png'];
+    const c={...candidate,image_urls:gallery};
+    const fetcher=async url=>{at.push(t);return url.endsWith('robots.txt')?new Response('User-agent: *\nAllow: /'):new Response(png,{headers:{'content-type':'image/png'}});};
+    for(const url of gallery)await acquireOriginal({candidate:c,asset_url:url,grant:written,output_directory:root},{fetcher,pacer});
+    assert.equal(at.length,3,'robots once, then two assets');
+    for(let i=1;i<at.length;i++)assert(at[i]-at[i-1]>=3000,'requests to one origin stay spaced');
   }finally{await rm(root,{recursive:true,force:true});}
 });

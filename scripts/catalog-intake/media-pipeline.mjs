@@ -95,27 +95,47 @@ async function boundedBytes(response){
  * Downloads one exact gallery original under a permitted written grant. Robots, refusals, rate limits
  * and redirects stop the transfer; the untouched original is preserved privately by checksum.
  */
-export async function acquireOriginal({candidate,asset_url,grant,output_directory},{fetcher=fetch,now=Date.now}={}){
-  const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:now()});
+/**
+ * Per-origin pacing and robots cache shared by every download made through one pacer, so a caller
+ * looping over many assets still spaces requests to each media origin.
+ */
+export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600,sleep=ms=>new Promise(r=>setTimeout(r,ms)),now=Date.now}={}){
+  const next=new Map(),robots=new Map(),interval=Math.max(2,min_interval_seconds)*1000;
+  return {now,
+    async wait(origin){const at=next.get(origin)??0;if(at>now())await sleep(at-now());next.set(origin,now()+interval);},
+    robots(origin){const hit=robots.get(origin);return hit&&hit.until>now()?hit.policy:null;},
+    remember(origin,policy){robots.set(origin,{policy,until:now()+robots_ttl_seconds*1000});}};
+}
+const defaultPacer=createMediaPacer();
+
+export async function acquireOriginal({candidate,asset_url,grant,output_directory},{fetcher=fetch,pacer=defaultPacer}={}){
+  const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
   if(decision.state!=='permitted'||grant.kind!=='written_permission')throw Error('Permitted written media grant required: '+decision.reasons.join(','));
   const root=await privateRoot(output_directory),url=new URL(asset_url);
   const request=async target=>{
+    await pacer.wait(url.origin);
     const response=await fetcher(target,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});
     if([401,403,429].includes(response.status))throw Error(`Media source refused access (${response.status})`);
     if(response.status>=300&&response.status<400)throw Error('Media redirect requires review');
     return response;
   };
-  const robots=await request(url.origin+'/robots.txt');
-  // RFC 9309: an absent robots file allows access; any other failure stops the download.
-  if(robots.ok){if(robotsParser(url.origin+'/robots.txt',(await boundedBytes(robots)).toString('utf8')).isAllowed(url.href,agent)!==true)throw Error('Media robots refused');}
-  else if(![404,410].includes(robots.status))throw Error(`Media robots unavailable (${robots.status})`);
+  let policy=pacer.robots(url.origin);
+  if(!policy){
+    const robots=await request(url.origin+'/robots.txt');
+    // RFC 9309: an absent robots file allows access; any other failure stops the download.
+    if(robots.ok)policy=robotsParser(url.origin+'/robots.txt',(await boundedBytes(robots)).toString('utf8'));
+    else if([404,410].includes(robots.status))policy=robotsParser(url.origin+'/robots.txt','');
+    else throw Error(`Media robots unavailable (${robots.status})`);
+    pacer.remember(url.origin,policy);
+  }
+  if(policy.isAllowed(url.href,agent)!==true)throw Error('Media robots refused');
   const response=await request(url.href);
   if(!response.ok)throw Error(`Source media unavailable (${response.status})`);
   const mime=(response.headers.get('content-type')??'').split(';')[0].trim().toLowerCase();
   if(!formats[mime])throw Error('Unsupported source image type');
   const bytes=await boundedBytes(response);
   const kept=await keepOriginal(root,bytes,formats[mime]);
-  return {source_url:url.href,sha256:kept.sha256,bytes:bytes.length,mime_type:mime,path:kept.path,acquired_at:new Date(now()).toISOString(),grant_reference:grant.grant_reference};
+  return {source_url:url.href,sha256:kept.sha256,bytes:bytes.length,mime_type:mime,path:kept.path,acquired_at:new Date(pacer.now()).toISOString(),grant_reference:grant.grant_reference};
 }
 
 /** Preserves an owner's own photograph of one exact product; no network request. */

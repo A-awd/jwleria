@@ -107,8 +107,9 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
     try{state=JSON.parse(await readFile(statePath,'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;state={schema_version:1,source_id:id,origin,inventory:[],discovery:{complete:false,visited:[],errors:[]},urls:{},candidates:{},candidate_urls:{},requests:0};}
     if(state.source_id!==id||state.origin!==origin)throw Error('Queue state belongs to another source');
     state.candidate_urls??={};
-    if(state.status==='blocked'&&source.resume_after_review!==state.blocked?.review_token)return {source_id:id,status:'blocked',reason:state.blocked?.reason,requests:0,detail:'source_review_required'};
-    if(state.not_before&&now()<state.not_before)return {source_id:id,status:'deferred',reason:'source_rate_limited',not_before:new Date(state.not_before).toISOString(),requests:0};
+    // Fail closed: a blocked origin without a recorded review token can never resume by config.
+    if(state.status==='blocked'&&(!state.blocked?.review_token||source.resume_after_review!==state.blocked.review_token))return {source_id:id,status:'blocked',reason:state.blocked?.reason,requests:0,detail:'source_review_required'};
+    if(state.not_before&&now()<state.not_before)return {source_id:id,status:'deferred',reason:state.status==='paused'?'origin_unhealthy':'source_rate_limited',not_before:new Date(state.not_before).toISOString(),requests:0};
     delete state.not_before;delete state.blocked;
     state.status='running';state.run_started_at=new Date(now()).toISOString();state.run={requests:0,acquired:0,new_revisions:0,failed:0,retried:0};await save();
 
@@ -243,7 +244,11 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       }else if(error.status==='blocked'){
         // A refusal or challenge needs a human review token before this origin is ever retried.
         state.blocked={reason:error.reason,...error.detail,observed_at:new Date(now()).toISOString(),review_token:createHash('sha256').update(id+error.reason+now()).digest('hex').slice(0,16)};
-      }else state.stop={reason:error.reason,...error.detail,observed_at:new Date(now()).toISOString()};
+      }else{
+        state.stop={reason:error.reason,...error.detail,observed_at:new Date(now()).toISOString()};
+        // An unhealthy origin cools down before any later run may contact it again.
+        if(error.status==='paused')state.not_before=now()+(source.unhealthy_defer_seconds??900)*1000;
+      }
       await save();
       return {...summary(state),reason:error.reason};
     }

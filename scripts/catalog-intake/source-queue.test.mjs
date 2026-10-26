@@ -89,9 +89,13 @@ test('transient failures back off and retry within bounds, persist for the next 
 test('consecutive transient failures pause an unhealthy origin instead of hammering it',async()=>{
   const root=await privateDir();
   const h=harness(url=>url.endsWith('/robots.txt')?()=>new Response(allow):()=>{throw new TypeError('fetch failed');});
-  const result=await runOrigin(source('rolex-official',{inventory_urls:rolex,max_attempts:3,unhealthy_stop_after:4}),{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
+  const config=source('rolex-official',{inventory_urls:rolex,max_attempts:3,unhealthy_stop_after:4,unhealthy_defer_seconds:600});
+  const result=await runOrigin(config,{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
   assert.equal(result.status,'paused');assert.equal(result.reason,'origin_unhealthy');
   assert.equal(h.calls.filter(c=>!c.url.endsWith('robots.txt')).length,4);
+  const count=h.calls.length;
+  const cooling=await runOrigin(config,{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
+  assert.deepEqual([cooling.status,cooling.reason,h.calls.length],['deferred','origin_unhealthy',count],'no request during the cool-down');
   await rm(root,{recursive:true});
 });
 
@@ -135,6 +139,11 @@ test('robots refusals, unreviewed redirects and challenges stay explicit; a bloc
   const again=await runOrigin(config,{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
   assert.equal(again.status,'blocked');assert.equal(again.detail,'source_review_required');assert.equal(h.calls.length,before);
   challenge=false;
+  // A hand-edited state without its review token fails closed instead of resuming.
+  const edited={...state,blocked:{reason:'source_challenge'}};
+  await writeFile(join(root,'rolex-official','state.json'),JSON.stringify(edited));
+  assert.equal((await runOrigin({...config,resume_after_review:undefined},{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now})).status,'blocked');
+  await writeFile(join(root,'rolex-official','state.json'),JSON.stringify(state));
   const resumed=await runOrigin({...config,resume_after_review:state.blocked.review_token},{root,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
   assert.equal(resumed.status,'completed');assert.deepEqual(resumed.url_states,{failed:2,acquired:1});assert.equal(resumed.inventory_complete,false);
   await rm(root,{recursive:true});
