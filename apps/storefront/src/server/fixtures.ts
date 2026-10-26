@@ -2,10 +2,15 @@ import type {
   Brand,
   BrandTier,
   Category,
+  LocalizedText,
+  ProductModel,
   ProductPage,
   ProductQuery,
+  ProductVariant,
   PublicProduct,
+  VariantSpec,
 } from '../contracts/catalog';
+import { assembleModel, singleModel } from '../components/variant-selection.mjs';
 
 const PREVIEW_BRAND_SLUG = 'jwleria-edit';
 const CATEGORY_IMAGES: Record<string, string> = {
@@ -166,6 +171,123 @@ const products: readonly PublicProduct[] = productSeeds.map(
   }),
 );
 
+// Synthetic model groups exercise variant selection; every reference, value and fact is a labelled preview.
+type OptionSeed = { label: LocalizedText; values: Record<string, LocalizedText> };
+type ModelSeed = {
+  key: string;
+  categorySlug: string;
+  name: LocalizedText;
+  options: Record<string, OptionSeed>;
+  specs: VariantSpec[];
+  variants: readonly (readonly [sequence: number, slug: string, options: Record<string, string>, images: string[]])[];
+};
+
+const SYNTHETIC_SUMMARY = {
+  ar: 'صورة اصطناعية للتجربة؛ ليست لقطعة تجارية أو منتج من علامة عالمية.',
+  en: 'A synthetic preview illustration, not a commercial item or a product from an international brand.',
+};
+
+const modelSeeds: readonly ModelSeed[] = [
+  {
+    key: 'preview:watch-model',
+    categorySlug: 'watches',
+    name: { ar: 'ساعة — نموذج معاينة', en: 'Preview watch model' },
+    options: {
+      dial: { label: { ar: 'لون الميناء', en: 'Dial' }, values: {
+        ivory: { ar: 'عاجي تجريبي', en: 'Preview ivory' },
+        slate: { ar: 'رمادي تجريبي', en: 'Preview slate' },
+        green: { ar: 'أخضر تجريبي', en: 'Preview green' },
+      } },
+      bracelet: { label: { ar: 'السوار', en: 'Bracelet' }, values: {
+        'three-link': { ar: 'سوار ثلاثي تجريبي', en: 'Preview three-link' },
+        'five-link': { ar: 'سوار خماسي تجريبي', en: 'Preview five-link' },
+        leather: { ar: 'حزام جلدي تجريبي', en: 'Preview leather strap' },
+      } },
+    },
+    specs: [
+      { kind: 'case_diameter', label: { ar: 'قطر العلبة', en: 'Case diameter' }, value: { ar: '40 مم', en: '40 mm' } },
+      { kind: 'movement', label: { ar: 'الحركة', en: 'Movement' }, value: { ar: 'Preview calibre 00', en: 'Preview calibre 00' }, valueLang: 'en' },
+    ],
+    // The green dial exists only on the leather strap, so no other combination is offered.
+    variants: [
+      [101, 'preview-watch-ivory-three-link', { dial: 'ivory', bracelet: 'three-link' }, [CATEGORY_IMAGES.watches]],
+      [102, 'preview-watch-ivory-five-link', { dial: 'ivory', bracelet: 'five-link' }, [CATEGORY_IMAGES.watches, '/images/catalog-still-life.webp']],
+      [103, 'preview-watch-slate-three-link', { dial: 'slate', bracelet: 'three-link' }, ['/images/catalog-still-life.webp']],
+      [104, 'preview-watch-slate-five-link', { dial: 'slate', bracelet: 'five-link' }, ['/images/catalog-still-life.webp', CATEGORY_IMAGES.watches]],
+      [105, 'preview-watch-green-leather', { dial: 'green', bracelet: 'leather' }, []],
+    ],
+  },
+  {
+    key: 'preview:handbag-model',
+    categorySlug: 'handbags',
+    name: { ar: 'حقيبة يد — نموذج معاينة', en: 'Preview handbag model' },
+    options: {
+      colour: { label: { ar: 'اللون', en: 'Colour' }, values: {
+        black: { ar: 'أسود تجريبي', en: 'Preview black' },
+        beige: { ar: 'بيج تجريبي', en: 'Preview beige' },
+        burgundy: { ar: 'عنابي تجريبي', en: 'Preview burgundy' },
+      } },
+    },
+    specs: [
+      { kind: 'material', label: { ar: 'المادة', en: 'Material' }, value: { ar: 'جلد تجريبي', en: 'Preview leather' } },
+      { kind: 'dimensions', label: { ar: 'الأبعاد', en: 'Dimensions' }, value: { ar: '30 × 22 × 12 سم', en: '30 × 22 × 12 cm' } },
+    ],
+    variants: [
+      [111, 'preview-handbag-black', { colour: 'black' }, [CATEGORY_IMAGES.handbags]],
+      [112, 'preview-handbag-beige', { colour: 'beige' }, [CATEGORY_IMAGES['leather-goods']]],
+      [113, 'preview-handbag-burgundy', { colour: 'burgundy' }, ['/images/catalog-still-life.webp']],
+    ],
+  },
+  {
+    key: 'preview:single-bracelet',
+    categorySlug: 'bracelets',
+    name: { ar: 'سوار — نموذج معاينة مفرد', en: 'Preview single bracelet' },
+    options: {},
+    specs: [
+      { kind: 'material', label: { ar: 'المادة', en: 'Material' }, value: { ar: 'معدن تجريبي', en: 'Preview metal' } },
+    ],
+    variants: [[121, 'preview-bracelet-single', {}, [CATEGORY_IMAGES.bracelets]]],
+  },
+];
+
+const modelVariants = new Map(modelSeeds.map((model, index): [string, ProductVariant[]] => [model.key, model.variants.map(([sequence, slug, chosen, images], position) => {
+  const options = Object.entries(chosen).map(([kind, key]) => ({ kind, key, label: model.options[kind].label, value: model.options[kind].values[key] }));
+  const words = (l: 'ar' | 'en') => [model.name[l], ...options.map((o) => o.value[l])].join(l === 'ar' ? '، ' : ', ');
+  return {
+    id: `4c4a0000-2026-4003-8000-${String(sequence).padStart(12, '0')}`,
+    slug,
+    reference: `JWL-PREVIEW-M${index + 1}-${String(position + 1).padStart(2, '0')}`,
+    brandSlug: PREVIEW_BRAND_SLUG,
+    collection: { ar: 'مختاراتنا', en: 'Jwleria Edit' },
+    collectionSlug: 'jwleria-edit',
+    images,
+    categorySlug: model.categorySlug,
+    name: { ar: words('ar'), en: words('en') },
+    summary: { ...SYNTHETIC_SUMMARY },
+    image: images[0] ?? null,
+    mediaKind: images.length ? 'synthetic-preview' : 'facts-only',
+    isPreview: true,
+    addedAt: `2026-10-26T09:${String(sequence - 100).padStart(2, '0')}:00.000Z`,
+    options,
+    specs: [...model.specs, ...options.map(({ kind, label, value }) => ({ kind, label, value }))],
+    position,
+    isPrimary: position === 0,
+  };
+})]));
+const modelSeedByKey = new Map(modelSeeds.map((model) => [model.key, model]));
+const modelKeyBySlug = new Map([...modelVariants].flatMap(([key, variants]) => variants.map((v): [string, string] => [v.slug, key])));
+
+// Listings show one card per model: its primary variant with a count of the real option values.
+const listed: readonly PublicProduct[] = [
+  ...products,
+  ...[...modelVariants].map(([key, variants]): PublicProduct => {
+    const counts = new Map<string, Set<string>>();
+    for (const v of variants) for (const o of v.options) counts.set(o.kind, (counts.get(o.kind) ?? new Set()).add(o.key));
+    const { options: _options, specs: _specs, position: _position, isPrimary: _primary, ...primary } = variants[0];
+    return { ...primary, model: { key, name: modelSeedByKey.get(key)!.name, variantCount: variants.length, options: [...counts].map(([kind, values]) => ({ kind, count: values.size })) } };
+  }),
+];
+
 const categoryBySlug = new Map(categories.map((category) => [category.slug, category]));
 
 function cloneBrand(brand: Brand): Brand {
@@ -177,7 +299,7 @@ function cloneCategory(category: Category): Category {
 }
 
 function cloneProduct(product: PublicProduct): PublicProduct {
-  return { ...product, name: { ...product.name }, summary: { ...product.summary } };
+  return product.model ? structuredClone(product) : { ...product, name: { ...product.name }, summary: { ...product.summary } };
 }
 
 function normalizeSlug(value: string | undefined): string {
@@ -220,7 +342,7 @@ export function getProducts(query: ProductQuery = {}): ProductPage {
   const searchTokens = normalizeSearch(query.search ?? '').split(/\s+/).filter(Boolean);
   const pageSize = Math.min(MAX_PAGE_SIZE, positiveInteger(query.pageSize, DEFAULT_PAGE_SIZE));
 
-  const filtered = products.filter((product) => {
+  const filtered = listed.filter((product) => {
     if (brand && product.brandSlug !== brand) return false;
     if (category && product.categorySlug !== category) return false;
     if (searchTokens.length === 0) return true;
@@ -237,6 +359,9 @@ export function getProducts(query: ProductQuery = {}): ProductPage {
       productCategory?.name.ar ?? '',
       productCategory?.name.en ?? '',
       'Jwleria Edit',
+      product.model?.name.ar ?? '',
+      product.model?.name.en ?? '',
+      ...(modelVariants.get(product.model?.key ?? '') ?? []).map((v) => v.reference),
     ].join(' '));
     return searchTokens.every((token) => searchable.includes(token));
   }).sort(latestFirst);
@@ -252,12 +377,23 @@ export function getProducts(query: ProductQuery = {}): ProductPage {
     page,
     pageSize,
     pages,
+    // Like the model projection: one card per model, single-variant previews included.
+    unit: 'models',
   };
 }
 
 export function getProduct(slug: string): PublicProduct | undefined {
-  const product = products.find((item) => item.slug === normalizeSlug(slug));
-  return product ? cloneProduct(product) : undefined;
+  const key = normalizeSlug(slug);
+  const product = products.find((item) => item.slug === key) ?? modelVariants.get(modelKeyBySlug.get(key) ?? '')?.find((v) => v.slug === key);
+  return product ? structuredClone(product) : undefined;
+}
+
+/** Any variant slug resolves to its whole synthetic model with that variant selected. */
+export function getProductModel(slug: string): ProductModel | undefined {
+  const key = normalizeSlug(slug);
+  const modelKey = modelKeyBySlug.get(key);
+  if (!modelKey) return singleModel(getProduct(key));
+  return structuredClone(assembleModel(modelKey, modelSeedByKey.get(modelKey)!.name, modelVariants.get(modelKey)!, key));
 }
 
 export function getBrand(slug: string): Brand | undefined {
@@ -270,13 +406,13 @@ export function getCategory(slug: string): Category | undefined {
   return category ? cloneCategory(category) : undefined;
 }
 
-/** Category matches first, then other neutral previews; never include the input item. */
-export function getRelatedProducts(product: PublicProduct, limit = 4): PublicProduct[] {
+/** Category matches first, then other neutral previews; never include the input item or its model. */
+export function getRelatedProducts(product: PublicProduct, limit = 4, modelKey: string | null = null): PublicProduct[] {
   if (!Number.isFinite(limit) || limit <= 0) return [];
   const count = Math.min(MAX_PAGE_SIZE, Math.floor(limit));
 
-  return products
-    .filter((item) => item.id !== product.id && item.slug !== product.slug)
+  return listed
+    .filter((item) => item.id !== product.id && item.slug !== product.slug && (!modelKey || item.model?.key !== modelKey))
     .sort((a, b) => {
       const aMatch = Number(a.categorySlug === product.categorySlug);
       const bMatch = Number(b.categorySlug === product.categorySlug);
@@ -288,7 +424,7 @@ export function getRelatedProducts(product: PublicProduct, limit = 4): PublicPro
 
 export function getLatestProducts(limit = 6): PublicProduct[] {
   if (!Number.isFinite(limit) || limit <= 0) return [];
-  return [...products]
+  return [...listed]
     .sort(latestFirst)
     .slice(0, Math.min(MAX_PAGE_SIZE, Math.floor(limit)))
     .map(cloneProduct);

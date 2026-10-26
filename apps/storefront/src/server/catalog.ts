@@ -1,7 +1,7 @@
 import { env } from 'node:process';
-import type { ProductPage, ProductQuery, PublicProduct } from '../contracts/catalog';
+import type { ProductModel, ProductPage, ProductQuery, PublicProduct } from '../contracts/catalog';
 import * as fixtures from './fixtures';
-import { queryCatalog, readProduct, listCollections, listPublishedBrands, readBrandPage } from './supabase-catalog.mjs';
+import { queryModels, readProductModel, listCollections, listPublishedBrands, readBrandModelsPage } from './supabase-catalog.mjs';
 import { findDirectoryBrand } from './catalog-directory.mjs';
 
 export function catalogMode(): 'preview' | 'live' | 'empty' {
@@ -48,7 +48,7 @@ export async function getBrandPage(slug: string, query: ProductQuery = {}) {
   const directory=getDirectoryBrands();
   const known=directory.find(b=>b.slug===slug);
   if(catalogMode()!=='live')return {brand:known,result:await getProducts({...query,brand:slug}),collections:[],directory};
-  const page=await readBrandPage(config(),slug,query);
+  const page=await readBrandModelsPage(config(),slug,query);
   const merged=new Map(directory.map(b=>[b.slug,b]));
   for(const brand of page.brands)merged.set(brand.slug,brand);
   return {brand:known??page.brand,result:page.result,collections:page.collections,directory:[...merged.values()]};
@@ -56,20 +56,25 @@ export async function getBrandPage(slug: string, query: ProductQuery = {}) {
 
 export async function getProducts(query: ProductQuery = {}): Promise<ProductPage> {
   if (catalogMode() === 'preview') return fixtures.getProducts(query);
-  if (catalogMode() === 'live') return queryCatalog(config(), query);
+  if (catalogMode() === 'live') return queryModels(config(), query);
   return { items: [], total: 0, page: 1, pageSize: 12, pages: 0 };
 }
+/** The model of any variant slug, with that variant selected, in one catalog read. */
+export async function getProductModel(slug: string): Promise<ProductModel | undefined> {
+  if (catalogMode() === 'preview') return fixtures.getProductModel(slug);
+  return catalogMode() === 'live' ? readProductModel(config(), slug) : undefined;
+}
 export async function getProduct(slug: string): Promise<PublicProduct | undefined> {
-  if (catalogMode() === 'preview') return fixtures.getProduct(slug);
-  return catalogMode() === 'live' ? readProduct(config(), slug) : undefined;
+  return (await getProductModel(slug))?.selected;
 }
 export async function getCollections(brand: string) {
   return catalogMode() === 'live' ? listCollections(config(), brand) : [];
 }
-export async function getRelatedProducts(product: PublicProduct, limit = 4): Promise<PublicProduct[]> {
-  if (catalogMode() === 'preview') return fixtures.getRelatedProducts(product, limit);
+/** Other models of the same category; the model's own variants are never listed as related. */
+export async function getRelatedProducts(product: PublicProduct, limit = 4, modelKey: string | null = null): Promise<PublicProduct[]> {
+  if (catalogMode() === 'preview') return fixtures.getRelatedProducts(product, limit, modelKey);
   const page = await getProducts({ category: product.categorySlug, pageSize: Math.min(limit + 1, 48) });
-  return page.items.filter(p => p.id !== product.id).slice(0, limit);
+  return page.items.filter(p => p.id !== product.id && (!modelKey || p.model?.key !== modelKey)).slice(0, limit);
 }
 export async function getLatestProducts(limit = 6) {
   return (await getProducts({ pageSize: limit })).items;
