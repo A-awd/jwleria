@@ -1,3 +1,19 @@
+## Current handoff — dedicated environment saved, session not launched — 2026-10-26
+
+The owner specifically approved dedicated Jwleria cloud environment creation with Full any-host outbound networking plus one new conversation, preserving Opus5.5 Max, current provider connector scopes, shared Default, credentials and Mac/OS permissions. Codex saved it; the UI now shows `Environment: Jwleria`, `Opus5.5 Max` and `Permissions: Auto`. This supersedes the prior pending choice below. It does not authorize new credentials, broader provider/security modes or production/media/scheduling actions.
+
+The new conversation is still unsent/unlaunched. Finish only the approved repository/branch and current-connector preparation, use the private English brief aligned with the approved Full scope, then launch that one conversation and record its actual result/URL. Do not re-request the settled network/environment approval or change shared Default. Saved configuration is not proof of source egress, a working runner or four-stage completion; verify those in the future session. No new credential, photo, production write, app source or test change occurred during this setup.
+
+Preserve Claude implementation/testing/review ownership, latest implementation preflight3fa1d2d, normal history merges and every separately gated source/media/publication, upload credential and schedule approval. Existing applied migration20261026114541 must not be repeated. Keep private draft/location/account identifiers out of this public repository. Historical pending notes below remain only as the earlier state; Easy Life stays stopped.
+
+## Current handoff — dedicated environment decision pending — 2026-10-26
+
+Continue from Claude preflight `3fa1d2d08f94c14c64f5f5765b4ea7346b8aef20` on `claude/pensive-mccarthy-40nrlc`, which preserves continuation pointer1bb3c161 through a normal merge. The existing session is confirmed Opus5.5 Max. Keep that model/Max selection and ordinary Auto permissions unchanged.
+
+The owner wants the four stages in one conversation with fewer repeated prompts. A dedicated Jwleria environment plus one future conversation is proposed because Default is shared, Limited and has no allowed domains. Full outbound networking is staged only in an UNSAVED new-environment form: it would allow any outbound host for the dedicated environment, not modify Default. Limited exact-host access remains an alternative. Specific approval for the chosen access is pending; do not infer it from a broad superuser question. No new environment/session, credential or access grant has been saved.
+
+Next dependent action is the owner's exact network/environment choice, followed by only its approved setup and a single continuation using the privately prepared English brief. Align that brief with the approved scope; keep raw prompt/private paths/account identifiers/screenshots outside this public repository. Do not promise approval-free operation, broaden tool/security modes or assume Mac/root/SSH access. Claude owns the four-stage implementation, tests and review; Codex coordinates. Preserve all existing media, WhatsApp, runner/upload, scheduling, source/publication and repository merge gates. No application merge, tests, production action or global/foundation routing change occurred in this preparation.
+
 ## Current handoff — four-stage preflight complete, setup approval pending — 2026-10-26
 
 Read the top STATE entry. Next action: the owner approves the consolidated setup request relayed by Codex. Until then do not collect, change configuration or write production data.
