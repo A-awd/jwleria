@@ -1,0 +1,587 @@
+{
+ "retrieved": "2026-10-26",
+ "source": "Mobbin connector (search_sections, search_screens, search_flows)",
+ "note": "Reference screenshots are not committed; open each mobbin_url on Mobbin.",
+ "references": [
+  {
+   "id": "062e2f6c-d576-4c5c-89a2-6fbc0d554e8a",
+   "target": "hero-nav",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/062e2f6c-d576-4c5c-89a2-6fbc0d554e8a",
+   "query": "Farfetch homepage",
+   "directions": [
+    "a",
+    "b"
+   ],
+   "note_ar": "رأس بصفّين: الشعار في المنتصف، وقائمة كبيرة للعلامات من A إلى Z تُفتح من «العلامات»."
+  },
+  {
+   "id": "652c3cb7-603d-4b30-8e51-ed8fa473ee6f",
+   "target": "hero-nav",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/652c3cb7-603d-4b30-8e51-ed8fa473ee6f",
+   "query": "Farfetch homepage",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "صفحة رئيسية بصورتين متجاورتين داخل هوامش بيضاء واسعة، واسم العلامة عنوانًا فوق الصورة."
+  },
+  {
+   "id": "4ff94654-4570-46c2-beaf-77b5ccaf97ce",
+   "target": "hero-nav",
+   "name": "SSENSE",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/sites/sections/4ff94654-4570-46c2-beaf-77b5ccaf97ce",
+   "query": "luxury fashion ecommerce hero section",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "رأس بسطر واحد وروابط صغيرة، وعناوين نصية كبيرة تقود الصفحة بدل الصورة."
+  },
+  {
+   "id": "495a0688-c81b-4bcf-86d6-335be9ca6288",
+   "target": "hero-nav",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/495a0688-c81b-4bcf-86d6-335be9ca6288",
+   "query": "luxury fashion ecommerce homepage",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "واجهة منقسمة: لوحة نص على جانب وصورة على الجانب الآخر، ثم صف مقترحات."
+  },
+  {
+   "id": "275e6bb0-084c-45cd-bc29-d3d14ea4c437",
+   "target": "hero-nav",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/275e6bb0-084c-45cd-bc29-d3d14ea4c437",
+   "query": "Farfetch homepage",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "اختيار القسم عبر بطاقات صور كبيرة بعناوين واضحة."
+  },
+  {
+   "id": "1302fa95-92b2-4350-8fae-9fd5688bc832",
+   "target": "hero-nav",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "flow",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/flows/1302fa95-92b2-4350-8fae-9fd5688bc832",
+   "query": "fashion marketplace browsing by brand",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "دليل العلامات: صف حروف A–Z مع بحث وتصفية حسب الفئة."
+  },
+  {
+   "id": "1a889d4d-b96d-4f5a-a3f7-9f359617acc1",
+   "target": "hero-nav",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/1a889d4d-b96d-4f5a-a3f7-9f359617acc1",
+   "query": "luxury fashion ecommerce homepage",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "تنقل نصي بخط سيريف على صفحة بيضاء يقودها الحرف."
+  },
+  {
+   "id": "fab9fd81-4397-423b-a03a-0c5c778c92fa",
+   "target": "hero-nav",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/fab9fd81-4397-423b-a03a-0c5c778c92fa",
+   "query": "fashion store mega menu",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "قائمة بملء الشاشة بعناصر كبيرة؛ مرجعنا لقائمة الجوال في الاتجاه أ."
+  },
+  {
+   "id": "a87f2a50-8a78-4193-b491-5589059041fa",
+   "target": "hero-nav",
+   "name": "In Common With",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "off-domain",
+   "mobbin_url": "https://mobbin.com/sites/sections/a87f2a50-8a78-4193-b491-5589059041fa",
+   "query": "jewelry brand website hero section",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "صورة بعرض الصفحة وتنقل خفيف فوقها؛ إحساس هادئ ودافئ. من خارج مجال الأزياء."
+  },
+  {
+   "id": "1f68eb6b-9599-4420-b76c-b1cefafa81fa",
+   "target": "hero-nav",
+   "name": "FARFETCH",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/sites/sections/1f68eb6b-9599-4420-b76c-b1cefafa81fa",
+   "query": "fashion retailer brand list section",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "شبكة أسماء علامات في خانات متساوية بفواصل رفيعة. من الموقع المؤسسي لا المتجر."
+  },
+  {
+   "id": "747e1e51-77c1-4dd5-a556-a67199054387",
+   "target": "hero-nav",
+   "name": "Assembly Coffee",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "off-domain",
+   "mobbin_url": "https://mobbin.com/sites/sections/747e1e51-77c1-4dd5-a556-a67199054387",
+   "query": "fine jewelry online store hero section",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "منتجات معروضة على منصّات بإضاءة هادئة. من خارج مجال الأزياء."
+  },
+  {
+   "id": "0d802a54-4f2a-487c-a836-679a0348ba4f",
+   "target": "catalog",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/0d802a54-4f2a-487c-a836-679a0348ba4f",
+   "query": "FARFETCH product listing page",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "قائمة منتجات بعمود تصفية جانبي (الفئة، العلامة، المقاس، اللون) وشبكة على خلفية بيضاء."
+  },
+  {
+   "id": "ee94ebcb-ed62-4c89-8cf7-6b212243f11c",
+   "target": "catalog",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/ee94ebcb-ed62-4c89-8cf7-6b212243f11c",
+   "query": "fashion ecommerce product listing page",
+   "directions": [
+    "b",
+    "c"
+   ],
+   "note_ar": "عنوان الفئة وعدد النتائج وتصفية جانبية، وتحت البطاقة اسم العلامة ثم المنتج ثم عدد الألوان."
+  },
+  {
+   "id": "c28f72c2-4863-4028-b944-4575166be6af",
+   "target": "catalog",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/c28f72c2-4863-4028-b944-4575166be6af",
+   "query": "FARFETCH brands A-Z page",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "صفحة العلامات من A إلى Z مع بحث داخل أسماء العلامات."
+  },
+  {
+   "id": "d82ea357-dd95-40fe-8217-5ec8bdb98ca5",
+   "target": "catalog",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/d82ea357-dd95-40fe-8217-5ec8bdb98ca5",
+   "query": "brand directory page listing designers A-Z",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "مربعات حروف A–Z مع تمييز الحرف المختار."
+  },
+  {
+   "id": "00bd84df-22f3-48a3-b4e1-abbd3ee0376a",
+   "target": "catalog",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/00bd84df-22f3-48a3-b4e1-abbd3ee0376a",
+   "query": "fashion ecommerce product listing page",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "شبكة منتجات بلا إطارات على أرضية فاتحة، ونقاط ألوان صغيرة تحت كل منتج."
+  },
+  {
+   "id": "e4c6a5b3-fe15-4e57-8782-35754ab902a4",
+   "target": "catalog",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/e4c6a5b3-fe15-4e57-8782-35754ab902a4",
+   "query": "watch store product listing page",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "بطاقات طولية كبيرة جدًا والمنتج صغير في وسطها؛ المساحة الفارغة نفسها توحي بالفخامة."
+  },
+  {
+   "id": "2c42876f-e42f-49dc-ba18-b6acc4bdf204",
+   "target": "catalog",
+   "name": "Face Formula",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "off-domain",
+   "mobbin_url": "https://mobbin.com/sites/sections/2c42876f-e42f-49dc-ba18-b6acc4bdf204",
+   "query": "product grid section for a fashion store",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "عنوان سيريف كبير للكتالوج وشريط تصفية بسيط فوق الشبكة. من خارج مجال الأزياء."
+  },
+  {
+   "id": "5ea27774-07b3-446d-b208-6b31e42f1281",
+   "target": "catalog",
+   "name": "SOTF",
+   "platform": "section",
+   "kind": "section",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/sites/sections/5ea27774-07b3-446d-b208-6b31e42f1281",
+   "query": "product grid section for a fashion store",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "بطاقات منتجات على منصّات رمادية تفصلها خطوط رفيعة."
+  },
+  {
+   "id": "85dbd6d2-e22e-47e1-b61a-1c1ef517dcfe",
+   "target": "catalog",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/85dbd6d2-e22e-47e1-b61a-1c1ef517dcfe",
+   "query": "department store mega menu with designers and categories",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "قائمة كبيرة بأعمدة روابط وصورة مميزة إلى جانبها."
+  },
+  {
+   "id": "21f0e2b4-ad40-4d7b-b7b4-42f373f9b17a",
+   "target": "catalog",
+   "name": "Urban Outfitters",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/21f0e2b4-ad40-4d7b-b7b4-42f373f9b17a",
+   "query": "brand directory page listing designers A-Z",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "العلامات مرتبة بالحروف مع عدد المنتجات بجانب كل علامة."
+  },
+  {
+   "id": "0e3baeaa-aca2-4943-8e7b-7e2571017378",
+   "target": "pdp",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/0e3baeaa-aca2-4943-8e7b-7e2571017378",
+   "query": "Farfetch product page",
+   "directions": [
+    "a",
+    "b"
+   ],
+   "note_ar": "اسم العلامة فوق اسم المنتج، وصورتان متجاورتان (كاملة وقريبة)، وعمود معلومات بجانبهما."
+  },
+  {
+   "id": "ea81f0f4-79c0-48eb-b60d-de531f895100",
+   "target": "pdp",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/ea81f0f4-79c0-48eb-b60d-de531f895100",
+   "query": "fashion product detail page with image gallery",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "شبكة صور بعمودين، وعمود معلومات: العلامة ثم الاسم ثم مربعات اللون والمقاس."
+  },
+  {
+   "id": "6b30a565-bd75-484f-aa9a-124b721b773a",
+   "target": "pdp",
+   "name": "Selfridges",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/6b30a565-bd75-484f-aa9a-124b721b773a",
+   "query": "watch product detail page",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "عمود المعلومات يبقى ثابتًا أثناء تمرير الصور، ثم روابط التفاصيل بخط كبير."
+  },
+  {
+   "id": "7ce8c22d-6f00-4eff-af5b-7ae329eedfe8",
+   "target": "pdp",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/7ce8c22d-6f00-4eff-af5b-7ae329eedfe8",
+   "query": "Farfetch product page",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "تفاصيل المنتج في أعمدة تحت تبويب، ومنها رقم المرجع."
+  },
+  {
+   "id": "2f7126af-fa40-4db1-87af-9fcb2e18ecaa",
+   "target": "pdp",
+   "name": "FARFETCH",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/2f7126af-fa40-4db1-87af-9fcb2e18ecaa",
+   "query": "Farfetch product page",
+   "directions": [
+    "b",
+    "c"
+   ],
+   "note_ar": "المقاسات أزرار صغيرة، وغير المتوفر منها مشطوب ولا يمكن اختياره."
+  },
+  {
+   "id": "712baa47-6362-4975-a62e-0018d9d2f799",
+   "target": "pdp",
+   "name": "H&M",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/712baa47-6362-4975-a62e-0018d9d2f799",
+   "query": "fashion product detail page with image gallery",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "اللون يُختار من صور مصغرة للمنتج بكل لون، واسم اللون المختار فوقها."
+  },
+  {
+   "id": "a108ec8a-8ed2-47d5-b9ef-2b3ed4687b9e",
+   "target": "pdp",
+   "name": "adidas",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/a108ec8a-8ed2-47d5-b9ef-2b3ed4687b9e",
+   "query": "product page with color swatches",
+   "directions": [
+    "b",
+    "c"
+   ],
+   "note_ar": "«الألوان المتوفرة في هذا المقاس» صور مصغرة، ثم شبكة المقاسات تحتها."
+  },
+  {
+   "id": "3123b8e6-5957-4ec9-b106-a08b98c8e46b",
+   "target": "pdp",
+   "name": "adidas",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/3123b8e6-5957-4ec9-b106-a08b98c8e46b",
+   "query": "fashion product detail page with image gallery",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "عارض صور بملء الشاشة مع أسهم وشريط صور مصغرة."
+  },
+  {
+   "id": "5d9a3669-1630-4f26-84bd-b537870379f6",
+   "target": "pdp",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/5d9a3669-1630-4f26-84bd-b537870379f6",
+   "query": "jewelry product detail page",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "صفحة مجوهرات: صورة تحريرية كبيرة ومعلومات قليلة بخط صغير على الجانب."
+  },
+  {
+   "id": "7b9b6878-e8e8-45a2-83d1-a48a7cf63240",
+   "target": "pdp",
+   "name": "ZARA",
+   "platform": "web",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/7b9b6878-e8e8-45a2-83d1-a48a7cf63240",
+   "query": "luxury brand product page for a ring or necklace",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "صورة المنتج صغيرة على مربع رمادي فاتح ومساحة فارغة واسعة حولها."
+  },
+  {
+   "id": "28079950-93c7-4f12-abd6-f13f3079ea5f",
+   "target": "mobile",
+   "name": "SSENSE",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/28079950-93c7-4f12-abd6-f13f3079ea5f",
+   "query": "designer fashion app product listing grid",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "قائمة منتجات بثلاثة أعمدة وشريط ثابت أسفل الشاشة للترتيب والتصفية."
+  },
+  {
+   "id": "abc1a71d-8876-48a4-9ca5-d12bab791388",
+   "target": "mobile",
+   "name": "HBX",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/abc1a71d-8876-48a4-9ca5-d12bab791388",
+   "query": "fashion app navigation menu",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "لوحة سفلية لاختيار الفئة مع زر «تم» ثابت؛ مرجعنا لتصفية الجوال في الاتجاه ب."
+  },
+  {
+   "id": "e757c5e0-267b-4955-978f-e093c90b88f9",
+   "target": "mobile",
+   "name": "SSENSE",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/e757c5e0-267b-4955-978f-e093c90b88f9",
+   "query": "luxury fashion app home screen",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "أسماء علامات بخط كبير جدًا متراكبة عموديًا؛ الحرف وحده يقود الصفحة."
+  },
+  {
+   "id": "da7d759e-ebb5-4958-a770-6e5a9cf03fca",
+   "target": "mobile",
+   "name": "ZARA",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/da7d759e-ebb5-4958-a770-6e5a9cf03fca",
+   "query": "designer fashion app product listing grid",
+   "directions": [
+    "b"
+   ],
+   "note_ar": "شبكة كثيفة على مربعات رمادية فاتحة، مع زر لتغيير عدد الأعمدة وزر للتصفية."
+  },
+  {
+   "id": "b14e5f34-422a-4c21-bbb1-42296092ba2d",
+   "target": "mobile",
+   "name": "SSENSE",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/b14e5f34-422a-4c21-bbb1-42296092ba2d",
+   "query": "luxury fashion app product detail page with swipeable photos",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "صورة المنتج بعرض الشاشة ومؤشر تمرير رفيع، ثم الاسم والزر أسفلها."
+  },
+  {
+   "id": "d5ccf5b1-7445-4343-ad98-7c25d5a840b6",
+   "target": "mobile",
+   "name": "ZARA",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/d5ccf5b1-7445-4343-ad98-7c25d5a840b6",
+   "query": "fashion app navigation menu",
+   "directions": [
+    "a"
+   ],
+   "note_ar": "قائمة نصية بملء الشاشة بلا صور، بتبويبات للأقسام في أعلاها."
+  },
+  {
+   "id": "f5550a7b-ae59-4dfc-bbca-6c58f117619b",
+   "target": "mobile",
+   "name": "SKIMS",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/f5550a7b-ae59-4dfc-bbca-6c58f117619b",
+   "query": "fashion app product detail with color selection",
+   "directions": [
+    "a",
+    "c"
+   ],
+   "note_ar": "اختيار اللون بدوائر مع اسم اللون المختار، والمقاسات رقائق متجاورة."
+  },
+  {
+   "id": "b95a252d-461a-4958-883d-f32667c5dbda",
+   "target": "mobile",
+   "name": "Vestiaire Collective",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/b95a252d-461a-4958-883d-f32667c5dbda",
+   "query": "fashion app navigation menu",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "قائمة الجوال بتبويبات نصية وصفوف بأسهم، وتحتها بطاقات بصور."
+  },
+  {
+   "id": "b09e8732-0e6b-42af-b3e8-c16a73aa0171",
+   "target": "mobile",
+   "name": "Vestiaire Collective",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "luxury-fashion-jewelry-watch",
+   "mobbin_url": "https://mobbin.com/screens/b09e8732-0e6b-42af-b3e8-c16a73aa0171",
+   "query": "luxury fashion app home screen",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "بطاقات العلامات بصور مربعة قابلة للتمرير أفقيًا."
+  },
+  {
+   "id": "a9b0e748-2e02-4403-a755-a9bb599ace02",
+   "target": "mobile",
+   "name": "Zalando",
+   "platform": "ios",
+   "kind": "screen",
+   "domain_fit": "general-fashion-retail",
+   "mobbin_url": "https://mobbin.com/screens/a9b0e748-2e02-4403-a755-a9bb599ace02",
+   "query": "luxury fashion app home screen",
+   "directions": [
+    "c"
+   ],
+   "note_ar": "صف تبويبات نصية قابل للتمرير أفقيًا فوق صورة كبيرة؛ يشبه صف الفئات في الاتجاه ج."
+  }
+ ]
+}

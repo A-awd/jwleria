@@ -1,0 +1,604 @@
+<meta charset="utf-8">
+<title>اتجاهات تصميم Jwleria</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: a review dossier — three options first, then each direction's evidence, then the Mobbin research behind it. */
+:root {
+  --bg: #fbfaf8;
+  --surface: #ffffff;
+  --fg: #1d1b18;
+  --muted: #6a645b;
+  --line: #e6e1d9;
+  --accent: #7c5e34;
+  --a: #8a6a3b;
+  --b: #1d1d1d;
+  --c: #5b4a37;
+  --chip-fg: #ffffff;
+  --shadow: 0 1px 2px rgb(29 27 24 / 6%), 0 8px 24px rgb(29 27 24 / 6%);
+  --font: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Segoe UI", Tahoma, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #151412; --surface: #1d1c19; --fg: #eeeae3; --muted: #a8a196; --line: #34312c;
+    --accent: #d2b07a; --a: #b48f57; --b: #e9e6e0; --c: #b39a7c; --chip-fg: #151412;
+    --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 25%);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #151412; --surface: #1d1c19; --fg: #eeeae3; --muted: #a8a196; --line: #34312c;
+  --accent: #d2b07a; --a: #b48f57; --b: #e9e6e0; --c: #b39a7c; --chip-fg: #151412;
+  --shadow: 0 1px 2px rgb(0 0 0 / 30%), 0 8px 24px rgb(0 0 0 / 25%);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font); font-size: 16px; line-height: 1.7; }
+.board { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 40px 80px; display: grid; gap: 64px; }
+a { color: var(--accent); text-underline-offset: 3px; }
+a:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+h1, h2, h3 { text-wrap: balance; line-height: 1.3; margin: 0; font-weight: 600; }
+h1 { font-size: clamp(28px, 4vw, 40px); }
+h2 { font-size: clamp(22px, 2.6vw, 28px); display: flex; align-items: center; gap: 12px; }
+h3 { font-size: 18px; display: flex; align-items: baseline; gap: 8px; }
+p { margin: 0; max-width: 68ch; }
+bdi { unicode-bidi: isolate; }
+.eyebrow { color: var(--muted); font-size: 14px; }
+.intro { display: grid; gap: 14px; }
+.intro .lede { font-size: 18px; color: var(--fg); }
+.status { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 14px; }
+.status span::before { content: "•"; margin-inline-end: 8px; color: var(--line); }
+.status span:first-child::before { content: none; }
+nav.toc { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); display: flex; gap: 6px 22px; flex-wrap: wrap; padding-block: 10px; font-size: 15px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+nav.toc a { color: var(--fg); text-decoration: none; }
+nav.toc a:hover { color: var(--accent); }
+
+.dchip { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; font-size: 14px; font-weight: 600; color: var(--chip-fg); background: var(--accent); flex: none; }
+.dchip.big { width: 40px; height: 40px; font-size: 20px; }
+.d-a.dchip { background: var(--a); } .d-b.dchip { background: var(--b); } .d-c.dchip { background: var(--c); }
+
+.summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+.sum { display: grid; gap: 8px; text-decoration: none; color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 10px 16px; box-shadow: var(--shadow); }
+.sum img { width: 100%; height: auto; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 3px; border: 1px solid var(--line); display: block; }
+.sum-t { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 18px; padding-inline: 4px; }
+.sum-s { color: var(--muted); font-size: 15px; padding-inline: 4px; }
+.sum:hover { border-color: var(--accent); }
+.sum:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+.now { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 28px; align-items: start; }
+.now ul { margin: 0; padding-inline-start: 20px; display: grid; gap: 8px; }
+.now .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.now figure { margin: 0; display: grid; gap: 6px; }
+.now img { border: 1px solid var(--line); border-radius: 4px; display: block; width: 100%; height: auto; }
+figcaption { color: var(--muted); font-size: 13px; }
+
+.dir { display: grid; gap: 22px; padding-top: 8px; border-top: 1px solid var(--line); scroll-margin-top: 60px; }
+.dir-head { display: grid; gap: 12px; padding-top: 24px; }
+.lede { font-size: 17px; }
+.open { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { display: inline-flex; align-items: center; min-height: 42px; padding: 0 18px; border-radius: 3px; background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 500; font-size: 15px; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.btn.ghost:hover { border-color: var(--fg); }
+.dir-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: start; }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 28px; }
+.facts li { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.facts li span:first-child { color: var(--muted); }
+.swatches { display: flex; gap: 6px; }
+.sw { width: 28px; height: 28px; border-radius: 50%; background: var(--c); border: 1px solid var(--line); }
+.gallery { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 1fr); gap: 18px 18px; align-items: start; }
+.gallery figure { margin: 0; display: grid; gap: 6px; }
+.gallery .g-wide:last-child { grid-column: 1 / -1; }
+.shot { display: block; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; background: var(--surface); }
+.shot img { display: block; width: 100%; height: auto; }
+.shot.phone { border-radius: 14px; max-width: 280px; }
+.shot:hover { border-color: var(--accent); }
+.dir-refs { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 14px; color: var(--muted); }
+.refchip { border: 1px solid var(--line); border-radius: 999px; padding: 2px 12px; color: var(--fg); text-decoration: none; font-size: 13px; }
+.refchip:hover { border-color: var(--accent); }
+
+.research { display: grid; gap: 28px; }
+.notice { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; display: grid; gap: 8px; font-size: 15px; }
+.refgroup { display: grid; gap: 14px; }
+.count { color: var(--muted); font-weight: 400; font-size: 14px; }
+.refgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.ref { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; display: grid; grid-template-rows: auto 1fr; scroll-margin-top: 70px; }
+.ref:target { outline: 2px solid var(--accent); }
+.ref-img { display: block; aspect-ratio: 4 / 3; overflow: hidden; background: var(--bg); border-bottom: 1px solid var(--line); }
+.ref-img img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.ref-body { padding: 12px 14px 14px; display: grid; gap: 8px; align-content: start; font-size: 14px; }
+.ref-head { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.ref-name { font-weight: 600; font-size: 15px; }
+.pill { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 8px; white-space: nowrap; }
+.ref-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 2px; }
+.dirs { display: inline-flex; gap: 4px; align-items: center; color: var(--muted); font-size: 13px; }
+.dirs .dchip { width: 22px; height: 22px; font-size: 12px; }
+
+.compare-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 14.5px; }
+th, td { text-align: start; vertical-align: top; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+thead th { font-size: 15px; background: var(--bg); }
+tbody th { color: var(--muted); font-weight: 500; width: 9em; }
+tr:last-child th, tr:last-child td { border-bottom: 0; }
+
+.next { display: grid; gap: 12px; }
+.next ol { margin: 0; padding-inline-start: 22px; display: grid; gap: 6px; }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 18px; }
+.mono { font-family: var(--mono); font-size: 13px; }
+
+@media (max-width: 900px) {
+  .summary { grid-template-columns: 1fr; }
+  .now { grid-template-columns: 1fr; }
+  .dir-meta { grid-template-columns: 1fr; }
+  .gallery { grid-template-columns: minmax(0, 1fr) minmax(0, 0.55fr); }
+}
+@media (max-width: 560px) {
+  .board { gap: 48px; }
+  .gallery { grid-template-columns: 1fr; }
+  .shot.phone { max-width: 220px; }
+}
+@media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+</style>
+
+<div class="board" dir="rtl" lang="ar">
+  <header class="intro">
+    <span class="eyebrow">معاينة للاختيار · لا تغيّر الموقع الحي</span>
+    <h1>ثلاثة اتجاهات لتصميم <bdi>Jwleria</bdi></h1>
+    <p class="lede">كل اتجاه يغيّر التخطيط والخط والخلفية وطريقة عرض الصور والتنقل وسلوك الجوال، وليس الألوان فقط. ابدأ بالصفحة الرئيسية، ثم انظر كيف ترث بطاقة الكتالوج وصفحة المنتج الاتجاه نفسه.</p>
+    <div class="status"><span>٤١ مرجعًا حقيقيًا من <bdi>Mobbin</bdi></span><span>بيانات منتجات حقيقية من الموقع</span><span>الصور أماكن مؤقتة إلى أن تُعتمد صور المنتجات الأصلية</span></div>
+  </header>
+
+  <nav class="toc" aria-label="أقسام الصفحة">
+    <a href="#options">الاتجاهات</a>
+    <a href="#dir-a">أ — الدار</a>
+    <a href="#dir-b">ب — الفهرس</a>
+    <a href="#dir-c">ج — المعرض</a>
+    <a href="#compare">المقارنة</a>
+    <a href="#research">مراجع <bdi>Mobbin</bdi></a>
+  </nav>
+
+  <section id="options" aria-label="الاتجاهات الثلاثة">
+    <div class="summary">
+<a class="sum d-a" href="#dir-a">
+  <img src="screens/a-home-desktop-fold.webp" alt="الصفحة الرئيسية في الدار" width="1440" height="900">
+  <span class="sum-t"><span class="dchip d-a">أ</span> الدار</span>
+  <span class="sum-s">تحريري وهادئ: صورة كبيرة، وخط عربي كلاسيكي، ومساحات واسعة.</span>
+</a>
+<a class="sum d-b" href="#dir-b">
+  <img src="screens/b-home-desktop-fold.webp" alt="الصفحة الرئيسية في الفهرس" width="1440" height="900">
+  <span class="sum-t"><span class="dchip d-b">ب</span> الفهرس</span>
+  <span class="sum-s">حديث ودقيق: أبيض وأسود، وتصفح سريع حسب العلامة والفئة.</span>
+</a>
+<a class="sum d-c" href="#dir-c">
+  <img src="screens/c-home-desktop-fold.webp" alt="الصفحة الرئيسية في المعرض" width="1440" height="900">
+  <span class="sum-t"><span class="dchip d-c">ج</span> المعرض</span>
+  <span class="sum-s">دافئ ويبدأ بالعلامات: منتجات على منصّات حجرية فاتحة.</span>
+</a>
+    </div>
+  </section>
+
+  <section class="now" aria-labelledby="now-h">
+    <div class="intro">
+      <h2 id="now-h">ما الذي نعالجه في التصميم الحالي</h2>
+      <ul>
+        <li>البطاقات وصفحة المنتج نص فقط، بلا مساحة للصورة.</li>
+        <li>كل لون وكل مقاس بطاقة مستقلة، فيتكرر الطراز نفسه في الشبكة.</li>
+        <li>الأسماء اللاتينية داخل الجملة العربية فيختل ترتيبها، مثل <bdi dir="ltr">Le Pliage</bdi> حقيبة يد <bdi dir="ltr">One</bdi>.</li>
+        <li>العلامات والفئات بعيدة عن الشاشة الأولى.</li>
+      </ul>
+      <p>الحل في الاتجاهات الثلاثة: بطاقة واحدة لكل طراز، واختيار اللون والمقاس داخل صفحة المنتج مع تحديث المرجع والصورة والرابط، وفصل الاسم اللاتيني في سطر مستقل.</p>
+    </div>
+    <div class="pair">
+      <figure><img src="screens/current-catalog.webp" alt="الكتالوج الحالي: بطاقات نصية لكل لون" loading="lazy"><figcaption>الكتالوج الحالي</figcaption></figure>
+      <figure><img src="screens/current-product.webp" alt="صفحة المنتج الحالية" loading="lazy"><figcaption>صفحة المنتج الحالية</figcaption></figure>
+    </div>
+  </section>
+
+<section class="dir" id="dir-a" aria-labelledby="dh-a">
+  <div class="dir-head">
+    <h2 id="dh-a"><span class="dchip big d-a">أ</span> الدار</h2>
+    <p class="lede">اتجاه يشبه المجلة الفاخرة. الشعار في المنتصف والتنقل تحته، وصورة كبيرة تفتح الصفحة، ثم شريط علامات بطيء وقصص للفئات. في الكتالوج ثلاثة أعمدة بصور طولية ونص قليل، وفي صفحة المنتج صور كبيرة متتابعة وعمود معلومات ثابت.</p>
+    <div class="open">
+      <a class="btn" href="a/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="a/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
+      <a class="btn ghost" href="a/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+    </div>
+  </div>
+  <div class="dir-meta">
+    <ul class="facts"><li><span>الخلفية</span><span>عاجي ورقي فاتح</span></li><li><span>الخط العربي</span><span><bdi>Amiri</bdi> للعناوين، <bdi>IBM Plex Sans Arabic</bdi> للنص</span></li><li><span>الخط اللاتيني</span><span><bdi>Bodoni Moda</bdi> لأسماء العلامات والطرازات</span></li><li><span>الرأس</span><span>شعار في المنتصف وصف تنقل تحته</span></li><li><span>الكتالوج</span><span>ثلاثة أعمدة، صور طولية ٤:٥</span></li><li><span>صفحة المنتج</span><span>صور متتابعة كبيرة وعمود معلومات ثابت</span></li><li><span>الجوال</span><span>قائمة بملء الشاشة، معرض بالسحب، زر ثابت أسفل الشاشة</span></li></ul>
+    <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#faf7f2" title="#faf7f2"></span><span class="sw" style="--c:#ffffff" title="#ffffff"></span><span class="sw" style="--c:#1b1915" title="#1b1915"></span><span class="sw" style="--c:#6b645a" title="#6b645a"></span><span class="sw" style="--c:#7a5c33" title="#7a5c33"></span></div>
+  </div>
+  <div class="gallery">
+    <figure class="g-wide"><a class="shot " href="screens/a-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+  </div>
+  <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-062e2f6c"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-652c3cb7"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-1a889d4d"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-fab9fd81"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-a87f2a50"><bdi>In Common With</bdi></a><a class="refchip" href="#ref-00bd84df"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-e4c6a5b3"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-2c42876f"><bdi>Face Formula</bdi></a><a class="refchip" href="#ref-0e3baeaa"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-6b30a565"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-5d9a3669"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-7b9b6878"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-b14e5f34"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-d5ccf5b1"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-f5550a7b"><bdi>SKIMS</bdi></a></div>
+</section>
+<section class="dir" id="dir-b" aria-labelledby="dh-b">
+  <div class="dir-head">
+    <h2 id="dh-b"><span class="dchip big d-b">ب</span> الفهرس</h2>
+    <p class="lede">اتجاه متاجر العلامات المتعددة الحديثة. بلا صورة افتتاحية؛ العنوان والأرقام الحقيقية ثم فهرس العلامات من A إلى Z. الكتالوج أربعة أعمدة مع عمود تصفية جانبي، وصفحة المنتج شبكة صور ومعلومات مدمجة. الأنسب لكتالوج كبير.</p>
+    <div class="open">
+      <a class="btn" href="b/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="b/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
+      <a class="btn ghost" href="b/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+    </div>
+  </div>
+  <div class="dir-meta">
+    <ul class="facts"><li><span>الخلفية</span><span>أبيض نقي وخطوط رمادية رفيعة</span></li><li><span>الخط العربي</span><span><bdi>IBM Plex Sans Arabic</bdi> فقط</span></li><li><span>الخط اللاتيني</span><span><bdi>Inter</bdi> بحروف كبيرة صغيرة الحجم</span></li><li><span>الرأس</span><span>سطر واحد وحقل بحث ظاهر، وقائمة علامات من A إلى Z</span></li><li><span>الكتالوج</span><span>أربعة أعمدة وتصفية جانبية حسب العلامة والفئة واللون</span></li><li><span>صفحة المنتج</span><span>شبكة صور ٢×٢ ومعلومات مدمجة</span></li><li><span>الجوال</span><span>لوحة تصفية من الأسفل، عمودان، معرض بالتمرير</span></li></ul>
+    <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#ffffff" title="#ffffff"></span><span class="sw" style="--c:#f5f5f4" title="#f5f5f4"></span><span class="sw" style="--c:#111111" title="#111111"></span><span class="sw" style="--c:#6b6b6b" title="#6b6b6b"></span><span class="sw" style="--c:#e6e6e6" title="#e6e6e6"></span></div>
+  </div>
+  <div class="gallery">
+    <figure class="g-wide"><a class="shot " href="screens/b-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+  </div>
+  <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-062e2f6c"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-4ff94654"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-1302fa95"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-0d802a54"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-ee94ebcb"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-c28f72c2"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-d82ea357"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-21f0e2b4"><bdi>Urban Outfitters</bdi></a><a class="refchip" href="#ref-0e3baeaa"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-ea81f0f4"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-7ce8c22d"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-2f7126af"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-a108ec8a"><bdi>adidas</bdi></a><a class="refchip" href="#ref-28079950"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-abc1a71d"><bdi>HBX</bdi></a><a class="refchip" href="#ref-e757c5e0"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-da7d759e"><bdi>ZARA</bdi></a></div>
+</section>
+<section class="dir" id="dir-c" aria-labelledby="dh-c">
+  <div class="dir-head">
+    <h2 id="dh-c"><span class="dchip big d-c">ج</span> المعرض</h2>
+    <p class="lede">تطوير للهوية الحالية مع تخطيط جديد كليًا. يبقي خط المسيري المعتمد، لكن الواجهة منقسمة إلى لوحة نص وصورة، والعلامات أبواب قابلة للتمرير، والمنتجات معروضة على منصّات حجرية فاتحة. الألوان في صفحة المنتج بطاقات صغيرة بلون التنويع.</p>
+    <div class="open">
+      <a class="btn" href="c/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="c/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
+      <a class="btn ghost" href="c/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+    </div>
+  </div>
+  <div class="dir-meta">
+    <ul class="facts"><li><span>الخلفية</span><span>عاجي مع لوحات حجرية فاتحة</span></li><li><span>الخط العربي</span><span><bdi>El Messiri</bdi> للعناوين (المعتمد حاليًا)، <bdi>Noto Sans Arabic</bdi> للنص</span></li><li><span>الخط اللاتيني</span><span><bdi>Cormorant Garamond</bdi> (الحالي)</span></li><li><span>الرأس</span><span>شعار وتنقل، وتحته صف فئات قابل للتمرير</span></li><li><span>الكتالوج</span><span>ثلاثة أعمدة، كل منتج على منصّة</span></li><li><span>صفحة المنتج</span><span>صورة رئيسية وشريط صور مصغرة وبطاقات ألوان</span></li><li><span>الجوال</span><span>صفوف رقائق، منصّات، زر ثابت أسفل الشاشة</span></li></ul>
+    <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#fbf8f3" title="#fbf8f3"></span><span class="sw" style="--c:#f0eae1" title="#f0eae1"></span><span class="sw" style="--c:#26211c" title="#26211c"></span><span class="sw" style="--c:#6f665b" title="#6f665b"></span><span class="sw" style="--c:#3b2f25" title="#3b2f25"></span></div>
+  </div>
+  <div class="gallery">
+    <figure class="g-wide"><a class="shot " href="screens/c-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+  </div>
+  <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-495a0688"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-275e6bb0"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-1f68eb6b"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-747e1e51"><bdi>Assembly Coffee</bdi></a><a class="refchip" href="#ref-ee94ebcb"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-5ea27774"><bdi>SOTF</bdi></a><a class="refchip" href="#ref-85dbd6d2"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-2f7126af"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-712baa47"><bdi>H&amp;M</bdi></a><a class="refchip" href="#ref-a108ec8a"><bdi>adidas</bdi></a><a class="refchip" href="#ref-3123b8e6"><bdi>adidas</bdi></a><a class="refchip" href="#ref-f5550a7b"><bdi>SKIMS</bdi></a><a class="refchip" href="#ref-b95a252d"><bdi>Vestiaire Collective</bdi></a><a class="refchip" href="#ref-b09e8732"><bdi>Vestiaire Collective</bdi></a><a class="refchip" href="#ref-a9b0e748"><bdi>Zalando</bdi></a></div>
+</section>
+
+  <section id="compare" class="next" aria-labelledby="cmp-h">
+    <h2 id="cmp-h">المقارنة</h2>
+    <div class="compare-wrap">
+      <table>
+        <thead><tr><th scope="col"></th><th scope="col">أ — الدار</th><th scope="col">ب — الفهرس</th><th scope="col">ج — المعرض</th></tr></thead>
+        <tbody><tr><th scope="row">الإحساس</th><td>مجلة فاخرة هادئة</td><td>متجر حديث سريع</td><td>بوتيك دافئ</td></tr><tr><th scope="row">الخلفية</th><td>عاجي ورقي</td><td>أبيض نقي</td><td>عاجي ولوحات حجرية</td></tr><tr><th scope="row">الخط</th><td><bdi>Amiri</bdi> + <bdi>Bodoni Moda</bdi></td><td><bdi>IBM Plex Sans Arabic</bdi> + <bdi>Inter</bdi></td><td><bdi>El Messiri</bdi> + <bdi>Cormorant</bdi></td></tr><tr><th scope="row">استخدام الصور</th><td>صورة افتتاحية كبيرة وقصص فئات</td><td>بلا صورة افتتاحية؛ المنتجات أولًا</td><td>صورة في واجهة منقسمة ومنتجات على منصّات</td></tr><tr><th scope="row">التنقل</th><td>شعار في المنتصف وصف تحته</td><td>سطر واحد وبحث ظاهر وقائمة A–Z</td><td>صف فئات ثابت تحت الرأس</td></tr><tr><th scope="row">الكتالوج</th><td>٣ أعمدة، صور طولية</td><td>٤ أعمدة وتصفية جانبية</td><td>٣ أعمدة على منصّات</td></tr><tr><th scope="row">صفحة المنتج</th><td>صور متتابعة وعمود ثابت</td><td>شبكة ٢×٢ ومعلومات مدمجة</td><td>صورة رئيسية ومصغرات وبطاقات ألوان</td></tr><tr><th scope="row">الجوال</th><td>قائمة بملء الشاشة وزر ثابت</td><td>تصفية من الأسفل وعمودان</td><td>رقائق قابلة للتمرير وزر ثابت</td></tr><tr><th scope="row">الأنسب إذا</th><td>أردنا الطابع الأرقى والأبطأ</td><td>كان الكتالوج كبيرًا والتصفح بالعلامة أهم</td><td>أردنا الإبقاء على الهوية الحالية بتخطيط جديد</td></tr></tbody>
+      </table>
+    </div>
+    <p>الخطوط والألوان مقترحات حتى تختار. اختيار اتجاه لا يعني نشره؛ يُدمج بعد ذلك مع مسار الصور والتنويعات الجاري بخطوة منسّقة.</p>
+  </section>
+
+  <section id="research" class="research" aria-labelledby="res-h">
+    <div class="intro">
+      <h2 id="res-h">مراجع <bdi>Mobbin</bdi></h2>
+      <p>نتائج فعلية من موصل <bdi>Mobbin</bdi>، بحث مركّز لكل شاشة على حدة. اضغط أي مرجع لفتحه في <bdi>Mobbin</bdi>. هذه الصور للبحث فقط ولا تُستخدم في الموقع.</p>
+    </div>
+    <div class="notice">
+      <strong>حدود المكتبة</strong>
+      <p>مكتبة <bdi>Mobbin</bdi> لا تكاد تضم مواقع مجوهرات أو ساعات فاخرة. أقوى المراجع لمتاجر الفخامة متعددة العلامات هي <bdi>FARFETCH</bdi> و <bdi>Selfridges</bdi> و <bdi>SSENSE</bdi>. بعض المراجع من متاجر أزياء عامة أو من خارج المجال، واخترناها لفكرة بنيوية محددة. مراجع الجوال من تطبيقات <bdi>iOS</bdi> لأن شاشات الويب في المكتبة مكتبية.</p>
+    </div>
+<section class="refgroup" aria-labelledby="rg-hero-nav">
+  <h3 id="rg-hero-nav">الصفحة الرئيسية والتنقل <span class="count">١١</span></h3>
+  <div class="refgrid"><article class="ref" id="ref-062e2f6c">
+  <a class="ref-img" href="https://mobbin.com/screens/062e2f6c-d576-4c5c-89a2-6fbc0d554e8a" target="_blank" rel="noopener"><img src="refs/062e2f6c-d576-4c5c-89a2-6fbc0d554e8a.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>رأس بصفّين: الشعار في المنتصف، وقائمة كبيرة للعلامات من A إلى Z تُفتح من «العلامات».</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span><span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/062e2f6c-d576-4c5c-89a2-6fbc0d554e8a" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-652c3cb7">
+  <a class="ref-img" href="https://mobbin.com/screens/652c3cb7-603d-4b30-8e51-ed8fa473ee6f" target="_blank" rel="noopener"><img src="refs/652c3cb7-603d-4b30-8e51-ed8fa473ee6f.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>صفحة رئيسية بصورتين متجاورتين داخل هوامش بيضاء واسعة، واسم العلامة عنوانًا فوق الصورة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/652c3cb7-603d-4b30-8e51-ed8fa473ee6f" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-4ff94654">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/4ff94654-4570-46c2-beaf-77b5ccaf97ce" target="_blank" rel="noopener"><img src="refs/4ff94654-4570-46c2-beaf-77b5ccaf97ce.webp" alt="مرجع من SSENSE على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SSENSE</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>رأس بسطر واحد وروابط صغيرة، وعناوين نصية كبيرة تقود الصفحة بدل الصورة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/sites/sections/4ff94654-4570-46c2-beaf-77b5ccaf97ce" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-495a0688">
+  <a class="ref-img" href="https://mobbin.com/screens/495a0688-c81b-4bcf-86d6-335be9ca6288" target="_blank" rel="noopener"><img src="refs/495a0688-c81b-4bcf-86d6-335be9ca6288.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>واجهة منقسمة: لوحة نص على جانب وصورة على الجانب الآخر، ثم صف مقترحات.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/495a0688-c81b-4bcf-86d6-335be9ca6288" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-275e6bb0">
+  <a class="ref-img" href="https://mobbin.com/screens/275e6bb0-084c-45cd-bc29-d3d14ea4c437" target="_blank" rel="noopener"><img src="refs/275e6bb0-084c-45cd-bc29-d3d14ea4c437.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>اختيار القسم عبر بطاقات صور كبيرة بعناوين واضحة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/275e6bb0-084c-45cd-bc29-d3d14ea4c437" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-1302fa95">
+  <a class="ref-img" href="https://mobbin.com/flows/1302fa95-92b2-4350-8fae-9fd5688bc832" target="_blank" rel="noopener"><img src="refs/1302fa95-92b2-4350-8fae-9fd5688bc832.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · رحلة</span></div>
+    <p>دليل العلامات: صف حروف A–Z مع بحث وتصفية حسب الفئة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/flows/1302fa95-92b2-4350-8fae-9fd5688bc832" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-1a889d4d">
+  <a class="ref-img" href="https://mobbin.com/screens/1a889d4d-b96d-4f5a-a3f7-9f359617acc1" target="_blank" rel="noopener"><img src="refs/1a889d4d-b96d-4f5a-a3f7-9f359617acc1.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>تنقل نصي بخط سيريف على صفحة بيضاء يقودها الحرف.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/1a889d4d-b96d-4f5a-a3f7-9f359617acc1" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-fab9fd81">
+  <a class="ref-img" href="https://mobbin.com/screens/fab9fd81-4397-423b-a03a-0c5c778c92fa" target="_blank" rel="noopener"><img src="refs/fab9fd81-4397-423b-a03a-0c5c778c92fa.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>قائمة بملء الشاشة بعناصر كبيرة؛ مرجعنا لقائمة الجوال في الاتجاه أ.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/fab9fd81-4397-423b-a03a-0c5c778c92fa" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-a87f2a50">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/a87f2a50-8a78-4193-b491-5589059041fa" target="_blank" rel="noopener"><img src="refs/a87f2a50-8a78-4193-b491-5589059041fa.webp" alt="مرجع من In Common With على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">In Common With</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>صورة بعرض الصفحة وتنقل خفيف فوقها؛ إحساس هادئ ودافئ. من خارج مجال الأزياء.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/sites/sections/a87f2a50-8a78-4193-b491-5589059041fa" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-1f68eb6b">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/1f68eb6b-9599-4420-b76c-b1cefafa81fa" target="_blank" rel="noopener"><img src="refs/1f68eb6b-9599-4420-b76c-b1cefafa81fa.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>شبكة أسماء علامات في خانات متساوية بفواصل رفيعة. من الموقع المؤسسي لا المتجر.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/sites/sections/1f68eb6b-9599-4420-b76c-b1cefafa81fa" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-747e1e51">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/747e1e51-77c1-4dd5-a556-a67199054387" target="_blank" rel="noopener"><img src="refs/747e1e51-77c1-4dd5-a556-a67199054387.webp" alt="مرجع من Assembly Coffee على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Assembly Coffee</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>منتجات معروضة على منصّات بإضاءة هادئة. من خارج مجال الأزياء.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/sites/sections/747e1e51-77c1-4dd5-a556-a67199054387" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article></div>
+</section>
+<section class="refgroup" aria-labelledby="rg-catalog">
+  <h3 id="rg-catalog">الكتالوج والعلامات والفئات <span class="count">١٠</span></h3>
+  <div class="refgrid"><article class="ref" id="ref-0d802a54">
+  <a class="ref-img" href="https://mobbin.com/screens/0d802a54-4f2a-487c-a836-679a0348ba4f" target="_blank" rel="noopener"><img src="refs/0d802a54-4f2a-487c-a836-679a0348ba4f.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>قائمة منتجات بعمود تصفية جانبي (الفئة، العلامة، المقاس، اللون) وشبكة على خلفية بيضاء.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/0d802a54-4f2a-487c-a836-679a0348ba4f" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-ee94ebcb">
+  <a class="ref-img" href="https://mobbin.com/screens/ee94ebcb-ed62-4c89-8cf7-6b212243f11c" target="_blank" rel="noopener"><img src="refs/ee94ebcb-ed62-4c89-8cf7-6b212243f11c.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>عنوان الفئة وعدد النتائج وتصفية جانبية، وتحت البطاقة اسم العلامة ثم المنتج ثم عدد الألوان.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span><span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/ee94ebcb-ed62-4c89-8cf7-6b212243f11c" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-c28f72c2">
+  <a class="ref-img" href="https://mobbin.com/screens/c28f72c2-4863-4028-b944-4575166be6af" target="_blank" rel="noopener"><img src="refs/c28f72c2-4863-4028-b944-4575166be6af.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>صفحة العلامات من A إلى Z مع بحث داخل أسماء العلامات.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/c28f72c2-4863-4028-b944-4575166be6af" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-d82ea357">
+  <a class="ref-img" href="https://mobbin.com/screens/d82ea357-dd95-40fe-8217-5ec8bdb98ca5" target="_blank" rel="noopener"><img src="refs/d82ea357-dd95-40fe-8217-5ec8bdb98ca5.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>مربعات حروف A–Z مع تمييز الحرف المختار.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/d82ea357-dd95-40fe-8217-5ec8bdb98ca5" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-00bd84df">
+  <a class="ref-img" href="https://mobbin.com/screens/00bd84df-22f3-48a3-b4e1-abbd3ee0376a" target="_blank" rel="noopener"><img src="refs/00bd84df-22f3-48a3-b4e1-abbd3ee0376a.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>شبكة منتجات بلا إطارات على أرضية فاتحة، ونقاط ألوان صغيرة تحت كل منتج.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/00bd84df-22f3-48a3-b4e1-abbd3ee0376a" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-e4c6a5b3">
+  <a class="ref-img" href="https://mobbin.com/screens/e4c6a5b3-fe15-4e57-8782-35754ab902a4" target="_blank" rel="noopener"><img src="refs/e4c6a5b3-fe15-4e57-8782-35754ab902a4.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>بطاقات طولية كبيرة جدًا والمنتج صغير في وسطها؛ المساحة الفارغة نفسها توحي بالفخامة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/e4c6a5b3-fe15-4e57-8782-35754ab902a4" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-2c42876f">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/2c42876f-e42f-49dc-ba18-b6acc4bdf204" target="_blank" rel="noopener"><img src="refs/2c42876f-e42f-49dc-ba18-b6acc4bdf204.webp" alt="مرجع من Face Formula على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Face Formula</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>عنوان سيريف كبير للكتالوج وشريط تصفية بسيط فوق الشبكة. من خارج مجال الأزياء.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/sites/sections/2c42876f-e42f-49dc-ba18-b6acc4bdf204" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-5ea27774">
+  <a class="ref-img" href="https://mobbin.com/sites/sections/5ea27774-07b3-446d-b208-6b31e42f1281" target="_blank" rel="noopener"><img src="refs/5ea27774-07b3-446d-b208-6b31e42f1281.webp" alt="مرجع من SOTF على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SOTF</bdi><span class="pill">قسم موقع · قسم</span></div>
+    <p>بطاقات منتجات على منصّات رمادية تفصلها خطوط رفيعة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/sites/sections/5ea27774-07b3-446d-b208-6b31e42f1281" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-85dbd6d2">
+  <a class="ref-img" href="https://mobbin.com/screens/85dbd6d2-e22e-47e1-b61a-1c1ef517dcfe" target="_blank" rel="noopener"><img src="refs/85dbd6d2-e22e-47e1-b61a-1c1ef517dcfe.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>قائمة كبيرة بأعمدة روابط وصورة مميزة إلى جانبها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/85dbd6d2-e22e-47e1-b61a-1c1ef517dcfe" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-21f0e2b4">
+  <a class="ref-img" href="https://mobbin.com/screens/21f0e2b4-ad40-4d7b-b7b4-42f373f9b17a" target="_blank" rel="noopener"><img src="refs/21f0e2b4-ad40-4d7b-b7b4-42f373f9b17a.webp" alt="مرجع من Urban Outfitters على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Urban Outfitters</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>العلامات مرتبة بالحروف مع عدد المنتجات بجانب كل علامة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/21f0e2b4-ad40-4d7b-b7b4-42f373f9b17a" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article></div>
+</section>
+<section class="refgroup" aria-labelledby="rg-pdp">
+  <h3 id="rg-pdp">صفحة المنتج والمعرض واختيار اللون والمقاس <span class="count">١٠</span></h3>
+  <div class="refgrid"><article class="ref" id="ref-0e3baeaa">
+  <a class="ref-img" href="https://mobbin.com/screens/0e3baeaa-aca2-4943-8e7b-7e2571017378" target="_blank" rel="noopener"><img src="refs/0e3baeaa-aca2-4943-8e7b-7e2571017378.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>اسم العلامة فوق اسم المنتج، وصورتان متجاورتان (كاملة وقريبة)، وعمود معلومات بجانبهما.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span><span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/0e3baeaa-aca2-4943-8e7b-7e2571017378" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-ea81f0f4">
+  <a class="ref-img" href="https://mobbin.com/screens/ea81f0f4-79c0-48eb-b60d-de531f895100" target="_blank" rel="noopener"><img src="refs/ea81f0f4-79c0-48eb-b60d-de531f895100.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>شبكة صور بعمودين، وعمود معلومات: العلامة ثم الاسم ثم مربعات اللون والمقاس.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/ea81f0f4-79c0-48eb-b60d-de531f895100" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-6b30a565">
+  <a class="ref-img" href="https://mobbin.com/screens/6b30a565-bd75-484f-aa9a-124b721b773a" target="_blank" rel="noopener"><img src="refs/6b30a565-bd75-484f-aa9a-124b721b773a.webp" alt="مرجع من Selfridges على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Selfridges</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>عمود المعلومات يبقى ثابتًا أثناء تمرير الصور، ثم روابط التفاصيل بخط كبير.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/6b30a565-bd75-484f-aa9a-124b721b773a" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-7ce8c22d">
+  <a class="ref-img" href="https://mobbin.com/screens/7ce8c22d-6f00-4eff-af5b-7ae329eedfe8" target="_blank" rel="noopener"><img src="refs/7ce8c22d-6f00-4eff-af5b-7ae329eedfe8.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>تفاصيل المنتج في أعمدة تحت تبويب، ومنها رقم المرجع.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/7ce8c22d-6f00-4eff-af5b-7ae329eedfe8" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-2f7126af">
+  <a class="ref-img" href="https://mobbin.com/screens/2f7126af-fa40-4db1-87af-9fcb2e18ecaa" target="_blank" rel="noopener"><img src="refs/2f7126af-fa40-4db1-87af-9fcb2e18ecaa.webp" alt="مرجع من FARFETCH على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">FARFETCH</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>المقاسات أزرار صغيرة، وغير المتوفر منها مشطوب ولا يمكن اختياره.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span><span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/2f7126af-fa40-4db1-87af-9fcb2e18ecaa" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-712baa47">
+  <a class="ref-img" href="https://mobbin.com/screens/712baa47-6362-4975-a62e-0018d9d2f799" target="_blank" rel="noopener"><img src="refs/712baa47-6362-4975-a62e-0018d9d2f799.webp" alt="مرجع من H&amp;M على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">H&amp;M</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>اللون يُختار من صور مصغرة للمنتج بكل لون، واسم اللون المختار فوقها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/712baa47-6362-4975-a62e-0018d9d2f799" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-a108ec8a">
+  <a class="ref-img" href="https://mobbin.com/screens/a108ec8a-8ed2-47d5-b9ef-2b3ed4687b9e" target="_blank" rel="noopener"><img src="refs/a108ec8a-8ed2-47d5-b9ef-2b3ed4687b9e.webp" alt="مرجع من adidas على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">adidas</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>«الألوان المتوفرة في هذا المقاس» صور مصغرة، ثم شبكة المقاسات تحتها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span><span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/a108ec8a-8ed2-47d5-b9ef-2b3ed4687b9e" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-3123b8e6">
+  <a class="ref-img" href="https://mobbin.com/screens/3123b8e6-5957-4ec9-b106-a08b98c8e46b" target="_blank" rel="noopener"><img src="refs/3123b8e6-5957-4ec9-b106-a08b98c8e46b.webp" alt="مرجع من adidas على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">adidas</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>عارض صور بملء الشاشة مع أسهم وشريط صور مصغرة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/3123b8e6-5957-4ec9-b106-a08b98c8e46b" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-5d9a3669">
+  <a class="ref-img" href="https://mobbin.com/screens/5d9a3669-1630-4f26-84bd-b537870379f6" target="_blank" rel="noopener"><img src="refs/5d9a3669-1630-4f26-84bd-b537870379f6.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>صفحة مجوهرات: صورة تحريرية كبيرة ومعلومات قليلة بخط صغير على الجانب.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/5d9a3669-1630-4f26-84bd-b537870379f6" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-7b9b6878">
+  <a class="ref-img" href="https://mobbin.com/screens/7b9b6878-e8e8-45a2-83d1-a48a7cf63240" target="_blank" rel="noopener"><img src="refs/7b9b6878-e8e8-45a2-83d1-a48a7cf63240.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">ويب · شاشة</span></div>
+    <p>صورة المنتج صغيرة على مربع رمادي فاتح ومساحة فارغة واسعة حولها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/7b9b6878-e8e8-45a2-83d1-a48a7cf63240" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article></div>
+</section>
+<section class="refgroup" aria-labelledby="rg-mobile">
+  <h3 id="rg-mobile">سلوك الجوال <span class="count">١٠</span></h3>
+  <div class="refgrid"><article class="ref" id="ref-28079950">
+  <a class="ref-img" href="https://mobbin.com/screens/28079950-93c7-4f12-abd6-f13f3079ea5f" target="_blank" rel="noopener"><img src="refs/28079950-93c7-4f12-abd6-f13f3079ea5f.webp" alt="مرجع من SSENSE على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SSENSE</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>قائمة منتجات بثلاثة أعمدة وشريط ثابت أسفل الشاشة للترتيب والتصفية.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/28079950-93c7-4f12-abd6-f13f3079ea5f" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-abc1a71d">
+  <a class="ref-img" href="https://mobbin.com/screens/abc1a71d-8876-48a4-9ca5-d12bab791388" target="_blank" rel="noopener"><img src="refs/abc1a71d-8876-48a4-9ca5-d12bab791388.webp" alt="مرجع من HBX على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">HBX</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>لوحة سفلية لاختيار الفئة مع زر «تم» ثابت؛ مرجعنا لتصفية الجوال في الاتجاه ب.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/abc1a71d-8876-48a4-9ca5-d12bab791388" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-e757c5e0">
+  <a class="ref-img" href="https://mobbin.com/screens/e757c5e0-267b-4955-978f-e093c90b88f9" target="_blank" rel="noopener"><img src="refs/e757c5e0-267b-4955-978f-e093c90b88f9.webp" alt="مرجع من SSENSE على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SSENSE</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>أسماء علامات بخط كبير جدًا متراكبة عموديًا؛ الحرف وحده يقود الصفحة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/e757c5e0-267b-4955-978f-e093c90b88f9" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-da7d759e">
+  <a class="ref-img" href="https://mobbin.com/screens/da7d759e-ebb5-4958-a770-6e5a9cf03fca" target="_blank" rel="noopener"><img src="refs/da7d759e-ebb5-4958-a770-6e5a9cf03fca.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>شبكة كثيفة على مربعات رمادية فاتحة، مع زر لتغيير عدد الأعمدة وزر للتصفية.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-b">ب</span></span><a href="https://mobbin.com/screens/da7d759e-ebb5-4958-a770-6e5a9cf03fca" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-b14e5f34">
+  <a class="ref-img" href="https://mobbin.com/screens/b14e5f34-422a-4c21-bbb1-42296092ba2d" target="_blank" rel="noopener"><img src="refs/b14e5f34-422a-4c21-bbb1-42296092ba2d.webp" alt="مرجع من SSENSE على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SSENSE</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>صورة المنتج بعرض الشاشة ومؤشر تمرير رفيع، ثم الاسم والزر أسفلها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/b14e5f34-422a-4c21-bbb1-42296092ba2d" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-d5ccf5b1">
+  <a class="ref-img" href="https://mobbin.com/screens/d5ccf5b1-7445-4343-ad98-7c25d5a840b6" target="_blank" rel="noopener"><img src="refs/d5ccf5b1-7445-4343-ad98-7c25d5a840b6.webp" alt="مرجع من ZARA على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">ZARA</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>قائمة نصية بملء الشاشة بلا صور، بتبويبات للأقسام في أعلاها.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span></span><a href="https://mobbin.com/screens/d5ccf5b1-7445-4343-ad98-7c25d5a840b6" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-f5550a7b">
+  <a class="ref-img" href="https://mobbin.com/screens/f5550a7b-ae59-4dfc-bbca-6c58f117619b" target="_blank" rel="noopener"><img src="refs/f5550a7b-ae59-4dfc-bbca-6c58f117619b.webp" alt="مرجع من SKIMS على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">SKIMS</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>اختيار اللون بدوائر مع اسم اللون المختار، والمقاسات رقائق متجاورة.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-a">أ</span><span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/f5550a7b-ae59-4dfc-bbca-6c58f117619b" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-b95a252d">
+  <a class="ref-img" href="https://mobbin.com/screens/b95a252d-461a-4958-883d-f32667c5dbda" target="_blank" rel="noopener"><img src="refs/b95a252d-461a-4958-883d-f32667c5dbda.webp" alt="مرجع من Vestiaire Collective على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Vestiaire Collective</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>قائمة الجوال بتبويبات نصية وصفوف بأسهم، وتحتها بطاقات بصور.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/b95a252d-461a-4958-883d-f32667c5dbda" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-b09e8732">
+  <a class="ref-img" href="https://mobbin.com/screens/b09e8732-0e6b-42af-b3e8-c16a73aa0171" target="_blank" rel="noopener"><img src="refs/b09e8732-0e6b-42af-b3e8-c16a73aa0171.webp" alt="مرجع من Vestiaire Collective على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Vestiaire Collective</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>بطاقات العلامات بصور مربعة قابلة للتمرير أفقيًا.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/b09e8732-0e6b-42af-b3e8-c16a73aa0171" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article><article class="ref" id="ref-a9b0e748">
+  <a class="ref-img" href="https://mobbin.com/screens/a9b0e748-2e02-4403-a755-a9bb599ace02" target="_blank" rel="noopener"><img src="refs/a9b0e748-2e02-4403-a755-a9bb599ace02.webp" alt="مرجع من Zalando على Mobbin" loading="lazy" decoding="async"></a>
+  <div class="ref-body">
+    <div class="ref-head"><bdi class="ref-name">Zalando</bdi><span class="pill">iOS · شاشة</span></div>
+    <p>صف تبويبات نصية قابل للتمرير أفقيًا فوق صورة كبيرة؛ يشبه صف الفئات في الاتجاه ج.</p>
+    <div class="ref-foot"><span class="dirs">يدعم الاتجاه <span class="dchip d-c">ج</span></span><a href="https://mobbin.com/screens/a9b0e748-2e02-4403-a755-a9bb599ace02" target="_blank" rel="noopener">فتح في <bdi>Mobbin</bdi></a></div>
+  </div>
+</article></div>
+</section>
+  </section>
+
+  <footer>
+    <p>مجلد الاستكشاف: <bdi class="mono">design-exploration/2026-10-26-storefront-directions</bdi> · بيانات المنتجات من الواجهة العامة للكتالوج · أسماء العلامات التجارية ملك لأصحابها، و<bdi>Jwleria</bdi> جهة مستقلة غير تابعة لها.</p>
+  </footer>
+</div>
