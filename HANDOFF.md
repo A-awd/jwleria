@@ -1,3 +1,13 @@
+## Current handoff — continue from Claude's implementation checkpoint — 2026-10-26
+
+Read branch `claude/pensive-mccarthy-40nrlc` at `d76423ad7b9b1ef672707e504b516ce75a857c4d`, especially its top STATE/HANDOFF and decision0011. This verified remote head contains documentation c342964 and Claude's concurrent-source, missing-only-intake and exact-media-evidence work. Claude owns implementation, tests and self-review. Codex records the pointer and relays results; no application merge into this continuation branch, foundation change or global routing update was performed.
+
+The exact production migration received fresh explicit owner approval and was applied successfully, directly observed by Codex. Claude's post-apply readback reports registered version `20261026114541`, seven migrations, unchanged public/candidate/source hashes and counts, intended access checks and completed advisors. Do not reapply the migration or treat the earlier denial/pending checklist as current. Detailed implementation/test/readback results belong to Claude's branch; Codex did not rerun its tests or audit its code.
+
+Attendance of that Claude run is complete: the necessary n8n normalization update was approved, Claude reports an inactive code-node sync and pinned-data parity test, and no tool approval remained pending when the session ended. No workflow activation, schedule, trigger or credential change was made. Preserve the explicit Supabase SQL tool permission and recurring-prompt caveat recorded below without promising universal approval suppression.
+
+Remaining dependencies are actual permitted exact-reference photos and visual checks, the verified WhatsApp number, a permitted-network environment for real collection, durable scheduling and full launch acceptance. No product images were approved/published and no storefront deployment occurred; Claude reports its cloud network and Worker-deployment access limitations. Preserve all source/media/publication gates, private-input boundaries, repository merge gates and Jwleria-only scope. Keep Easy Life stopped. Resume the owning Claude implementation rather than rebuilding or duplicating its review.
+
 ## Current handoff — queues, missing-only intake and exact media evidence implemented — 2026-10-26
 
 Continue from `claude/pensive-mccarthy-40nrlc` (top STATE entry and decision 0011). It fast-forwards the continuation branch; updating `codex/jwleria-architecture-2026-10-03` to it needs the owner's go-ahead because Claude's push authority is the work branch. Tests: `node --test scripts/catalog-intake/*.test.mjs` from the repo root (77) and `node --test tests/*.test.mjs` from `apps/storefront` (48, needs `pnpm install --frozen-lockfile`).
