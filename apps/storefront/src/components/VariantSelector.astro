@@ -1,0 +1,28 @@
+---
+import type { Locale, ProductVariant } from '../contracts/catalog';
+import { href, optionLabel, t } from '../i18n/ui';
+import { selectorAxes } from './variant-selection.mjs';
+import VariantText from './VariantText.astro';
+
+// Every value is a link to an existing variant page, so selection works without JavaScript.
+// Values reuse the existing chip (44px target, aria-current state); layout lives in the .variant-* block.
+interface Props { variants: ProductVariant[]; selected: ProductVariant; locale: Locale }
+const { variants, selected, locale } = Astro.props;
+const s = t(locale);
+const axes = selectorAxes(variants, selected);
+---
+{axes.length > 0 && <div class="variant-selector" role="group" aria-label={s.variants.group} data-variant-selector>
+  {axes.map((axis, a) => (
+    <fieldset class="variant-option">
+      <legend>{optionLabel(locale, axis.kind, axis.label)}{axis.current && <>: <span><VariantText text={axis.current.value[locale]} lang={axis.current.valueLang} /></span></>}</legend>
+      <ul class="variant-values" role="list">
+        {axis.values.map((v, i) => (
+          <li class="variant-item">
+            <a class="chip variant-value" href={href(locale, `/products/${v.slug}/`)} aria-current={v.current ? 'true' : undefined} aria-describedby={v.changes.length ? `variant-note-${a}-${i}` : undefined} data-variant-link data-option-kind={axis.kind} data-option-key={v.key}><VariantText text={v.value[locale]} lang={v.valueLang} /></a>
+            {v.changes.length > 0 && <small class="variant-note" id={`variant-note-${a}-${i}`}>{s.variants.changes(v.changes.map((c) => ({ label: optionLabel(locale, c.kind, c.label), value: c.value[locale], valueLang: c.valueLang }))).map((part) => typeof part === 'string' ? part : <VariantText text={part.value} lang={part.valueLang} />)}</small>}
+          </li>
+        ))}
+      </ul>
+    </fieldset>
+  ))}
+</div>}

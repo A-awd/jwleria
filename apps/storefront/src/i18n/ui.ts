@@ -1,5 +1,6 @@
-import type { Locale } from '../contracts/catalog';
+import type { Locale, ModelSummary } from '../contracts/catalog';
 import { withBrand } from '../components/inquiry-message.mjs';
+import { MODEL_PAGE_VARIANTS } from '../components/variant-selection.mjs';
 
 export const locales = ['ar', 'en'] as const satisfies readonly Locale[];
 export const isLocale = (v: unknown): v is Locale => v === 'ar' || v === 'en';
@@ -7,6 +8,43 @@ export const dirOf = (l: Locale) => (l === 'ar' ? 'rtl' : 'ltr');
 export const otherLocale = (l: Locale): Locale => (l === 'ar' ? 'en' : 'ar');
 export const href = (l: Locale, path = '/') => `/${l}${path.startsWith('/') ? path : `/${path}`}`;
 export const localeParams = () => locales.map((locale) => ({ params: { locale } }));
+
+// Option counts use each noun's correct Arabic form: واحد/مثنى for 1–2, plural for 3–10, singular from 11.
+type ArabicForms = readonly [one: string, two: string, few: string, many: string, other: string];
+const AR_COUNTS: Record<string, ArabicForms> = {
+  dial: ['لون ميناء واحد', 'لونا ميناء', 'ألوان ميناء', 'لون ميناء', 'لون ميناء'],
+  bracelet: ['سوار واحد', 'سواران', 'أساور', 'سوارًا', 'سوار'],
+  bracelet_material: ['مادة سوار واحدة', 'مادتا سوار', 'مواد سوار', 'مادة سوار', 'مادة سوار'],
+  colour: ['لون واحد', 'لونان', 'ألوان', 'لونًا', 'لون'],
+  size: ['مقاس واحد', 'مقاسان', 'مقاسات', 'مقاسًا', 'مقاس'],
+  case_size: ['قطر واحد', 'قطران', 'أقطار', 'قطرًا', 'قطر'],
+  option: ['خيار واحد', 'خياران', 'خيارات', 'خيارًا', 'خيار'],
+};
+const EN_COUNTS: Record<string, readonly [one: string, other: string]> = {
+  dial: ['dial', 'dials'], bracelet: ['bracelet', 'bracelets'], bracelet_material: ['bracelet material', 'bracelet materials'], colour: ['colour', 'colours'], size: ['size', 'sizes'],
+  ring_size: ['ring size', 'ring sizes'], bracelet_size: ['bracelet size', 'bracelet sizes'], bag_size: ['bag size', 'bag sizes'],
+  case_size: ['case diameter', 'case diameters'], option: ['option', 'options'],
+};
+const countKind = (kind: string, table: Record<string, unknown>) => {
+  const k = kind === 'color' ? 'colour' : kind;
+  return k in table ? k : /^(?:ring|bracelet|bag)_size$/.test(k) && 'size' in table ? 'size' : 'option';
+};
+const AR_MODELS: ArabicForms = ['طراز واحد', 'طرازان', 'طرازات', 'طرازًا', 'طراز'];
+const arabicPlural = ([one, two, few, many, other]: ArabicForms, n: number) => {
+  const tens = n % 100;
+  return n === 1 ? one : n === 2 ? two : tens >= 3 && tens <= 10 ? `${n} ${few}` : tens >= 11 ? `${n} ${many}` : `${n} ${other}`;
+};
+export const arabicCount = (kind: string, n: number) => arabicPlural(AR_COUNTS[countKind(kind, AR_COUNTS)], n);
+export function englishCount(kind: string, n: number) {
+  const [one, other] = EN_COUNTS[countKind(kind, EN_COUNTS)];
+  return `${n} ${n === 1 ? one : other}`;
+}
+/** One changed option in a note; valueLang 'en' marks a value kept in its English source text. */
+type Change = { label: string; value: string; valueLang?: 'en' };
+/** A note in reading order: plain text, and the changed options whose values the selector marks by language. */
+type ChangeNote = (string | Change)[];
+const changeNote = (lead: string, separator: string, item: (label: string) => string) => (changes: Change[]): ChangeNote =>
+  [lead, ...changes.flatMap((c, i) => [...(i ? [separator] : []), item(c.label), c])];
 
 const ar = {
   langName: 'العربية',
@@ -55,6 +93,7 @@ const ar = {
     apply: 'عرض النتائج',
     clear: 'مسح',
     results: (n: number) => `${n} قطعة`,
+    models: (n: number) => arabicPlural(AR_MODELS, n),
     none: 'لا توجد قطع مطابقة.',
     noscript: 'البحث والتصفية متاحان دون جافاسكربت.',
   },
@@ -66,6 +105,15 @@ const ar = {
     related: 'مختارات أخرى',
     views: ['المشهد الكامل', 'تفصيل', 'تفصيل قريب'],
     how: 'طريقة الاستفسار',
+    noPhoto: 'لا توجد صورة معتمدة لهذا المرجع بعد.',
+  },
+  variants: {
+    group: 'خيارات هذا الطراز',
+    kinds: { dial: 'لون الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
+    count: arabicCount,
+    changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
+    showing: (ref: string) => `تم عرض المرجع ${ref}`,
+    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات' },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -145,6 +193,7 @@ const en: typeof ar = {
     apply: 'Show results',
     clear: 'Clear',
     results: (n: number) => `${n} pieces`,
+    models: (n: number) => `${n} ${n === 1 ? 'model' : 'models'}`,
     none: 'No matching pieces.',
     noscript: 'Search and filters work without JavaScript.',
   },
@@ -156,6 +205,15 @@ const en: typeof ar = {
     related: 'You may also like',
     views: ['Full view', 'Detail', 'Close detail'],
     how: 'How to inquire',
+    noPhoto: 'No approved photograph of this reference yet.',
+  },
+  variants: {
+    group: 'Options for this model',
+    kinds: { dial: 'Dial', bracelet: 'Bracelet', bracelet_material: 'Bracelet material', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter' },
+    count: englishCount,
+    changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
+    showing: (ref: string) => `Showing reference ${ref}`,
+    credit: { photo: 'Photo', source: 'Source', changes: 'Changes' },
   },
   dialog: {
     title: 'WhatsApp inquiry',
@@ -190,3 +248,21 @@ const en: typeof ar = {
 
 export const ui = { ar, en };
 export const t = (l: Locale) => ui[l];
+
+/** The label of an option or spec kind (one source for both): the reviewed translation when known, otherwise the catalog's own label. */
+export const optionLabel = (l: Locale, kind: string, fallback: Record<Locale, string>) => ui[l].variants.kinds[kind] ?? fallback[l];
+/** A listing total names what it counts: model cards from the model projection, otherwise catalog rows. */
+export const resultCount = (l: Locale, page: { total: number; unit?: 'models' | 'products' }) =>
+  page.unit === 'models' ? ui[l].catalog.models(page.total) : ui[l].catalog.results(page.total);
+/** Neutral counts of the real option values a model card can mention (only kinds with a choice). A model with
+ * more variants than its page can offer gets no count, since the page could not show every value counted. */
+export const optionCounts = (l: Locale, model?: Pick<ModelSummary, 'variantCount' | 'options'>) =>
+  !model || model.variantCount > MODEL_PAGE_VARIANTS ? '' : model.options.filter((o) => o.count > 1).map((o) => ui[l].variants.count(o.kind, o.count)).join(' · ');
+/** A page's canonical URL and its language alternates all name its canonical twin (a model's primary variant). */
+export function pageLinks(l: Locale, canonicalPath: string, site?: URL) {
+  const absolute = (path: string) => (site ? new URL(path, site).href : path);
+  return {
+    canonical: absolute(href(l, canonicalPath)),
+    alternates: [['ar', absolute(href('ar', canonicalPath))], ['en', absolute(href('en', canonicalPath))], ['x-default', absolute(href('ar', canonicalPath))]] as const,
+  };
+}

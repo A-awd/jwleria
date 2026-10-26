@@ -1,0 +1,6 @@
+---
+// An option or spec value; one kept in its English source text is marked as English and isolated left-to-right.
+interface Props { text: string; lang?: 'en' }
+const { text, lang } = Astro.props;
+---
+{lang ? <bdi lang={lang} dir="ltr">{text}</bdi> : text}

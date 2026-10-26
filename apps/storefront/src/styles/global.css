@@ -242,3 +242,18 @@ html[lang="ar"] .steps li::before { content: counter(s, arabic-indic); }
 .pdp.pdp--facts { max-width: 56rem; margin-inline: auto; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'info' 'cta'; grid-template-rows: auto auto; }
 .pdp--facts .pdp__info { padding-block: 1.5rem; }
 .pdp--facts .pdp__info h1 { max-width: 24ch; }
+
+/* Variant controls and gallery credit: functional baseline only (owner role split, 2026-10-26).
+   The chosen design replaces this block as a whole; it reuses the existing tokens and the .chip control. */
+.variant-selector { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
+.variant-option { border: 0; margin: 0; padding: 0; min-width: 0; }
+.variant-option legend { padding: 0; margin-bottom: .5rem; font-size: var(--s-1); color: var(--muted); }
+.variant-values { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; }
+.variant-item { display: grid; gap: .25rem; justify-items: start; min-width: 0; max-width: 100%; }
+.variant-value { max-width: 100%; overflow-wrap: anywhere; }
+.variant-note { max-width: 18rem; font-size: .75rem; line-height: 1.4; color: var(--muted); }
+.variant-count { margin: 0; font-size: var(--s-1); color: var(--muted); }
+.variant-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+.gallery-credit { display: block; margin-top: .25rem; }
+.gallery-credit--card { margin: .25rem 0 0; font-size: .75rem; color: var(--muted); }
+/* End of variant controls and gallery credit. */

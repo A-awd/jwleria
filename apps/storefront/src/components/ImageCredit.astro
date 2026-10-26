@@ -1,0 +1,13 @@
+---
+import type { ImageAttribution, Locale } from '../contracts/catalog';
+import { t } from '../i18n/ui';
+
+// The visible credit an open-licence image carries wherever it is shown (inactive until such a grant exists).
+interface Props { credit: ImageAttribution; locale: Locale; card?: boolean }
+const { credit, locale, card = false } = Astro.props;
+const s = t(locale);
+const Tag = card ? 'p' : 'span';
+---
+<Tag class:list={['gallery-credit', { 'gallery-credit--card': card }]}>
+  {s.variants.credit.photo}: <bdi>{credit.creator}</bdi> · <a href={credit.licenseUrl} rel="license nofollow"><bdi>{credit.license}</bdi></a> · <a href={credit.sourceUrl} rel="nofollow">{s.variants.credit.source}</a>{credit.changes && <> · {s.variants.credit.changes}: <bdi>{credit.changes}</bdi></>}
+</Tag>

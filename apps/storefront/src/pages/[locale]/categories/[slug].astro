@@ -3,7 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import Pagination from '../../../components/Pagination.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import { getCategories, getCategory, getProducts } from '../../../server/catalog';
-import { href, isLocale, t } from '../../../i18n/ui';
+import { href, isLocale, resultCount, t } from '../../../i18n/ui';
 
 
 const { locale, slug } = Astro.params;
@@ -19,7 +19,7 @@ const others = getCategories().filter((c) => c.slug !== category.slug);
     <header class="page-head">
       <p class="crumb"><a href={href(locale, '/categories/')}>{s.nav.categories}</a></p>
       <h1>{category.name[locale]}</h1>
-      <p class="lead">{s.catalog.results(result.total)}</p>
+      <p class="lead">{resultCount(locale, result)}</p>
     </header>
     {products.length > 0
       ? <div class="grid grid--4">{products.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} priority={i===0} />)}</div>

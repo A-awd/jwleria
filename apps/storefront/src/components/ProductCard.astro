@@ -1,9 +1,10 @@
 ---
 import type { Brand, Locale, PublicProduct } from '../contracts/catalog';
 import { getBrand } from '../server/catalog';
-import { href, t } from '../i18n/ui';
+import { href, optionCounts, t } from '../i18n/ui';
 import { artClass, productInquiry } from './view';
 import { productMedia } from './product-media.mjs';
+import ImageCredit from './ImageCredit.astro';
 
 interface Props { product: PublicProduct; locale: Locale; eager?: boolean; priority?: boolean; brand?: Brand; columns?: 3 | 4 }
 const { product: p, locale, eager = false } = Astro.props;
@@ -12,15 +13,22 @@ const url = href(locale, `/products/${p.slug}/`);
 const brand = Astro.props.brand ?? await getBrand(p.brandSlug);
 const inquiry = productInquiry(locale, p, Astro.url.origin, brand);
 const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefined;
+// A model card shows its primary variant's own image only, and a neutral count of real option values.
+const name = p.model?.name ?? p.name;
+const options = optionCounts(locale, p.model);
+// The card shows image 0, so an open-licence credit on it is shown with the card too.
+const credit = p.image ? p.imageVariants?.[0]?.attribution : undefined;
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>
   {p.image && <a class="media" href={url} tabindex="-1" aria-hidden="true">
     <img class={artClass(p.image, p.categorySlug, p.reference)} {...media} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={Astro.props.priority ? 'high' : 'auto'} decoding="async" />
     {p.isPreview && <span class="badge">{s.preview}</span>}
   </a>}
+  {credit && <ImageCredit credit={credit} locale={locale} card />}
   <div class="card__body">
     <p class="card__brand">{brand?.name ?? s.brands.ownTitle}</p>
-    <h3 class="card__name"><a href={url}>{p.name[locale]}</a></h3>
+    <h3 class="card__name"><a href={url}>{name[locale]}</a></h3>
+    {options && <p class="variant-count">{options}</p>}
     {!p.image && <>{p.collectionKind !== 'source-group' && <p class="card__collection">{p.collection[locale]}</p>}<p class="card__summary">{p.summary[locale]}</p></>}
     <p class="card__ref">{s.reference} <bdi>{p.reference}</bdi></p>
     <div class="card__cta">
