@@ -8,23 +8,19 @@
   const EM = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => EM[c]);
   const lat = (s, c) => `<bdi class="lat${c ? ' ' + c : ''}" lang="en" dir="ltr">${esc(s)}</bdi>`;
-  const refT = (r, id) => `<bdi class="ref"${id ? ` id="${id}"` : ''} dir="ltr">${esc(r)}</bdi>`;
+  const refT = (r, id) => `<bdi class="ref"${id ? ` id="${id}"` : ''} dir="ltr">${esc(r).replace(/\./g, '.<wbr>')}</bdi>`;
   const fv = (s) => (/[؀-ۿ]/.test(s) ? esc(s) : lat(s, 'lv'));
   const cat = (slug) => D.categories.find((c) => c.slug === slug) || { slug, ar: slug, en: slug };
-  const JW = '<bdi lang="en" dir="ltr">Jwleria</bdi>';
   const IMG = '../shared/img/';
   const FO = 'لا تتوفر صورة أصلية معتمدة لهذا المرجع حاليًا.';
   const INQ = 'التواصل عبر واتساب لمعرفة السعر';
   const VIEWS = ['الواجهة', 'الجانب', 'الخلف', 'التفاصيل'];
   const smooth = () => (matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth');
-  const grp = (n) => AR(Number(n).toLocaleString('en-US')).replace(/,/g, '٬');
 
   const P = {
     bag: '<path d="M23 25v-4a9 9 0 0 1 18 0v4"/><path d="M13 25h38l-3.5 27h-31z"/>',
     watch: '<circle cx="32" cy="32" r="12"/><path d="M26.5 21.5 28.5 9h7l2 12.5M26.5 42.5l2 12.5h7l2-12.5M32 26v6l4 2.5"/>',
     luggage: '<rect x="17" y="18" width="30" height="34" rx="4"/><path d="M26 18v-6h12v6M25 26v18M39 26v18"/><circle cx="23" cy="55.5" r="2"/><circle cx="41" cy="55.5" r="2"/>',
-    search: '<circle cx="28" cy="28" r="15"/><path d="m39 39 12 12"/>',
-    menu: '<path d="M12 22h40M12 32h40M12 42h40"/>',
     right: '<path d="m25 16 16 16-16 16"/>',
     left: '<path d="M39 16 23 32l16 16"/>',
   };
@@ -125,50 +121,31 @@
     clearTimeout(tt);
     tt = setTimeout(() => t.classList.remove('on'), 2400);
   }
+  // Static chrome (strip, header, footer, toast) is in the HTML; this wires it and renders the category chips.
   function shell() {
-    const nav = [['home.html#brands', 'العلامات'], ['home.html#categories', 'الفئات'], ['catalog.html', 'الكتالوج'], ['#about', `عن ${JW}`]];
-    const wm = '<a class="wm" href="home.html" aria-label="Jwleria، الصفحة الرئيسية"><span lang="en" dir="ltr">JWLERIA</span></a>';
-    $('#pv').innerHTML = '<div class="wrap"><p>معاينة تصميم · الاتجاه ج — المعرض</p><a href="../index.html">كل الاتجاهات</a></div>';
-    $('#hdr').innerHTML = `<div class="wrap hdr-in">
-      <button class="ib mb" type="button" aria-expanded="false" aria-controls="nav" aria-label="القائمة">${ui('menu')}</button>${wm}
-      <nav class="nav" id="nav" aria-label="التنقل الرئيسي"><ul>${nav.map(([h, t]) => `<li><a href="${h}"${PAGE === 'catalog' && h === 'catalog.html' ? ' aria-current="page"' : ''}>${t}</a></li>`).join('')}</ul></nav>
-      <div class="tools"><button class="ib" type="button" id="sbtn" aria-expanded="false" aria-controls="${PAGE === 'catalog' ? 'q' : 'sp'}" aria-label="بحث">${ui('search')}</button><a class="lang" href="#" lang="en" hreflang="en" data-inert>English</a></div></div>
-      <div class="sp" id="sp" hidden><form class="wrap sp-f" action="catalog.html" method="get" role="search"><label class="sr" for="sq">البحث في الكتالوج</label><input class="inp" id="sq" name="q" type="search" placeholder="اسم العلامة أو الطراز أو المرجع" autocomplete="off"><button class="btn btn-s" type="submit">بحث</button></form></div>`;
     const cb = $('#cbar');
     if (PAGE === 'catalog') cb.remove();
     else {
       const here = PAGE === 'product' ? J.byId(J.params().get('model')).category : '';
       cb.innerHTML = `<nav class="wrap" aria-label="الفئات"><ul class="chips"><li><a class="chip" href="catalog.html">كل الفئات</a></li>${D.categories.map((c) => `<li><a class="chip${c.slug === here ? ' is-here' : ''}" href="catalog.html?category=${c.slug}">${c.ar}</a></li>`).join('')}</ul></nav>`;
     }
-    $('#ftr').innerHTML = `<div class="wrap ftr-g">
-      <div id="about" tabindex="-1">${wm}<h2>عن ${JW}</h2><p>دليل مستقل لمختارات من العلامات العالمية في الساعات والمجوهرات والحقائب. لكل طراز صفحة واحدة تجمع ألوانه ومقاساته ومراجعه.</p></div>
-      <nav aria-label="روابط التذييل"><h2>تصفّح</h2><ul><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="../index.html">كل الاتجاهات</a></li></ul></nav>
-      <div><h2>الفئات</h2><ul class="fcats">${D.categories.map((c) => `<li><a href="catalog.html?category=${c.slug}">${c.ar}</a></li>`).join('')}</ul></div></div>
-      <div class="wrap legal"><p>أسماء العلامات التجارية ملك لأصحابها. ${JW} جهة مستقلة، غير تابعة لهذه العلامات ولا تمثلها.</p><p>معاينة تصميم: الصور مؤقتة أو توضيحية.</p></div>`;
-    const t = d.createElement('div');
-    t.className = 'toast';
-    t.setAttribute('role', 'status');
-    t.setAttribute('aria-live', 'polite');
-    B.append(t);
-
     const mb = $('.mb'), nv = $('#nav'), sb = $('#sbtn'), sp = $('#sp');
     const menu = (o) => { mb.setAttribute('aria-expanded', String(o)); nv.classList.toggle('open', o); };
     const search = (o) => { sp.hidden = !o; sb.setAttribute('aria-expanded', String(o)); if (o) $('#sq').focus(); };
     mb.addEventListener('click', () => menu(mb.getAttribute('aria-expanded') !== 'true'));
     nv.addEventListener('click', (e) => { if (e.target.closest('a')) menu(false); });
     sb.addEventListener('click', () => {
-      if (PAGE === 'catalog') { const q = $('#q'); q.scrollIntoView({ block: 'center', behavior: smooth() }); q.focus({ preventScroll: true }); return; }
-      search(sp.hidden);
+      if (PAGE !== 'catalog') return search(sp.hidden);
+      const q = $('#q');
+      q.scrollIntoView({ block: 'center', behavior: smooth() });
+      q.focus({ preventScroll: true });
     });
     d.addEventListener('keydown', (e) => {
       if (e.key !== 'Escape') return;
       if (mb.getAttribute('aria-expanded') === 'true') { menu(false); mb.focus(); }
       if (!sp.hidden) { search(false); sb.focus(); }
     });
-    d.addEventListener('click', (e) => {
-      const x = e.target.closest('[data-inert]');
-      if (x) { e.preventDefault(); toast(); }
-    });
+    d.addEventListener('click', (e) => { if (e.target.closest('[data-inert]')) { e.preventDefault(); toast(); } });
   }
 
   /* ---------- home ---------- */
@@ -179,17 +156,7 @@
       return `<li><a class="door" href="catalog.html?brand=${encodeURIComponent(b)}"><span class="door-f"><span class="door-n">${lat(b)}</span>${n ? `<span class="door-c">${J.countAr(n, 'ref')}</span>` : ''}</span></a></li>`;
     }).join('');
     const cats = D.categories.map((c) => `<li><a class="cat" href="catalog.html?category=${c.slug}"><span class="cat-i"><img src="${IMG}${c.img}-320.webp" srcset="${IMG}${c.img}-320.webp 320w, ${IMG}${c.img}-640.webp 640w" sizes="(max-width: 599px) 96px, 128px" width="320" height="320" alt="" loading="lazy" decoding="async"><span class="cap">صورة توضيحية</span></span><span class="cat-t"><span class="cat-n">${c.ar}</span><span class="cat-e">${lat(c.en)}</span></span>${ui('left')}</a></li>`).join('');
-    $('#main').innerHTML = `
-    <section class="wrap" aria-labelledby="h1"><div class="hero">
-      <div class="hero-p">
-        <p class="eyebrow">ساعات · مجوهرات · حقائب</p>
-        <h1 id="h1">الفخامة، بكل تفاصيلها</h1>
-        <p class="hero-s">مختارات من العلامات العالمية، والتفاصيل عبر واتساب.</p>
-        <div class="hero-a"><a class="btn btn-s" href="#brands">العلامات</a><a class="btn btn-o" href="catalog.html">الكتالوج</a></div>
-        <ul class="stats"><li><strong>${AR(D.brands.length)}</strong><span>علامة في الدليل</span></li><li><strong>${AR(D.categories.length)}</strong><span>فئات</span></li><li><strong>${grp(D.meta.catalogReferences)}</strong><span>مرجعًا منشورًا</span></li></ul>
-      </div>
-      <figure class="hero-f"><img src="${IMG}catalog-still-life-1200.webp" srcset="${IMG}catalog-still-life-600.webp 600w, ${IMG}catalog-still-life-1200.webp 1200w" sizes="(max-width: 899px) 100vw, 58vw" width="1200" height="800" alt="" fetchpriority="high" decoding="async"><figcaption class="cap">صورة توضيحية</figcaption></figure>
-    </div></section>
+    $('#main').insertAdjacentHTML('beforeend', `
     <section class="wrap sec" id="brands" aria-labelledby="bh" tabindex="-1">
       <div class="sec-h"><div><h2 id="bh">العلامات</h2><p>${AR(D.brands.length)} علامة في الدليل. الرقم تحت الاسم عدد المراجع المنشورة حاليًا.</p></div>${scBtns('doors', 'العلامات')}</div>
       <ul class="sc-row doors" id="doors">${doors}</ul>
@@ -201,7 +168,7 @@
     <section class="wrap sec" aria-labelledby="fh">
       <div class="sec-h"><div><h2 id="fh">مختارات من الكتالوج</h2><p>ساعات وحقائب بمراجعها الفعلية.</p></div><a class="more-l" href="catalog.html">عرض الكتالوج</a></div>
       <ul class="grid4">${pick.map((m) => `<li>${card(m, 3)}</li>`).join('')}</ul>
-    </section>`;
+    </section>`);
     scroller($('#doors'), $('#brands .sc-prev'), $('#brands .sc-next'));
   }
 
@@ -213,17 +180,9 @@
     if (st.brand && !brands.includes(st.brand)) brands.push(st.brand);
     const n = (s) => D.models.filter((m) => m.category === s).length;
     const hay = (m) => [m.brand, m.name, m.collection, m.typeAr, m.nameAr, cat(m.category).ar].concat(m.variants.map((v) => v.ref)).join(' ').toLowerCase();
-    $('#main').innerHTML = `<div class="wrap"><nav class="crumbs" aria-label="مسار التنقل"><ol id="crumbs"></ol></nav>
-      <div class="page-h"><h1 id="h1">الكتالوج</h1><p class="lede">طراز واحد لكل منتج، والألوان والمقاسات داخل صفحة المنتج.</p></div></div>
-      <div class="fbar"><form class="wrap filters" id="filters" role="search" aria-label="تصفية الكتالوج">
-        <div class="fcat" role="group" aria-label="الفئة"><ul class="chips">${[['', 'كل الفئات']].concat(D.categories.map((c) => [c.slug, c.ar])).map(([s, t]) => `<li><button class="chip" type="button" data-cat="${s}" aria-pressed="false">${t}${s && n(s) ? `<span class="chip-n">${AR(n(s))}</span>` : ''}</button></li>`).join('')}</ul></div>
-        <div class="fctl"><label class="fld"><span class="sr">العلامة</span><select class="sel" id="fb"><option value="">كل العلامات</option>${brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join('')}</select></label>
-        <label class="fld"><span class="sr">البحث في الكتالوج</span><input class="inp" id="q" type="search" placeholder="بحث بالاسم أو المرجع" autocomplete="off"></label></div>
-      </form></div>
-      <div class="wrap"><div class="resbar"><p id="count" aria-live="polite"></p><button class="lnk" type="button" id="clr" hidden>مسح التصفية</button></div>
-        <ul class="grid3" id="grid"></ul>
-        <div class="empty" id="empty" hidden><p class="empty-h">لا توجد طرازات مطابقة في هذه المعاينة.</p><p>تضم المعاينة ${J.counts(D.models).label} من الكتالوج العام.</p><button class="btn btn-o" type="button" id="reset">عرض كل الطرازات</button></div>
-        <nav class="pager" id="pager" aria-label="ترقيم الصفحات"></nav></div>`;
+    $('.fcat .chips').innerHTML = [['', 'كل الفئات']].concat(D.categories.map((c) => [c.slug, c.ar])).map(([s, t]) => `<li><button class="chip" type="button" data-cat="${s}" aria-pressed="false">${t}${s && n(s) ? `<span class="chip-n">${AR(n(s))}</span>` : ''}</button></li>`).join('');
+    $('#fb').insertAdjacentHTML('beforeend', brands.map((b) => `<option value="${esc(b)}">${esc(b)}</option>`).join(''));
+    $('#all').textContent = J.counts(D.models).label;
     $('#fb').value = st.brand;
     $('#q').value = st.q;
     function apply() {
@@ -324,7 +283,7 @@
       return `<div class="refs" data-axis="ref" role="group" aria-labelledby="ax-ref"><p class="refs-h" id="ax-ref">${h} <span class="refs-c">(${AR(sib.length)})</span></p><div class="rchips">${sib.map((x) => `<a class="rc" href="${J.url(m, x)}" data-ref="${esc(x.ref)}"${x.ref === v.ref ? ' aria-current="true"' : ''}>${refT(x.ref)}</a>`).join('')}</div><p class="refs-n">${nt}</p></div>`;
     }
     function opts(focusSel) {
-      const box = $('#opts'), axes = J.axesOf(m);
+      const box = $('#opts'), axes = J.axesOf(m).sort((a, b) => (a.kind === 'size') - (b.kind === 'size'));
       if (!axes.length) { box.hidden = true; return; }
       const old = $('#dr'), sl = old ? old.scrollLeft : null;
       box.innerHTML = axes.map(axis).join('') + refs();

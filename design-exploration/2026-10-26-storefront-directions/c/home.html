@@ -13,11 +13,41 @@
 </head>
 <body data-page="home">
 <a class="skip" href="#main">تخطَّ إلى المحتوى</a>
-<div class="pv" id="pv"></div>
-<header class="hdr" id="hdr"></header>
+<div class="pv"><div class="wrap"><p>معاينة تصميم · الاتجاه ج — المعرض</p><a href="../index.html">كل الاتجاهات</a></div></div>
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <button class="ib mb" type="button" aria-expanded="false" aria-controls="nav" aria-label="القائمة"><svg class="ui" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 22h40M12 32h40M12 42h40"/></svg></button>
+    <a class="wm" href="home.html" aria-label="Jwleria، الصفحة الرئيسية"><span lang="en" dir="ltr">JWLERIA</span></a>
+    <nav class="nav" id="nav" aria-label="التنقل الرئيسي"><ul><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about">عن <bdi lang="en" dir="ltr">Jwleria</bdi></a></li></ul></nav>
+    <div class="tools">
+      <button class="ib" type="button" id="sbtn" aria-expanded="false" aria-controls="sp" aria-label="بحث"><svg class="ui" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="28" cy="28" r="15"/><path d="m39 39 12 12"/></svg></button>
+      <a class="lang" href="#" lang="en" hreflang="en" data-inert>English</a>
+    </div>
+  </div>
+  <div class="sp" id="sp" hidden><form class="wrap sp-f" action="catalog.html" method="get" role="search"><label class="sr" for="sq">البحث في الكتالوج</label><input class="inp" id="sq" name="q" type="search" placeholder="اسم العلامة أو الطراز أو المرجع" autocomplete="off"><button class="btn btn-s" type="submit">بحث</button></form></div>
+</header>
 <div class="cbar" id="cbar"></div>
-<main id="main" tabindex="-1"></main>
-<footer class="ftr" id="ftr"></footer>
+<main id="main" tabindex="-1">
+<section class="wrap" aria-labelledby="h1"><div class="hero">
+  <div class="hero-p">
+    <p class="eyebrow">ساعات · مجوهرات · حقائب</p>
+    <h1 id="h1">الفخامة، بكل تفاصيلها</h1>
+    <p class="hero-s">مختارات من العلامات العالمية، والتفاصيل عبر واتساب.</p>
+    <div class="hero-a"><a class="btn btn-s" href="#brands">العلامات</a><a class="btn btn-o" href="catalog.html">الكتالوج</a></div>
+    <ul class="stats"><li><strong>٤١</strong><span>علامة في الدليل</span></li><li><strong>٩</strong><span>فئات</span></li><li><strong>٤٬٠٩٧</strong><span>مرجعًا منشورًا</span></li></ul>
+  </div>
+  <figure class="hero-f"><img src="../shared/img/catalog-still-life-1200.webp" srcset="../shared/img/catalog-still-life-600.webp 600w, ../shared/img/catalog-still-life-1200.webp 1200w" sizes="(max-width: 899px) 100vw, 58vw" width="1200" height="800" alt="" fetchpriority="high" decoding="async"><figcaption class="cap">صورة توضيحية</figcaption></figure>
+</div></section>
+</main>
+<footer class="ftr">
+  <div class="wrap ftr-g">
+    <div id="about" tabindex="-1"><a class="wm" href="home.html" aria-label="Jwleria، الصفحة الرئيسية"><span lang="en" dir="ltr">JWLERIA</span></a><h2>عن <bdi lang="en" dir="ltr">Jwleria</bdi></h2><p>دليل مستقل لمختارات من العلامات العالمية في الساعات والمجوهرات والحقائب. لكل طراز صفحة واحدة تجمع ألوانه ومقاساته ومراجعه.</p></div>
+    <nav aria-label="روابط التذييل"><h2>تصفّح</h2><ul><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="../index.html">كل الاتجاهات</a></li></ul></nav>
+    <div><h2>الفئات</h2><ul class="fcats"><li><a href="catalog.html?category=watches">الساعات</a></li><li><a href="catalog.html?category=jewelry">المجوهرات</a></li><li><a href="catalog.html?category=bracelets">الأساور</a></li><li><a href="catalog.html?category=handbags">حقائب اليد</a></li><li><a href="catalog.html?category=leather-goods">المصنوعات الجلدية</a></li><li><a href="catalog.html?category=luggage">حقائب السفر</a></li><li><a href="catalog.html?category=clothing">الملابس</a></li><li><a href="catalog.html?category=shoes">الأحذية</a></li><li><a href="catalog.html?category=accessories">الإكسسوارات</a></li></ul></div>
+  </div>
+  <div class="wrap legal"><p>أسماء العلامات التجارية ملك لأصحابها. <bdi lang="en" dir="ltr">Jwleria</bdi> جهة مستقلة، غير تابعة لهذه العلامات ولا تمثلها.</p><p>معاينة تصميم: الصور مؤقتة أو توضيحية.</p></div>
+</footer>
+<div class="toast" role="status" aria-live="polite"></div>
 <script src="../shared/catalog-data.js"></script>
 <script src="../shared/variants.js"></script>
 <script src="app.js"></script>
