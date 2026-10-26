@@ -33,6 +33,7 @@ h1, h2, h3, p, figure, dl, dd { margin: 0; }
 :lang(en) { font-family: var(--lt); }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 [hidden] { display: none !important; }
+main:focus { outline: none; }
 .vh { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .wrap { max-width: var(--max); margin-inline: auto; padding-inline: var(--gut); }
 
@@ -87,6 +88,7 @@ h1, h2, h3, p, figure, dl, dd { margin: 0; }
   max-height: calc(100vh - var(--hdr) - 40px); overflow: auto;
 }
 .mega-in { display: grid; grid-template-columns: minmax(0,1fr) 248px; gap: 56px; padding-block: 28px 40px; }
+.mega-in.solo { grid-template-columns: 1fr; padding-block: 24px 36px; }
 .mega-hd { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .mega-t { font-size: 15px; font-weight: 600; }
 .mega-m { font-size: 12.5px; color: var(--muted); }
@@ -155,6 +157,7 @@ h1, h2, h3, p, figure, dl, dd { margin: 0; }
 .sec-hd .grow { flex: 1; }
 
 /* Category tiles */
+.cats > li { display: contents; }
 .cats { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); }
 .cat { display: grid; grid-template-columns: auto minmax(0,1fr) 112px; gap: 16px; align-items: center; background: #fff; padding: 16px 16px 16px 20px; min-height: 144px; transition: background .2s; }
 .cat:hover { background: var(--panel); }
@@ -291,7 +294,7 @@ h1, h2, h3, p, figure, dl, dd { margin: 0; }
 .d-links a { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; font-size: 16px; }
 .d-cats { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 .d-cats a { font-size: 15px; }
-.d-az { columns: 2; column-gap: 16px; }
+.d-az .az-c { column-count: 2; column-gap: 16px; }
 .d-az .az-g { padding-bottom: 12px; }
 .d-az .az-g a { min-height: 40px; font-size: 15px; }
 @keyframes fade { from { opacity: 0; } }
