@@ -11,5 +11,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     cache: storage.caches?.default,
     waitUntil: execution.cfContext?.waitUntil.bind(execution.cfContext),
     build: __JWL_CACHE_BUILD__,
+    // Astro's error render of this request reuses these locals, so that pass bypasses the shared cache.
+    scope: context.locals,
   });
 });
