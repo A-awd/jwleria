@@ -15,7 +15,7 @@ const html=body=>new Response(body,{headers:{'content-type':'text/html; charset=
 const xml=urls=>new Response('<urlset>'+urls.map(u=>'<url><loc>'+u+'</loc></url>').join('')+'</urlset>',{headers:{'content-type':'application/xml'}});
 const rolex=['https://www.rolex.com/en-us/watches/submariner/m126610ln-0001','https://www.rolex.com/en-us/watches/datejust/m126334-0001','https://www.rolex.com/en-us/watches/explorer/m224270-0001'];
 const iwc=['https://www.iwc.com/en/watches/portugieser/iw371605-portugieser-chronograph','https://www.iwc.com/en/watches/pilot/iw328201-pilot-watch'];
-const piaget=['https://www.piaget.com/us-en/watches/polo/polo-watch-g0a41002'];
+const jlc=['https://www.jaeger-lecoultre.com/us-en/watches/reverso/reverso-tribute/reverso-tribute-small-seconds-q713256j'];
 const productPage=url=>{const ref=url.match(/(m[a-z0-9]+-\d+|iw\d+|g[a-z0-9]+)(?:-[^/]*)?$/i)[1];return ld(ref,'Synthetic '+ref,'https://media.example.test/'+ref+'.png');};
 // Stands in for the database registry (jwl_source_registry); restricted sources stay closed in code regardless.
 const registry=Object.fromEntries(Object.entries(sourceAdapters).map(([id,a])=>[id,{origin:a.origin,enabled:true,acquisition_allowed:true,min_interval_seconds:2}]));
@@ -39,31 +39,35 @@ test('independent origins run concurrently with their own pacing; one refusal or
   const root=await privateDir();
   const h=scheduledHarness(url=>{
     if(url.endsWith('/robots.txt'))return()=>new Response(allow);
-    if(url.endsWith('/sitemap.xml'))return()=>xml(url.includes('rolex')?rolex:url.includes('iwc')?iwc:piaget);
+    if(url.endsWith('/sitemap.xml'))return()=>xml(url.includes('rolex')?rolex:url.includes('iwc')?iwc:jlc);
     if(url===rolex[1])return()=>new Response('denied',{status:403});
-    if(url.includes('piaget')&&url!=='https://www.piaget.com/robots.txt')return()=>new Response('slow down',{status:429,headers:{'retry-after':'7200'}});
+    if(url.includes('jaeger-lecoultre')&&url!=='https://www.jaeger-lecoultre.com/robots.txt')return()=>new Response('slow down',{status:429,headers:{'retry-after':'7200'}});
     return()=>html(productPage(url));
   });
   const received=[];
   const result=await runSources({output_root:root,sources:[
     source('rolex-official',{sitemap_urls:['https://www.rolex.com/sitemap.xml']}),
     source('iwc-schaffhausen-official',{sitemap_urls:['https://www.iwc.com/sitemap.xml'],min_interval_seconds:5}),
+    source('jaeger-lecoultre-official',{sitemap_urls:['https://www.jaeger-lecoultre.com/sitemap.xml']}),
     source('piaget-official',{sitemap_urls:['https://www.piaget.com/sitemap.xml']}),
     source('cartier-official',{sitemap_urls:['https://www.cartier.com/sitemap.xml']}),
   ]},{registry,fetcher:h.fetcher,sleep:h.sleep,now:h.now,onRecord:async(row,meta)=>{received.push(meta.source_id+':'+row.external_id);}});
   const by=Object.fromEntries(result.origins.map(r=>[r.source_id,r]));
   assert.equal(by['rolex-official'].status,'blocked');assert.equal(by['rolex-official'].blocked,'source_refused_access');
   assert.equal(by['iwc-schaffhausen-official'].status,'completed');assert.equal(by['iwc-schaffhausen-official'].candidates,2);
-  assert.equal(by['piaget-official'].status,'rate_limited');
+  assert.equal(by['jaeger-lecoultre-official'].status,'rate_limited');
   // Retry-After is honored from the response time (the shared virtual clock moves with other origins).
-  const limitedAt=h.calls.find(c=>c.url.includes('piaget')&&c.url.endsWith('sitemap.xml')).at,notBefore=Date.parse(by['piaget-official'].not_before);
+  const limitedAt=h.calls.find(c=>c.url.includes('jaeger-lecoultre')&&c.url.endsWith('sitemap.xml')).at,notBefore=Date.parse(by['jaeger-lecoultre-official'].not_before);
   assert(notBefore>=limitedAt+7_200_000&&notBefore<=limitedAt+7_200_000+60_000,'not-before follows Retry-After');
   assert.deepEqual(by['cartier-official'],{source_id:'cartier-official',status:'skipped',reason:'acquisition_permission_restricted',requests:0});
   assert(!h.calls.some(c=>c.url.includes('cartier')),'restricted source must not be contacted');
+  // Terms forbidding automated access without written approval close a source like Cartier's.
+  assert.deepEqual(by['piaget-official'],{source_id:'piaget-official',status:'skipped',reason:'acquisition_permission_restricted',requests:0});
+  assert(!h.calls.some(c=>c.url.includes('piaget')),'terms-restricted source must not be contacted');
   assert(!h.calls.some(c=>c.url===rolex[2]),'refused origin stops before later products');
   assert.deepEqual(received.sort(),['iwc-schaffhausen-official:iw328201','iwc-schaffhausen-official:iw371605','rolex-official:m126610ln-0001'].sort());
   // Each origin keeps its own minimum spacing; origins interleave instead of waiting for each other.
-  for(const [host,gap] of [['rolex',2000],['iwc',5000],['piaget',2000]]){
+  for(const [host,gap] of [['rolex',2000],['iwc',5000],['jaeger-lecoultre',2000]]){
     const times=h.calls.filter(c=>c.url.includes(host)).map(c=>c.at);
     for(let i=1;i<times.length;i++)assert(times[i]-times[i-1]>=gap,`${host} request spacing ${times[i]-times[i-1]} < ${gap}`);
   }

@@ -9,6 +9,9 @@ export const recordedSourceStops=Object.freeze({
   'van-cleef-and-arpels-official':'acquisition_permission_restricted',
   'celine-official':'source_challenge_recorded',
   'rimowa-official':'robots_refusal_recorded',
+  // Published terms (Piaget read 2026-10-26; Panerai's indexed copy of the same text) forbid automated access without prior written approval.
+  'piaget-official':'acquisition_permission_restricted',
+  'panerai-official':'acquisition_permission_restricted',
 });
 const hash=/^[a-f0-9]{64}$/;
 // Invalid numeric config must never disable a bound; it falls back to the safe default.
