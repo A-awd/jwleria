@@ -13,7 +13,7 @@ const hex=(buffer:ArrayBuffer)=>[...new Uint8Array(buffer)].map(b=>b.toString(16
 
 Deno.serve(request=>handleUpload(request,{
   public_base:new URL(`/storage/v1/object/public/${bucket}/`,projectUrl).href,
-  approved:async(url:string,sha256:string)=>(await sql.unsafe(approvalQuery,[url,sha256])).length===1,
+  approved:async(url:string,sha256:string,bytes:number,width:number,height:number)=>(await sql.unsafe(approvalQuery,[url,sha256,bytes,width,height])).length===1,
   put:async(path:string,bytes:Uint8Array)=>{
     const {error}=await storage.upload(path,bytes,{contentType:'image/webp',cacheControl:'31536000',upsert:false});
     if(!error)return 'uploaded';
