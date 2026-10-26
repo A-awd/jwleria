@@ -94,6 +94,38 @@ end $$;
 revoke all on function public.jwl_expire_media_grants() from public,anon,authenticated;
 grant execute on function public.jwl_expire_media_grants() to service_role;
 
+-- Records the exact evidence rows and the verified approval in one transaction. Replays are
+-- idempotent only when every stored value is identical; the evidence trigger re-checks each file.
+create function public.jwl_record_media_approval(evidence jsonb, approval jsonb)
+returns jsonb language plpgsql security invoker set search_path='' as $$
+declare mismatched integer;
+begin
+  if jsonb_typeof(evidence) is distinct from 'array' or jsonb_array_length(evidence) not between 1 and 160 or jsonb_typeof(approval) is distinct from 'object' then raise exception 'Invalid media approval';end if;
+  if approval->'image_verified' is distinct from 'true'::jsonb then raise exception 'Only a verified media approval can be recorded';end if;
+  if exists(select 1 from jsonb_array_elements(evidence) e where e->>'candidate_id' is distinct from approval->>'candidate_id' or e->>'revision_hash' is distinct from approval->>'revision_hash' or e->>'grant_reference' is distinct from approval->>'media_reference') then
+    raise exception 'Evidence must bind the approved candidate revision and grant';
+  end if;
+  insert into jwl_internal.media_assets(candidate_id,revision_hash,public_url,public_sha256,width,height,original_source,original_sha256,grant_reference,verified_reference,verification_reference)
+    select e->>'candidate_id',e->>'revision_hash',e->>'public_url',e->>'public_sha256',(e->>'width')::integer,(e->>'height')::integer,e->>'original_source',e->>'original_sha256',e->>'grant_reference',e->>'verified_reference',e->>'verification_reference'
+    from jsonb_array_elements(evidence) e
+    on conflict do nothing;
+  select count(*) into mismatched from jsonb_array_elements(evidence) e where not exists(
+    select 1 from jwl_internal.media_assets m where m.candidate_id=e->>'candidate_id' and m.revision_hash=e->>'revision_hash' and m.public_url=e->>'public_url'
+      and m.public_sha256=e->>'public_sha256' and m.width=(e->>'width')::integer and m.height=(e->>'height')::integer and m.original_source=e->>'original_source'
+      and m.original_sha256=e->>'original_sha256' and m.grant_reference=e->>'grant_reference' and m.verified_reference=e->>'verified_reference');
+  if mismatched>0 then raise exception 'Stored media evidence differs from this approval';end if;
+  insert into jwl_internal.publication_approvals(candidate_id,revision_hash,media_reference,image_verified,approved_images,approved_image_variants)
+    values(approval->>'candidate_id',approval->>'revision_hash',approval->>'media_reference',true,approval->'approved_images',approval->'approved_image_variants')
+    on conflict do nothing;
+  if not exists(select 1 from jwl_internal.publication_approvals p where p.candidate_id=approval->>'candidate_id' and p.revision_hash=approval->>'revision_hash'
+    and p.media_reference=approval->>'media_reference' and p.image_verified and p.revoked_at is null and p.approved_images=approval->'approved_images' and p.approved_image_variants=approval->'approved_image_variants') then
+    raise exception 'A different or revoked approval already exists for this revision';
+  end if;
+  return jsonb_build_object('candidate_id',approval->>'candidate_id','revision_hash',approval->>'revision_hash','evidence_rows',jsonb_array_length(evidence),'published',0);
+end $$;
+revoke all on function public.jwl_record_media_approval(jsonb,jsonb) from public,anon,authenticated;
+grant execute on function public.jwl_record_media_approval(jsonb,jsonb) to service_role;
+
 -- Same validation and private content as jwl_ingest_batch, but an existing candidate is never
 -- overwritten: guarded repairs and current publications depend on its exact revision.
 create function public.jwl_ingest_missing_batch(records jsonb)

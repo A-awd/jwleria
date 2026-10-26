@@ -67,8 +67,13 @@ function bindingOf(input){
   if(!text(source.id)||candidate.source_id!==source.id||!hashPattern.test(candidate.candidate_id)||!hashPattern.test(candidate.revision_hash))throw new Error('Source-bound candidate and revision required');
   const sourcePage=https(candidate.source_url);
   if(sourcePage.origin!==source.origin||!Array.isArray(source.media_origins))throw new Error('Source origin mismatch');
-  const assetUrl=https(asset.source_url);
-  if(!source.media_origins.includes(assetUrl.origin)||!Array.isArray(candidate.image_urls)||!candidate.image_urls.includes(asset.source_url)||!hashPattern.test(asset.sha256))throw new Error('Exact candidate asset required');
+  // An owner's own photograph has no source URL; it binds to its checksum and one exact product instead.
+  if(grant.kind==='owner_original'){
+    if(!hashPattern.test(asset.sha256??'')||asset.source_url!=='owner-original:'+asset.sha256||grant.candidate_id!==candidate.candidate_id)throw new Error('Exact owner original required');
+  }else{
+    const assetUrl=https(asset.source_url);
+    if(!source.media_origins.includes(assetUrl.origin)||!Array.isArray(candidate.image_urls)||!candidate.image_urls.includes(asset.source_url)||!hashPattern.test(asset.sha256))throw new Error('Exact candidate asset required');
+  }
   if(grant.media_permission_reference!==source.media_permission_reference||grant.source_id!==source.id||grant.candidate_id!==candidate.candidate_id||grant.revision_hash!==candidate.revision_hash||grant.asset_source_url!==asset.source_url||grant.asset_sha256!==asset.sha256||grant.website_publication!==true||grant.resize!==true||grant.webp_encode!==true)throw new Error('Exact asset derivative grant mismatch');
   if(!isAbsolute(asset.path??'')||!isAbsolute(input.output_directory??''))throw new Error('Absolute local input and output paths required');
   return {source_id:source.id,candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_permission_reference:source.media_permission_reference,asset_source_url:asset.source_url,asset_sha256:asset.sha256};

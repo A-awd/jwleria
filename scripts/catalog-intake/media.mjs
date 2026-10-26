@@ -1,4 +1,6 @@
 import {createHash} from 'node:crypto';
+import {readFile,realpath} from 'node:fs/promises';
+import {join} from 'node:path';
 
 const buckets={staging:'jwl-media-staging',published:'jwl-product-media'};
 const formats={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/avif':'avif'};
@@ -59,6 +61,32 @@ export async function promoteMedia(review,receipts,config,fetcher=fetch) {
     if(createHash('sha256').update(bytes).digest('hex')!==receipt.sha256)throw new Error('Staged media checksum changed');
     await storage(config,`object/${buckets.published}/${receipt.path}`,{method:'POST',headers:{'Content-Type':receipt.mime_type,'x-upsert':'true','cache-control':'public, max-age=60'},body:bytes},fetcher);
     published.push(new URL(`/storage/v1/object/public/${buckets.published}/${receipt.path}`,config.url).href);
+  }
+  return published;
+}
+
+/** Uploads verified content-addressed derivatives; an object that already exists must match byte-for-byte. */
+export async function uploadDerivatives(bundle,{output_directory,storage:config},fetcher=fetch) {
+  if(bundle?.publication_state!=='verified-not-uploaded'||!Array.isArray(bundle.uploads)||!bundle.uploads.length)throw new Error('Verified approval bundle required');
+  const root=await realpath(output_directory);
+  const expected=new Set(bundle.evidence.map(row=>row.public_url));
+  const published=[];
+  for(const file of bundle.uploads) {
+    if(!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(file.path))throw new Error('Derivative path must be content-addressed');
+    const bytes=await readFile(join(root,file.path));
+    if(createHash('sha256').update(bytes).digest('hex')!==file.sha256)throw new Error('Prepared derivative checksum changed');
+    const {url,headers}=storageConfig(config);
+    const publicUrl=new URL(`/storage/v1/object/public/${buckets.published}/${file.path}`,url).href;
+    if(!expected.has(publicUrl))throw new Error('Upload target differs from approved evidence');
+    // Content-addressed paths never change meaning, so they may be cached immutably.
+    const response=await fetcher(new URL(`/storage/v1/object/${buckets.published}/${file.path}`,url),{method:'POST',headers:{...headers,'Content-Type':'image/webp','x-upsert':'false','cache-control':'public, max-age=31536000, immutable'},body:bytes,redirect:'error',signal:AbortSignal.timeout(20000)});
+    if(!response.ok) {
+      const detail=await response.text().catch(()=>'');
+      if(response.status!==409&&!/duplicate|already exists/i.test(detail))throw new Error(`Media storage operation failed (${response.status})`);
+      const existing=await fetcher(publicUrl,{redirect:'error',signal:AbortSignal.timeout(20000)});
+      if(!existing.ok||createHash('sha256').update(Buffer.from(await existing.arrayBuffer())).digest('hex')!==file.sha256)throw new Error('Existing public derivative differs');
+    }
+    published.push(publicUrl);
   }
   return published;
 }

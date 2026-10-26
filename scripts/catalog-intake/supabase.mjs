@@ -7,7 +7,7 @@ export async function catalogRpc(name, args, {url,key}, fetcher = fetch) {
   const base = new URL(url);
   if (base.protocol !== 'https:' || !base.hostname.endsWith('.supabase.co') || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw new Error('Invalid Supabase endpoint');
   if (!key || typeof key !== 'string') throw new Error('Missing server credential');
-  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_publish_candidate'].includes(name)) throw new Error('Unsupported catalog operation');
+  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_record_media_approval','jwl_publish_candidate'].includes(name)) throw new Error('Unsupported catalog operation');
   const headers = {apikey:key,'Content-Type':'application/json'};
   if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
   const response = await fetcher(new URL(`/rest/v1/rpc/${name}`,base),{method:'POST',headers,body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:'error'});
@@ -38,6 +38,12 @@ export async function ingestMissing(rows, config, fetcher = fetch) {
   return result;
 }
 
+/** Records exact evidence and the verified approval atomically; it does not publish. */
+export async function recordMediaApproval(bundle, config, fetcher = fetch) {
+  if (bundle?.approval?.image_verified!==true || !Array.isArray(bundle.evidence) || !bundle.evidence.length) throw new Error('Verified approval bundle required');
+  return catalogRpc('jwl_record_media_approval',{evidence:bundle.evidence,approval:bundle.approval},config,fetcher);
+}
+
 export async function publish(review, config, fetcher = fetch) {
   const text = field => {const v=review[field];if(typeof v!=='string'||!v.trim())throw new Error(`Missing ${field}`);return v.trim();};
   const slug = field => {const v=text(field);if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v))throw new Error(`Invalid ${field}`);return v;};
@@ -46,6 +52,9 @@ export async function publish(review, config, fetcher = fetch) {
     slug:slug('slug'),reference:text('reference'),brand_slug:slug('brand_slug'),brand_name:text('brand_name'),brand_tier:text('brand_tier'),category_slug:slug('category_slug'),collection_slug:slug('collection_slug'),
     collection_ar:text('collection_ar'),collection_en:text('collection_en'),name_ar:text('name_ar'),name_en:text('name_en'),
     description_ar:text('description_ar'),description_en:text('description_en'),images:[...review.images],
+    // The database compares these with the exact approval and current candidate.
+    image_variants:Array.isArray(review.image_variants)?review.image_variants:[],
+    ...(review.collection_kind?{collection_kind:review.collection_kind}:{}),
   };
   if(!['luxury','accessible','contemporary'].includes(product.brand_tier))throw new Error('Invalid brand tier');
   product.search_text=normalizeSearch([product.reference,product.brand_slug,product.collection_ar,product.collection_en,product.name_ar,product.name_en].join(' '));
