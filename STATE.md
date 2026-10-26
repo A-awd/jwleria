@@ -1,3 +1,21 @@
+## Four-stage preflight (read-only) — 2026-10-26
+
+Bounded read-only capability preflight before the four owner-requested stages: real runner, factual pilot, permitted images and durable n8n scheduling. No collection, configuration, credential, schedule, publication or production write occurred. Migration `20261026114541` is applied and must not be reapplied.
+
+- **Egress:** the session's cloud environment ("Default", trusted network level) denies by default.
+  - One request each to a neutral host, `www.rolex.com`, `www.iwc.com`, the Supabase project host and `jwleria.com` was refused at the proxy CONNECT stage. GitHub opened.
+  - This is an environment allowlist denial, not a brand refusal: the brands were never contacted.
+  - Node's built-in fetch uses the proxy here, so the queue needs no extra flag.
+- **GitHub:** fetch, push to the work branch and MCP reads work.
+- **Supabase:** reads, the new `jwl_source_registry()` RPC and the earlier approved `apply_migration` work. No Edge Functions are deployed. The MCP connector has no Storage upload tool. `pg_cron`/`pg_net` are available but not installed.
+- **n8n:** search, read, update and pinned tests work. There are no credential tools (the scope excludes them), and nothing is active or scheduled.
+- **Cloudflare:** Worker read works. There is no upload or deploy tool despite the Workers Write scope.
+- **Storefront:** it accepts any credential-free HTTPS image URL and already renders responsive variants, so approved Storage images need no Worker redeploy.
+- **Repository gap:** no factual-publication payload builder exists in the repository (earlier publications used private tooling); it is needed before the pilot can publish.
+- **Runner bridge:** no Remote Control or Mac runner session is connected, so a Mac runner is unproven.
+
+Proposed minimum for the first pilot: allow only `www.rolex.com` and `www.iwc.com`. Optionally allow `jwleria.com` and `www.jwleria.com` for read-only page verification. Collect in this session with the tested queue, and do the baseline export, missing-only ingestion and any factual publication through the Supabase connector, which does not use the VM network. Do not add the Supabase host or any secret for the pilot. Media CDN hosts, the Supabase host for uploads, n8n database credentials and activation are later, separately approved steps. Owner inputs still missing: permitted exact-product photos and the verified WhatsApp number.
+
 ## Claude implementation pointer and applied migration — 2026-10-26
 
 Claude's completed implementation checkpoint is branch `claude/pensive-mccarthy-40nrlc` at `d76423ad7b9b1ef672707e504b516ce75a857c4d`. Remote ancestry confirms it contains continuation documentation `c342964bb1d10e6571fecaa30f84808fab49ad1a` (15 commits ahead, zero behind). Read that branch's top STATE/HANDOFF and decision0011 for the per-origin queues, missing-only intake and exact media-evidence implementation. Claude owns the code, tests and technical review; its reported77 source/48 app tests and post-apply checks are not a duplicate Codex audit. This continuation checkpoint adds a documentation pointer only: no application merge or foundation/global routing change was performed.
@@ -10,7 +28,7 @@ The full project remains incomplete: actual permitted exact-product photos and v
 
 ## Concurrent intake, missing-only ingestion and exact media evidence — 2026-10-26
 
-Claude Code implemented, tested and self-reviewed the remaining background-processing and authentic-media path on branch `claude/pensive-mccarthy-40nrlc`. It descends from continuation tip 60da478 and includes Codex documentation c342964, so it fast-forwards `codex/jwleria-architecture-2026-10-03`. Decision 0011 records the rules. Nothing was published, no image was downloaded, uploaded or approved, and the storefront code is unchanged.
+Claude Code implemented, tested and self-reviewed the remaining background-processing and authentic-media path on branch `claude/pensive-mccarthy-40nrlc`. It descends from continuation tip 60da478 and includes Codex documentation c342964 and, since merge 7ba79e3, the continuation pointer 1bb3c16. The two branches advance independently: consolidate only by merge, never by force-push. Decision 0011 records the rules. Nothing was published, no image was downloaded, uploaded or approved, and the storefront code is unchanged.
 
 **Implemented (repository code):**
 - `scripts/catalog-intake/source-queue.mjs`: one queue per permitted official origin, origins running concurrently.

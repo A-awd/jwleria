@@ -1,3 +1,18 @@
+## Current handoff — four-stage preflight complete, setup approval pending — 2026-10-26
+
+Read the top STATE entry. Next action: the owner approves the consolidated setup request relayed by Codex. Until then do not collect, change configuration or write production data.
+- **Network:** allow `www.rolex.com` and `www.iwc.com` (optionally `jwleria.com`, `www.jwleria.com`) for the pilot window.
+- **Pilot production writes:** missing-only private ingestion of the pilot records through `jwl_ingest_missing_batch`, and, separately, factual publication of review-ready pilot records.
+
+Then verify egress with one robots request per allowed origin. If the change does not reach this running session, report it rather than working around it. The pilot itself:
+1. Export known revisions through the connector.
+2. Run bounded Rolex (2 s pacing) and IWC (60 s pacing) queues, then rerun to prove resume and duplicate handling.
+3. Ingest missing records only, and verify existing hashes are unchanged.
+
+Before publishing, implement the factual-publication payload builder (brand/collection mapping only from existing exact public rows; anything else is held).
+
+Stage 3 needs owner photo inputs plus an approved upload path. Stage 4 needs an owner-created least-privilege database credential in n8n and approval to activate a schedule. Cartier, VCA, CELINE and RIMOWA stay closed.
+
 ## Current handoff — continue from Claude's implementation checkpoint — 2026-10-26
 
 Read branch `claude/pensive-mccarthy-40nrlc` at `d76423ad7b9b1ef672707e504b516ce75a857c4d`, especially its top STATE/HANDOFF and decision0011. This verified remote head contains documentation c342964 and Claude's concurrent-source, missing-only-intake and exact-media-evidence work. Claude owns implementation, tests and self-review. Codex records the pointer and relays results; no application merge into this continuation branch, foundation change or global routing update was performed.
@@ -10,7 +25,7 @@ Remaining dependencies are actual permitted exact-reference photos and visual ch
 
 ## Current handoff — queues, missing-only intake and exact media evidence implemented — 2026-10-26
 
-Continue from `claude/pensive-mccarthy-40nrlc` (top STATE entry and decision 0011). It fast-forwards the continuation branch; updating `codex/jwleria-architecture-2026-10-03` to it needs the owner's go-ahead because Claude's push authority is the work branch. Tests: `node --test scripts/catalog-intake/*.test.mjs` from the repo root (77) and `node --test tests/*.test.mjs` from `apps/storefront` (48, needs `pnpm install --frozen-lockfile`).
+Continue from `claude/pensive-mccarthy-40nrlc` (top STATE entry and decision 0011). The continuation branch advances independently (its pointer 1bb3c16 is merged here at 7ba79e3). Consolidate only by merge, never by force-push, and only with the owner's go-ahead, because Claude's push authority is the work branch. Tests: `node --test scripts/catalog-intake/*.test.mjs` from the repo root (77) and `node --test tests/*.test.mjs` from `apps/storefront` (48, needs `pnpm install --frozen-lockfile`).
 
 Owner inputs and approvals still needed, in order:
 1. **Production migration — APPLIED** after explicit owner approval, as registered version `20261026114541`. The file was renamed to match. Readback confirmed: 7 migrations; unchanged public, candidate and source hashes and counts; anonymous access denied; expected informational advisor notes only (see STATE). The approval covered only this migration. The earlier pre-apply checklist, kept for the record:
