@@ -290,6 +290,8 @@ test('derivation writes nothing; only service_role applies it, atomically and re
     assert.deepEqual(await snapshot(db),mapped);
     const evidence=(await db.query("select e.rule,e.compared,e.basis,e.revision_hash=c.revision_hash bound from jwl_internal.variant_evidence e join jwl_internal.candidates c using(candidate_id) join public.jwl_catalog p on p.id=e.product_id where p.reference='m126200-0006'")).rows[0];
     assert.equal(evidence.bound,true);assert.equal(evidence.compared.diameter,'36 mm');assert.deepEqual(evidence.basis.option_facts,['color','bracelet_type']);
+    assert.deepEqual((await db.query("select indexname from pg_indexes where schemaname='public' and tablename='jwl_product_variants' order by indexname")).rows.map(r=>r.indexname),
+      ['jwl_product_variants_model_key_position_key','jwl_product_variants_pkey','jwl_product_variants_primary'],'no duplicate index');
     // A direct write that breaks a model is refused by the table itself.
     await assert.rejects(as(db,'service_role',()=>db.query("update public.jwl_product_variants set position=0 where model_key='rolex-official:126200'")),/duplicate key|check constraint/);
     // A new candidate revision unmaps that row until the next run.
@@ -297,6 +299,34 @@ test('derivation writes nothing; only service_role applies it, atomically and re
     await db.query("update jwl_internal.candidates set revision_hash=repeat('e',64) where candidate_id=$1",[target]);
     assert.equal((await db.query('select count(*)::int n from public.jwl_product_variants where product_id=$1',[target])).rows[0].n,0);
     assert.equal((await db.query('select count(*)::int n from jwl_internal.variant_evidence where product_id=$1',[target])).rows[0].n,0);
+  }finally{await db.close();}
+});
+
+test('apply refuses an inconsistent derived model and keeps the previous mapping',async()=>{
+  const db=await database();
+  try{
+    const first=await apply(db),mapped=await snapshot(db);
+    const result=(await db.query("select pg_get_function_result('jwl_internal.derive_product_variants()'::regprocedure) r")).rows[0].r;
+    await db.exec('alter function jwl_internal.derive_product_variants() rename to derive_product_variants_reviewed');
+    const columns=['product_id','model_key','is_primary','position','model_name','options','specs','rule','candidate_id','revision_hash','compared','basis'];
+    // Each case breaks exactly one rule of the check for one model; the derivation itself never does.
+    const derivedWith=(column,expr)=>`create or replace function jwl_internal.derive_product_variants() returns ${result} language sql stable set search_path='' as $$
+      select ${columns.map(c=>c===column?`case when d.model_key='rolex-official:126200' then ${expr} else d."${c}" end`:`d."${c}"`).join(',')}
+      from jwl_internal.derive_product_variants_reviewed() d $$`;
+    for(const [label,column,expr] of [
+      ['two primaries','is_primary','d."position"<=1'],
+      ['no variant at position 0','position','greatest(d."position",1)'],
+      ['a gap in positions','position','case d."position" when 3 then 5 else d."position" end'],
+      ['two model names','model_name',`case d."position" when 3 then d.model_name||'{"en":"Other"}' else d.model_name end`],
+      ['two rules','rule',`case d."position" when 3 then 'loewe-style-code' else d.rule end`],
+      ['a single inside a group','rule',`'single:only-variant'`],
+    ]){
+      await db.exec(derivedWith(column,expr));
+      await assert.rejects(apply(db),/Derived model rolex-official:126200 is inconsistent/,label);
+      assert.deepEqual(await snapshot(db),mapped,label+': the previous mapping is intact');
+    }
+    await db.exec('drop function jwl_internal.derive_product_variants(); alter function jwl_internal.derive_product_variants_reviewed() rename to derive_product_variants');
+    assert.deepEqual(await apply(db),first);
   }finally{await db.close();}
 });
 

@@ -383,8 +383,6 @@ revoke all on function jwl_internal.unmap_changed_variant() from public,anon,aut
 create trigger jwl_variant_revision_unmap after update of revision_hash on jwl_internal.candidates
   for each row when (old.revision_hash is distinct from new.revision_hash) execute function jwl_internal.unmap_changed_variant();
 
-create index jwl_product_variants_model on public.jwl_product_variants (model_key,position);
-
 -- One card per model: the first visible variant of each model plus every unmapped row. A withdrawn
 -- primary hands the card to the next visible variant; search covers every visible variant's text.
 create view public.jwl_catalog_models with (security_invoker=true) as
