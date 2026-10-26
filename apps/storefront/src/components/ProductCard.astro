@@ -1,7 +1,7 @@
 ---
 import type { Brand, Locale, PublicProduct } from '../contracts/catalog';
 import { getBrand } from '../server/catalog';
-import { href, t } from '../i18n/ui';
+import { href, optionCounts, t } from '../i18n/ui';
 import { artClass, productInquiry } from './view';
 import { productMedia } from './product-media.mjs';
 
@@ -12,6 +12,9 @@ const url = href(locale, `/products/${p.slug}/`);
 const brand = Astro.props.brand ?? await getBrand(p.brandSlug);
 const inquiry = productInquiry(locale, p, Astro.url.origin, brand);
 const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefined;
+// A model card shows its primary variant's own image only, and a neutral count of real option values.
+const name = p.model?.name ?? p.name;
+const options = optionCounts(locale, p.model?.options);
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>
   {p.image && <a class="media" href={url} tabindex="-1" aria-hidden="true">
@@ -20,7 +23,8 @@ const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefi
   </a>}
   <div class="card__body">
     <p class="card__brand">{brand?.name ?? s.brands.ownTitle}</p>
-    <h3 class="card__name"><a href={url}>{p.name[locale]}</a></h3>
+    <h3 class="card__name"><a href={url}>{name[locale]}</a></h3>
+    {options && <p class="variant-count">{options}</p>}
     {!p.image && <>{p.collectionKind !== 'source-group' && <p class="card__collection">{p.collection[locale]}</p>}<p class="card__summary">{p.summary[locale]}</p></>}
     <p class="card__ref">{s.reference} <bdi>{p.reference}</bdi></p>
     <div class="card__cta">

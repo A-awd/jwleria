@@ -1,0 +1,29 @@
+---
+import type { Locale, PublicProduct } from '../contracts/catalog';
+import { t } from '../i18n/ui';
+import { artClass } from './view';
+import { productMedia } from './product-media.mjs';
+
+// Only this variant's own approved images, bounded; a variant without one renders nothing here.
+const LIMIT = 8;
+interface Props { product: PublicProduct; locale: Locale }
+const { product, locale } = Astro.props;
+const s = t(locale);
+const views = product.images.slice(0, LIMIT).map((src, i) => ({ src, i, label: s.product.views[i] ?? s.product.details, credit: product.imageVariants?.[i]?.attribution }));
+---
+{views.length > 0 && <div class="pdp__gallery" aria-label={product.name[locale]} data-gallery={product.reference}>
+  {views.map((v) => (
+    <figure>
+      <div class="media">
+        <img class={v.i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} {...productMedia(product, v.i, 'detail')} alt={product.name[locale]} loading={v.i === 0 ? 'eager' : 'lazy'} fetchpriority={v.i === 0 ? 'high' : undefined} decoding="async" />
+        {product.isPreview && v.i === 0 && <span class="badge">{s.preview}</span>}
+      </div>
+      <figcaption>
+        {v.label}
+        {v.credit && <span class="gallery-credit">
+          {s.variants.credit.photo}: <bdi>{v.credit.creator}</bdi> · <a href={v.credit.licenseUrl} rel="license nofollow"><bdi>{v.credit.license}</bdi></a> · <a href={v.credit.sourceUrl} rel="nofollow">{s.variants.credit.source}</a>{v.credit.changes && <> · {s.variants.credit.changes}: <bdi>{v.credit.changes}</bdi></>}
+        </span>}
+      </figcaption>
+    </figure>
+  ))}
+</div>}

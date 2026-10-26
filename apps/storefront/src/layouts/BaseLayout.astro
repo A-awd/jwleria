@@ -9,8 +9,9 @@ import Footer from '../components/Footer.astro';
 import InquiryDialog from '../components/InquiryDialog.astro';
 import { dirOf, href, t } from '../i18n/ui';
 
-interface Props { locale: Locale; title: string; description: string; path: string; image?: string | null }
-const { locale, title, description, path, image = '/images/hero-editorial.webp' } = Astro.props;
+/** canonicalPath names the page's canonical twin (a model's primary variant); path stays the visited page. */
+interface Props { locale: Locale; title: string; description: string; path: string; canonicalPath?: string; image?: string | null }
+const { locale, title, description, path, canonicalPath = path, image = '/images/hero-editorial.webp' } = Astro.props;
 const fullTitle = `${title} · Jwleria`;
 const live = (env.PUBLIC_RELEASE || import.meta.env.PUBLIC_RELEASE) === 'live';
 const origin = env.PUBLIC_SITE_ORIGIN || import.meta.env.PUBLIC_SITE_ORIGIN;
@@ -21,7 +22,7 @@ if (origin) {
   if (site.protocol !== 'https:' || site.username || site.password || site.pathname !== '/' || site.search || site.hash) throw new Error('Invalid site origin');
 }
 const absolute = (value: string) => site ? new URL(value, site).href : value;
-const canonical = absolute(href(locale, path));
+const canonical = absolute(href(locale, canonicalPath));
 ---
 <!doctype html>
 <html lang={locale} dir={dirOf(locale)}>
@@ -42,9 +43,9 @@ const canonical = absolute(href(locale, path));
         }
       }
     </script>
-    <link rel="alternate" hreflang="ar" href={absolute(href('ar', path))} />
-    <link rel="alternate" hreflang="en" href={absolute(href('en', path))} />
-    <link rel="alternate" hreflang="x-default" href={absolute(href('ar', path))} />
+    <link rel="alternate" hreflang="ar" href={absolute(href('ar', canonicalPath))} />
+    <link rel="alternate" hreflang="en" href={absolute(href('en', canonicalPath))} />
+    <link rel="alternate" hreflang="x-default" href={absolute(href('ar', canonicalPath))} />
     {live && <meta property="og:url" content={canonical} />}
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Jwleria" />

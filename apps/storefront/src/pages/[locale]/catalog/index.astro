@@ -2,7 +2,7 @@
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import { getBrands, getCategories, getProducts, getCollections } from '../../../server/catalog';
-import { href, isLocale, t } from '../../../i18n/ui';
+import { href, isLocale, resultCount, t } from '../../../i18n/ui';
 import Pagination from '../../../components/Pagination.astro';
 
 const { locale } = Astro.params;
@@ -56,7 +56,7 @@ const categories = getCategories();
       <button class="btn btn--solid" type="submit">{s.catalog.apply}</button>
       <a class="btn" href={href(locale, '/catalog/')}>{s.catalog.clear}</a>
     </form>
-    <p class="status" role="status" aria-live="polite">{result.total ? s.catalog.results(result.total) : s.catalog.none}</p>
+    <p class="status" role="status" aria-live="polite">{result.total ? resultCount(locale, result) : s.catalog.none}</p>
     <div class="grid grid--4 section section--tight">
       {result.items.map((p, i) => <ProductCard product={p} locale={locale} eager={i < 2} priority={i===0} />)}
     </div>

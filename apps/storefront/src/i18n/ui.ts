@@ -8,6 +8,37 @@ export const otherLocale = (l: Locale): Locale => (l === 'ar' ? 'en' : 'ar');
 export const href = (l: Locale, path = '/') => `/${l}${path.startsWith('/') ? path : `/${path}`}`;
 export const localeParams = () => locales.map((locale) => ({ params: { locale } }));
 
+// Option counts use each noun's correct Arabic form: واحد/مثنى for 1–2, plural for 3–10, singular from 11.
+type ArabicForms = readonly [one: string, two: string, few: string, many: string, other: string];
+const AR_COUNTS: Record<string, ArabicForms> = {
+  dial: ['لون ميناء واحد', 'لونا ميناء', 'ألوان ميناء', 'لون ميناء', 'لون ميناء'],
+  bracelet: ['سوار واحد', 'سواران', 'أساور', 'سوارًا', 'سوار'],
+  colour: ['لون واحد', 'لونان', 'ألوان', 'لونًا', 'لون'],
+  size: ['مقاس واحد', 'مقاسان', 'مقاسات', 'مقاسًا', 'مقاس'],
+  case_size: ['قطر واحد', 'قطران', 'أقطار', 'قطرًا', 'قطر'],
+  option: ['خيار واحد', 'خياران', 'خيارات', 'خيارًا', 'خيار'],
+};
+const EN_COUNTS: Record<string, readonly [one: string, other: string]> = {
+  dial: ['dial', 'dials'], bracelet: ['bracelet', 'bracelets'], colour: ['colour', 'colours'], size: ['size', 'sizes'],
+  ring_size: ['ring size', 'ring sizes'], bracelet_size: ['bracelet size', 'bracelet sizes'], bag_size: ['bag size', 'bag sizes'],
+  case_size: ['case diameter', 'case diameters'], option: ['option', 'options'],
+};
+const countKind = (kind: string, table: Record<string, unknown>) => {
+  const k = kind === 'color' ? 'colour' : kind;
+  return k in table ? k : /^(?:ring|bracelet|bag)_size$/.test(k) && 'size' in table ? 'size' : 'option';
+};
+const AR_MODELS: ArabicForms = ['طراز واحد', 'طرازان', 'طرازات', 'طرازًا', 'طراز'];
+const arabicPlural = ([one, two, few, many, other]: ArabicForms, n: number) => {
+  const tens = n % 100;
+  return n === 1 ? one : n === 2 ? two : tens >= 3 && tens <= 10 ? `${n} ${few}` : tens >= 11 ? `${n} ${many}` : `${n} ${other}`;
+};
+export const arabicCount = (kind: string, n: number) => arabicPlural(AR_COUNTS[countKind(kind, AR_COUNTS)], n);
+export function englishCount(kind: string, n: number) {
+  const [one, other] = EN_COUNTS[countKind(kind, EN_COUNTS)];
+  return `${n} ${n === 1 ? one : other}`;
+}
+type Change = { label: string; value: string };
+
 const ar = {
   langName: 'العربية',
   skip: 'الانتقال إلى المحتوى',
@@ -55,6 +86,7 @@ const ar = {
     apply: 'عرض النتائج',
     clear: 'مسح',
     results: (n: number) => `${n} قطعة`,
+    models: (n: number) => arabicPlural(AR_MODELS, n),
     none: 'لا توجد قطع مطابقة.',
     noscript: 'البحث والتصفية متاحان دون جافاسكربت.',
   },
@@ -66,6 +98,15 @@ const ar = {
     related: 'مختارات أخرى',
     views: ['المشهد الكامل', 'تفصيل', 'تفصيل قريب'],
     how: 'طريقة الاستفسار',
+    noPhoto: 'لا توجد صورة معتمدة لهذا المرجع بعد.',
+  },
+  variants: {
+    group: 'خيارات هذا الطراز',
+    kinds: { dial: 'لون الميناء', bracelet: 'السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
+    count: arabicCount,
+    changes: (changes: Change[]) => `يغيّر ${changes.map((c) => `${c.label} إلى ${c.value}`).join('، ')}`,
+    showing: (ref: string) => `تم عرض المرجع ${ref}`,
+    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات' },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -145,6 +186,7 @@ const en: typeof ar = {
     apply: 'Show results',
     clear: 'Clear',
     results: (n: number) => `${n} pieces`,
+    models: (n: number) => `${n} ${n === 1 ? 'model' : 'models'}`,
     none: 'No matching pieces.',
     noscript: 'Search and filters work without JavaScript.',
   },
@@ -156,6 +198,15 @@ const en: typeof ar = {
     related: 'You may also like',
     views: ['Full view', 'Detail', 'Close detail'],
     how: 'How to inquire',
+    noPhoto: 'No approved photograph of this reference yet.',
+  },
+  variants: {
+    group: 'Options for this model',
+    kinds: { dial: 'Dial', bracelet: 'Bracelet', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter' },
+    count: englishCount,
+    changes: (changes: Change[]) => `Changes ${changes.map((c) => `${c.label.charAt(0).toLowerCase()}${c.label.slice(1)} to ${c.value}`).join(', ')}`,
+    showing: (ref: string) => `Showing reference ${ref}`,
+    credit: { photo: 'Photo', source: 'Source', changes: 'Changes' },
   },
   dialog: {
     title: 'WhatsApp inquiry',
@@ -190,3 +241,12 @@ const en: typeof ar = {
 
 export const ui = { ar, en };
 export const t = (l: Locale) => ui[l];
+
+/** The option label for a kind: the reviewed translation when known, otherwise the catalog's own label. */
+export const optionLabel = (l: Locale, kind: string, fallback: Record<Locale, string>) => ui[l].variants.kinds[kind] ?? fallback[l];
+/** A listing total names what it counts: model cards from the model projection, otherwise catalog rows. */
+export const resultCount = (l: Locale, page: { total: number; unit?: 'models' | 'products' }) =>
+  page.unit === 'models' ? ui[l].catalog.models(page.total) : ui[l].catalog.results(page.total);
+/** Neutral counts of the real option values a model card can mention (only kinds with a choice). */
+export const optionCounts = (l: Locale, options: { kind: string; count: number }[] = []) =>
+  options.filter((o) => o.count > 1).map((o) => ui[l].variants.count(o.kind, o.count)).join(' · ');
