@@ -90,3 +90,22 @@ export async function uploadDerivatives(bundle,{output_directory,storage:config}
   }
   return published;
 }
+
+/** Deletes public files whose grant was revoked (from jwl_revoked_media_files); only content-addressed product media. */
+export async function deleteRevokedDerivatives(publicUrls,config,fetcher=fetch) {
+  const {url,headers}=storageConfig(config);
+  const prefix=new URL(`/storage/v1/object/public/${buckets.published}/`,url).href;
+  const paths=[...new Set(publicUrls)].map(value=>{
+    if(typeof value!=='string'||!value.startsWith(prefix))throw new Error('Not a product-media file of this project');
+    const path=value.slice(prefix.length);
+    if(!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(path))throw new Error('Derivative path must be content-addressed');
+    return path;
+  });
+  const deleted=[];
+  for(let offset=0;offset<paths.length;offset+=100) {
+    const batch=paths.slice(offset,offset+100);
+    await storage(config,`object/${buckets.published}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({prefixes:batch})},fetcher);
+    deleted.push(...batch);
+  }
+  return deleted;
+}

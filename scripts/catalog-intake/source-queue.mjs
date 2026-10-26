@@ -12,6 +12,8 @@ const robotsParser=require('robots-parser');
 export const agent='JwleriaCatalog/1.0';
 const repository=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const wait=ms=>new Promise(r=>setTimeout(r,ms));
+// Invalid numeric config must never disable pacing or bounds; it falls back to the safe default.
+const number=(value,fallback,min,max)=>{if(value==null)return fallback;const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;};
 const within=(root,path)=>{const tail=relative(root,path);return !tail||(!tail.startsWith('..'+sep)&&tail!=='..'&&!isAbsolute(tail));};
 
 /** Recorded permission/access boundaries. Lifting one needs a reviewed code change, never a config flag. */
@@ -74,13 +76,12 @@ export function sourceGate(source,registry){
   if(!adapter)return {allowed:false,reason:'unsupported_source_adapter'};
   if(source.origin&&source.origin!==adapter.origin)return {allowed:false,reason:'official_origin_mismatch'};
   if(source.enabled!==true||source.acquisition_allowed!==true||typeof source.permission_reference!=='string'||!source.permission_reference.trim())return {allowed:false,reason:'reviewed_acquisition_authorization_missing'};
-  if(registry){
-    const row=registry[source.source_id];
-    // The database registry is authoritative: a local config can narrow it but never widen it.
-    if(!row||row.enabled!==true||row.acquisition_allowed!==true||row.origin!==adapter.origin)return {allowed:false,reason:'registry_acquisition_not_allowed'};
-  }
+  // The database registry is authoritative and required: a local config can narrow it but never widen it.
+  if(!registry||typeof registry!=='object')return {allowed:false,reason:'source_registry_required'};
+  const row=registry[source.source_id];
+  if(!row||row.enabled!==true||row.acquisition_allowed!==true||row.origin!==adapter.origin)return {allowed:false,reason:'registry_acquisition_not_allowed'};
   if(adapter.inventoryOnly&&!(Array.isArray(source.inventory_urls)&&source.inventory_urls.length))return {allowed:false,reason:'reviewed_inventory_required'};
-  const interval=Math.max(2,Number(source.min_interval_seconds)||0,Number(registry?.[source.source_id]?.min_interval_seconds)||0);
+  const interval=Math.max(2,number(source.min_interval_seconds,2,2,86400),number(row.min_interval_seconds,2,2,86400));
   return {allowed:true,adapter,interval_seconds:interval};
 }
 
@@ -94,13 +95,17 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
   const {adapter}=gate,id=source.source_id,origin=adapter.origin;
   const dir=join(root,id);await mkdir(dir,{recursive:true,mode:0o700});
   const statePath=join(dir,'state.json'),journal=join(dir,'candidates.ndjson'),lockPath=join(dir,'queue.lock');
+  const running={source_id:id,status:'skipped',reason:'origin_queue_already_running',requests:0};
   try{
-    const prior=JSON.parse(await readFile(lockPath,'utf8'));
+    const raw=await readFile(lockPath,'utf8'),prior=JSON.parse(raw);
     if(!Number.isSafeInteger(prior.pid)||prior.pid<1)throw Error('Invalid queue lock requires review');
-    try{process.kill(prior.pid,0);return {source_id:id,status:'skipped',reason:'origin_queue_already_running',requests:0};}catch(e){if(e.code!=='ESRCH')throw e;}
-    await unlink(lockPath);
+    try{process.kill(prior.pid,0);return running;}catch(e){if(e.code!=='ESRCH')throw e;}
+    // Remove only the stale lock that was read; a lock another runner just took is left alone.
+    if(await readFile(lockPath,'utf8').catch(()=>null)===raw)await unlink(lockPath).catch(()=>{});
   }catch(e){if(e.code!=='ENOENT')throw e;}
-  const lock=await open(lockPath,'wx',0o600);await lock.writeFile(JSON.stringify({pid:process.pid,started_at:new Date(now()).toISOString()}));await lock.close();
+  let lock;
+  try{lock=await open(lockPath,'wx',0o600);}catch(e){if(e.code==='EEXIST')return running;throw e;}
+  await lock.writeFile(JSON.stringify({pid:process.pid,started_at:new Date(now()).toISOString()}));await lock.close();
   let state;
   const save=async()=>{state.updated_at=new Date(now()).toISOString();await writeFile(statePath+'.tmp',JSON.stringify(state,null,2),{mode:0o600});await rename(statePath+'.tmp',statePath);};
   try{
@@ -114,9 +119,13 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
     state.status='running';state.run_started_at=new Date(now()).toISOString();state.run={requests:0,acquired:0,new_revisions:0,failed:0,retried:0};await save();
 
     let interval=gate.interval_seconds*1000;
-    const maxAttempts=Math.min(5,Math.max(1,source.max_attempts??3)),maxTotalAttempts=Math.max(maxAttempts,source.max_total_attempts??6);
-    const backoffBase=Math.max(interval,(source.backoff_base_seconds??5)*1000),backoffMax=Math.max(backoffBase,(source.backoff_max_seconds??300)*1000);
-    let nextAllowed=0,consecutiveTransient=0,consecutiveRedirects=0,policy=null;
+    const maxAttempts=number(source.max_attempts,3,1,5),maxTotalAttempts=Math.max(maxAttempts,number(source.max_total_attempts,6,1,20));
+    const backoffBase=Math.max(interval,number(source.backoff_base_seconds,5,1,3600)*1000),backoffMax=Math.max(backoffBase,number(source.backoff_max_seconds,300,1,86400)*1000);
+    const unhealthyAfter=number(source.unhealthy_stop_after,5,1,50),redirectStop=number(source.redirect_stop_after,5,1,50),maxProducts=number(source.max_products,Infinity,1,1e6);
+    // Pacing survives restarts: the first request of a run still waits for the previous run's last one.
+    let lastRequest=Number.isFinite(state.last_request_at)?state.last_request_at:0,nextAllowed=lastRequest+interval;
+    let consecutiveTransient=0,consecutiveRedirects=0,policy=null;
+    const sent=()=>{lastRequest=now();state.last_request_at=lastRequest;nextAllowed=lastRequest+interval;state.requests++;state.run.requests++;};
     // One origin never waits on another: every request passes this origin's own pacing gate.
     const request=async(url,limit,{robots=false}={})=>{
       const target=new URL(url);
@@ -125,19 +134,27 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       const delay=nextAllowed-now();if(delay>0)await sleep(delay);
       let response;
       try{response=await fetcher(target.href,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});}
-      catch(error){nextAllowed=now()+interval;state.requests++;state.run.requests++;throw new UrlFailure('network_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});}
-      nextAllowed=now()+interval;state.requests++;state.run.requests++;
+      catch(error){sent();throw new UrlFailure('network_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});}
+      sent();
       if([401,403].includes(response.status))throw new OriginStop('blocked','source_refused_access',{url:target.href,http_status:response.status});
-      if(response.status===429)throw new OriginStop('rate_limited','source_rate_limited',{url:target.href,not_before:retryAfter(response.headers.get('retry-after'),now())});
+      if(response.status===429||response.status>=500){
+        // A challenge or Retry-After is an instruction from the source, never a transient error to retry through.
+        const page=await boundedText(response,256*1024).catch(()=>'');
+        if(sourceChallenge(page))throw new OriginStop('blocked','source_challenge',{url:target.href,http_status:response.status});
+        const after=retryAfter(response.headers.get('retry-after'),now());
+        if(response.status===429||after!==null)throw new OriginStop('rate_limited','source_rate_limited',{url:target.href,http_status:response.status,not_before:after});
+        throw new UrlFailure(`source_http_${response.status}`,{transient:true});
+      }
       if(response.status>=300&&response.status<400){
-        if(++consecutiveRedirects>=(source.redirect_stop_after??5))throw new OriginStop('blocked','repeated_redirects_require_review',{url:target.href});
+        if(++consecutiveRedirects>=redirectStop)throw new OriginStop('blocked','repeated_redirects_require_review',{url:target.href});
         throw new UrlFailure('redirect_requires_review',{detail:{location:response.headers.get('location')}});
       }
       consecutiveRedirects=0;
-      if(response.status>=500)throw new UrlFailure(`source_http_${response.status}`,{transient:true});
       if(response.status===404||response.status===410)throw new UrlFailure('source_gone');
       if(!response.ok)throw new UrlFailure(`source_http_${response.status}`);
-      const body=await boundedText(response,limit);
+      const body=await boundedText(response,limit).catch(error=>{
+        if(error instanceof UrlFailure)throw error;
+        throw new UrlFailure('body_read_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});});
       if(sourceChallenge(body))throw new OriginStop('blocked','source_challenge',{url:target.href});
       return {body,type:(response.headers.get('content-type')??'').toLowerCase()};
     };
@@ -147,7 +164,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
         try{const result=await request(url,limit,options);consecutiveTransient=0;return result;}
         catch(error){
           if(!(error instanceof UrlFailure)||!error.transient)throw error;
-          if(++consecutiveTransient>=(source.unhealthy_stop_after??5))throw new OriginStop('paused','origin_unhealthy',{url,last_error:error.reason});
+          if(++consecutiveTransient>=unhealthyAfter)throw new OriginStop('paused','origin_unhealthy',{url,last_error:error.reason,attempts:attempt});
           if(attempt>=maxAttempts){error.attempts=attempt;throw error;}
           state.run.retried++;
           nextAllowed=Math.max(nextAllowed,now()+Math.min(backoffMax,backoffBase*2**(attempt-1)));
@@ -159,7 +176,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       if(error instanceof UrlFailure)throw new OriginStop('failed','robots_unavailable',{reason:error.reason});throw error;});
     policy=robotsParser(origin+'/robots.txt',robots.body);
     const crawlDelay=(policy.getCrawlDelay(agent)??0)*1000;
-    if(crawlDelay>interval){interval=crawlDelay;log({source_id:id,event:'robots_crawl_delay',seconds:crawlDelay/1000});}
+    if(crawlDelay>interval){interval=crawlDelay;nextAllowed=Math.max(nextAllowed,lastRequest+interval);log({source_id:id,event:'robots_crawl_delay',seconds:crawlDelay/1000});}
 
     if(Array.isArray(source.inventory_urls)&&source.inventory_urls.length){
       const reviewed=source.inventory_urls.filter(u=>{try{return new URL(u).origin===origin;}catch{return false;}});
@@ -173,7 +190,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       const queue=roots.map(url=>({url,depth:0})),seen=new Set(),errors=[];let maps=0;
       while(queue.length){
         const {url,depth}=queue.shift();if(seen.has(url))continue;seen.add(url);
-        if(depth>3||++maps>(source.max_sitemaps??30)){errors.push({url,reason:'sitemap_bound_reached'});break;}
+        if(depth>3||++maps>number(source.max_sitemaps,30,1,200)){errors.push({url,reason:'sitemap_bound_reached'});break;}
         try{
           const {body}=await withRetry(url,32*1024*1024);const locs=sitemapLocations(body);
           if(/<sitemapindex\b/.test(body))for(const child of locs.filter(follow))queue.push({url:child,depth:depth+1});
@@ -191,7 +208,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       const entry=state.urls[url];
       if(entry&&entry.status!=='pending_retry')continue;
       if(entry?.status==='pending_retry'&&entry.attempts>=maxTotalAttempts){entry.status='failed';entry.reason='transient_exhausted';await save();continue;}
-      if(processedThisRun>=(source.max_products??Infinity)){state.status='bounded_pause';break;}
+      if(processedThisRun>=maxProducts){state.status='bounded_pause';break;}
       try{await readFile(join(dir,'pause.request'));state.status='paused_by_request';break;}catch(e){if(e.code!=='ENOENT')throw e;}
       processedThisRun++;
       const attempts=(entry?.attempts??0);
@@ -218,6 +235,11 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
           :{status:'acquired',candidate_ids:ids,attempts:attempts+1};
         state.run.acquired++;
       }catch(error){
+        if(error instanceof OriginStop&&error.status==='paused'&&error.detail.url===url){
+          // The pause still counts this URL's attempts, so a failing page cannot pause the origin forever.
+          const tries=attempts+(error.detail.attempts??1);
+          state.urls[url]=tries>=maxTotalAttempts?{status:'failed',reason:'transient_exhausted',attempts:tries}:{status:'pending_retry',reason:error.detail.last_error,attempts:tries,last_attempt_at:new Date(now()).toISOString()};
+        }
         if(!(error instanceof UrlFailure))throw error;
         const tries=attempts+(error.attempts??1);
         state.urls[url]=error.transient&&tries<maxTotalAttempts
@@ -239,7 +261,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       state.status=error.status;
       if(error.status==='rate_limited'){
         // Honor the source's Retry-After, but never resume sooner than the conservative minimum.
-        state.not_before=Math.max(error.detail.not_before??0,now()+(source.rate_limit_min_seconds??900)*1000);
+        state.not_before=Math.max(error.detail.not_before??0,now()+number(source.rate_limit_min_seconds,900,60,86400)*1000);
         state.rate_limit={url:error.detail.url,observed_at:new Date(now()).toISOString()};
       }else if(error.status==='blocked'){
         // A refusal or challenge needs a human review token before this origin is ever retried.
@@ -247,7 +269,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       }else{
         state.stop={reason:error.reason,...error.detail,observed_at:new Date(now()).toISOString()};
         // An unhealthy origin cools down before any later run may contact it again.
-        if(error.status==='paused')state.not_before=now()+(source.unhealthy_defer_seconds??900)*1000;
+        if(error.status==='paused')state.not_before=now()+number(source.unhealthy_defer_seconds,900,60,86400)*1000;
       }
       await save();
       return {...summary(state),reason:error.reason};
@@ -265,7 +287,9 @@ function summary(state){
 }
 
 /** Runs independent origin queues concurrently; one stopped origin never halts the others. */
-export async function runSources(config,{fetcher=fetch,sleep=wait,now=Date.now,onRecord,log=()=>{},registry=config.registry}={}){
+export async function runSources(config,{fetcher=fetch,sleep=wait,now=Date.now,onRecord,log=()=>{},registry}={}){
+  // The registry must come from the database, never from the local config being checked against it.
+  if(!registry||typeof registry!=='object'||Array.isArray(registry))throw Error('A fresh database source registry is required');
   const root=await privateRoot(config.output_root);
   const sources=config.sources??[];
   const origins=sources.map(s=>sourceAdapters[s.source_id]?.origin).filter(Boolean);
@@ -286,14 +310,12 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   if(!configPath)throw Error('Usage: node source-queue.mjs PRIVATE_QUEUE_CONFIG.json');
   const {createIncrementalSink}=await import('./incremental.mjs');
   const config=JSON.parse(await readFile(configPath,'utf8'));
-  let ingest;
-  if(config.ingest_missing===true){
-    // Server-side credentials come only from the process environment, never from the config file.
-    const {ingestMissing}=await import('./supabase.mjs');
-    const db={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SECRET_KEY};
-    ingest=batch=>ingestMissing(batch,db);
-  }
+  // Server-side credentials come only from the process environment, never from the config file.
+  const {ingestMissing,sourceRegistry}=await import('./supabase.mjs');
+  const db={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SECRET_KEY};
+  const registry=await sourceRegistry(db);
+  const ingest=config.ingest_missing===true?batch=>ingestMissing(batch,db):undefined;
   const sink=await createIncrementalSink({output_directory:join(config.output_root,'incremental'),known_revisions_path:config.known_revisions_path,ingest});
-  const result=await runSources(config,{onRecord:sink.onRecord,log:row=>console.error(JSON.stringify(row))});
+  const result=await runSources(config,{registry,onRecord:sink.onRecord,log:row=>console.error(JSON.stringify(row))});
   console.log(JSON.stringify({...result,incremental:await sink.close()}));
 }

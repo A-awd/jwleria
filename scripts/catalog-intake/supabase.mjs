@@ -7,7 +7,7 @@ export async function catalogRpc(name, args, {url,key}, fetcher = fetch) {
   const base = new URL(url);
   if (base.protocol !== 'https:' || !base.hostname.endsWith('.supabase.co') || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw new Error('Invalid Supabase endpoint');
   if (!key || typeof key !== 'string') throw new Error('Missing server credential');
-  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_record_media_approval','jwl_publish_candidate'].includes(name)) throw new Error('Unsupported catalog operation');
+  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_record_media_approval','jwl_publish_candidate','jwl_source_registry','jwl_revoked_media_files'].includes(name)) throw new Error('Unsupported catalog operation');
   const headers = {apikey:key,'Content-Type':'application/json'};
   if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
   const response = await fetcher(new URL(`/rest/v1/rpc/${name}`,base),{method:'POST',headers,body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:'error'});
@@ -36,6 +36,13 @@ export async function ingestMissing(rows, config, fetcher = fetch) {
     result.inserted_ids.push(...receipt.inserted_ids);result.skipped_existing_ids.push(...receipt.skipped_existing_ids);
   }
   return result;
+}
+
+/** Fresh acquisition registry from the database (no permission text); queue runners require it. */
+export async function sourceRegistry(config, fetcher = fetch) {
+  const registry = await catalogRpc('jwl_source_registry',{},config,fetcher);
+  if (!registry || typeof registry !== 'object' || Array.isArray(registry)) throw new Error('Invalid source registry');
+  return registry;
 }
 
 /** Records exact evidence and the verified approval atomically; it does not publish. */

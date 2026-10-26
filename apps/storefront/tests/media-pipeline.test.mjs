@@ -8,7 +8,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
 import {galleryBinding,evaluateMediaGrant,mediaReadiness,acquireOriginal,createMediaPacer,keepOwnerOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from '../../../scripts/catalog-intake/media-pipeline.mjs';
-import {uploadDerivatives} from '../../../scripts/catalog-intake/media.mjs';
+import {uploadDerivatives,deleteRevokedDerivatives} from '../../../scripts/catalog-intake/media.mjs';
 import {recordMediaApproval,publish} from '../../../scripts/catalog-intake/supabase.mjs';
 
 const sharp=installedImageEngine();
@@ -114,25 +114,28 @@ test('end to end: permitted original → private derivatives → verification �
     assert.equal(bundle.publication_state,'verified-not-uploaded');assert.equal(bundle.evidence.length,4);
     assert.deepEqual(bundle.approval.approved_image_variants[0].variants.map(v=>v.width),[320,640,960,1200]);
 
+    // Order: the database checks the grant and evidence before any file becomes public.
+    await service(db,"insert into jwl_internal.media_grants(grant_reference,kind,source_id,media_origins,website_publication,resize,webp_encode,evidence_reference) values('synthetic-written-01','written_permission','synthetic-official','[\"https://media.example.test\"]',true,true,true,'synthetic private permission record')");
+    await service(db,'select public.jwl_ingest_missing_batch($1::jsonb)',[JSON.stringify([candidate])]);
+    const config={url:'https://project.supabase.co',key:'synthetic-test-key'};
+    const rpc=rpcThrough(db);
+    assert.deepEqual(await recordMediaApproval(bundle,config,rpc),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,evidence_rows:4,published:0});
+    assert.equal((await recordMediaApproval(bundle,config,rpc)).evidence_rows,4,'identical replay is idempotent');
+    const tampered=structuredClone(bundle);tampered.evidence[0].public_sha256='0'.repeat(64);
+    await assert.rejects(recordMediaApproval(tampered,config,rpc),/check constraint|differs/);
+
     const stored=new Map();
     const storage=async(url,init={})=>{
       const href=String(url);
       if(init.method==='POST'){const key=href.split('/object/jwl-product-media/')[1];if(stored.has(key))return new Response('{"error":"Duplicate"}',{status:400});stored.set(key,Buffer.from(init.body));return new Response('{}');}
+      if(init.method==='DELETE'){for(const key of JSON.parse(init.body).prefixes)stored.delete(key);return new Response('[]');}
       const key=href.split('/object/public/jwl-product-media/')[1];return stored.has(key)?new Response(stored.get(key)):new Response('',{status:404});
     };
-    const config={url:'https://project.supabase.co',key:'synthetic-test-key'};
     const uploaded=await uploadDerivatives(bundle,{output_directory:root,storage:config},storage);
     assert.deepEqual(uploaded.sort(),bundle.evidence.map(e=>e.public_url).sort());
     assert.deepEqual((await uploadDerivatives(bundle,{output_directory:root,storage:config},storage)).length,4,'re-upload verifies identical existing objects');
     await assert.rejects(uploadDerivatives({...bundle,evidence:bundle.evidence.slice(1)},{output_directory:root,storage:config},storage),/differs from approved evidence/);
 
-    await service(db,"insert into jwl_internal.media_grants(grant_reference,kind,source_id,media_origins,website_publication,resize,webp_encode,evidence_reference) values('synthetic-written-01','written_permission','synthetic-official','[\"https://media.example.test\"]',true,true,true,'synthetic private permission record')");
-    await service(db,'select public.jwl_ingest_missing_batch($1::jsonb)',[JSON.stringify([candidate])]);
-    const rpc=rpcThrough(db);
-    assert.deepEqual(await recordMediaApproval(bundle,config,rpc),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,evidence_rows:4,published:0});
-    assert.equal((await recordMediaApproval(bundle,config,rpc)).evidence_rows,4,'identical replay is idempotent');
-    const tampered=structuredClone(bundle);tampered.evidence[0].public_sha256='0'.repeat(64);
-    await assert.rejects(recordMediaApproval(tampered,config,rpc),/differs/);
     const review={candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,slug:'synthetic-submariner',reference:candidate.external_id,brand_slug:'synthetic',brand_name:'Synthetic',brand_tier:'luxury',category_slug:'watches',collection_slug:'submariner',collection_ar:'سابمارينر',collection_en:'Submariner',name_ar:candidate.name_ar,name_en:candidate.name_en,description_ar:candidate.description_ar,description_en:candidate.description_en,images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants};
     await assert.rejects(publish({...review,image_variants:[]},config,rpc),/differ from approved media/);
     await publish(review,config,rpc);
@@ -140,6 +143,11 @@ test('end to end: permitted original → private derivatives → verification �
     assert.deepEqual(live,{active:true,media_state:'approved_media',images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants});
     await service(db,"update jwl_internal.media_grants set revoked_at=now()");
     assert.equal((await db.query('select active from public.jwl_catalog')).rows[0].active,false);
+    // Revocation cleanup removes the public files too.
+    const revoked=(await service(db,'select public.jwl_revoked_media_files() r')).rows[0].r;
+    assert.deepEqual((await deleteRevokedDerivatives(revoked,config,storage)).length,4);
+    assert.equal(stored.size,0);
+    await assert.rejects(deleteRevokedDerivatives(['https://other.supabase.co/storage/v1/object/public/jwl-product-media/x.webp'],config,storage),/Not a product-media file/);
   }finally{await db.close();await rm(root,{recursive:true,force:true});}
 });
 
@@ -171,5 +179,20 @@ test('one pacer spaces every request to a media origin even across many assets',
     for(const url of gallery)await acquireOriginal({candidate:c,asset_url:url,grant:written,output_directory:root},{fetcher,pacer});
     assert.equal(at.length,3,'robots once, then two assets');
     for(let i=1;i<at.length;i++)assert(at[i]-at[i-1]>=3000,'requests to one origin stay spaced');
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('a refused or rate-limited media origin is not contacted again through the same pacer',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-media-stop-'));
+  try{
+    for(const [status,headers,pattern] of [[403,{},/stopped until review/],[429,{'retry-after':'60'},/stopped until 20/]]){
+      let t=Date.parse('2026-10-26T00:00:00Z');const calls=[];
+      const pacer=createMediaPacer({sleep:async ms=>{t+=ms;},now:()=>t});
+      const fetcher=async url=>{calls.push(url);return url.endsWith('robots.txt')?new Response('',{status:404}):new Response('',{status,headers});};
+      await assert.rejects(acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{fetcher,pacer}),/refused access|rate limited/);
+      const count=calls.length;
+      await assert.rejects(acquireOriginal({candidate,asset_url:asset,grant:written,output_directory:root},{fetcher,pacer}),pattern);
+      assert.equal(calls.length,count,'no further request to the stopped origin');
+    }
   }finally{await rm(root,{recursive:true,force:true});}
 });

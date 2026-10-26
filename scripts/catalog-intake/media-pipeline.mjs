@@ -99,10 +99,14 @@ async function boundedBytes(response){
  * Per-origin pacing and robots cache shared by every download made through one pacer, so a caller
  * looping over many assets still spaces requests to each media origin.
  */
-export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600,sleep=ms=>new Promise(r=>setTimeout(r,ms)),now=Date.now}={}){
-  const next=new Map(),robots=new Map(),interval=Math.max(2,min_interval_seconds)*1000;
+export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600,rate_limit_min_seconds=900,sleep=ms=>new Promise(r=>setTimeout(r,ms)),now=Date.now}={}){
+  const next=new Map(),robots=new Map(),stopped=new Map(),interval=Math.max(2,Number(min_interval_seconds)||2)*1000;
   return {now,
-    async wait(origin){const at=next.get(origin)??0;if(at>now())await sleep(at-now());next.set(origin,now()+interval);},
+    async wait(origin){
+      // A refused or rate-limited origin is not contacted again through this pacer until its time.
+      const until=stopped.get(origin);if(until!==undefined&&until>now())throw Error(`Media origin stopped until ${until===Infinity?'review':new Date(until).toISOString()}`);
+      const at=next.get(origin)??0;if(at>now())await sleep(at-now());next.set(origin,now()+interval);},
+    stop(origin,retryAfter){stopped.set(origin,retryAfter===undefined?Infinity:Math.max(retryAfter??0,now()+Math.max(60,rate_limit_min_seconds)*1000));},
     robots(origin){const hit=robots.get(origin);return hit&&hit.until>now()?hit.policy:null;},
     remember(origin,policy){robots.set(origin,{policy,until:now()+robots_ttl_seconds*1000});}};
 }
@@ -115,7 +119,8 @@ export async function acquireOriginal({candidate,asset_url,grant,output_director
   const request=async target=>{
     await pacer.wait(url.origin);
     const response=await fetcher(target,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});
-    if([401,403,429].includes(response.status))throw Error(`Media source refused access (${response.status})`);
+    if([401,403].includes(response.status)){pacer.stop(url.origin);throw Error(`Media source refused access (${response.status})`);}
+    if(response.status===429){const v=response.headers.get('retry-after'),s=Number(v);pacer.stop(url.origin,v==null?null:Number.isFinite(s)?pacer.now()+s*1000:Date.parse(v)||null);throw Error('Media source rate limited (429)');}
     if(response.status>=300&&response.status<400)throw Error('Media redirect requires review');
     return response;
   };
@@ -184,6 +189,8 @@ export function approvalBundle({candidate,grant,items,public_base_url}){
   if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Between one and twenty prepared images required');
   const evidence=[],entries=[],uploads=[];
   for(const {asset,manifest,verification,performance_review_accepted} of items){
+    const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
+    if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
     requireVerification(verification,{candidate,asset});
     const b=manifest?.binding;
     if(manifest?.publication_state!=='private-prepared'||b?.candidate_id!==candidate.candidate_id||b.revision_hash!==candidate.revision_hash||b.asset_sha256!==asset.sha256||b.asset_source_url!==asset.source_url||b.media_permission_reference!==grant.grant_reference)
