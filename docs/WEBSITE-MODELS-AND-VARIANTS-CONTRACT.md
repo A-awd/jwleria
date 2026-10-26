@@ -12,7 +12,7 @@ This file is the shared engineering contract for the parallel streams. It is pre
 
 | Source | Variants (public) | Planned rule | Evidence and consistency | Options |
 |---|---|---|---|---|
-| Rolex | 1,465 | Official model number = reference without the `m` prefix and the `-NNNN` dial/bracelet suffix (e.g. `m126334-0001` → `126334`). The letters stay part of the model (`126610LN` ≠ `126610LV`). | Same collection, case diameter, case material, movement and water resistance across the group. | dial (`color` fact), bracelet (`bracelet_type` fact) |
+| Rolex | 1,465 | Official model number = reference without the `m` prefix and the `-NNNN` dial/bracelet suffix (e.g. `m126334-0001` → `126334`). The letters stay part of the model (`126610LN` ≠ `126610LV`). | Same collection, case diameter, case material, movement and water resistance across the group. | dial (`color` fact), bracelet (`bracelet_type` fact), bracelet material (`bracelet_material` fact), each only when it varies within the model |
 | LOEWE | 407 | Style code before the `-NNNN` colour code (e.g. `328.24.W10-2435` → `328.24.W10`). | Same product name, dimensions and material. | colour |
 | Longchamp | 390 | Model code before the trailing three-character colour code, only where the product name (without its colour suffix) and dimensions match. | Same name, dimensions and material. | colour |
 | Bottega Veneta | 8 | Style + material prefix before the colour code, only with a colour fact and matching name. | Same name and material. | colour |
@@ -29,7 +29,7 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
 
 - `public.jwl_product_variants` (additive, anon-readable only for active catalog rows):
   - `product_id text primary key references public.jwl_catalog(id) on delete cascade`;
-  - `model_key text not null` (`<source_id>:<model code>`), `is_primary boolean not null`, `position integer not null >= 0`;
+  - `model_key text not null` (`<source_id>:<model code>` for a grouped model, `<source_id>:ref:<reference>` for a single-variant model, so the two namespaces never collide), `is_primary boolean not null`, `position integer not null >= 0`;
   - `model_name jsonb not null` — `{ar,en}` model-level name without the variant-specific words or reference;
   - `options jsonb not null` — ordered `[{kind, label:{ar,en}, value:{ar,en}, key}]`, empty for a single-variant model;
   - `specs jsonb not null` — ordered translated facts `[{kind, label:{ar,en}, value:{ar,en}}]`; a value without a verified Arabic translation keeps the English text and carries `"value_lang":"en"`;
