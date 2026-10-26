@@ -13,7 +13,7 @@ const s = t(locale);
 const brand = await getBrand(product.brandSlug);
 const category = getCategory(product.categorySlug);
 const related = await getRelatedProducts(product, 4);
-const inquiry = productInquiry(locale, product, Astro.url.origin);
+const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
 const views = product.images.map((src, i) => ({src, label: s.product.views[i] ?? s.product.details}));
 ---
 <BaseLayout locale={locale} title={product.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} image={product.image}>
@@ -51,7 +51,7 @@ const views = product.images.map((src, i) => ({src, label: s.product.views[i] ??
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
           <h2 id="h-how">{s.product.how}</h2>
           <p>{product.isPreview ? s.dialog.explain : s.product.confirm}</p>
-          <blockquote>{s.dialog.product(product.name[locale], product.reference)}</blockquote>
+          <blockquote>{s.dialog.product(product.name[locale], product.reference, brand?.name)}</blockquote>
         </section>
       </div>
 
