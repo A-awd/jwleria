@@ -1,3 +1,9 @@
+## Current direction — Claude execution ownership — 2026-10-26
+
+Read decision0010 and the top STATE entry. Claude Code owns programming, tests and self-review. Codex supplies the comprehensive brief and relays results; do not send implementation or a duplicate code audit back to Codex. Start from the refreshed continuation branch, preserving the existing storefront and governance merge gates.
+
+Connection preparation is underway, not completed. The Claude interface lists the intended repositories and selected existing Supabase connector; Cloudflare and n8n require reconnecting. Claude must establish actual available capability without dummy writes, secret exposure or assuming access to ignored Mac/iCloud files. Prepare only Jwleria connections, stop only dependent actions for specific owner authorization or missing input, and continue other authorized work. Existing source/media restrictions, pending WhatsApp destination and remaining full-project requirements below still apply. Keep sanitized continuity in GitHub; do not invoke Easy Life.
+
 ## Current handoff — captured catalog reconciliation complete, project incomplete — 2026-10-21
 
 Continue the current working branch and read the top STATE checkpoint. Actual live database/domain readback is4,097 public factual records, zero product photos and4,150 private candidates. The remaining40 in-scope records were published successfully:37 Longchamp,2 guarded LOEWE/Bottega repairs and exact-reference JLC Q3926480 movement/calibre recovery. Only53 captured out-of-scope fragrance/candle records remain held. Preserve all current revisions, private gallery references and source restrictions. Do not replay old prepared payloads or imply worldwide catalog completeness.

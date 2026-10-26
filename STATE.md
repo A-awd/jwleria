@@ -1,3 +1,11 @@
+## Claude execution ownership and connection preparation — 2026-10-26
+
+The owner assigns all programming, tests and technical review to Claude Code; Codex supplies directions, relays results and prepares necessary owner authentication. Decision0010 records that role boundary. No new Claude implementation or deployment is established by this setup checkpoint.
+
+Authenticated GitHub reads confirmed the existing continuation branch at0948b351766fb72698b6720ee6a22053b6ddbe26 before this documentation update; the approved foundation and older main remain unchanged. The Claude Code repository picker exposes Jwleria and the global instruction repository. Existing Supabase is selected for this session, but Claude-side operation is not yet proven. Cloudflare and n8n are marked for reconnection. No provider access expansion or replacement credential has been approved in this setup. Required connection preparation is now requested; older n8n deferral is historical rather than proof of current access.
+
+Continue from the actual implemented branch. Have Claude establish its available repository, database, hosting, workflow and source-input capabilities through harmless reads, then continue independent implementation within existing authority. Preserve missing photos, the unprepared WhatsApp destination and complete project acceptance as unfinished requirements. The dated operational observations below were not refreshed during this delegation setup. Easy Life remains stopped.
+
 ## Current catalog reconciliation — 2026-10-21
 
 Live catalog and domain API independently return **4,097 active factual products, zero product images; 4,150 private candidates**. This is captured source-backed regional coverage, not every worldwide product and not a completed photographed catalog. Categories: watches1,774; handbags1,174; bracelets384; jewelry283; leather goods323; luggage28; shoes22; accessories109; clothing0.
