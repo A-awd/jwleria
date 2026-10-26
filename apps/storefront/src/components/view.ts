@@ -1,6 +1,7 @@
 import { env as runtime } from 'node:process';
-import type { Locale, PublicProduct, BrandTier as Tier } from '../contracts/catalog';
+import type { Brand, Locale, PublicProduct, BrandTier as Tier } from '../contracts/catalog';
 import { href, t } from '../i18n/ui';
+import { contactChannel, whatsappHref } from './contact.mjs';
 import { productInquiryMessage } from './inquiry-message.mjs';
 
 export const OWN_COLLECTION = 'jwleria-edit';
@@ -16,12 +17,11 @@ export function artClass(src: string, group: string, variant = '') {
 
 /**
  * The single production switch for inquiries. It stays in preview until the owning configuration
- * supplies PUBLIC_INQUIRY_MODE=live and a verified PUBLIC_WHATSAPP_E164. No number is ever assumed here.
+ * supplies PUBLIC_INQUIRY_MODE=live and a verified PUBLIC_WHATSAPP_E164; contact.mjs owns the validation.
  */
 export function inquiryChannel(): { live: false } | { live: true; e164: string } {
   const env = import.meta.env;
-  const num = String(runtime.PUBLIC_WHATSAPP_E164 || env.PUBLIC_WHATSAPP_E164 || '').trim().replace(/^\+/, '').replace(/[ ()-]/g, '');
-  return (runtime.PUBLIC_INQUIRY_MODE || env.PUBLIC_INQUIRY_MODE) === 'live' && /^[1-9]\d{7,14}$/.test(num) ? { live: true, e164: num } : { live: false };
+  return contactChannel(runtime.PUBLIC_INQUIRY_MODE || env.PUBLIC_INQUIRY_MODE, runtime.PUBLIC_WHATSAPP_E164 || env.PUBLIC_WHATSAPP_E164);
 }
 
 export interface InquiryLink { href: string; attrs: Record<string, string> }
@@ -30,14 +30,15 @@ export interface InquiryLink { href: string; attrs: Record<string, string> }
 export function inquiryLink(l: Locale, message: string, fallback: string, ref = '', subject = ''): InquiryLink {
   const ch = inquiryChannel();
   if (ch.live) {
-    return { href: `https://wa.me/${ch.e164}?text=${encodeURIComponent(message)}`, attrs: { target: '_blank', rel: 'noopener' } };
+    return { href: whatsappHref(ch.e164, message), attrs: { target: '_blank', rel: 'noopener' } };
   }
   return { href: href(l, fallback), attrs: { 'data-inquiry': '', 'aria-controls': 'inquiry-dialog', 'aria-haspopup': 'dialog', 'data-inq-message': message, 'data-inq-ref': ref, 'data-inq-subject': subject } };
 }
 
-export function productInquiry(l: Locale, p: PublicProduct, publicOrigin: string) {
+/** The brand is named only when it is the product's own resolved brand; an unknown brand adds no line. */
+export function productInquiry(l: Locale, p: PublicProduct, publicOrigin: string, brand?: Pick<Brand, 'slug' | 'name'>) {
   if (!p.isPreview && !inquiryChannel().live) return undefined;
-  const text = t(l).dialog.product(p.name[l], p.reference);
+  const text = t(l).dialog.product(p.name[l], p.reference, brand?.slug === p.brandSlug ? brand.name : undefined);
   const origin = runtime.PUBLIC_SITE_ORIGIN || import.meta.env.PUBLIC_SITE_ORIGIN || publicOrigin;
   const message = p.isPreview ? text : productInquiryMessage(text, origin, l, p.slug);
   return inquiryLink(l, message, `/products/${p.slug}/#inquiry`, p.reference, p.name[l]);

@@ -1,4 +1,5 @@
 import type { Locale } from '../contracts/catalog';
+import { withBrand } from '../components/inquiry-message.mjs';
 
 export const locales = ['ar', 'en'] as const satisfies readonly Locale[];
 export const isLocale = (v: unknown): v is Locale => v === 'ar' || v === 'en';
@@ -75,7 +76,7 @@ const ar = {
     failed: 'تعذّر النسخ التلقائي. النص متاح للنسخ اليدوي.',
     close: 'إغلاق',
     general: 'مرحباً، أود الاستفسار عن مختارات Jwleria.',
-    product: (name: string, ref: string) => `مرحباً، أود معرفة السعر والتوفر لهذه القطعة: ${name} — المرجع ${ref}`,
+    product: (name: string, ref: string, brand?: string) => `مرحباً، أود معرفة السعر والتوفر لهذه القطعة: ${withBrand(name, brand)} — المرجع ${ref}`,
     brand: (name: string) => `مرحباً، أود الاستفسار عن ${name}.`,
   },
   footer: {
@@ -165,7 +166,7 @@ const en: typeof ar = {
     failed: 'Copy failed — select the text manually.',
     close: 'Close',
     general: 'Hello, I would like to ask about the Jwleria selection.',
-    product: (name: string, ref: string) => `Hello, I would like the price and availability for: ${name} — reference ${ref}`,
+    product: (name: string, ref: string, brand?: string) => `Hello, I would like the price and availability for: ${withBrand(name, brand)} — reference ${ref}`,
     brand: (name: string) => `Hello, I would like to ask about ${name}.`,
   },
   footer: {

@@ -10,7 +10,7 @@ const { product: p, locale, eager = false } = Astro.props;
 const s = t(locale);
 const url = href(locale, `/products/${p.slug}/`);
 const brand = Astro.props.brand ?? await getBrand(p.brandSlug);
-const inquiry = productInquiry(locale, p, Astro.url.origin);
+const inquiry = productInquiry(locale, p, Astro.url.origin, brand);
 const media = p.image ? productMedia(p,0,'card',Astro.props.columns??4) : undefined;
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>

@@ -1,11 +1,14 @@
 ---
 import type { Locale } from '../contracts/catalog';
 import { t } from '../i18n/ui';
+import { inquiryChannel } from './view';
 
 interface Props { locale: Locale }
 const s = t(Astro.props.locale);
+// Live contact opens WhatsApp directly; the copy-only preview dialog and its "not connected" text are omitted.
+const live = inquiryChannel().live;
 ---
-<dialog id="inquiry-dialog" class="inquiry" aria-labelledby="inquiry-title" data-copied={s.dialog.copied} data-failed={s.dialog.failed}>
+{!live && <dialog id="inquiry-dialog" class="inquiry" aria-labelledby="inquiry-title" data-copied={s.dialog.copied} data-failed={s.dialog.failed}>
   <div class="inquiry__panel">
     <form method="dialog" class="inquiry__close">
       <button class="icon-btn" aria-label={s.dialog.close}>
@@ -27,7 +30,7 @@ const s = t(Astro.props.locale);
     </div>
     <p class="note" role="status" aria-live="polite" data-status></p>
   </div>
-</dialog>
+</dialog>}
 
 <script>
   const dialog = document.getElementById('inquiry-dialog') as HTMLDialogElement | null;
