@@ -1,3 +1,23 @@
+## Current handoff — queues, missing-only intake and exact media evidence implemented — 2026-10-26
+
+Continue from `claude/pensive-mccarthy-40nrlc` (top STATE entry and decision 0011). It fast-forwards the continuation branch; updating `codex/jwleria-architecture-2026-10-03` to it needs the owner's go-ahead because Claude's push authority is the work branch. Tests: `node --test scripts/catalog-intake/*.test.mjs` from the repo root (77) and `node --test tests/*.test.mjs` from `apps/storefront` (48, needs `pnpm install --frozen-lockfile`).
+
+Owner inputs and approvals still needed, in order:
+1. **Production migration approval.** Apply `20261026120000_jwleria_media_evidence_and_missing_intake.sql` to Supabase `saymzvrvtfrjftmtqtor`. It is additive, private and service-role-only, and touches no existing data, function or public read path. The session classifier denied it as a production deploy. After approval:
+   - compare the public projection hash and candidate hash with the pre-apply baseline (public `f929f0974933890b08574e2d19038803`, candidates `0c7944b68e67530c850a51125b0daa84`, 4,097 active);
+   - rename the local file to the registered version;
+   - check the advisors (expect only the intended "RLS enabled, no policy" notes for the two new private tables).
+2. **Photo inputs** (none exist yet). Either:
+   - the owner's own photos of exact products (JPEG/PNG/WebP, each with its exact reference); or
+   - written permission from a rights holder or authorized distributor naming the source, image origins, website publication, resizing and WebP encoding.
+
+   Each becomes a private grant record (the evidence document stays outside Git). Then a visual verification per original. Enabling a source's `publication_allowed` for media is a separate owner decision. Open-license images need an attribution feature and an owner decision first.
+3. **Verified business WhatsApp number** (still unprepared; never invent one).
+4. **An execution environment for real collection:** a machine or cloud environment whose network allows the permitted brand origins and Supabase. It needs a server credential supplied only through the environment, plus a private output location (not Git). This cloud container's network blocks those hosts.
+5. **Scheduling:** none is active. `pg_cron` is available but not installed. Expiring grants stay refused until a reviewed change adds a scheduled sweep.
+
+Do not restart Cartier/VCA/CELINE/RIMOWA, replay stale payloads, overwrite changed revisions, publish unapproved or mismatched photos, or call the photo-free catalog complete. Worker deployment is not possible from the cloud connector; storefront code is unchanged.
+
 ## Current direction — Claude execution ownership — 2026-10-26
 
 Read decision0010 and the top STATE entry. Claude Code owns programming, tests and self-review. Codex supplies the comprehensive brief and relays results; do not send implementation or a duplicate code audit back to Codex. Start from the refreshed continuation branch, preserving the existing storefront and governance merge gates.

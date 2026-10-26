@@ -1,3 +1,48 @@
+## Concurrent intake, missing-only ingestion and exact media evidence — 2026-10-26
+
+Claude Code implemented, tested and self-reviewed the remaining background-processing and authentic-media path on branch `claude/pensive-mccarthy-40nrlc`. It descends from continuation tip 60da478 and includes Codex documentation c342964, so it fast-forwards `codex/jwleria-architecture-2026-10-03`. Decision 0011 records the rules. Nothing was published, no image was downloaded, uploaded or approved, and the storefront code is unchanged.
+
+**Implemented (repository code):**
+- `scripts/catalog-intake/source-queue.mjs`: one queue per permitted official origin, origins running concurrently.
+  - Each origin has its own pacing: at least 2 s, taking the largest of config, database interval and robots crawl-delay, persisted across runs.
+  - Fresh robots, resumable private state, URL and identity deduplication, and bounded transient retry with exponential backoff.
+  - A refusal or challenge (including on a 5xx) blocks only that origin until a recorded review token. A 429 or 5xx Retry-After defers only that origin, for at least 15 minutes. Unhealthy origins cool down.
+  - Cartier, VCA, CELINE and RIMOWA stay closed in code. The database registry (`jwl_source_registry`) is required and can only narrow local config.
+  - Reuses the existing official, bag and Longchamp extractors.
+- `incremental.mjs`: each record is assessed on arrival. Ingestion is missing-only: an existing candidate with another revision is held for review, never overwritten. A durable outbox replays failed batches. Factual readiness (facts, Arabic name, summary, approved category) is reported separately.
+- `media-pipeline.mjs`, `media.mjs`, `supabase.mjs`, `responsive-media.mjs`:
+  - exact-reference gallery binding;
+  - grant evaluation: written permission or owner original; open licenses refused; restricted sources closed;
+  - paced, robots-aware original acquisition with per-origin stops, and checksum-preserved originals;
+  - owner-original derivatives and a required complete visual-verification record;
+  - an approval bundle, with the approval recorded before upload (upload needs the database receipt);
+  - content-addressed upload, `image_variants` in publish, and revoked-file cleanup.
+- Migration `apps/storefront/supabase/migrations/20261026120000_jwleria_media_evidence_and_missing_intake.sql`:
+  - append-only `media_grants`/`media_assets` evidence;
+  - an approval trigger binding every file to its grant kind, its exact gallery URL and granted origin or owner original, its reference and its dimensions;
+  - final revocation cascading to withdrawal, plus a publish-time live-grant check;
+  - expiring grants fail closed, and written permission is refused for restricted sources;
+  - RPCs for missing-only intake, atomic approval recording, the source registry and revoked files.
+
+**Validation:**
+- Source suite 77/77 and app suite 48/48. PGlite replays every migration, including an end-to-end run: permitted original → derivatives → verification → evidence → publish → revoke → withdrawal → file cleanup.
+- An independent reviewer subagent found 3 high and 6 medium defects. All were reproduced and fixed with tests. Its re-check confirmed the fixes and found one new outbox-duplicate defect, also fixed and tested.
+- Residual low risks, documented and not fixed: a narrow non-atomic window when stealing a stale queue lock; media pacing and stops are in-memory per process.
+
+**Actual connection outcomes:**
+- **GitHub:** clone, fetch and push to the work branch work.
+- **Supabase:** reads work. Live readback today: 4,097 active public factual rows, 4,150 private candidates, 6,877 revisions, 0 media approvals, 0 storage buckets, 6 registered migrations.
+  - Gallery binding: 3,103 candidates have every gallery URL naming the exact reference (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 372, Bottega 8). 1,047 do not (Cartier, VCA, AP, IWC, JLC, Panerai, Piaget, 19 Longchamp). This is identity evidence only; no media permission exists.
+  - Applying the new migration was **denied by this session's permission classifier as a production deploy**. A follow-up read-only check was also denied. `list_migrations` confirms the live database still has the same 6 migrations, so nothing was applied.
+- **Cloudflare:** `jwleria-storefront` Worker read works. The connector has no Worker upload/deploy tool and the container has no deploy credential, so no deployment is possible from this session.
+- **n8n:** search and read work.
+  - The inactive "Jwleria — Catalog candidate normalization" draft was stale (no `collection_kind` or calibre support), so its code node alone was synced to the repository normalizer.
+  - A pinned-data test with synthetic records (execution 58896) reproduced the local candidate IDs and revision hashes exactly.
+  - No trigger, schedule, credential, activation or other workflow changed.
+- **Container network:** the proxy denies `jwleria.com` and brand origins, so live collection or HTTP readback cannot run from this cloud container.
+
+The project remains incomplete. Photos, the verified WhatsApp destination, scheduled operation and launch acceptance are still open. Easy Life remains stopped.
+
 ## Claude execution ownership and connection preparation — 2026-10-26
 
 The owner assigns all programming, tests and technical review to Claude Code; Codex supplies directions, relays results and prepares necessary owner authentication. Decision0010 records that role boundary. The Claude Code session titled "Jwleria programming continuation" was launched with Opus5.5 Extra and one comprehensive English execution brief. No completed Claude implementation or new deployment is established by this setup checkpoint.
