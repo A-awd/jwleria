@@ -27,7 +27,8 @@ const tote=(code,color,ar,extra={})=>({source:'longchamp-official',ref:'L1899089
 const puzzle=(code,color,extra={})=>({source:'loewe-official',ref:'328.24.W10-'+code,collection:'Puzzle',name_en:'Small Puzzle bag in classic calfskin',name_ar:'حقيبة Puzzle، مقاس صغير، من جلد عجل كلاسيكي',
   facts:{color,dimensions:'24 x 16.5 x 10.5 cm',material:'Classic calfskin',...extra}});
 const fixtures=[
-  datejust('m126200-0001','Silver',jubilee),datejust('m126200-0002','Silver',oyster),datejust('m126200-0005','Bright blue',jubilee),
+  // As in the captured data, one variant's Arabic name omits the shared case diameter.
+  {...datejust('m126200-0001','Silver',jubilee),name_ar:'ساعة رولكس ديت جست'},datejust('m126200-0002','Silver',oyster),datejust('m126200-0005','Bright blue',jubilee),
   datejust('m126200-0006','Bright blue',oyster),datejust('m126200-0029','Bright blue',jubilee),datejust('m126200-0010','Candy pink',oyster),
   {...datejust('m126334-0001','Blue',jubilee),name_en:'Rolex Datejust 41 watch: Oystersteel and white gold - m126334-0001',facts:{...datejust('','Blue',jubilee).facts,diameter:'41 mm',material:'White Rolesor - combination of Oystersteel and white gold'}},
   {...datejust('m126334-0003','White',jubilee),name_en:'Rolex Datejust 41 watch: Oystersteel and white gold - m126334-0003',facts:{...datejust('','White',jubilee).facts,diameter:'41 mm',material:'White Rolesor - combination of Oystersteel and white gold'}},
@@ -125,7 +126,9 @@ test('positions, primaries and model names are deterministic and never invented'
     }
     const m=await byRef(db);
     assert.deepEqual(['m126200-0001','m126200-0002','m126200-0006','m126200-0010'].map(r=>m.get(r).position),[0,1,2,3],'ordered by reference');
-    assert.deepEqual(m.get('m126200-0006').model_name,{ar:'ساعة رولكس ديت جست، 36 مم',en:'Rolex Datejust 36 watch: Oystersteel'});
+    assert.deepEqual(m.get('m126200-0006').model_name,{ar:'ساعة رولكس ديت جست، 36 مم',en:'Rolex Datejust 36 watch: Oystersteel'},
+      'the Arabic model name keeps the diameter every member shares, even when the primary variant name omits it');
+    assert.equal(m.get('m126200-0006').basis.arabic_name,'shared_size');
     assert.deepEqual(m.get('L1899089556').model_name,{ar:'حقيبة كتف Le Pliage Original، مقاس كبير',en:'Le Pliage Original L Tote bag'});
     assert.deepEqual(m.get('L2605089545').model_name,{ar:'حقيبة يد Le Pliage Original، مقاس متوسط، أسود',en:'Le Pliage Original M Handbag'},
       'an Arabic tail that is not the recorded colour keeps the primary variant name');

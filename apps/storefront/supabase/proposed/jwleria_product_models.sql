@@ -268,16 +268,24 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
       'key',case when c.slug<>'' and not c.shared_slug then c.slug when c.slug<>'' then c.slug||'-'||left(md5(c.en),8) else left(md5(c.en),12) end)
     ||case when c.ar is null then '{"value_lang":"en"}'::jsonb else '{}'::jsonb end order by c.o) o
   from keyed_cells c group by c.id
+), sized as (
+  -- A trailing "، <case diameter>" is model-level when every member records that same diameter.
+  select g.*,case when g.shown ? 'diameter' and right(g.noref_ar,length(g.shown->'diameter'->>'ar')+2)='، '||(g.shown->'diameter'->>'ar')
+    then left(g.noref_ar,length(g.noref_ar)-length(g.shown->'diameter'->>'ar')-2) else g.noref_ar end unsized_ar
+  from grouped g
 ), names as (
-  -- Model-level Arabic name: identical names, or one shared base whose only differing tail is the colour.
+  -- Model-level Arabic name: identical names, the same name with or without the shared diameter, or one
+  -- shared base whose only differing tail is the colour. Otherwise the primary variant's own name.
   select g.source_id,g.code,min(g.core_en) en,
     case when count(distinct g.noref_ar)=1 then 'shared'
+      when count(distinct g.unsized_ar)=1 and bool_and(g.shown ? 'diameter') and count(distinct g.shown->'diameter'->>'ar')=1 then 'shared_size'
       when v.kinds='{color}'::text[] and count(distinct substring(g.noref_ar from '^(.*\S)، [^،]+$'))=1
         and bool_and(coalesce(substring(g.noref_ar from '^.*\S، ([^،]+)$')=g.shown->'color'->>'ar'
           or lower(substring(g.noref_ar from '^.*\S، ([^،]+)$'))=lower((g.shown->'color'->>'en') collate "C"),false))
         then 'colour_tail' else 'primary' end ar_source,
-    min(g.noref_ar) shared_ar,min(substring(g.noref_ar from '^(.*\S)، [^،]+$')) base_ar,(array_agg(g.name_ar order by g.pos))[1] primary_ar
-  from grouped g join vary3 v on v.source_id=g.source_id and v.code=g.code
+    min(g.noref_ar) shared_ar,min(g.noref_ar) filter (where g.unsized_ar<>g.noref_ar) sized_ar,
+    min(substring(g.noref_ar from '^(.*\S)، [^،]+$')) base_ar,(array_agg(g.name_ar order by g.pos))[1] primary_ar
+  from sized g join vary3 v on v.source_id=g.source_id and v.code=g.code
   group by g.source_id,g.code,v.kinds
 ), specs as (
   select d.id,jsonb_agg(jsonb_build_object('kind',l.kind,'label',jsonb_build_object('ar',l.label_ar,'en',l.label_en),
@@ -290,7 +298,7 @@ select s.id,
   case when g.id is not null then s.source_id||':'||s.code else coalesce(s.source_id,'unbound')||':'||s.reference end,
   coalesce(g.pos,0)=0,coalesce(g.pos,0)::integer,
   case when g.id is null then jsonb_build_object('ar',s.name_ar,'en',s.name_en)
-    else jsonb_build_object('ar',case n.ar_source when 'shared' then n.shared_ar when 'colour_tail' then n.base_ar else n.primary_ar end,'en',n.en) end,
+    else jsonb_build_object('ar',case n.ar_source when 'shared' then n.shared_ar when 'shared_size' then n.sized_ar when 'colour_tail' then n.base_ar else n.primary_ar end,'en',n.en) end,
   coalesce(o.o,'[]'::jsonb),coalesce(sp.s,'[]'::jsonb),
   case when g.id is not null then s.grule
     when not s.bound then 'single:unbound-revision'
