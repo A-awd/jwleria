@@ -7,7 +7,7 @@ export async function catalogRpc(name, args, {url,key}, fetcher = fetch) {
   const base = new URL(url);
   if (base.protocol !== 'https:' || !base.hostname.endsWith('.supabase.co') || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw new Error('Invalid Supabase endpoint');
   if (!key || typeof key !== 'string') throw new Error('Missing server credential');
-  if (!['jwl_ingest_batch','jwl_publish_candidate'].includes(name)) throw new Error('Unsupported catalog operation');
+  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_publish_candidate'].includes(name)) throw new Error('Unsupported catalog operation');
   const headers = {apikey:key,'Content-Type':'application/json'};
   if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
   const response = await fetcher(new URL(`/rest/v1/rpc/${name}`,base),{method:'POST',headers,body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:'error'});
@@ -23,6 +23,19 @@ export async function ingest(rows, config, fetcher = fetch) {
     receipts.push(await catalogRpc('jwl_ingest_batch',{records:candidates.slice(offset,offset+100)},config,fetcher));
   }
   return {received:candidates.length,changed:receipts.reduce((n,r)=>n+r.changed,0),published:0};
+}
+
+/** Inserts only candidates the database does not have; an existing revision is never overwritten. */
+export async function ingestMissing(rows, config, fetcher = fetch) {
+  const candidates = normalizeBatch(rows);
+  // Re-normalizing must reproduce the exact identity and revision the queue assessed.
+  for (const [i,row] of rows.entries()) if (candidates[i]?.candidate_id!==row.candidate_id || candidates[i]?.revision_hash!==row.revision_hash) throw new Error('Record changed during normalization; review before ingestion');
+  const result = {inserted_ids:[],skipped_existing_ids:[]};
+  for (let offset=0; offset<candidates.length; offset+=100) {
+    const receipt = await catalogRpc('jwl_ingest_missing_batch',{records:candidates.slice(offset,offset+100)},config,fetcher);
+    result.inserted_ids.push(...receipt.inserted_ids);result.skipped_existing_ids.push(...receipt.skipped_existing_ids);
+  }
+  return result;
 }
 
 export async function publish(review, config, fetcher = fetch) {
