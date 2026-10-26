@@ -73,11 +73,16 @@
     ref: ['مرجع واحد', 'مرجعان', 'مراجع', 'مرجعًا'],
     model: ['طراز واحد', 'طرازان', 'طرازات', 'طرازًا'],
   };
+  // Above 100 the agreement follows the last two digits (٤٠٧ مراجع, ٤٠٩٧ مرجعًا);
+  // a round hundred or a remainder of 1–2 takes the bare singular (١٠٠ مرجع).
+  const SINGULAR = { color: 'لون', size: 'مقاس', dial: 'لون للميناء', ref: 'مرجع', model: 'طراز' };
   function countAr(n, noun) {
     const f = NOUNS[noun];
     if (n === 1) return f[0];
     if (n === 2) return f[1];
-    if (n >= 3 && n <= 10) return AR(n) + ' ' + f[2];
+    const r = n >= 100 ? n % 100 : n;
+    if (n >= 100 && r <= 2) return AR(n) + ' ' + SINGULAR[noun];
+    if (r >= 3 && r <= 10) return AR(n) + ' ' + f[2];
     return AR(n) + ' ' + f[3];
   }
 
