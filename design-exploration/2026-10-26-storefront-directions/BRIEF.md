@@ -58,7 +58,7 @@ screenshots are research only and are not used as page imagery.
 ## Performance and accessibility rules
 
 - No frameworks or third-party scripts. Small inline/local JS only.
-- Fonts: at most two families per direction, regular weights, `display=swap`.
+- Fonts: each direction names its families (two or three, as in the table below), regular or medium weights only, `display=swap`. Previews load them from Google Fonts; the chosen direction self-hosts only the weights and subsets it uses.
 - Images have intrinsic `width`/`height`, `srcset`/`sizes`, lazy loading below
   the fold; hero ≤ 1600 px wide, cards request ≤ 640 px.
 - WCAG AA contrast, visible `:focus-visible`, skip link, landmarks,

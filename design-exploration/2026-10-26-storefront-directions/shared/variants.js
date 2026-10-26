@@ -24,7 +24,7 @@
       category: 'watches',
       typeAr: 'ساعة',
       typeEn: 'Watch',
-      nameAr: 'ديت جست 41',
+      nameAr: 'ديت جست ٤١',
       name: 'Datejust 41',
       collection: 'Datejust',
       axes: ['dial'],
