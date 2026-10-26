@@ -179,24 +179,27 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
   where p.active
 ), fact_values as (
   -- Only facts of the exact published revision; an encoded line break is whitespace, not content.
-  select b.id,lower(e->>'key') fact,btrim(regexp_replace(replace(replace(e->>'value','&#10;',' '),'&#13;',' '),'\s+',' ','g')) collate "C" val
+  select b.id,b.source_id,lower(e->>'key') fact,btrim(regexp_replace(replace(replace(e->>'value','&#10;',' '),'&#13;',' '),'\s+',' ','g')) collate "C" val
   from base b cross join lateral jsonb_array_elements(case when b.bound and jsonb_typeof(b.raw)='array' then b.raw else '[]'::jsonb end) e
   where jsonb_typeof(e->'key')='string' and jsonb_typeof(e->'value')='string'
 ), facts as (
-  select id,fact,array_agg(distinct val order by val) vals,string_agg(distinct val,' | ' order by val) joined
-  from fact_values where val<>'' group by id,fact
+  select id,source_id,fact,array_agg(distinct val order by val) vals,string_agg(distinct val,' | ' order by val) joined
+  from fact_values where val<>'' group by id,source_id,fact
 ), translated as (
   select v.fact,v.val,coalesce(t.term_ar,jwl_internal.arabic_measure(v.val)) ar
   from (select distinct fact,val from fact_values) v left join jwl_internal.term_translations t on t.kind=v.fact and t.term_en=v.val
 ), display as (
   -- Arabic only when every value of the fact has a reviewed translation; otherwise the English text.
-  select f.id,f.fact,array_to_string(f.vals,', ') en,case when bool_and(t.ar is not null) then string_agg(t.ar,'، ' order by u.o) end ar
+  select f.id,f.source_id,f.fact,f.joined,array_to_string(f.vals,', ') en,case when bool_and(t.ar is not null) then string_agg(t.ar,'، ' order by u.o) end ar
   from facts f cross join lateral unnest(f.vals) with ordinality u(v,o) left join translated t on t.fact=f.fact and t.val=u.v
-  group by f.id,f.fact,f.vals
+  group by f.id,f.source_id,f.fact,f.vals,f.joined
+), fact_maps as (
+  -- One row per catalog row, joined once: a per-row lookup into the fact lists would be quadratic.
+  select id,jsonb_object_agg(fact,joined) f,jsonb_object_agg(fact,jsonb_build_object('en',en,'ar',ar)) shown from display group by id
 ), catalog_rows as (
-  select b.*,coalesce((select jsonb_object_agg(x.fact,x.joined) from facts x where x.id=b.id),'{}'::jsonb) f,
+  select b.*,coalesce(m.f,'{}'::jsonb) f,coalesce(m.shown,'{}'::jsonb) shown,
     r.rule grule,r.consistency,r.option_facts,case when b.bound then substring(b.reference from r.code_pattern) end code
-  from base b left join rules r on r.source_id=b.source_id
+  from base b left join fact_maps m on m.id=b.id left join rules r on r.source_id=b.source_id
 ), stripped as (
   select x.*,
     case when x.f->>'color' is not null and lower(right(x.noref_en,length(x.f->>'color')+3)) in (lower(' — '||(x.f->>'color')),lower(' – '||(x.f->>'color')),lower(' - '||(x.f->>'color')))
@@ -209,13 +212,13 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
   select s.*,count(*) over (partition by s.source_id,s.code) gsize from stripped s where s.grule is not null and s.code is not null
 ), compared as (
   -- Identity and consistency facts of each member; a missing fact fails the comparison.
-  select g.id,g.source_id,g.code,
+  select g.id,g.source_id,g.code,g.gsize,
     jsonb_build_object('brand',g.brand_slug,'category',g.category_slug,'collection',g.collection_slug,'collection_kind',g.collection_kind,'collection_name',g.collection_en,'name',g.core_en)
     ||coalesce((select jsonb_object_agg(k,g.f->k) from unnest(g.consistency) k),'{}'::jsonb) v
   from coded g
 ), mismatch as (
   select source_id,code,jsonb_agg(key order by key) keys from (
-    select c.source_id,c.code,e.key from compared c join coded g on g.id=c.id and g.gsize>1 cross join lateral jsonb_each(c.v) e
+    select c.source_id,c.code,e.key from compared c cross join lateral jsonb_each(c.v) e where c.gsize>1
     group by 1,2,3 having count(distinct e.value)>1 or bool_or(e.value='null'::jsonb)) m
   group by 1,2
 ), members as (
@@ -250,33 +253,37 @@ with rules(source_id,rule,code_pattern,consistency,option_facts) as (values
     group by 1,2,3,4 having count(distinct m.f->>u.o)>1) x
   group by 1,2
 ), option_cells as (
-  select g.id,g.source_id,g.code,u.fact,u.o,d.en,d.ar,btrim(regexp_replace(lower(d.en),'[^a-z0-9]+','-','g'),'-') slug,l.kind,l.label_ar,l.label_en
-  from grouped g join vary3 v on v.source_id=g.source_id and v.code=g.code
-  cross join lateral unnest(v.kinds) with ordinality u(fact,o) join display d on d.id=g.id and d.fact=u.fact
-  cross join lateral (select k.kind,k.label_ar,k.label_en from kinds k where k.fact=u.fact and (k.source_id is null or k.source_id=g.source_id) order by k.source_id nulls last limit 1) l
-), slug_counts as (
-  select source_id,code,fact,slug,count(distinct en) n from option_cells group by 1,2,3,4
+  select x.*,btrim(regexp_replace(lower(x.en),'[^a-z0-9]+','-','g'),'-') slug from (
+    select g.id,g.source_id,g.code,u.fact,u.o,(g.shown->u.fact->>'en') collate "C" en,g.shown->u.fact->>'ar' ar,l.kind,l.label_ar,l.label_en
+    from grouped g join vary3 v on v.source_id=g.source_id and v.code=g.code
+    cross join lateral unnest(v.kinds) with ordinality u(fact,o)
+    cross join lateral (select k.kind,k.label_ar,k.label_en from kinds k where k.fact=u.fact and (k.source_id is null or k.source_id=g.source_id) order by k.source_id nulls last limit 1) l
+    where g.shown ? u.fact) x
+), keyed_cells as (
+  -- Two different values with the same slug get a hash suffix so every key stays unique.
+  select c.*,min(c.en) over w<>max(c.en) over w shared_slug from option_cells c window w as (partition by c.source_id,c.code,c.fact,c.slug)
 ), options as (
   select c.id,jsonb_agg(jsonb_build_object('kind',c.kind,'label',jsonb_build_object('ar',c.label_ar,'en',c.label_en),
       'value',jsonb_build_object('ar',coalesce(c.ar,c.en),'en',c.en),
-      'key',case when c.slug<>'' and s.n=1 then c.slug when c.slug<>'' then c.slug||'-'||left(md5(c.en),8) else left(md5(c.en),12) end)
+      'key',case when c.slug<>'' and not c.shared_slug then c.slug when c.slug<>'' then c.slug||'-'||left(md5(c.en),8) else left(md5(c.en),12) end)
     ||case when c.ar is null then '{"value_lang":"en"}'::jsonb else '{}'::jsonb end order by c.o) o
-  from option_cells c join slug_counts s using(source_id,code,fact,slug) group by c.id
+  from keyed_cells c group by c.id
 ), names as (
   -- Model-level Arabic name: identical names, or one shared base whose only differing tail is the colour.
   select g.source_id,g.code,min(g.core_en) en,
     case when count(distinct g.noref_ar)=1 then 'shared'
       when v.kinds='{color}'::text[] and count(distinct substring(g.noref_ar from '^(.*\S)، [^،]+$'))=1
-        and bool_and(coalesce(substring(g.noref_ar from '^.*\S، ([^،]+)$')=d.ar or lower(substring(g.noref_ar from '^.*\S، ([^،]+)$'))=lower(d.en),false))
+        and bool_and(coalesce(substring(g.noref_ar from '^.*\S، ([^،]+)$')=g.shown->'color'->>'ar'
+          or lower(substring(g.noref_ar from '^.*\S، ([^،]+)$'))=lower((g.shown->'color'->>'en') collate "C"),false))
         then 'colour_tail' else 'primary' end ar_source,
     min(g.noref_ar) shared_ar,min(substring(g.noref_ar from '^(.*\S)، [^،]+$')) base_ar,(array_agg(g.name_ar order by g.pos))[1] primary_ar
-  from grouped g join vary3 v on v.source_id=g.source_id and v.code=g.code left join display d on d.id=g.id and d.fact='color'
+  from grouped g join vary3 v on v.source_id=g.source_id and v.code=g.code
   group by g.source_id,g.code,v.kinds
 ), specs as (
   select d.id,jsonb_agg(jsonb_build_object('kind',l.kind,'label',jsonb_build_object('ar',l.label_ar,'en',l.label_en),
       'value',jsonb_build_object('ar',coalesce(d.ar,d.en),'en',d.en))||case when d.ar is null then '{"value_lang":"en"}'::jsonb else '{}'::jsonb end order by l.ord) s
-  from display d join base b on b.id=d.id
-  cross join lateral (select k.kind,k.label_ar,k.label_en,k.ord from kinds k where k.fact=d.fact and (k.source_id is null or k.source_id=b.source_id) order by k.source_id nulls last limit 1) l
+  from display d
+  cross join lateral (select k.kind,k.label_ar,k.label_en,k.ord from kinds k where k.fact=d.fact and (k.source_id is null or k.source_id=d.source_id) order by k.source_id nulls last limit 1) l
   group by d.id
 )
 select s.id,

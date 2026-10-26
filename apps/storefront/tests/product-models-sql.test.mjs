@@ -283,3 +283,20 @@ test('rollback drops only the proposed objects and leaves the catalog and its fu
     assert.equal((await apply(db)).variants,fixtures.length,'the proposal can be re-applied after a rollback');
   }finally{await db.close();}
 });
+
+test('derivation stays linear on a catalog the size of the live one',async()=>{
+  // Synthetic rows only: 12 dials x 2 bracelets per Rolex model number and 10 colours per LOEWE style.
+  const dials=['Silver','White','Blue','Green','Pink','Slate','Olive green','Bright blue','Bright black','Champagne-colour','Sundust','Chocolate'];
+  const rows=Array.from({length:1200},(_,i)=>i%3
+    ?datejust(`m9${String(10000+Math.floor(i/24)).slice(1)}-${String(1+i%24).padStart(4,'0')}`,dials[i%12],i%24<12?jubilee:oyster)
+    :{...puzzle('',i%10?`Shade ${i%10}`:'Black',{lining:'Calfskin'}),ref:`Z${1000+Math.floor(i/30)}.W10-${1000+i%10}`});
+  const db=await database(rows);
+  try{
+    const started=Date.now(),derived=await derive(db),elapsed=Date.now()-started;
+    assert.equal(derived.length,rows.length);
+    assert.equal(new Set(derived.map(r=>r.model_key)).size,1200/24+1200/30,'50 Rolex models of 16 variants and 40 LOEWE models of 10');
+    assert.ok(derived.every(r=>!r.rule.startsWith('single:')));
+    // The earlier quadratic per-row fact lookup took about 18 s here; the linear derivation takes about 1 s.
+    assert.ok(elapsed<10000,`derivation took ${elapsed} ms`);
+  }finally{await db.close();}
+});
