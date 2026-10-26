@@ -108,6 +108,22 @@ test('a withdrawn, redirected or personalized refresh stops the stale copy and i
   const next=await publicPageResponse(r,h.render,h.options);assert.equal(next.headers.get('X-JWL-Cache'),'MISS');assert.equal(h.renders(),2);await h.flush();
  }
 });
+test('Astro\'s error render of a failed request never serves, refreshes or removes the page copy',async()=>{
+ const h=harness(),r=new Request('https://jwleria.com/ar/catalog/');
+ await publicPageResponse(r,h.render,h.options);await h.flush();h.at(161000);
+ // Main pass: the cache lookup fails, so the page renders in the foreground and throws (an upstream outage).
+ const locals={},working=h.options.cache.match;h.options.cache.match=async()=>{throw new Error('cache unavailable');};
+ await assert.rejects(publicPageResponse(r,async()=>{throw new Error('catalog unavailable');},{...h.options,scope:locals}),/catalog unavailable/);
+ h.options.cache.match=working;
+ // Astro then renders its error route through the middleware again with the same Request and locals.
+ let errorRenders=0;const errorRoute=async()=>{errorRenders++;return new Response('Not found',{status:404});};
+ const waits=h.waits(),error=await publicPageResponse(r,errorRoute,{...h.options,scope:locals});
+ assert.equal(error.status,404);assert.equal(error.headers.has('X-JWL-Cache'),false);assert.equal(errorRenders,1);assert.equal(h.waits(),waits);await h.flush();
+ assert.equal(h.entry().headers.get('X-JWL-Stored-At'),'100000');assert.equal(await h.entry().text(),'real catalog 1');
+ // The next visitor request has its own locals and is served from the untouched copy.
+ const next=await publicPageResponse(r,h.render,{...h.options,scope:{}});assert.equal(next.headers.get('X-JWL-Cache'),'STALE');assert.equal(await next.text(),'real catalog 1');await h.flush();
+ assert.equal(h.entry().headers.get('X-JWL-Stored-At'),'161000');
+});
 test('beyond the ten-minute window the old copy is never served',async()=>{
  const h=harness(),r=new Request('https://jwleria.com/en/brands/test-brand/');
  await publicPageResponse(r,h.render,h.options);await h.flush();

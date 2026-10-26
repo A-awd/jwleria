@@ -7,6 +7,9 @@ const MAX_REFRESHES = 16;
 const ABANDONED_MS = 30000;
 // Key -> start token only: a promise from one request is never awaited by another request's handler.
 const refreshing = new Map();
+// Astro renders its error page for a failed request by running the middleware again with the same Request and
+// locals. That pass must not serve, refresh or store the page's copy, so each request scope is handled once.
+const handled = new WeakSet();
 const route = /^\/(?:ar|en)\/(?:$|(?:brands|categories)\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?|catalog\/|about\/|products\/[a-z0-9]+(?:-[a-z0-9]+)*\/)$/;
 function shareableRequest(request) {
   const url = new URL(request.url);
@@ -63,12 +66,17 @@ function refresh(key, next, { cache, waitUntil, now }) {
     .finally(() => { if (refreshing.get(key.url) === token) refreshing.delete(key.url); }));
 }
 /**
+ * `scope` is an object unique to one visitor request that Astro passes to every render of it (its locals).
  * @param {Request} request
  * @param {() => Promise<Response>} next
- * @param {{cache?: Pick<Cache, 'match' | 'put'> & Partial<Pick<Cache, 'delete'>>, waitUntil?: (task: Promise<unknown>) => void, build?: string, now?: () => number}} options
+ * @param {{cache?: Pick<Cache, 'match' | 'put'> & Partial<Pick<Cache, 'delete'>>, waitUntil?: (task: Promise<unknown>) => void, build?: string, scope?: object, now?: () => number}} options
  */
-export async function publicPageResponse(request, next, { cache, waitUntil, build, now = Date.now } = {}) {
+export async function publicPageResponse(request, next, { cache, waitUntil, build, scope, now = Date.now } = {}) {
   if (!cache || !build || !shareableRequest(request)) return next();
+  if (scope) {
+    if (handled.has(scope)) return next();
+    handled.add(scope);
+  }
   const start = now();
   const url = new URL(request.url);
   url.searchParams.sort();
