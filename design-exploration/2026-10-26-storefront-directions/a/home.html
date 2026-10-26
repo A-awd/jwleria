@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&amp;family=Bodoni+Moda:opsz,wght@6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&amp;family=Bodoni+Moda:opsz,wght@6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;display=swap">
 <link rel="stylesheet" href="style.css">
 <script src="../shared/catalog-data.js" defer></script>
 <script src="../shared/variants.js" defer></script>
@@ -16,9 +16,10 @@
 </head>
 <body data-page="home">
 <a class="skip-link" href="#main">الانتقال إلى المحتوى الرئيسي</a>
-<div class="preview-strip" role="note"><p><span>معاينة تصميم · الاتجاه أ — الدار</span><a href="../index.html">كل الاتجاهات</a></p></div>
+<svg class="sprite" aria-hidden="true" focusable="false"><symbol id="i-bag" viewBox="0 0 120 120"><ellipse fill="rgba(27,25,21,.22)" stroke="none" cx="60" cy="100" rx="40" ry="2.4"/><path vector-effect="non-scaling-stroke" d="M44 47c0-15 32-15 32 0M30 47h60l6 50H24z"/><path vector-effect="non-scaling-stroke" d="M30 58h60" opacity=".5"/></symbol><symbol id="i-watch" viewBox="0 0 120 120"><ellipse fill="rgba(27,25,21,.22)" stroke="none" cx="60" cy="106" rx="22" ry="2"/><path vector-effect="non-scaling-stroke" d="M49 17h22l-2 19H51zM51 84h18l2 19H49zM60 60V47M60 60l8 5"/><circle vector-effect="non-scaling-stroke" cx="60" cy="60" r="25"/><circle vector-effect="non-scaling-stroke" cx="60" cy="60" r="20" opacity=".55"/></symbol><symbol id="i-luggage" viewBox="0 0 120 120"><ellipse fill="rgba(27,25,21,.22)" stroke="none" cx="60" cy="106" rx="34" ry="2.4"/><rect vector-effect="non-scaling-stroke" x="34" y="34" width="52" height="64" rx="6"/><path vector-effect="non-scaling-stroke" d="M50 34V23h20v11M48 44v44M72 44v44"/><circle vector-effect="non-scaling-stroke" cx="43" cy="102" r="3"/><circle vector-effect="non-scaling-stroke" cx="77" cy="102" r="3"/></symbol></svg>
+<div class="preview-strip" role="note"><p class="wrap"><span>معاينة تصميم · الاتجاه أ — الدار</span><a href="../index.html">كل الاتجاهات</a></p></div>
 <header class="site-header" data-header>
-  <div class="masthead">
+  <div class="masthead wrap">
     <div class="mast-start">
       <button class="icon-btn menu-btn" type="button" aria-expanded="false" aria-controls="site-menu" aria-label="فتح القائمة" data-menu-open><svg class="ico" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M3 8.5h18M9 15.5h12"/></svg></button>
       <button class="search-btn" type="button" aria-expanded="false" aria-controls="search-panel" data-search-toggle><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.25"/><path d="M15.2 15.2 20 20"/></svg><span class="search-label">بحث</span></button>
@@ -29,7 +30,7 @@
     </div>
   </div>
   <div class="navrow-wrap">
-    <nav class="navrow" aria-label="التنقل الرئيسي">
+    <nav class="navrow wrap" aria-label="التنقل الرئيسي">
       <a class="mini-mark" href="home.html" aria-label="Jwleria — الصفحة الرئيسية"><span dir="ltr" lang="en">JWLERIA</span></a>
       <ul class="nav-list"><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about"><span>عن <bdi>Jwleria</bdi></span></a></li></ul>
       <div class="mini-actions">
@@ -40,7 +41,7 @@
   </div>
   <div class="search-panel" id="search-panel" hidden>
     <form class="search-form" action="catalog.html" method="get" role="search">
-      <label class="search-field"><span class="sr-only">البحث في الكتالوج</span><input type="search" name="q" dir="auto" autocomplete="off" placeholder="البحث بالعلامة أو الطراز أو المرجع"></label>
+      <label class="search-field"><span class="sr-only">البحث في الكتالوج</span><input type="search" name="q" autocomplete="off" placeholder="علامة، طراز أو مرجع"></label>
       <button class="search-submit" type="submit">بحث</button>
       <button class="icon-btn" type="button" aria-label="إغلاق البحث" data-search-close><svg class="ico" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M5.5 5.5l13 13M18.5 5.5l-13 13"/></svg></button>
     </form>
@@ -59,15 +60,21 @@
 </div>
 <main id="main" tabindex="-1">
   <section class="hero" aria-labelledby="hero-title">
-    <figure class="hero-media">
-      <img src="../shared/img/hero-editorial-1600.webp" srcset="../shared/img/hero-editorial-800.webp 800w, ../shared/img/hero-editorial-1600.webp 1600w" sizes="100vw" width="1600" height="900" alt="صورة توضيحية: حقيبة جلدية وساعة وسوار على درج حجري" fetchpriority="high" decoding="async">
-      <figcaption class="caption">صورة توضيحية</figcaption>
-    </figure>
-    <div class="hero-copy">
+    <div class="wrap hero-head">
       <p class="kicker">٤١ علامة عالمية · ٩ فئات</p>
       <h1 id="hero-title">الفخامة،<br> بكل تفاصيلها</h1>
       <p class="hero-sub">مختارات من العلامات العالمية، والتفاصيل عبر واتساب.</p>
-      <p class="hero-links"><a class="text-link" href="#brands">العلامات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a><a class="text-link" href="catalog.html">الكتالوج<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></p>
+    </div>
+    <div class="wrap hero-spread">
+      <div class="hero-index">
+        <h2 class="hi-title" id="hi-title">الفئات</h2>
+        <ol class="hi-list" aria-labelledby="hi-title" data-cat-index></ol>
+        <p class="hero-links"><a class="text-link" href="#brands">العلامات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a><a class="text-link" href="catalog.html">الكتالوج<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></p>
+      </div>
+      <figure class="hero-media">
+        <img src="../shared/img/hero-editorial-1600.webp" srcset="../shared/img/hero-editorial-800.webp 800w, ../shared/img/hero-editorial-1600.webp 1600w" sizes="(min-width: 760px) 56vw, 100vw" width="1600" height="900" alt="صورة توضيحية: حقيبة جلدية وساعة وسوار على درج حجري" fetchpriority="high" decoding="async">
+        <figcaption class="caption">صورة توضيحية</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -78,7 +85,7 @@
 
   <section class="section wrap" id="categories" aria-labelledby="cats-title">
     <div class="section-head">
-      <div><p class="kicker">الفئات</p><h2 class="h2" id="cats-title">من الساعات إلى حقائب السفر</h2></div>
+      <div><p class="kicker">عن قرب</p><h2 class="h2" id="cats-title">من الساعات إلى حقائب السفر</h2></div>
     </div>
     <div class="stories">
       <article class="story">
@@ -109,21 +116,17 @@
       </article>
       <article class="story">
         <figure class="story-media">
-          <img src="../shared/img/bracelet-640.webp" srcset="../shared/img/bracelet-320.webp 320w, ../shared/img/bracelet-640.webp 640w" sizes="(min-width: 960px) 40vw, 100vw" width="640" height="640" alt="" loading="lazy" decoding="async">
+          <img src="../shared/img/luggage-640.webp" srcset="../shared/img/luggage-320.webp 320w, ../shared/img/luggage-640.webp 640w" sizes="(min-width: 960px) 40vw, 100vw" width="640" height="640" alt="" loading="lazy" decoding="async">
           <figcaption class="caption">صورة توضيحية</figcaption>
         </figure>
         <div class="story-copy">
           <p class="story-index">٠٣</p>
-          <h3>المجوهرات</h3>
-          <p class="story-text">قطع من دور المجوهرات العالمية، تُعرض بمرجعها ومادتها وتفاصيلها كاملة.</p>
-          <ul class="story-brands" data-story-brands="jewelry" aria-label="علامات في هذه المعاينة"></ul>
-          <a class="text-link" href="catalog.html?category=jewelry">عرض المجوهرات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
+          <h3>حقائب السفر</h3>
+          <p class="story-text">تُعرض كل حقيبة سفر بأبعادها ومادتها، ولكل لون منها مرجع مستقل داخل صفحة الطراز نفسها.</p>
+          <ul class="story-brands" data-story-brands="luggage" aria-label="علامات في هذه المعاينة"></ul>
+          <a class="text-link" href="catalog.html?category=luggage">عرض حقائب السفر<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
         </div>
       </article>
-    </div>
-    <div class="cat-index">
-      <h3 class="cat-index-title">كل الفئات</h3>
-      <ul class="cat-index-list" data-cat-index></ul>
     </div>
   </section>
 
@@ -140,7 +143,7 @@
   <section class="section wrap" id="brands" aria-labelledby="brands-title">
     <div class="section-head">
       <div><p class="kicker">الدليل</p><h2 class="h2" id="brands-title">العلامات</h2></div>
-      <p class="section-note">٤١ علامة في الدليل، مرتّبة أبجديًا. الرقم بجانب العلامة هو عدد مراجعها المنشورة حاليًا.</p>
+      <p class="section-note">٤١ علامة في الدليل، مرتّبة أبجديًا. الرقم بجانب العلامة هو عدد مراجعها المنشورة حاليًا، والأسماء المسطّرة لها طرازات في هذه المعاينة.</p>
     </div>
     <div class="brand-index" data-brand-index></div>
   </section>
@@ -150,6 +153,8 @@
     <div class="footer-brand">
       <p class="footer-mark"><span dir="ltr" lang="en">JWLERIA</span></p>
       <p class="footer-line">مختارات من العلامات العالمية، والتفاصيل عبر واتساب.</p>
+      <h2 class="f-head f-about">عن <bdi>Jwleria</bdi></h2>
+      <p class="footer-about"><bdi>Jwleria</bdi> كتالوج مستقل للاستفسار فقط: صفحة واحدة لكل طراز، تجمع ألوانه ومقاساته الحقيقية ومرجعه الدقيق وتفاصيله المنشورة.</p>
       <p class="footer-facts">٤١ علامة · ٩ فئات · ٤٬٠٩٧ مرجعًا منشورًا</p>
     </div>
     <nav class="footer-col" aria-label="روابط الموقع">
