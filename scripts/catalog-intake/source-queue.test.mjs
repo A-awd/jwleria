@@ -396,3 +396,19 @@ test('a partial revision export with the complete identity list never treats a k
   assert.deepEqual(review.map(r=>[r.external_id,r.ingest,r.known_revision]),[['m126610ln-0001','known_identity_requires_review',null],['M126610LN-0001','known_identity_requires_review',null]]);
   await rm(dir,{recursive:true});
 });
+
+test('a refusal keeps the responder and page title as review evidence; an egress-proxy denial is not recorded as a source refusal',async()=>{
+  const root=await privateDir();
+  const denied=harness(url=>url.endsWith('/robots.txt')?()=>new Response('<HTML><HEAD><TITLE>Access Denied</TITLE></HEAD><BODY>Reference #18.x</BODY></HTML>',{status:403,headers:{server:'AkamaiGHost'}}):null);
+  const blocked=await runOrigin(source('iwc-schaffhausen-official',{sitemap_roots:'robots_declared'}),{root,registry,fetcher:denied.fetcher,sleep:denied.sleep,now:denied.now});
+  assert.equal(blocked.status,'blocked');
+  const state=JSON.parse(await readFile(join(root,'iwc-schaffhausen-official','state.json'),'utf8'));
+  assert.deepEqual([state.blocked.reason,state.blocked.http_status,state.blocked.server,state.blocked.title],['source_refused_access',403,'AkamaiGHost','Access Denied']);
+  assert.match(state.blocked.review_token,/^[a-f0-9]{16}$/);
+  const proxy=harness(url=>url.endsWith('/robots.txt')?()=>new Response('Blocked by egress policy',{status:403}):null);
+  const environment=await runOrigin(source('bottega-veneta-official'),{root,registry,fetcher:proxy.fetcher,sleep:proxy.sleep,now:proxy.now});
+  assert.equal(environment.status,'failed');assert.equal(environment.reason,'environment_egress_denied');
+  const bottega=JSON.parse(await readFile(join(root,'bottega-veneta-official','state.json'),'utf8'));
+  assert.equal(bottega.blocked,undefined,'no source review token: the origin never received the request');
+  await rm(root,{recursive:true});
+});

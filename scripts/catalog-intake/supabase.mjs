@@ -1,5 +1,6 @@
 import { normalizeBatch } from './normalize.mjs';
 import { normalizeSearch } from '../../apps/storefront/src/server/supabase-catalog.mjs';
+import { dollarQuote } from './factual-publication.mjs';
 import { readFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 
@@ -51,7 +52,8 @@ export async function recordMediaApproval(bundle, config, fetcher = fetch) {
   return catalogRpc('jwl_record_media_approval',{evidence:bundle.evidence,approval:bundle.approval},config,fetcher);
 }
 
-export async function publish(review, config, fetcher = fetch) {
+/** The exact media-lane product payload; the database compares it with the approval and current candidate. */
+export function publicationProduct(review) {
   const text = field => {const v=review[field];if(typeof v!=='string'||!v.trim())throw new Error(`Missing ${field}`);return v.trim();};
   const slug = field => {const v=text(field);if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v))throw new Error(`Invalid ${field}`);return v;};
   if (!Array.isArray(review.images) || !review.images.length || review.images.some(s=>{try{const u=new URL(s);return u.protocol!=='https:'||u.username||u.password;}catch{return true;}})) throw new Error('Invalid publication images');
@@ -65,8 +67,27 @@ export async function publish(review, config, fetcher = fetch) {
   };
   if(!['luxury','accessible','contemporary'].includes(product.brand_tier))throw new Error('Invalid brand tier');
   product.search_text=normalizeSearch([product.reference,product.brand_slug,product.collection_ar,product.collection_en,product.name_ar,product.name_en].join(' '));
-  return catalogRpc('jwl_publish_candidate',{candidate:text('candidate_id'),revision:text('revision_hash'),product},config,fetcher);
+  return {candidate:text('candidate_id'),revision:text('revision_hash'),product};
 }
+
+export async function publish(review, config, fetcher = fetch) {
+  return catalogRpc('jwl_publish_candidate',publicationProduct(review),config,fetcher);
+}
+
+const hex64=/^[a-f0-9]{64}$/;
+/** Connector form of recordMediaApproval: the same exact evidence and approval, recorded atomically, no publication. */
+export function mediaApprovalSql(bundle) {
+  if (bundle?.approval?.image_verified!==true || !Array.isArray(bundle.evidence) || !bundle.evidence.length || !hex64.test(bundle.approval.candidate_id??'')) throw new Error('Verified approval bundle required');
+  return `select public.jwl_record_media_approval(${dollarQuote(JSON.stringify(bundle.evidence))}::jsonb,${dollarQuote(JSON.stringify(bundle.approval))}::jsonb) as receipt;`;
+}
+/** Connector form of publish: the database re-checks approval, live grant, source flag and current revision. */
+export function mediaPublicationSql(review) {
+  const {candidate,revision,product}=publicationProduct(review);
+  if (!hex64.test(candidate) || !hex64.test(revision)) throw new Error('Exact candidate revision required');
+  return `select public.jwl_publish_candidate('${candidate}','${revision}',${dollarQuote(JSON.stringify(product))}::jsonb) as published;`;
+}
+/** The one public bucket the derivatives need; creating it is a separately approved production change. */
+export const productMediaBucketSql=`insert into storage.buckets(id,name,public,file_size_limit,allowed_mime_types) values('jwl-product-media','jwl-product-media',true,15728640,array['image/webp']) on conflict(id) do nothing returning id,public,file_size_limit,allowed_mime_types;`;
 
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
   const [operation,input]=process.argv.slice(2);

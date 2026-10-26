@@ -67,30 +67,74 @@ export async function promoteMedia(review,receipts,config,fetcher=fetch) {
 
 /** Uploads verified content-addressed derivatives; an object that already exists must match byte-for-byte. */
 export async function uploadDerivatives(bundle,{output_directory,storage:config,approval_receipt},fetcher=fetch) {
-  if(bundle?.publication_state!=='verified-not-uploaded'||!Array.isArray(bundle.uploads)||!bundle.uploads.length)throw new Error('Verified approval bundle required');
+  const {url,headers}=storageConfig(config);
   // Files become public only after the database accepted this exact approval and its evidence.
-  if(approval_receipt?.candidate_id!==bundle.approval?.candidate_id||approval_receipt?.revision_hash!==bundle.approval?.revision_hash||approval_receipt?.evidence_rows!==bundle.evidence?.length)throw new Error('Recorded approval receipt required before upload');
-  const root=await realpath(output_directory);
-  const expected=new Set(bundle.evidence.map(row=>row.public_url));
+  const files=await approvedFiles(bundle,{output_directory,approval_receipt,public_prefix:new URL(`/storage/v1/object/public/${buckets.published}/`,url).href});
   const published=[];
-  for(const file of bundle.uploads) {
-    if(!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(file.path))throw new Error('Derivative path must be content-addressed');
-    const bytes=await readFile(join(root,file.path));
-    if(createHash('sha256').update(bytes).digest('hex')!==file.sha256)throw new Error('Prepared derivative checksum changed');
-    const {url,headers}=storageConfig(config);
-    const publicUrl=new URL(`/storage/v1/object/public/${buckets.published}/${file.path}`,url).href;
-    if(!expected.has(publicUrl))throw new Error('Upload target differs from approved evidence');
+  for(const file of files) {
     // Content-addressed paths never change meaning, so they may be cached immutably.
-    const response=await fetcher(new URL(`/storage/v1/object/${buckets.published}/${file.path}`,url),{method:'POST',headers:{...headers,'Content-Type':'image/webp','x-upsert':'false','cache-control':'public, max-age=31536000, immutable'},body:bytes,redirect:'error',signal:AbortSignal.timeout(20000)});
+    const response=await fetcher(new URL(`/storage/v1/object/${buckets.published}/${file.path}`,url),{method:'POST',headers:{...headers,'Content-Type':'image/webp','x-upsert':'false','cache-control':'public, max-age=31536000, immutable'},body:file.bytes,redirect:'error',signal:AbortSignal.timeout(20000)});
     if(!response.ok) {
       const detail=await response.text().catch(()=>'');
       if(response.status!==409&&!/duplicate|already exists/i.test(detail))throw new Error(`Media storage operation failed (${response.status})`);
-      const existing=await fetcher(publicUrl,{redirect:'error',signal:AbortSignal.timeout(20000)});
+      const existing=await fetcher(file.public_url,{redirect:'error',signal:AbortSignal.timeout(20000)});
       if(!existing.ok||createHash('sha256').update(Buffer.from(await existing.arrayBuffer())).digest('hex')!==file.sha256)throw new Error('Existing public derivative differs');
     }
-    published.push(publicUrl);
+    published.push(file.public_url);
   }
   return published;
+}
+
+/** Checks prepared files against the bundle and its recorded approval receipt; shared by both upload paths. */
+async function approvedFiles(bundle,{output_directory,approval_receipt,public_prefix}){
+  if(bundle?.publication_state!=='verified-not-uploaded'||!Array.isArray(bundle.uploads)||!bundle.uploads.length)throw new Error('Verified approval bundle required');
+  if(approval_receipt?.candidate_id!==bundle.approval?.candidate_id||approval_receipt?.revision_hash!==bundle.approval?.revision_hash||approval_receipt?.evidence_rows!==bundle.evidence?.length)throw new Error('Recorded approval receipt required before upload');
+  const root=await realpath(output_directory);
+  const expected=new Map(bundle.evidence.map(row=>[row.public_url,row.public_sha256]));
+  const files=[];
+  for(const file of bundle.uploads){
+    if(!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(file.path))throw new Error('Derivative path must be content-addressed');
+    const bytes=await readFile(join(root,file.path));
+    if(createHash('sha256').update(bytes).digest('hex')!==file.sha256)throw new Error('Prepared derivative checksum changed');
+    const publicUrl=public_prefix+file.path;
+    if(expected.get(publicUrl)!==file.sha256)throw new Error('Upload target differs from approved evidence');
+    files.push({...file,bytes,public_url:publicUrl});
+  }
+  return files;
+}
+
+/**
+ * Uploads through the deployed approval-bound function (jwl-media-upload): the runner holds no storage or
+ * database credential, and the function re-checks each file's checksum against live recorded evidence.
+ */
+export async function uploadThroughFunction(bundle,{output_directory,approval_receipt,function_url,public_base_url,headers={}},fetcher=fetch){
+  const endpoint=new URL(function_url),base=new URL(public_base_url);
+  if(endpoint.protocol!=='https:'||!endpoint.hostname.endsWith('.supabase.co')||endpoint.pathname!=='/functions/v1/jwl-media-upload'||endpoint.username||endpoint.password||endpoint.search)throw new Error('Approved upload function URL required');
+  if(base.origin!==endpoint.origin||base.pathname!==`/storage/v1/object/public/${buckets.published}`)throw new Error('Public product-media bucket of the same project required');
+  const files=await approvedFiles(bundle,{output_directory,approval_receipt,public_prefix:base.href+'/'});
+  const results=[];
+  for(const file of files){
+    const response=await fetcher(endpoint,{method:'PUT',headers:{...headers,'Content-Type':'image/webp','x-jwl-path':file.path},body:file.bytes,redirect:'error',signal:AbortSignal.timeout(30000)});
+    const body=await response.json().catch(()=>({}));
+    if(![200,201].includes(response.status)||body.sha256!==file.sha256||body.public_url!==file.public_url)throw new Error(`Approved upload refused (${response.status} ${body.error??'unconfirmed'})`);
+    results.push({public_url:file.public_url,sha256:file.sha256,state:body.state});
+  }
+  return results;
+}
+
+/** Downloads every approved public file and proves it is the exact derivative: type, size and checksum. */
+export async function verifyPublishedDerivatives(bundle,fetcher=fetch){
+  const sizes=new Map(bundle.uploads.map(file=>[file.sha256,file.bytes]));
+  const verified=[];
+  for(const row of bundle.evidence){
+    const response=await fetcher(row.public_url,{redirect:'error',signal:AbortSignal.timeout(30000)});
+    if(!response.ok)throw new Error(`Uploaded derivative unavailable (${response.status})`);
+    if((response.headers.get('content-type')??'').split(';')[0].trim()!=='image/webp')throw new Error('Uploaded derivative type differs');
+    const bytes=Buffer.from(await response.arrayBuffer());
+    if(createHash('sha256').update(bytes).digest('hex')!==row.public_sha256||(sizes.has(row.public_sha256)&&sizes.get(row.public_sha256)!==bytes.length))throw new Error('Uploaded derivative differs from approved evidence');
+    verified.push({public_url:row.public_url,sha256:row.public_sha256,bytes:bytes.length});
+  }
+  return verified;
 }
 
 /** Deletes public files whose grant was revoked (from jwl_revoked_media_files); only content-addressed product media. */

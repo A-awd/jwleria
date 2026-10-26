@@ -102,7 +102,9 @@ export function buildFactualPublication({candidates,evidence,mapping,existing={}
 }
 
 const tag=text=>{for(;;){const t='$jwl'+randomBytes(6).toString('hex')+'$';if(!text.includes(t))return t;}};
-const quoted=text=>{const t=tag(text);return t+text+t;};
+/** Dollar-quotes one literal for a connector SQL call, with a random tag that cannot occur in the text. */
+export const dollarQuote=text=>{const t=tag(String(text));return t+text+t;};
+const quoted=dollarQuote;
 
 /**
  * One statement, so one transaction: refuses (writing nothing) when any target row already exists.

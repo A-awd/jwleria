@@ -50,6 +50,8 @@ export const sourceAdapters=Object.freeze({
 class OriginStop extends Error{constructor(status,reason,detail={}){super(reason);this.status=status;this.reason=reason;this.detail=detail;}}
 class UrlFailure extends Error{constructor(reason,{transient=false,detail={}}={}){super(reason);this.reason=reason;this.transient=transient;this.detail=detail;}}
 export const sourceChallenge=html=>/<title[^>]*>[^<]*(?:captcha|access denied|just a moment|robot check)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container|verify you are (?:a )?human/i.test(html);
+/** A refusal written by the runner's egress proxy rather than the origin (observed body for denied hosts). */
+export const environmentDenial=body=>/^\s*Blocked by egress policy\s*$/i.test(String(body).slice(0,200));
 export function sitemapLocations(xml){return [...new Set([...xml.matchAll(/<loc\b[^>]*>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/loc>/g)].map(m=>m[1].trim().replace(/&amp;/g,'&')))];}
 /** Sitemaps declared in robots.txt, kept only when they are HTTPS on the official origin itself. */
 export function declaredSitemaps(urls,origin){
@@ -166,7 +168,15 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       try{response=await fetcher(target.href,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});}
       catch(error){sent(kind);throw new UrlFailure('network_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});}
       sent(kind);
-      if([401,403].includes(response.status))throw new OriginStop('blocked','source_refused_access',{url:target.href,http_status:response.status});
+      if([401,403].includes(response.status)){
+        // Keep just enough evidence for the reviewer: who answered and the page title, never the page itself.
+        const page=await boundedText(response,16*1024).catch(()=>'');
+        const evidence={url:target.href,http_status:response.status,server:(response.headers.get('server')??'').slice(0,60)||null,
+          title:(page.match(/<title[^>]*>([^<]{0,200})/i)?.[1]??'').replace(/\s+/g,' ').trim().slice(0,120)||null};
+        // The runner's own network policy, not the source, refused this host: nothing was sent to the origin.
+        if(environmentDenial(page))throw new OriginStop('failed','environment_egress_denied',evidence);
+        throw new OriginStop('blocked','source_refused_access',evidence);
+      }
       if(response.status===429||response.status>=500){
         // A challenge or Retry-After is an instruction from the source, never a transient error to retry through.
         const page=await boundedText(response,256*1024).catch(()=>'');
