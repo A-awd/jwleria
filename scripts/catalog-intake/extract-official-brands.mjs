@@ -148,8 +148,12 @@ export function prepareOfficialCandidates(rows){return rows.map(row=>{
  const identity=officialVariantIdentity(row.source_id,row.source_url);if(!identity||identity.external_id.toLowerCase()!==row.external_id.toLowerCase())throw Error('Acquired source identity mismatch');
  let ar=originalArabicName(row.product_name);
  if(row.source_id==='rolex-official'){
-  const model=row.product_name.match(/^Rolex (.+?) watch(?=:|$)/)?.[1];const translated=model?originalArabicName('Rolex '+model):null;
-  if(translated){const diameter=row.facts?.find(f=>f.key==='diameter'&&/^\d+(?:\.\d+)? mm$/.test(f.value));ar='ساعة '+translated+(diameter?'، '+diameter.value.replace('mm','مم'):'');}
+  const diameter=row.facts?.find(f=>f.key==='diameter'&&/^\d+(?:\.\d+)? mm$/.test(f.value)),size=diameter?.value.slice(0,-3);
+  let model=row.product_name.match(/^Rolex (.+?) watch(?=:|$)/)?.[1];
+  // A size the diameter already states is not repeated in the model ("Datejust 41" → "Datejust", then "41 mm").
+  if(model&&size&&model.endsWith(' '+size))model=model.slice(0,-(size.length+1));
+  const translated=model?originalArabicName('Rolex '+model):null;
+  if(translated)ar='ساعة '+translated+(diameter?'، '+diameter.value.replace('mm','مم'):'');
  }
  const facts=[...(row.facts||[]),...additionalFacts({sku:row.external_id,description:row.source_description},{id:row.source_id,page_url:row.source_url},'')];
  const uniqueFacts=[...new Map(facts.map(f=>[f.key+'\0'+f.value,f])).values()];

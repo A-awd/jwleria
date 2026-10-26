@@ -4,7 +4,7 @@ import {mkdtemp,readFile,writeFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {fileURLToPath} from 'node:url';
-import {runSources,runOrigin,sourceGate,recordedSourceStops,sourceAdapters} from './source-queue.mjs';
+import {runSources,runOrigin,sourceGate,recordedSourceStops,sourceAdapters,selectInventory} from './source-queue.mjs';
 import {createIncrementalSink,assessCandidate} from './incremental.mjs';
 import {ingestMissing} from './supabase.mjs';
 import {normalizeBatch} from './normalize.mjs';
@@ -327,5 +327,72 @@ test('a record the queue re-emits after a crash is not ingested twice and cannot
   const summary=await next.close();
   assert.deepEqual([summary.outbox_replayed,summary.replayed,summary.inserted,summary.pending_ingestion,summary.ingest_errors],[1,1,1,0,0]);
   assert.equal(calls,1);
+  await rm(dir,{recursive:true});
+});
+
+test('robots-declared discovery is bounded to the official origin, paced, counted separately and fetches no product page',async()=>{
+  const root=await privateDir();
+  const robots='User-agent: *\nCrawl-delay: 3\nAllow: /\nSitemap: https://www.rolex.com/sitemap.xml\nSitemap: http://www.rolex.com/insecure.xml\nSitemap: https://elsewhere.example.test/sitemap.xml\n';
+  const index='<sitemapindex><sitemap><loc>https://www.rolex.com/en-gb/sitemap.xml</loc></sitemap><sitemap><loc>https://www.rolex.com/fr/sitemap.xml</loc></sitemap><sitemap><loc>https://elsewhere.example.test/x.xml</loc></sitemap></sitemapindex>';
+  const products=['https://www.rolex.com/en-gb/watches/datejust/m126334-0001','https://www.rolex.com/en-gb/watches/submariner/m126610ln-0001','https://www.rolex.com/en-gb/watches/explorer/m224270-0001'];
+  const h=harness(url=>url==='https://www.rolex.com/robots.txt'?()=>new Response(robots)
+    :url==='https://www.rolex.com/sitemap.xml'?()=>new Response(index)
+    :url==='https://www.rolex.com/en-gb/sitemap.xml'?()=>xml([...products,'https://www.rolex.com/en-gb/about-rolex','https://www.rolex.com/fr/watches/datejust/m126334-0001']):null);
+  const result=await runOrigin(source('rolex-official',{sitemap_roots:'robots_declared',sitemap_child_selector:'/en-gb/',product_url_selector:'^https://www\\.rolex\\.com/en-gb/watches/',discover_only:true,max_sitemaps:5}),{root,registry,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
+  assert.equal(result.status,'discovered');assert.equal(result.discovered_urls,3);assert.equal(result.discovery_complete,true);
+  assert.deepEqual(result.requests_by_kind,{robots:1,sitemap:2,page:0});
+  assert.deepEqual(h.calls.map(c=>c.url),['https://www.rolex.com/robots.txt','https://www.rolex.com/sitemap.xml','https://www.rolex.com/en-gb/sitemap.xml']);
+  for(let i=1;i<h.calls.length;i++)assert(h.calls[i].at-h.calls[i-1].at>=3000,'robots crawl-delay paces discovery');
+  const state=JSON.parse(await readFile(join(root,'rolex-official','state.json'),'utf8'));
+  assert.deepEqual(state.discovered.urls,products);assert.deepEqual(state.inventory,[],'discovery alone queues nothing for acquisition');
+  const capped=await runOrigin(source('rolex-official',{sitemap_roots:'robots_declared',sitemap_child_selector:'/en-gb/',discover_only:true,max_discovered_urls:2}),{root,registry,fetcher:h.fetcher,sleep:h.sleep,now:h.now});
+  assert.equal(capped.discovered_urls,2);assert.equal(capped.discovery_complete,false);assert.equal(capped.discovery_errors[0].reason,'discovered_url_bound_reached');
+  const none=harness(url=>url.endsWith('/robots.txt')?()=>new Response('User-agent: *\nAllow: /\nSitemap: https://elsewhere.example.test/sitemap.xml\n'):null);
+  const empty=await runOrigin(source('iwc-schaffhausen-official',{sitemap_roots:'robots_declared',discover_only:true}),{root,registry,fetcher:none.fetcher,sleep:none.sleep,now:none.now});
+  assert.equal(empty.status,'failed');assert.equal(empty.reason,'no_robots_declared_sitemaps');assert.equal(none.calls.length,1,'an off-origin declaration is never followed');
+  await rm(root,{recursive:true});
+});
+
+test('inventory selection takes missing identities first, never passes a known case variant as missing, and bounds controls',async()=>{
+  const urls=['https://www.rolex.com/en-gb/watches/submariner/m126610ln-0001','https://www.rolex.com/en-gb/watches/datejust/m999999-0001',
+    'https://www.rolex.com/en-us/watches/datejust/m999999-0001','https://www.rolex.com/en-gb/watches/explorer/m224270-0001',
+    'https://www.rolex.com/en-gb/watches/day-date/m888888-0002','https://www.rolex.com/en-gb/about-rolex'];
+  const known=new Set(['m126610ln-0001','M224270-0001']);
+  const pick=selectInventory(urls,{source_id:'rolex-official',known_external_ids:known,max_missing:1,controls:1});
+  assert.deepEqual(pick.missing,[urls[1]]);assert.deepEqual(pick.controls,[urls[0]]);assert.deepEqual(pick.selected,[urls[1],urls[0]]);
+  assert.deepEqual(pick.counts,{urls:6,identities:4,missing_total:2,known_total:2,alias_urls:1,unsupported_urls:1});
+  assert.deepEqual(selectInventory(urls,{source_id:'rolex-official',known_external_ids:known,max_missing:5}).selected,[urls[1],urls[4]],'no controls unless requested');
+  assert.throws(()=>selectInventory(urls,{source_id:'prada-official',known_external_ids:known}),/URL identity/);
+  assert.throws(()=>selectInventory(urls,{source_id:'rolex-official'}),/known-identity export/);
+});
+
+test('a selected inventory is acquired once with the captured-inventory preparation; the rerun resumes without page requests',async()=>{
+  const root=await privateDir();
+  const page=(ref,collection)=>html('<html><title>Rolex</title><script type="application/ld+json">'+JSON.stringify({'@type':'Product',sku:ref,name:'Rolex '+collection+' 41 watch: Oystersteel - '+ref,image:'https://media.example.test/'+ref+'.png',material:'Oystersteel',size:{value:41,unitText:'mm'}})+'</script></html>');
+  const selected=['https://www.rolex.com/en-gb/watches/datejust/m999999-0001','https://www.rolex.com/en-gb/watches/submariner/m126610ln-0001'];
+  const h=harness(url=>url.endsWith('/robots.txt')?()=>new Response(allow):url===selected[0]?()=>page('m999999-0001','Datejust'):url===selected[1]?()=>page('m126610ln-0001','Submariner'):null);
+  const records=[];const config=source('rolex-official',{inventory_urls:selected,max_products:20});
+  const first=await runOrigin(config,{root,registry,fetcher:h.fetcher,sleep:h.sleep,now:h.now,onRecord:async row=>{records.push(row);}});
+  assert.equal(first.status,'completed');assert.deepEqual(first.requests_by_kind,{robots:1,sitemap:0,page:2});
+  assert.equal(records[0].name_ar,'ساعة رولكس ديت جست، 41 مم','Rolex names follow the existing captured-inventory preparation');
+  assert.equal(records[0].translation_state,'provided');assert.equal(records[0].category_slug,'watches');assert.equal(records[0].category_mapping_state,'source_path');
+  const second=await runOrigin(config,{root,registry,fetcher:h.fetcher,sleep:h.sleep,now:h.now,onRecord:async row=>{records.push(row);}});
+  assert.equal(second.status,'completed');assert.deepEqual(second.requests_by_kind,{robots:1,sitemap:0,page:0});assert.equal(second.new_revisions,0);
+  assert.equal(records.length,2,'nothing is handed on twice');
+  await rm(root,{recursive:true});
+});
+
+test('a partial revision export with the complete identity list never treats a known identity or case variant as missing',async()=>{
+  const dir=await privateDir();
+  const known=candidate(),variant=candidate({external_id:'M126610LN-0001'}),fresh=candidate({external_id:'m999999-0001',source_url:'https://www.rolex.com/en-gb/watches/datejust/m999999-0001'});
+  assert.notEqual(variant.candidate_id,known.candidate_id);
+  const sink=await createIncrementalSink({output_directory:dir,known:new Map(),known_identities:[{source_id:'rolex-official',external_id:'m126610ln-0001'}]});
+  for(const record of [known,variant,fresh])await sink.onRecord(record);
+  const summary=await sink.close();
+  assert.deepEqual(summary.ingest,{known_identity_requires_review:2,missing:1});
+  const ready=(await readFile(join(dir,'ingest-ready.ndjson'),'utf8')).trim().split('\n').map(l=>JSON.parse(l));
+  assert.deepEqual(ready.map(r=>r.external_id),['m999999-0001']);
+  const review=(await readFile(join(dir,'review-required.ndjson'),'utf8')).trim().split('\n').map(l=>JSON.parse(l));
+  assert.deepEqual(review.map(r=>[r.external_id,r.ingest,r.known_revision]),[['m126610ln-0001','known_identity_requires_review',null],['M126610LN-0001','known_identity_requires_review',null]]);
   await rm(dir,{recursive:true});
 });

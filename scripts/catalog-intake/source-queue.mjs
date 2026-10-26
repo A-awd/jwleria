@@ -3,7 +3,7 @@ import {resolve,join,relative,isAbsolute,sep} from 'node:path';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
 import {fileURLToPath,pathToFileURL} from 'node:url';
-import {officialAdapters,officialVariantIdentity,extractOfficialProducts} from './extract-official-brands.mjs';
+import {officialAdapters,officialVariantIdentity,extractOfficialProducts,prepareOfficialCandidates} from './extract-official-brands.mjs';
 import {extractBagPage,bagSourceProfile} from './extract-bags.mjs';
 import {extractLongchamp} from './extract-longchamp.mjs';
 
@@ -24,9 +24,12 @@ export const recordedSourceStops=Object.freeze({
   'rimowa-official':'robots_refusal_recorded',
 });
 
+// Records pass through the same preparation as the existing captured inventory (e.g. Rolex Arabic names),
+// so an unchanged source page reproduces the stored revision instead of looking changed.
 const official=id=>{const a=officialAdapters[id];return {origin:a.origin,brand:a.brand,
   product:url=>{try{return Boolean(officialVariantIdentity(id,url));}catch{return false;}},
-  extract:(html,url)=>extractOfficialProducts(html,{id,brand:a.brand,page_url:url,language:'en'})};};
+  identity:url=>{try{return officialVariantIdentity(id,url)?.external_id??null;}catch{return null;}},
+  extract:(html,url)=>prepareOfficialCandidates(extractOfficialProducts(html,{id,brand:a.brand,page_url:url,language:'en'}))};};
 const bag=(id,brand,origin)=>({origin,brand,profile:robots=>bagSourceProfile(brand,origin,robots),
   extract:(html,url)=>{
     const page=extractBagPage(html,{brand,source_id:id,page_url:url});
@@ -48,6 +51,31 @@ class OriginStop extends Error{constructor(status,reason,detail={}){super(reason
 class UrlFailure extends Error{constructor(reason,{transient=false,detail={}}={}){super(reason);this.reason=reason;this.transient=transient;this.detail=detail;}}
 export const sourceChallenge=html=>/<title[^>]*>[^<]*(?:captcha|access denied|just a moment|robot check)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container|verify you are (?:a )?human/i.test(html);
 export function sitemapLocations(xml){return [...new Set([...xml.matchAll(/<loc\b[^>]*>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/loc>/g)].map(m=>m[1].trim().replace(/&amp;/g,'&')))];}
+/** Sitemaps declared in robots.txt, kept only when they are HTTPS on the official origin itself. */
+export function declaredSitemaps(urls,origin){
+  return [...new Set((urls??[]).map(value=>{try{const url=new URL(String(value).trim());return url.protocol==='https:'&&url.origin===origin&&!url.username&&!url.password&&!url.hash?url.href:null;}catch{return null;}}).filter(Boolean))];
+}
+/**
+ * Picks a bounded inventory from discovered URLs without fetching them: identities the database does not
+ * hold come first, then at most `controls` known identities to re-check parity. Identity is read from the
+ * official URL and compared case-insensitively, so a case variant can never pass as missing.
+ */
+export function selectInventory(urls,{source_id,known_external_ids,max_missing=20,controls=0}={}){
+  const adapter=sourceAdapters[source_id];
+  if(!adapter?.identity)throw Error('Inventory selection needs an adapter with URL identity');
+  if(!(known_external_ids instanceof Set))throw Error('A fresh known-identity export is required');
+  const known=new Set([...known_external_ids].map(id=>String(id).toLowerCase()));
+  const missing=[],existing=[],identities=new Set();let unsupported=0,aliases=0;
+  for(const url of urls??[]){
+    const id=adapter.identity(url)?.toLowerCase();
+    if(!id){unsupported++;continue;}
+    if(identities.has(id)){aliases++;continue;}
+    identities.add(id);(known.has(id)?existing:missing).push(url);
+  }
+  const maxMissing=number(max_missing,20,0,1e6),maxControls=number(controls,0,0,1e6);
+  return {selected:[...missing.slice(0,maxMissing),...existing.slice(0,maxControls)],missing:missing.slice(0,maxMissing),controls:existing.slice(0,maxControls),
+    counts:{urls:(urls??[]).length,identities:identities.size,missing_total:missing.length,known_total:existing.length,alias_urls:aliases,unsupported_urls:unsupported}};
+}
 
 export async function privateRoot(path){
   if(!isAbsolute(path??''))throw Error('Absolute private output root required');
@@ -116,7 +144,7 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
     if(state.status==='blocked'&&(!state.blocked?.review_token||source.resume_after_review!==state.blocked.review_token))return {source_id:id,status:'blocked',reason:state.blocked?.reason,requests:0,detail:'source_review_required'};
     if(state.not_before&&now()<state.not_before)return {source_id:id,status:'deferred',reason:state.status==='paused'?'origin_unhealthy':'source_rate_limited',not_before:new Date(state.not_before).toISOString(),requests:0};
     delete state.not_before;delete state.blocked;
-    state.status='running';state.run_started_at=new Date(now()).toISOString();state.run={requests:0,acquired:0,new_revisions:0,failed:0,retried:0};await save();
+    state.status='running';state.run_started_at=new Date(now()).toISOString();state.run={requests:0,requests_by_kind:{robots:0,sitemap:0,page:0},acquired:0,new_revisions:0,failed:0,retried:0};await save();
 
     let interval=gate.interval_seconds*1000;
     const maxAttempts=number(source.max_attempts,3,1,5),maxTotalAttempts=Math.max(maxAttempts,number(source.max_total_attempts,6,1,20));
@@ -125,17 +153,19 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
     // Pacing survives restarts: the first request of a run still waits for the previous run's last one.
     let lastRequest=Number.isFinite(state.last_request_at)?state.last_request_at:0,nextAllowed=lastRequest+interval;
     let consecutiveTransient=0,consecutiveRedirects=0,policy=null;
-    const sent=()=>{lastRequest=now();state.last_request_at=lastRequest;nextAllowed=lastRequest+interval;state.requests++;state.run.requests++;};
+    // Robots, sitemap and product-page requests are counted separately so discovery is never hidden in page totals.
+    const sent=kind=>{lastRequest=now();state.last_request_at=lastRequest;nextAllowed=lastRequest+interval;state.requests++;state.run.requests++;
+      state.run.requests_by_kind[kind]++;state.requests_by_kind??={robots:0,sitemap:0,page:0};state.requests_by_kind[kind]=(state.requests_by_kind[kind]??0)+1;};
     // One origin never waits on another: every request passes this origin's own pacing gate.
-    const request=async(url,limit,{robots=false}={})=>{
+    const request=async(url,limit,{robots=false,kind=robots?'robots':'page'}={})=>{
       const target=new URL(url);
       if(target.origin!==origin||target.username||target.password)throw new OriginStop('failed','unexpected_acquisition_origin');
       if(!robots&&policy.isAllowed(target.href,agent)!==true)throw new UrlFailure('robots_refused');
       const delay=nextAllowed-now();if(delay>0)await sleep(delay);
       let response;
       try{response=await fetcher(target.href,{headers:{'User-Agent':agent},redirect:'manual',signal:AbortSignal.timeout(20000)});}
-      catch(error){sent();throw new UrlFailure('network_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});}
-      sent();
+      catch(error){sent(kind);throw new UrlFailure('network_error',{transient:true,detail:{message:String(error?.message??error).slice(0,200)}});}
+      sent(kind);
       if([401,403].includes(response.status))throw new OriginStop('blocked','source_refused_access',{url:target.href,http_status:response.status});
       if(response.status===429||response.status>=500){
         // A challenge or Retry-After is an instruction from the source, never a transient error to retry through.
@@ -172,33 +202,56 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
       }
     };
 
-    const robots=await withRetry(origin+'/robots.txt',512*1024,{robots:true}).catch(error=>{
+    const robots=await withRetry(origin+'/robots.txt',512*1024,{robots:true,kind:'robots'}).catch(error=>{
       if(error instanceof UrlFailure)throw new OriginStop('failed','robots_unavailable',{reason:error.reason});throw error;});
     policy=robotsParser(origin+'/robots.txt',robots.body);
     const crawlDelay=(policy.getCrawlDelay(agent)??0)*1000;
     if(crawlDelay>interval){interval=crawlDelay;nextAllowed=Math.max(nextAllowed,lastRequest+interval);log({source_id:id,event:'robots_crawl_delay',seconds:crawlDelay/1000});}
 
+    // Bounded sitemap discovery. Roots are a bag profile, reviewed config URLs, or (sitemap_roots:'robots_declared')
+    // only the same-origin sitemaps this run's fresh robots file declares; a selector narrows them to an approved scope.
+    const discover=async()=>{
+      const profile=adapter.profile?.(robots.body);
+      const declared=source.sitemap_roots==='robots_declared';
+      const rootSelector=source.sitemap_root_selector?new RegExp(source.sitemap_root_selector):null;
+      const roots=profile?profile.roots:declared
+        ?declaredSitemaps(policy.getSitemaps(),origin).filter(url=>!rootSelector||rootSelector.test(url))
+        :(source.sitemap_urls??[]);
+      if(!roots.length)throw new OriginStop('failed',declared?'no_robots_declared_sitemaps':'no_reviewed_sitemap_roots');
+      const follow=profile?profile.follow:url=>new URL(url).origin===origin&&(!source.sitemap_child_selector||new RegExp(source.sitemap_child_selector).test(url));
+      // An optional product selector keeps discovery inside the approved scope (e.g. the captured locale).
+      const narrow=source.product_url_selector?new RegExp(source.product_url_selector):null;
+      const product=url=>(profile?profile.product:adapter.product)(url)&&(!narrow||narrow.test(url));
+      const maxMaps=number(source.max_sitemaps,30,1,200),maxUrls=number(source.max_discovered_urls,50000,1,200000);
+      const queue=roots.map(url=>({url,depth:0})),seen=new Set(),errors=[];let maps=0,found=new Set();
+      while(queue.length){
+        const {url,depth}=queue.shift();if(seen.has(url))continue;seen.add(url);
+        if(depth>3||++maps>maxMaps){errors.push({url,reason:'sitemap_bound_reached'});break;}
+        try{
+          const {body}=await withRetry(url,32*1024*1024,{kind:'sitemap'});const locs=sitemapLocations(body);
+          if(/<sitemapindex\b/.test(body))for(const child of locs.filter(follow))queue.push({url:child,depth:depth+1});
+          else if(/<urlset\b/.test(body)){
+            for(const loc of locs.filter(product)){if(found.size>=maxUrls){errors.push({url,reason:'discovered_url_bound_reached'});break;}found.add(loc);}
+            if(found.size>=maxUrls)break;
+          }
+          else errors.push({url,reason:'sitemap_format_changed'});
+        }catch(error){if(!(error instanceof UrlFailure))throw error;errors.push({url,reason:error.reason});}
+      }
+      return {urls:[...found],complete:errors.length===0,visited:[...seen],errors,
+        scope:profile?.scope??(declared?'robots-declared official sitemaps':'reviewed official sitemap roots'),checked_at:new Date(now()).toISOString()};
+    };
+    if(source.discover_only===true){
+      // Discovery alone fetches no product page; the URLs wait for a separately selected, bounded inventory.
+      const found=await discover();
+      state.discovered=found;state.status='discovered';await save();
+      return {...summary(state),discovered_urls:found.urls.length,discovery_complete:found.complete,discovery_errors:found.errors};
+    }
     if(Array.isArray(source.inventory_urls)&&source.inventory_urls.length){
       const reviewed=source.inventory_urls.filter(u=>{try{return new URL(u).origin===origin;}catch{return false;}});
       state.inventory=[...new Set([...state.inventory,...reviewed])];state.discovery={...state.discovery,complete:true,scope:'reviewed_private_inventory'};
     }else if(!state.discovery.complete||source.refresh_inventory===true){
-      const profile=adapter.profile?.(robots.body);
-      const roots=profile?profile.roots:(source.sitemap_urls??[]);
-      if(!roots.length)throw new OriginStop('failed','no_reviewed_sitemap_roots');
-      const follow=profile?profile.follow:url=>new URL(url).origin===origin&&(!source.sitemap_child_selector||new RegExp(source.sitemap_child_selector).test(url));
-      const product=profile?profile.product:adapter.product;
-      const queue=roots.map(url=>({url,depth:0})),seen=new Set(),errors=[];let maps=0;
-      while(queue.length){
-        const {url,depth}=queue.shift();if(seen.has(url))continue;seen.add(url);
-        if(depth>3||++maps>number(source.max_sitemaps,30,1,200)){errors.push({url,reason:'sitemap_bound_reached'});break;}
-        try{
-          const {body}=await withRetry(url,32*1024*1024);const locs=sitemapLocations(body);
-          if(/<sitemapindex\b/.test(body))for(const child of locs.filter(follow))queue.push({url:child,depth:depth+1});
-          else if(/<urlset\b/.test(body))state.inventory=[...new Set([...state.inventory,...locs.filter(product)])];
-          else errors.push({url,reason:'sitemap_format_changed'});
-        }catch(error){if(!(error instanceof UrlFailure))throw error;errors.push({url,reason:error.reason});}
-      }
-      state.discovery={complete:errors.length===0,visited:[...seen],errors,scope:profile?.scope??'reviewed official sitemap roots',checked_at:new Date(now()).toISOString()};
+      const {urls,...found}=await discover();
+      state.inventory=[...new Set([...state.inventory,...urls])];state.discovery=found;
       await save();
     }
     if(!state.inventory.length)throw new OriginStop('failed','no_supported_products_discovered');
@@ -280,7 +333,8 @@ export async function runOrigin(source,{root,registry,fetcher=fetch,sleep=wait,n
 }
 function summary(state){
   const counts={};for(const row of Object.values(state.urls))counts[row.status]=(counts[row.status]??0)+1;
-  return {source_id:state.source_id,status:state.status,requests:state.run?.requests??0,discovered:state.inventory.length,url_states:counts,
+  return {source_id:state.source_id,status:state.status,requests:state.run?.requests??0,
+    requests_by_kind:{robots:0,sitemap:0,page:0,...state.run?.requests_by_kind},discovered:state.inventory.length,url_states:counts,
     candidates:Object.keys(state.candidates).length,new_revisions:state.run?.new_revisions??0,retried:state.run?.retried??0,
     discovery_complete:state.discovery?.complete===true,inventory_complete:state.inventory_complete===true,worldwide_brand_complete:false,
     ...(state.not_before?{not_before:new Date(state.not_before).toISOString()}:{}),...(state.blocked?{blocked:state.blocked.reason}:{})};

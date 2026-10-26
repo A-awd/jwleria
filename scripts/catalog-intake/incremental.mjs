@@ -9,13 +9,17 @@ const hash=/^[a-f0-9]{64}$/;
  * Private ingestion and public factual readiness are separate decisions. A known candidate with a
  * different revision is never overwritten here: guarded private repairs and live rows depend on it.
  */
-export function assessCandidate(record,known){
+export const identityKey=(sourceId,externalId)=>String(sourceId)+'\u0000'+String(externalId).toLowerCase();
+export function assessCandidate(record,known,identities){
   if(!hash.test(record?.candidate_id??'')||!hash.test(record?.revision_hash??''))return {ingest:'rejected',publication:'held',reasons:['invalid_identity']};
   const missing=['source_id','external_id','brand','collection','product_name','source_url'].filter(f=>typeof record[f]!=='string'||!record[f].trim()).map(f=>'missing_'+f);
   if(!Array.isArray(record.image_urls)||!record.image_urls.length)missing.push('gallery_reference_missing');
   if(missing.length)return {ingest:'rejected',publication:'held',reasons:missing};
   const previous=known?.get(record.candidate_id);
-  const ingest=!known?'baseline_unknown':previous===undefined?'missing':previous===record.revision_hash?'unchanged':'changed_requires_review';
+  let ingest=!known?'baseline_unknown':previous===undefined?'missing':previous===record.revision_hash?'unchanged':'changed_requires_review';
+  // A partial revision export is paired with the complete identity list: an identity the database already
+  // holds (including a case variant of its reference) is never treated as missing.
+  if(ingest==='missing'&&identities?.has(identityKey(record.source_id,record.external_id)))ingest='known_identity_requires_review';
   const held=[];
   if(!Array.isArray(record.facts)||!record.facts.length)held.push('facts_missing');
   if(record.translation_state!=='provided'||!record.name_ar)held.push('arabic_name_pending');
@@ -33,7 +37,7 @@ export function assessCandidate(record,known){
  * `ingest-ready.ndjson` is a durable outbox: a record leaves it only through a matching receipt,
  * so a failed batch or a crash is replayed on the next run instead of being lost.
  */
-export async function createIncrementalSink({output_directory,known_revisions_path,known,ingest,batch_size=100,now=Date.now}={}){
+export async function createIncrementalSink({output_directory,known_revisions_path,known,known_identities,ingest,batch_size=100,now=Date.now}={}){
   const dir=await privateRoot(output_directory);
   let baseline=known instanceof Map?known:known?new Map(Object.entries(known)):null;
   if(!baseline&&known_revisions_path){
@@ -43,6 +47,8 @@ export async function createIncrementalSink({output_directory,known_revisions_pa
   }
   if(baseline)for(const [id,revision] of baseline)if(!hash.test(id)||!hash.test(revision))throw Error('Invalid known revision export');
   if(ingest&&!baseline)throw Error('Missing-only ingestion needs a fresh known-revision export');
+  // Optional complete identity export (source_id + reference) for the sources in this run.
+  const identities=known_identities==null?null:new Set([...known_identities].map(row=>typeof row==='string'?row:identityKey(row?.source_id,row?.external_id)));
   const size=Math.max(1,Math.min(100,Number(batch_size)||100));
   const seen=new Map(),counts={received:0,replayed:0,ingest:{},publication:{},reasons:{},inserted:0,skipped_existing:0,ingest_errors:0,outbox_replayed:0};
   const key=r=>r.candidate_id+':'+r.revision_hash;
@@ -77,7 +83,7 @@ export async function createIncrementalSink({output_directory,known_revisions_pa
     counts.received++;
     if(seen.get(record.candidate_id)===record.revision_hash){counts.replayed++;return;}
     seen.set(record.candidate_id,record.revision_hash);
-    const decision=assessCandidate(record,baseline);
+    const decision=assessCandidate(record,baseline,identities);
     bump(counts.ingest,decision.ingest);bump(counts.publication,decision.publication);for(const r of decision.reasons)bump(counts.reasons,r);
     const row={observed_at:new Date(now()).toISOString(),source_id:record.source_id,external_id:record.external_id,candidate_id:record.candidate_id,revision_hash:record.revision_hash,source_url:meta.url??record.source_url,...decision};
     await appendFile(join(dir,'decisions.ndjson'),JSON.stringify(row)+'\n',{mode:0o600});
@@ -85,7 +91,7 @@ export async function createIncrementalSink({output_directory,known_revisions_pa
       await appendFile(join(dir,'ingest-ready.ndjson'),JSON.stringify(record)+'\n',{mode:0o600});
       if(ingest&&!pending.some(r=>key(r)===key(record))){pending.push(record);if(pending.length>=size&&!suspended)await flush();}
     }
-    if(decision.ingest==='changed_requires_review')await appendFile(join(dir,'review-required.ndjson'),JSON.stringify({...row,known_revision:baseline.get(record.candidate_id),record})+'\n',{mode:0o600});
+    if(decision.ingest==='changed_requires_review'||decision.ingest==='known_identity_requires_review')await appendFile(join(dir,'review-required.ndjson'),JSON.stringify({...row,known_revision:baseline.get(record.candidate_id)??null,record})+'\n',{mode:0o600});
   };
   const close=async()=>{
     // One final attempt per remaining batch; anything still pending is replayed by the next run.
