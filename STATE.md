@@ -1,3 +1,57 @@
+## Claude execution checkpoint — handoff to one new conversation — 2026-10-26
+
+The owner requested a safe checkpoint so execution continues in ONE new conversation in which current connector tool policies load from the start. Use the approved dedicated Jwleria environment (Full egress), Opus 5.5 Ultracode, Auto permissions and the same existing connectors and scopes. This supersedes every launch-pending or not-launched checkpoint below: that conversation ran and its outcome is recorded here. Full detail, the requirements ledger and ready briefs are in [docs/CLAUDE-CONTINUATION-2026-10-26.md](docs/CLAUDE-CONTINUATION-2026-10-26.md).
+
+**Live and verified:**
+- **Real egress.** Rolex robots answered HTTP 200; IWC robots answered HTTP 403, a source refusal.
+- **Bounded two-run pilot.**
+  - Run 1: Rolex sent robots 200 then sitemap 403, and IWC sent robots 403. Both origins were blocked as `source_refused_access`, 0 product pages were requested and 0 records were acquired.
+  - Run 2 made 0 requests.
+  - No database write, publication or image download occurred.
+  - Baseline at 2026-10-26 12:56Z: 4,097 active public products, 4,150 candidates, 6,877 revisions and 0 media approvals, grants, assets or buckets. Row hashes were unchanged afterwards.
+  - This counts as a successful refusal/resume safety check and an unsuccessful product acquisition.
+- **n8n origin workflow "Jwleria — Origin intake run".**
+  - It is inactive, with 8 Code nodes verified byte for byte against the build.
+  - Its 4 Postgres nodes are disabled. They hold an auto-attached unrelated credential that must never be used.
+  - Only the schedule may call it.
+  - Offline pinned tests in real n8n passed: fail-closed without the identity export, a page loop with a revision hash identical to the local modules, off-origin skip and 2 s pacing.
+- **n8n schedule "Jwleria — Durable catalog intake (inactive)".**
+  - It runs daily at 03:17 Asia/Riyadh with a 2400 s limit.
+  - Its 2 Postgres nodes are disabled and have no credential.
+  - No origin is scheduled, because neither one has a reviewed sitemap.
+- **Sandbox discovery.** n8n's Code-node sandbox defines nothing through `Object.defineProperty` and alters `Object.getPrototypeOf`. Bundles are now built without those helpers, and the VM replica reproduces the failure (decision 0012).
+- **Codex administration.**
+  - n8n has a Jwleria project containing the five Jwleria workflows, with their IDs preserved. The unrelated Postgres credential was not shared into it.
+  - Easy Life is permanently cancelled, and its n8n project and workflows are deleted. Do not recreate or invoke it.
+
+**Implemented and tested, not deployed or applied:**
+- bounded robots-declared discovery and the factual-publication payload builder (becdc0a);
+- the approval-bound media upload function and phased runner (c7d80a4);
+- the shared intake rules, n8n steps and the least-privilege runner role proposal (c8d6090);
+- the sandbox-safe bundles (1cb725c).
+
+Suites on 1cb725c: catalog-intake 97/97, storefront 56/56.
+
+**Not done (ready briefs in the continuation document):**
+- B1: storefront stale-while-revalidate and parallel product-page reads, with a lab before/after. Live cache-miss TTFB is 1.0–3.4 s against about 0.3 s on a hit.
+- B2: inquiry message brand line and isolated valid-number tests.
+- B3: social drafts with channel-specific grants.
+- B4: operations docs.
+- B5: a bounded acquisition from another eligible source.
+- B6: a single review and final validation.
+
+The ledger fraction is about 65% (11 of 17 actionable items), not the 90% target.
+
+**Owner inputs and gates unchanged:**
+- exact-product photos with rights evidence;
+- the verified business WhatsApp number, followed by a Worker deploy;
+- approval of the runner role migration, then owner entry of its credential in n8n, then approval to enable the database nodes;
+- schedule activation;
+- upload function deploy and bucket creation;
+- any exact factual batch.
+
+Migration `20261026114541` stays applied once. No production write, deploy, schedule, credential, photo or message occurred in this conversation.
+
 ## Consolidated execution mandate sent on Ultracode — 2026-10-26
 
 The owner explicitly asks Claude to receive the complete assignment at once, use Ultracode, and stop waiting for sequential stage handoffs. Codex reused the existing "Jwleria — full execution" conversation, changed the observed Opus5.5 Extra setting to Opus5.5 Ultracode, and verified the selected setting. This current owner instruction supersedes the earlier Max preference for this execution. Ordinary Auto permissions, the dedicated Full environment, shared Default and provider scopes were not changed.

@@ -1,3 +1,17 @@
+## Current handoff — continue in ONE new conversation — 2026-10-26
+
+Start one new conversation in the approved dedicated Jwleria environment (Full egress) with Opus 5.5 Ultracode, Auto permissions and the same existing connectors and scopes. No new credential, broader scope or security bypass is authorized, and a new conversation does not guarantee zero approval prompts. Easy Life is permanently cancelled; do not recreate or invoke it.
+
+1. **Refresh the state.**
+   - Refresh `claude/nifty-curie-2ztbn6`. Its remote head is recorded in the final checkpoint commit message and the owner summary.
+   - Preserve any newer Codex continuation by a normal merge.
+   - Read the top STATE entry, decisions 0010–0012 and [docs/CLAUDE-CONTINUATION-2026-10-26.md](docs/CLAUDE-CONTINUATION-2026-10-26.md).
+2. **Run backlog B1–B4 in parallel.** Use disjoint files, one git worktree per stream, and symlink `apps/storefront/node_modules` into each. Keep all database and provider actions with one coordinator.
+3. **Run B5.** Choose one eligible official source with no recorded refusal, never Rolex, IWC or the closed brands. Use capped, paced requests and a fresh private identity export. Prepare up to 30 private and up to 20 facts-only batches for exact owner approval. Report zero honestly.
+4. **Finish with B6.** Review once, run both suites once, update STATE and HANDOFF, push and verify the remote.
+
+Keep the n8n database nodes disabled. Never use the auto-attached unrelated credential. Do not activate the schedule, deploy, publish media, create credentials, reapply migration `20261026114541` or bypass any source refusal. Keep provider workflow, account and session identifiers, raw prompts, exports and evidence out of Git. A parallel workflow for B1–B4 was stopped before any edit, so nothing partial is pending.
+
 ## Current handoff — one comprehensive Ultracode execution — 2026-10-26
 
 Continue the existing "Jwleria — full execution" Claude conversation. The owner now explicitly selects Opus5.5 Ultracode and requests one complete assignment rather than sequential stage handoffs. Codex verified the selected Ultracode setting and sent one comprehensive 5,511-word English execution mandate, with its opening and final instructions visible in the conversation. Auto permissions and the approved dedicated Full environment remain unchanged. Keep the raw prompt, private session identifiers and proof screenshots outside this repository.

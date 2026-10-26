@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0012 — n8n sandbox-safe bundles and disabled database paths](decisions/0012-n8n-sandbox-bundles-and-disabled-database-paths.md)
+
 - [0011 — Per-origin queues, missing-only intake and exact media evidence](decisions/0011-per-origin-queues-and-exact-media-evidence.md)
 
 - [0010 — Claude owns implementation, tests and technical review](decisions/0010-claude-implementation-ownership.md)
