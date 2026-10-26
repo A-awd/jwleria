@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&amp;family=Bodoni+Moda:opsz,wght@6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;display=swap">
 <link rel="stylesheet" href="style.css">
 <script src="../shared/catalog-data.js" defer></script>
+<script src="../shared/variants.js" defer></script>
 <script src="app.js" defer></script>
 </head>
 <body data-page="home">
@@ -30,7 +31,7 @@
   <div class="navrow-wrap">
     <nav class="navrow" aria-label="التنقل الرئيسي">
       <a class="mini-mark" href="home.html" aria-label="Jwleria — الصفحة الرئيسية"><span dir="ltr" lang="en">JWLERIA</span></a>
-      <ul class="nav-list"><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about">عن <bdi>Jwleria</bdi></a></li></ul>
+      <ul class="nav-list"><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about"><span>عن <bdi>Jwleria</bdi></span></a></li></ul>
       <div class="mini-actions">
         <button class="icon-btn" type="button" aria-expanded="false" aria-controls="search-panel" aria-label="بحث" data-search-toggle><svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.25"/><path d="M15.2 15.2 20 20"/></svg></button>
         <a class="lang-link" href="#" lang="en" dir="ltr" hreflang="en" data-preview>English</a>
@@ -51,7 +52,7 @@
     <span class="wordmark" dir="ltr" lang="en" aria-hidden="true"><span>JWLERIA</span></span>
     <a class="lang-link" href="#" lang="en" dir="ltr" hreflang="en" data-preview>English</a>
   </div>
-  <ul class="menu-main"><li><a href="home.html#brands">العلامات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="home.html#categories">الفئات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="catalog.html">الكتالوج<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="#about">عن <bdi>Jwleria</bdi><svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li></ul>
+  <ul class="menu-main"><li><a href="home.html#brands">العلامات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="home.html#categories">الفئات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="catalog.html">الكتالوج<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li><li><a href="#about"><span>عن <bdi>Jwleria</bdi></span><svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></li></ul>
   <p class="menu-sub">الفئات</p>
   <ul class="menu-cats" data-cat-links></ul>
   <p class="menu-foot"><a href="../index.html">كل الاتجاهات</a></p>
@@ -89,7 +90,7 @@
           <p class="story-index">٠١</p>
           <h3>الساعات</h3>
           <p class="story-text">لكل ساعة صفحة واحدة تجمع مرجعها الدقيق والقطر والمادة وآلية الحركة.</p>
-          <p class="story-brands" data-story-brands="watches"></p>
+          <ul class="story-brands" data-story-brands="watches" aria-label="علامات في هذه المعاينة"></ul>
           <a class="text-link" href="catalog.html?category=watches">عرض الساعات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
         </div>
       </article>
@@ -102,7 +103,7 @@
           <p class="story-index">٠٢</p>
           <h3>حقائب اليد</h3>
           <p class="story-text">طراز واحد لكل حقيبة، وألوانها ومقاساتها الحقيقية تُختار داخل الصفحة نفسها.</p>
-          <p class="story-brands" data-story-brands="handbags"></p>
+          <ul class="story-brands" data-story-brands="handbags" aria-label="علامات في هذه المعاينة"></ul>
           <a class="text-link" href="catalog.html?category=handbags">عرض حقائب اليد<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
         </div>
       </article>
@@ -115,7 +116,7 @@
           <p class="story-index">٠٣</p>
           <h3>المجوهرات</h3>
           <p class="story-text">قطع من دور المجوهرات العالمية، تُعرض بمرجعها ومادتها وتفاصيلها كاملة.</p>
-          <p class="story-brands" data-story-brands="jewelry"></p>
+          <ul class="story-brands" data-story-brands="jewelry" aria-label="علامات في هذه المعاينة"></ul>
           <a class="text-link" href="catalog.html?category=jewelry">عرض المجوهرات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
         </div>
       </article>
@@ -139,7 +140,7 @@
   <section class="section wrap" id="brands" aria-labelledby="brands-title">
     <div class="section-head">
       <div><p class="kicker">الدليل</p><h2 class="h2" id="brands-title">العلامات</h2></div>
-      <p class="section-note">٤١ علامة مرتّبة أبجديًا. الرقم بجانب العلامة هو عدد مراجعها المنشورة حاليًا.</p>
+      <p class="section-note">٤١ علامة في الدليل، مرتّبة أبجديًا. الرقم بجانب العلامة هو عدد مراجعها المنشورة حاليًا.</p>
     </div>
     <div class="brand-index" data-brand-index></div>
   </section>
@@ -153,7 +154,7 @@
     </div>
     <nav class="footer-col" aria-label="روابط الموقع">
       <p class="f-head">الموقع</p>
-      <ul class="f-links"><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about">عن <bdi>Jwleria</bdi></a></li></ul>
+      <ul class="f-links"><li><a href="home.html#brands">العلامات</a></li><li><a href="home.html#categories">الفئات</a></li><li><a href="catalog.html">الكتالوج</a></li><li><a href="#about"><span>عن <bdi>Jwleria</bdi></span></a></li></ul>
     </nav>
     <nav class="footer-col footer-cats" aria-label="الفئات">
       <p class="f-head">الفئات</p>
