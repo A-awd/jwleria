@@ -6,7 +6,7 @@ The rules are those in `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`.
 
 ## Method
 
-The body of `jwl_internal.derive_product_variants()` was copied from the migration into one `SELECT`. The reviewed term dictionary is an inline `VALUES` list and `arabic_measure` is inlined. The query reads the live public catalog and the candidate revisions it was published from. It aggregates the derived mapping into a single JSON report. The generated text was scanned before each run: it is one statement and contains no `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, `ALTER`, `GRANT`, `TRUNCATE`, `COPY`, `SET` or locking keyword outside string literals. On a local PGlite database, the inline query gives the same report as the installed function.
+The body of `jwl_internal.derive_product_variants()` was copied from the migration into one `SELECT`. The reviewed term dictionary is an inline `VALUES` list and `arabic_measure` is inlined. The query reads the live public catalog and the candidate revisions it was published from. It aggregates the derived mapping into a single JSON report. The generated text was scanned before each run: it is one statement and contains no `INSERT`, `UPDATE`, `DELETE`, `CREATE`, `DROP`, `ALTER`, `GRANT`, `TRUNCATE`, `COPY`, `SET` or locking keyword outside string literals and comments. On a local PGlite database, the inline query gives the same report as the installed function.
 
 Production reads, in order:
 
@@ -14,6 +14,30 @@ Production reads, in order:
 2. Second dry run, after the performance fix: it completed.
 3. One spot-check `SELECT` (at most 40 rows), built on the same derivation.
 4. One final dry run after the Arabic-name fix. Its only change is the Arabic-name sources: 7 Rolex models moved from `primary` to `shared_size`. Every other figure was identical to run 2. The figures below are from this final run.
+
+**What is saved.** The stream's working files are in its scratch directory `vdb-scratch/`, outside the repository:
+
+- The SQL text of runs 2, 3 and 4: `dryrun-v2.sql`, `spotcheck.sql` and `dryrun-final.sql`. Each can be rebuilt exactly from the migration as committed. Runs 2 and 3 come from commit `151d158` and run 4 from commit `2347e63`.
+- One result: run 2's report, `dryrun-v2-result.json`. It was saved without its `untranslated` section.
+
+The results of runs 3 and 4 were read in the session but not saved. Three parts of this document therefore cannot be re-audited without another read-only production read:
+
+- the untranslated-terms table;
+- run 4's Arabic-name split (100 / 7 / 1 for Rolex) and its statement that nothing else changed;
+- the spot-check facts. These include the Rolex fact census and the `126200` pairs described under *Splits, ambiguity and missing options*.
+
+Every other figure is in the saved run 2 report.
+
+The next read-only dry run uses `dryrun-next.sql` and `spotcheck-next.sql` from the same directory. Both are built from the migration at commit `8ea934d`. Locally, both pass the same keyword scan, and the report equals the one built on the installed function. The report adds the rows now kept single by an unresolved Arabic name, and a count of key collisions, which should be 0. Save the complete JSON results next to them, as `dryrun-next-result.json` and `spotcheck-next-result.json`, before updating any figure here.
+
+## Changes since run 4 (not yet measured in production)
+
+Review round 3 changed the derivation after run 4; see defects 3 to 5 below. The figures in the following sections are still those of run 4. The expected effect:
+
+- The one model whose Arabic name fell back to the primary variant's name, Rolex `278344rbr`, is no longer formed. Each of its variants stays its own model, under the rule `single:arabic-name-mismatch`. Run 4 did not save its member count, k. Rolex grouped models therefore go from 108 to 107, grouped variants from 914 to 914 − k, and displayed models from 2,871 to 2,870 + k. Every other grouped model took its Arabic name from `shared`, `shared_size` or `colour_tail`. Those rules are unchanged.
+- Single models now have the key `<source>:ref:<reference>`. Grouped keys are unchanged, and no count changes.
+- The LOEWE style code may no longer contain `:`. No captured LOEWE reference is expected to contain one. One that does would become `single:unrecognised-reference`.
+- One duplicate index was removed. This has no effect on the mapping.
 
 ## Totals
 
@@ -84,7 +108,9 @@ Of the 914 grouped Rolex variants, 906 carry a dial option. The other 8 belong t
 | LOEWE | 94 | 0 | 0 | 0 |
 | Longchamp | 0 | 0 | 82 | 0 |
 
-The single remaining `primary` model is `278344rbr`. Its members are named `ساعة رولكس ديت جست 31، 31 مم` and `ساعة رولكس ديت جست، 31 مم`, and the model uses the primary variant's existing name, `ساعة رولكس ديت جست، 31 مم`. Every model name is an existing catalog name, with the reference or colour tail removed. No name is invented.
+In run 4, the single remaining `primary` model was `278344rbr`. Its members are named `ساعة رولكس ديت جست 31، 31 مم` and `ساعة رولكس ديت جست، 31 مم`. The model used the primary variant's existing name, `ساعة رولكس ديت جست، 31 مم`.
+
+That fallback no longer exists (defect 3). When member Arabic names differ in a way none of the three rules explains, the group is not formed. Each variant then stays its own model with its own names. Every grouped model name is an existing catalog name. Only the reference, the shared-diameter difference or a verified colour tail is removed. No name is invented.
 
 ## Untranslated terms per spec kind
 
@@ -141,9 +167,22 @@ All three model codes match their references, and every listed reference is a di
 
    A new test derives 1,200 synthetic rows and fails above 10 s. The previous version took 17.9 s on that test.
 2. **Arabic model name lost the shared diameter.** In 7 Rolex models, the primary variant's Arabic name omits the `، NN مم` that every other member carries. Examples: `ساعة رولكس ديت جست` against `ساعة رولكس ديت جست، 36 مم` in `126200`, and `ساعة رولكس أويستر بربتشوال` against `ساعة رولكس أويستر بربتشوال، 34 مم` in `124200`. The model fell back to the primary's shorter name, which is less specific than its English name and matches other Datejust sizes. The other five affected models are `126500ln`, `126621`, `126710blnr`, `128235` and `226570`. Now, when the names differ only by a trailing diameter that every member records with the same value, the model uses the existing name that includes it. That value is the case diameter, which the consistency check already requires to be identical. This case is recorded as `shared_size`. A fixture now reproduces the captured shape, and the tests assert the result.
+3. **The fallback Arabic model name could carry one variant's colour or reference** (review round 3). When member Arabic names matched none of the three rules, the model took the primary variant's full Arabic name (`name_ar`), so every variant showed that one variant's words. Two synthetic cases show it:
+   - A Longchamp pair whose Cognac row ends in a tail other than the reviewed `كونياك`. Both pages got the Black row's `… مقاس متوسط، أسود` as their model name.
+   - A LOEWE pair whose Arabic names end in their own, different references. Both got the first row's reference.
+
+   Such a group is now not formed. Its rows stay single (`single:arabic-name-mismatch`), and the evidence records `arabic_name: "unresolved"`. Fixtures cover both cases, plus a pair whose names are identical apart from the reference. The tests also check that no grouped model name contains a member's reference or a dial or colour value. In run 4, only `278344rbr` used the fallback, and its name was harmless. It now stays single (see *Changes since run 4*).
+4. **A single could take a grouped model's key, which blocked every mapping.** One example is an eight-character Longchamp reference such as `L1899089`, which is an unrecognised single. Its key was `longchamp-official:L1899089`, the same as the group of `L1899089001` and its siblings. `apply_product_variants()` then refused the whole catalog. Singles are now keyed `<source>:ref:<reference>`, and no model code may contain `:`, so the two key spaces cannot overlap. Fixtures cover the Longchamp case and the matching LOEWE case. The next dry run reports `key_collisions`.
+5. **Two smaller defects.**
+   - The check in `apply_product_variants()` that refuses an inconsistent model was never exercised. A test now breaks each of its six conditions in turn for one model. It asserts the error and that the previous mapping is unchanged.
+   - A second index on `(model_key, position)` duplicated the one the unique constraint already creates, so it was removed.
 
 ## Open observations (not changed)
 
 - Option keys drop letters outside `a-z0-9`. For example, "Green ombré" becomes `green-ombr`. The keys are unique and stable but not pretty. They are not shown to visitors.
 - Large reviewed-term gaps remain, mainly LOEWE colours, materials and every bag dimension, weight, lining and closure. They stay in English until a reviewed dictionary covers them.
 - The 502 ambiguous Rolex references could be grouped only if the source recorded a distinguishing fact, for example hour markers. Without it, they stay single.
+- **For the contract owner: the Rolex option `bracelet_material`.** The contract lists only dial and bracelet as Rolex options. The derivation also uses bracelet material, which run 4 shows in 5 option cells. It separates references with the same dial and bracelet type but a different recorded bracelet material. It is kept until the contract owner decides between two options:
+  - add "Bracelet material / مادة السوار" to the contract's Rolex options; or
+  - remove the kind, so that those references become `single:ambiguous-options` (the count needs a new dry run).
+- **For the contract owner: the key of a single.** The contract describes `model_key` as `<source_id>:<model code>`. That is the form of a grouped key. A single's key is `<source_id>:ref:<reference>`.
