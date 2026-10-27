@@ -57,6 +57,27 @@
     });
   }
 
+  // Rolex Datejust 36, model codes 126234 and 126200 (public catalog, 2026-10-26).
+  // m126234-0015 and m126200-0006 have exact open-licence photographs (photos.js).
+  [
+    {
+      id: 'rolex-datejust-36-126234', brand: 'Rolex', category: 'watches', typeAr: 'ساعة', typeEn: 'Watch',
+      nameAr: 'ديت جست ٣٦', name: 'Datejust 36', collection: 'Datejust', axes: ['dial'],
+      dials: [{"id": "d01", "ar": "فضي", "en": "Silver", "tone": "#c9cbcd"}, {"id": "d02", "ar": "أسود لامع", "en": "Bright black", "tone": "#1d1d1f"}, {"id": "d03", "ar": "أزرق لامع", "en": "Bright blue", "tone": "#2b4f8a"}, {"id": "d04", "ar": "صدف أبيض مرصّع بالألماس", "en": "White mother-of-pearl set with diamonds", "tone": "#efece6"}, {"id": "d05", "ar": "أسود لامع مرصّع بالألماس", "en": "Bright black set with diamonds", "tone": "#1d1d1f"}, {"id": "d06", "ar": "أزرق لامع مرصّع بالألماس", "en": "Bright blue set with diamonds", "tone": "#2b4f8a"}, {"id": "d07", "ar": "أردوازي", "en": "Slate", "tone": "#5d636a"}, {"id": "d08", "ar": "أخضر نعناعي", "en": "Mint green", "tone": "#9cc7b4"}, {"id": "d09", "ar": "أخضر متدرّج", "en": "Green ombré", "tone": "#2f5b44"}, {"id": "d10", "ar": "أبيض", "en": "White", "tone": "#eeeeea"}, {"id": "d11", "ar": "باذنجاني مرصّع بالألماس", "en": "Aubergine set with diamonds", "tone": "#4b2a3c"}, {"id": "d12", "ar": "وردي مرصّع بالألماس", "en": "Pink set with diamonds", "tone": "#e3b9bd"}, {"id": "d13", "ar": "فضي مرصّع بالألماس", "en": "Silver set with diamonds", "tone": "#c9cbcd"}, {"id": "d14", "ar": "رمادي داكن مرصّع بالألماس", "en": "Dark grey set with diamonds", "tone": "#3c3e42"}],
+      facts: [{ ar: 'القطر', v: '36 mm' }, { ar: 'المادة', v: "White Rolesor \u2014 Oystersteel and white gold" }],
+      variants: [{"ref": "m126234-0013", "dial": "d01"}, {"ref": "m126234-0014", "dial": "d01"}, {"ref": "m126234-0015", "dial": "d02"}, {"ref": "m126234-0016", "dial": "d02"}, {"ref": "m126234-0017", "dial": "d03"}, {"ref": "m126234-0018", "dial": "d03"}, {"ref": "m126234-0019", "dial": "d04"}, {"ref": "m126234-0020", "dial": "d04"}, {"ref": "m126234-0027", "dial": "d05"}, {"ref": "m126234-0028", "dial": "d05"}, {"ref": "m126234-0037", "dial": "d06"}, {"ref": "m126234-0038", "dial": "d06"}, {"ref": "m126234-0045", "dial": "d07"}, {"ref": "m126234-0046", "dial": "d07"}, {"ref": "m126234-0051", "dial": "d08"}, {"ref": "m126234-0052", "dial": "d08"}, {"ref": "m126234-0059", "dial": "d09"}, {"ref": "m126234-0060", "dial": "d09"}, {"ref": "m126234-0061", "dial": "d10"}, {"ref": "m126234-0062", "dial": "d10"}, {"ref": "m126234-0063", "dial": "d11"}, {"ref": "m126234-0064", "dial": "d11"}, {"ref": "m126234-0065", "dial": "d12"}, {"ref": "m126234-0066", "dial": "d12"}, {"ref": "m126234-0067", "dial": "d13"}, {"ref": "m126234-0068", "dial": "d13"}, {"ref": "m126234-0069", "dial": "d03"}, {"ref": "m126234-0070", "dial": "d03"}, {"ref": "m126234-0071", "dial": "d14"}, {"ref": "m126234-0072", "dial": "d14"}],
+      defaultRef: 'm126234-0013',
+    },
+    {
+      id: 'rolex-datejust-36-126200', brand: 'Rolex', category: 'watches', typeAr: 'ساعة', typeEn: 'Watch',
+      nameAr: 'ديت جست ٣٦', name: 'Datejust 36', collection: 'Datejust', axes: ['dial'],
+      dials: [{"id": "d01", "ar": "فضي", "en": "Silver", "tone": "#c9cbcd"}, {"id": "d02", "ar": "أسود لامع", "en": "Bright black", "tone": "#1d1d1f"}, {"id": "d03", "ar": "أزرق لامع", "en": "Bright blue", "tone": "#2b4f8a"}, {"id": "d04", "ar": "أردوازي", "en": "Slate", "tone": "#5d636a"}, {"id": "d05", "ar": "أخضر نعناعي", "en": "Mint green", "tone": "#9cc7b4"}, {"id": "d06", "ar": "أخضر متدرّج", "en": "Green ombré", "tone": "#2f5b44"}, {"id": "d07", "ar": "أبيض", "en": "White", "tone": "#eeeeea"}],
+      facts: [{ ar: 'القطر', v: '36 mm' }, { ar: 'المادة', v: "Oystersteel" }],
+      variants: [{"ref": "m126200-0001", "dial": "d01"}, {"ref": "m126200-0002", "dial": "d01"}, {"ref": "m126200-0003", "dial": "d02"}, {"ref": "m126200-0004", "dial": "d02"}, {"ref": "m126200-0005", "dial": "d03"}, {"ref": "m126200-0006", "dial": "d03"}, {"ref": "m126200-0017", "dial": "d04"}, {"ref": "m126200-0018", "dial": "d04"}, {"ref": "m126200-0023", "dial": "d05"}, {"ref": "m126200-0024", "dial": "d05"}, {"ref": "m126200-0025", "dial": "d06"}, {"ref": "m126200-0026", "dial": "d06"}, {"ref": "m126200-0027", "dial": "d07"}, {"ref": "m126200-0028", "dial": "d07"}, {"ref": "m126200-0029", "dial": "d03"}, {"ref": "m126200-0030", "dial": "d03"}],
+      defaultRef: 'm126200-0001',
+    }
+  ].forEach((m) => { if (!data.models.some((x) => x.id === m.id)) data.models.splice(0, 0, m); });
+
   const KIND = {
     size: { list: 'sizes', label: { ar: 'المقاس', en: 'Size' } },
     color: { list: 'colors', label: { ar: 'اللون', en: 'Colour' } },
@@ -159,12 +180,27 @@
   // Facts-only state: no approved photograph exists for this variant.
   // In the previews only Longchamp and LOEWE tints stand in for approved photos.
   function hasStandInImage(model) {
-    return model.brand === 'Longchamp' || model.brand === 'LOEWE';
+    return model.brand === 'Longchamp' || model.brand === 'LOEWE'; // layout stand-ins only, never photos
   }
 
   function counts(models) {
     const refs = models.reduce((n, m) => n + m.variants.length, 0);
     return { models: models.length, refs, label: countAr(models.length, 'model') + ' · ' + countAr(refs, 'ref') };
+  }
+
+
+  // Photographs bound to this exact reference only; [] means the facts-only state.
+  function imagesOf(model, v) {
+    const p = window.JWL_PHOTOS || {};
+    return (v && p[v.ref]) || [];
+  }
+  // A card may lead with a real variant that has an approved photograph; otherwise the primary.
+  function cardVariant(model) {
+    return model.variants.find((v) => imagesOf(model, v).length) || primary(model);
+  }
+  // srcset for one photo entry: "<base>-400.webp 400w, ..."
+  function srcset(img) {
+    return img.widths.map((w) => `${img.base}-${w}.webp ${w}w`).join(', ');
   }
 
   const baseTone = JWL.toneOf;
@@ -174,7 +210,7 @@
   }
 
   Object.assign(JWL, {
-    toneOf,
+    toneOf, imagesOf, cardVariant, srcset,
     AR, countAr, axesOf, valueOf, nearest, changesFor, changeNoteAr, siblings, url, primary, summaryAr, hasStandInImage, counts,
   });
 })();
