@@ -9,6 +9,7 @@ These instructions apply equally to Claude, Codex, ChatGPT, Hermes, and future l
 3. Read `README.md`, this file, `STATE.md`, and `HANDOFF.md`.
 4. Read relevant entries in `DECISIONS.md` and `decisions/`.
 5. Consult `A-awd/ai-operating-system` only for global rules.
+6. Claude also reads `CLAUDE.md`. Every agent uses the modules in `docs/spec/` (execution spec, requirements and evidence ledger, decision and approval ledger, stop and recovery runbook, maintenance backlog, coverage and source registry) and keeps them current; they do not replace `STATE.md` or `HANDOFF.md`.
 
 The latest approved GitHub state wins over platform-local memory.
 

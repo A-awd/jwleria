@@ -1,3 +1,10 @@
+## Current handoff — after the finishing pass on `wf/finish` — 2026-10-27
+
+1. Integrate `wf/finish` into the foundation branch. Then build a new upload-only release package. It carries the credit title support, the copy and the photo framing; the operator uploads it before any titled credit is recorded.
+2. Re-render the private m126234-0015 execution bundle against the updated proposed SQL, with `"title": "Rolex Datejust 36 - Up High"` on the front file, then re-hash it and repeat the fresh read.
+3. Ask the owner for the open-licence migration as three separate lines ([decision and approval ledger](docs/spec/DECISION-APPROVAL-LEDGER.md)). Ask also for the bucket and the upload function.
+4. Run database writes from an interactive session, where the action-time question can be answered ([runbook](docs/spec/STOP-RECOVERY-RUNBOOK.md), playbook DB-1). Never replay `20261026114541`.
+
 ## Foundation and media checkpoint: what is live and what is not, 2026-10-27
 
 **Live (deployed by the operator; this session has no deploy tool):**
@@ -21,7 +28,7 @@
 - Four photographs are excluded: their creator states no reference, and three have an uncertain dial shade. "Presentation Ready" (330 px) and m126200-0006 (500 px) stay out.
 - The bundle (rendered SQL in execution order with sha256, evidence, rollback, scripts and the three files) is in a private Artifact held by the owner. It is not in Git because source bindings stay private (decision 0009).
 
-**Remaining external gates, in order:** owner approval of the open-licence migration as two lines (the grant kind, and the source-flag exemption); the action-time database confirmation for each write; owner approval of the bucket and the upload-function deploy; licence-reviewer confirmation of the CC BY 2.0 title/URI point; `confirm-renditions --network` for the front rendition before step (d); a fresh read that still matches. The same database confirmation path also blocks the models migration.
+**Remaining external gates, in order** (superseded: the current list is `docs/spec/DECISION-APPROVAL-LEDGER.md`, where the migration approval has three lines, both halves of the title/URI point are closed and `confirm-renditions` is done)**:** owner approval of the open-licence migration as two lines (the grant kind, and the source-flag exemption); the action-time database confirmation for each write; owner approval of the bucket and the upload-function deploy; licence-reviewer confirmation of the CC BY 2.0 title/URI point; `confirm-renditions --network` for the front rendition before step (d); a fresh read that still matches. The same database confirmation path also blocks the models migration.
 
 **Reported, not changed:** on phones the gallery's 4:5 `object-fit: cover` frame shows about 60% of a 4:3 photo's width. The fix (`contain`, or a frame that matches the photo's aspect ratio) belongs to the designer stream and needs a Worker release.
 

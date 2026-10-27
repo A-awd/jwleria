@@ -56,7 +56,7 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
   - Selecting a value moves to the existing variant that keeps as many of the other selected values as possible. A value that would need another attribute to change shows that change.
   - Each option has a visible label (Arabic/English), `aria-current` on the selected value and a clear focus ring, and works with RTL. Touch targets are at least 44 px.
 - Gallery per variant: only that variant's approved images. A variant without an approved image shows the honest facts-only state, never another variant's photo. A bounded number of images (first image eager with `fetchpriority=high` only when it is the LCP, the rest lazy). Use the responsive srcset/sizes already in `product-media.mjs`, with explicit width/height.
-- Attribution: when an approved image manifest entry carries `attribution` (`creator`, `license`, `license_url`, `source_url`, `changes`), render a small visible credit under that image. This is prepared for a possible future open-license decision and is inactive otherwise.
+- Attribution: when an approved image manifest entry carries `attribution` (`creator`, `license`, `license_url`, `source_url`, `changes`, and an optional `title` when the work's author supplied one), render a small visible credit under that image. A five-field credit stays valid; a title is shown untranslated in locale quotation marks before the creator (`«Title» — Creator`). This is prepared for a possible future open-license decision and is inactive otherwise.
 - Counts: report displayed models (view count) separately from variants (catalog count).
 
 ## Original media

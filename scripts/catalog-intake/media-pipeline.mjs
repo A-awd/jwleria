@@ -63,11 +63,17 @@ export function commonsRendition(page_url,rendition_url,width){
   const file=sameCommonsFile(page_url,rendition_url,commonsRenditionUrl);
   return file!==null&&file[5]===file[3]&&Number.isInteger(width)&&width>=100&&width<=4000&&file[4]===String(width);
 }
-/** Whether one licensed-file record of an open-licence grant is an honest original or rendition of its page. */
+/**
+ * Whether one licensed-file record of an open-licence grant is an honest original or rendition of its page. Each
+ * record states `title`: the work's title as its author supplied it (CC 2.0/3.0 licences require it "if supplied"),
+ * 1..300 characters without control characters, or null when none was supplied (a file name or a caption written by
+ * others is not one). jwl_internal.valid_open_license_files applies the same rule.
+ */
 export function commonsFile(file){
   if(!file||typeof file!=='object'||Array.isArray(file))return false;
   const keys=Object.keys(file).sort().join(',');
-  if(keys!=='file_kind,file_url,rendition_width,source_page_url')return false;
+  if(keys!=='file_kind,file_url,rendition_width,source_page_url,title')return false;
+  if(file.title!==null&&!credit(file.title,300))return false;
   if(file.file_kind==='original')return file.rendition_width===null&&commonsOriginal(file.source_page_url,file.file_url);
   if(file.file_kind==='rendition')return commonsRendition(file.source_page_url,file.file_url,file.rendition_width);
   return false;
@@ -96,9 +102,13 @@ function openLicenseGaps(grant){
   if(Array.isArray(grant.media_origins)&&grant.media_origins.length)reasons.push('open_license_names_one_file_not_origins');
   return reasons;
 }
-/** The visible credit of one licensed file's image, exactly as the proposed migration re-derives it from the grant. */
+/**
+ * The visible credit of one licensed file's image, exactly as the proposed migration re-derives it from the grant:
+ * the file's supplied title is added as `title`; a file without one keeps the five-field credit.
+ */
 export function openLicenseAttribution(grant,changes,file=grant.licensed_files?.[0]){
-  return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:file.source_page_url,changes};
+  return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:file.source_page_url,changes,
+    ...(typeof file.title==='string'?{title:file.title}:{})};
 }
 
 /**

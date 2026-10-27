@@ -64,7 +64,7 @@ const ar = {
   hero: {
     eyebrow: '',
     title: 'الفخامة، بكل تفاصيلها',
-    lead: 'مختارات من العلامات العالمية، والتفاصيل عبر واتساب.',
+    lead: 'دليل العلامات العالمية ومختارات من القطع، والتفاصيل عبر واتساب.',
     primary: 'العلامات',
     secondary: 'المختارات',
   },
@@ -74,7 +74,7 @@ const ar = {
     all: 'الكل',
     count: (n: number) => `${n} علامة`,
     ownTitle: 'مختاراتنا',
-    ownLead: 'مختارات من عالم الفخامة.',
+    ownLead: 'قطع للمعاينة من مختاراتنا الخاصة.',
     pendingTitle: 'المختارات قيد الإعداد',
     pendingText: 'لا توجد قطع معروضة لهذه العلامة حالياً.',
     ask: 'الاستفسار عن هذه العلامة',
@@ -83,8 +83,8 @@ const ar = {
   },
   tiers: { luxury: 'الفخامة العليا', accessible: 'الفخامة الميسّرة', contemporary: 'المعاصر' },
   categories: { title: 'القطع حسب الفئة', lead: 'من الساعات إلى حقائب السفر.', empty: 'لا توجد قطع معروضة في هذه الفئة بعد.', other: 'فئات أخرى' },
-  latest: { title: 'أحدث المختارات', lead: 'مختارات من دور الأزياء والساعات والمجوهرات.' },
-  concierge: { title: 'تفاصيل القطع عبر واتساب', text: 'الاستفسار عن السعر والتوفر متاح عبر واتساب بمرجع القطعة أو صورتها.' },
+  latest: { title: 'أحدث المختارات', lead: 'أحدث القطع المعروضة من الأزياء والساعات والمجوهرات.' },
+  inquiryBand: { title: 'تفاصيل القطع عبر واتساب', text: 'الاستفسار عن السعر والتوفر متاح عبر واتساب بمرجع القطعة أو صورتها.' },
   catalog: {
     title: 'الكتالوج',
     lead: 'جميع القطع المعروضة حالياً.',
@@ -115,7 +115,7 @@ const ar = {
     changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
     // The only two changes the open-licence migration accepts, in reviewed Arabic.
-    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP' } as Record<string, string> },
+    credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -165,7 +165,7 @@ const en: typeof ar = {
   hero: {
     eyebrow: '',
     title: 'Luxury in every detail',
-    lead: 'Explore brands and pieces, and contact us for the details.',
+    lead: 'A directory of brands and a selection of pieces, with details on WhatsApp.',
     primary: 'Explore the brands',
     secondary: 'View the edit',
   },
@@ -184,8 +184,8 @@ const en: typeof ar = {
   },
   tiers: { luxury: 'Luxury', accessible: 'Accessible luxury', contemporary: 'Contemporary' },
   categories: { title: 'Browse by category', lead: 'From watches to luggage.', empty: 'No pieces are shown in this category yet.', other: 'Other categories' },
-  latest: { title: 'Latest in the edit', lead: 'Selections from fashion, watch and jewellery houses.' },
-  concierge: { title: 'Item details via WhatsApp', text: 'Price and availability enquiries are available on WhatsApp with the item\'s reference or photo.' },
+  latest: { title: 'Latest in the edit', lead: 'The latest pieces on view across fashion, watches and jewellery.' },
+  inquiryBand: { title: 'Item details via WhatsApp', text: 'Price and availability inquiries are available on WhatsApp with the item\'s reference or photo.' },
   catalog: {
     title: 'Catalogue',
     lead: 'Every piece currently on view.',
@@ -215,7 +215,7 @@ const en: typeof ar = {
     count: englishCount,
     changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
     showing: (ref: string) => `Showing reference ${ref}`,
-    credit: { photo: 'Photo', source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP' } as Record<string, string> },
+    credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'WhatsApp inquiry',

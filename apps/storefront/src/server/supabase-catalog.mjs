@@ -262,7 +262,7 @@ export async function listPublishedBrands(config,fetcher=fetch) {
 /** @returns {import('../contracts/catalog').Brand[]} */
 function publishedBrands(rows) {
   if(!Array.isArray(rows)||rows.some(r=>!r||!slugPattern.test(r.brand_slug)||typeof r.brand_name!=='string'||!r.brand_name.trim()||!['luxury','accessible','contemporary'].includes(r.brand_tier)))throw new Error('Invalid brand directory');
-  return rows.map(r=>({id:`brand-${r.brand_slug}`,slug:r.brand_slug,name:r.brand_name,tier:r.brand_tier,summary:{ar:`مختارات ${r.brand_name}. التفاصيل والتوفر عبر واتساب.`,en:`${r.brand_name} selections. Details and availability via WhatsApp.`}}));
+  return rows.map(r=>({id:`brand-${r.brand_slug}`,slug:r.brand_slug,name:r.brand_name,tier:r.brand_tier,summary:{ar:`مختارات ${r.brand_name}. الاستفسار عن التفاصيل عبر واتساب.`,en:`${r.brand_name} selections. Ask about the details on WhatsApp.`}}));
 }
 
 // One database snapshot avoids waiting for three separate metadata round trips.

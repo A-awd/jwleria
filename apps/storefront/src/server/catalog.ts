@@ -24,8 +24,8 @@ function getDirectoryBrands() {
   return fixtures.getBrands().filter(b => catalogMode() === 'preview' || b.slug !== 'jwleria-edit').map(b => ({
     ...b,
     summary: b.slug === 'jwleria-edit' ? b.summary : {
-      ar: `مختارات ${b.name}. التفاصيل والتوفر عبر واتساب.`,
-      en: `${b.name} selections. Details and availability via WhatsApp.`,
+      ar: `${b.name} مدرجة في دليل العلامات. الاستفسار عبر واتساب.`,
+      en: `${b.name} in the brand directory. Inquiries via WhatsApp.`,
     },
   }));
 }

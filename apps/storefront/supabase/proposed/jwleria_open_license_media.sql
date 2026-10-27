@@ -73,20 +73,42 @@ $$;
 revoke all on function jwl_internal.open_license_decisions() from public,anon,authenticated;
 grant execute on function jwl_internal.open_license_decisions() to service_role;
 
+-- A credit string must contain a character that JavaScript's String.prototype.trim() keeps. Postgres trim() strips
+-- only U+0020, so "length(trim(x))>0" alone accepts a string of no-break, ideographic or other Unicode spaces that the
+-- pipeline and the storefront refuse; such a row would pass the database and then fail the storefront read. The set
+-- below is ECMAScript WhiteSpace and LineTerminator ([[:space:]] covers the ASCII ones).
+create function jwl_internal.visible_credit_text(value text)
+returns boolean language sql immutable security invoker set search_path='' as $$
+  select coalesce(value ~ '[^[:space:]\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]',false)
+$$;
+revoke all on function jwl_internal.visible_credit_text(text) from public,anon,authenticated;
+grant execute on function jwl_internal.visible_credit_text(text) to service_role;
+
 -- The files an open-licence grant covers: 1..20 distinct Commons file pages, each with exactly one held file on
 -- upload.wikimedia.org (Commons only, never a brand origin or another wiki), recorded honestly as either
 --   {"file_kind":"original","rendition_width":null,"file_url":".../wikipedia/commons/<h>/<hh>/<File>"} or
 --   {"file_kind":"rendition","rendition_width":N,"file_url":".../wikipedia/commons/thumb/<h>/<hh>/<File>/<N>px-<File>"}
 -- where <File> is the page's own File name spelled the same way, N is 100..4000, and <h>/<hh> are the first one and
 -- two hex digits of md5(<File> percent-decoded), as MediaWiki stores it (underscores, as in the URL).
+-- Each file also states "title": the work's title as its author supplied it (CC BY/BY-SA 2.0 and 3.0 require it
+-- "if supplied"), 1..300 characters without control characters, or null when the author supplied none. A file
+-- name or a caption written by others is not a supplied title.
+create function jwl_internal.valid_credit_title(title jsonb)
+returns boolean language sql immutable security invoker set search_path='' as $$
+  select coalesce(jsonb_typeof(title)='string' and jwl_internal.visible_credit_text(title#>>'{}') and length(title#>>'{}')<=300 and title#>>'{}' !~ '[[:cntrl:]]',false)
+$$;
+revoke all on function jwl_internal.valid_credit_title(jsonb) from public,anon,authenticated;
+grant execute on function jwl_internal.valid_credit_title(jsonb) to service_role;
+
 create function jwl_internal.valid_open_license_files(files jsonb)
 returns boolean language plpgsql immutable security invoker set search_path='' as $$
 declare f jsonb; page text; name text; hash text; url text; parts text[]; width numeric; seen_pages text[]:='{}'; seen_files text[]:='{}';
 begin
  if jsonb_typeof(files) is distinct from 'array' or jsonb_array_length(files) not between 1 and 20 then return false;end if;
  for f in select value from jsonb_array_elements(files) loop
-  if jsonb_typeof(f) is distinct from 'object' or not(f ?& array['source_page_url','file_url','file_kind','rendition_width'])
-    or f-array['source_page_url','file_url','file_kind','rendition_width']<>'{}'::jsonb then return false;end if;
+  if jsonb_typeof(f) is distinct from 'object' or not(f ?& array['source_page_url','file_url','file_kind','rendition_width','title'])
+    or f-array['source_page_url','file_url','file_kind','rendition_width','title']<>'{}'::jsonb then return false;end if;
+  if f->'title'<>'null'::jsonb and not jwl_internal.valid_credit_title(f->'title') then return false;end if;
   if jsonb_typeof(f->'source_page_url') is distinct from 'string' or jsonb_typeof(f->'file_url') is distinct from 'string' then return false;end if;
   page:=f->>'source_page_url';url:=f->>'file_url';parts:=string_to_array(url,'/');
   if length(page)>2048 or length(url)>2048 or page !~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$' then return false;end if;
@@ -121,8 +143,8 @@ alter table jwl_internal.media_grants add constraint jwl_open_license_grant_chec
   candidate_id is not null and source_id is not null and media_origins='[]'::jsonb
   and source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official')
   and jwl_internal.open_licenses() ? license_code and license_url=jwl_internal.open_licenses()->license_code->>'url'
-  and length(trim(creator)) between 1 and 300 and creator !~ '[[:cntrl:]]'
-  and length(trim(attribution_text)) between 1 and 500 and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
+  and length(trim(creator)) between 1 and 300 and jwl_internal.visible_credit_text(creator) and creator !~ '[[:cntrl:]]'
+  and length(trim(attribution_text)) between 1 and 500 and jwl_internal.visible_credit_text(attribution_text) and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
   and jwl_internal.valid_open_license_files(licensed_files)
   and jwl_internal.open_license_decisions() ? owner_decision_reference,false)
   else num_nulls(license_code,license_url,creator,licensed_files,attribution_text,owner_decision_reference)=6 end);
@@ -148,14 +170,16 @@ revoke all on function jwl_internal.require_open_license_binding() from public,a
 create trigger jwl_open_license_binding before insert on jwl_internal.media_grants
   for each row execute function jwl_internal.require_open_license_binding();
 
--- A visible credit: exactly five bounded strings, an allowlisted licence and its Commons file page.
+-- A visible credit: five bounded strings, an allowlisted licence and its Commons file page, plus an optional "title"
+-- (null, or a bounded string as in valid_credit_title). A five-field credit stays valid.
 create function jwl_internal.valid_media_attribution(credit jsonb)
 returns boolean language plpgsql immutable security invoker set search_path='' as $$
 declare field text;
 begin
- if jsonb_typeof(credit) is distinct from 'object' or not(credit ?& array['creator','license','license_url','source_url','changes']) or credit-array['creator','license','license_url','source_url','changes']<>'{}'::jsonb then return false;end if;
+ if jsonb_typeof(credit) is distinct from 'object' or not(credit ?& array['creator','license','license_url','source_url','changes']) or credit-array['creator','license','license_url','source_url','changes','title']<>'{}'::jsonb then return false;end if;
+ if credit ? 'title' and credit->'title'<>'null'::jsonb and not jwl_internal.valid_credit_title(credit->'title') then return false;end if;
  foreach field in array array['creator','license','license_url','source_url','changes'] loop
-  if jsonb_typeof(credit->field) is distinct from 'string' or length(trim(credit->>field))=0 or length(credit->>field)>(case field when 'source_url' then 2048 else 300 end) or credit->>field ~ '[[:cntrl:]]' then return false;end if;
+  if jsonb_typeof(credit->field) is distinct from 'string' or not jwl_internal.visible_credit_text(credit->>field) or length(credit->>field)>(case field when 'source_url' then 2048 else 300 end) or credit->>field ~ '[[:cntrl:]]' then return false;end if;
  end loop;
  if not exists(select 1 from jsonb_each(jwl_internal.open_licenses()) l where l.value->>'label'=credit->>'license' and l.value->>'url'=credit->>'license_url') then return false;end if;
  return credit->>'source_url' ~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$';
@@ -218,8 +242,9 @@ begin
 end $$;
 
 -- Same evidence rules as 20261026114541, plus: each open-licence entry credits one granted file, carries the exact
--- credit derived from the grant and that file, cites that file as the original of every variant and, for a
--- rendition, says it was resized and is never wider than the rendition. No other grant kind may carry a credit.
+-- credit derived from the grant and that file (with that file's title when its author supplied one, and no title key
+-- otherwise), cites that file as the original of every variant and, for a rendition, says it was resized and is
+-- never wider than the rendition. No other grant kind may carry a credit.
 create or replace function jwl_internal.require_media_evidence() returns trigger
 language plpgsql security invoker set search_path='' as $$
 declare c jwl_internal.candidates; g jwl_internal.media_grants; entry jsonb; variant jsonb; a jwl_internal.media_assets; f jsonb;
@@ -236,7 +261,8 @@ begin
     f:=null;
     if g.kind='open_license' then
       f:=(select l.value from jsonb_array_elements(g.licensed_files) l where l.value->>'source_page_url'=entry->'attribution'->>'source_url');
-      if f is null or entry->'attribution' is distinct from jsonb_build_object('creator',g.creator,'license',jwl_internal.open_licenses()->g.license_code->>'label','license_url',g.license_url,'source_url',f->>'source_page_url','changes',entry->'attribution'->'changes')
+      if f is null or entry->'attribution' is distinct from (jsonb_build_object('creator',g.creator,'license',jwl_internal.open_licenses()->g.license_code->>'label','license_url',g.license_url,'source_url',f->>'source_page_url','changes',entry->'attribution'->'changes')
+          ||case when jsonb_typeof(f->'title')='string' then jsonb_build_object('title',f->'title') else '{}'::jsonb end)
         or coalesce(entry->'attribution'->>'changes' not in ('resized and converted to WebP','converted to WebP'),true)
         -- A rendition is already a resize of the licensed original, so its credit always says so.
         or (f->>'file_kind'='rendition' and entry->'attribution'->>'changes'<>'resized and converted to WebP') then

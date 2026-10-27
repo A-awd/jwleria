@@ -9,7 +9,10 @@ const s = t(locale);
 const Tag = card ? 'p' : 'span';
 // A change without a reviewed translation keeps its English text, marked as English.
 const changes = credit.changes ? s.variants.credit.changed[credit.changes] : undefined;
+// A supplied title is the author's own and is never translated; only its quotation marks follow the locale, and it
+// is joined to the creator without a new translated word ("«Title» — Creator").
+const [open, close] = s.variants.credit.quote;
 ---
 <Tag class:list={['gallery-credit', { 'gallery-credit--card': card }]}>
-  {s.variants.credit.photo}: <bdi>{credit.creator}</bdi> · <a href={credit.licenseUrl} rel="license nofollow"><bdi>{credit.license}</bdi></a> · <a href={credit.sourceUrl} rel="nofollow">{s.variants.credit.source}</a>{credit.changes && <> · {s.variants.credit.changes}: {changes ? <bdi>{changes}</bdi> : <bdi lang="en" dir="ltr">{credit.changes}</bdi>}</>}
+  {s.variants.credit.photo}: {credit.title && <>{open}<bdi>{credit.title}</bdi>{close} — </>}<bdi>{credit.creator}</bdi> · <a href={credit.licenseUrl} rel="license nofollow"><bdi>{credit.license}</bdi></a> · <a href={credit.sourceUrl} rel="nofollow">{s.variants.credit.source}</a>{credit.changes && <> · {s.variants.credit.changes}: {changes ? <bdi>{changes}</bdi> : <bdi lang="en" dir="ltr">{credit.changes}</bdi>}</>}
 </Tag>

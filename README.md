@@ -18,6 +18,9 @@ GitHub is the permanent source of truth for approved public-safe material. Platf
 2. Review [STATE.md](STATE.md) and [HANDOFF.md](HANDOFF.md).
 3. Consult [DECISIONS.md](DECISIONS.md) and the latest GitHub branch and commit.
 4. Use [LAUNCHER.md](LAUNCHER.md) with any supported AI agent.
+5. Claude sessions: read [CLAUDE.md](CLAUDE.md) for roles, evidence labels and stopping criteria.
+
+Durable project modules: [execution spec](docs/spec/EXECUTION-SPEC.md), [requirements and evidence ledger](docs/spec/REQUIREMENTS-EVIDENCE-LEDGER.md), [decision and approval ledger](docs/spec/DECISION-APPROVAL-LEDGER.md), [stop and recovery runbook](docs/spec/STOP-RECOVERY-RUNBOOK.md), [maintenance backlog](docs/spec/MAINTENANCE-BACKLOG.md) and [coverage and source registry](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md). Current state stays in `STATE.md` and `HANDOFF.md`.
 
 See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) and [migration/MIGRATION-REPORT.md](migration/MIGRATION-REPORT.md).
 
