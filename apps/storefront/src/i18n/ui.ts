@@ -185,7 +185,7 @@ const en: typeof ar = {
   tiers: { luxury: 'Luxury', accessible: 'Accessible luxury', contemporary: 'Contemporary' },
   categories: { title: 'Browse by category', lead: 'From watches to luggage.', empty: 'No pieces are shown in this category yet.', other: 'Other categories' },
   latest: { title: 'Latest in the edit', lead: 'Selections from fashion, watch and jewellery houses.' },
-  concierge: { title: 'The details, in conversation', text: 'Share a reference or an image; our team checks availability and every detail with you in conversation.' },
+  concierge: { title: 'Item details via WhatsApp', text: 'Price and availability enquiries are available on WhatsApp with the item\'s reference or photo.' },
   catalog: {
     title: 'Catalogue',
     lead: 'Every piece currently on view.',

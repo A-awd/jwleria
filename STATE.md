@@ -15,7 +15,7 @@
 
 **Media (evidence in `docs/WEBSITE-MEDIA-COVERAGE-2026-10-26.md`):**
 - Live: 0 approved images, 0 grants, 0 buckets; catalog hash unchanged.
-- Official brand images eligible: 0. No brand permits commercial display of its photographs.
+- Official brand images eligible: 0. For the twelve reviewed sources, no grant or licence covering this showcase's display of official photographs was observed at the checkpoint (terms and press pages read 2026-10-26). This is not a finding that no brand would ever permit it.
 - Open-licence exact matches (third-party, never "official"): m126234-0015 (6 Ajay Suresh photos, CC BY 2.0) and m126200-0006 (Remi Mathis, CC BY-SA 4.0) form the lower-risk sample. m126500ln-0001, m126900-0001 and m126713grnr-0001 are exact but carry provenance risk. Three photos are unresolved between sibling references and are excluded.
 - A private phone preview of the 7-image sample with credits and WebP derivatives was published as a private Artifact and handed to the designer session. It is not website publication. Commons answered HTTP 429; nothing was retried or bypassed.
 

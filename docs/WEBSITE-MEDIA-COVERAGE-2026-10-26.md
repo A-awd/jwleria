@@ -22,7 +22,7 @@ The question checked was whether an official permission or licence exists that w
 | Audemars Piguet | No | Uses other than personal non-commercial use need "the prior written consent of Audemars Piguet". | A signed licence from Audemars Piguet (Marketing) S.A. |
 | Cartier, Van Cleef & Arpels, IWC, Jaeger-LeCoultre, Panerai, Piaget (Richemont) | No | The Richemont Media Centre terms allow editorial use only, with no cropping or derivatives. Maison site terms allow personal use only. Piaget and Panerai also forbid automated access without written approval. | A written licence from each Maison. |
 
-Conclusion: **0 official images are eligible**. Press and media images limited to editorial use do not cover this commercial showcase. A reachable image URL is never permission.
+Conclusion: **0 official images are eligible** for the reviewed sources at this checkpoint, because no applicable grant was observed. It does not mean a brand would refuse a request. Press and media images limited to editorial use do not cover this commercial showcase. A reachable image URL is never permission.
 
 ## Open-licence exact-product photographs (proposal only — not published)
 
