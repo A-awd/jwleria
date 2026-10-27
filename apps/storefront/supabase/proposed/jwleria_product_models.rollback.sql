@@ -3,6 +3,7 @@
 begin;
 drop function if exists public.jwl_brand_models_page(text,integer,integer);
 drop function if exists public.jwl_product_model(text);
+drop function if exists public.jwl_catalog_models_search(text);
 drop view if exists public.jwl_catalog_models;
 drop trigger if exists jwl_variant_revision_unmap on jwl_internal.candidates;
 drop function if exists jwl_internal.unmap_changed_variant();

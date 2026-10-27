@@ -194,7 +194,7 @@ const modelSeeds: readonly ModelSeed[] = [
     categorySlug: 'watches',
     name: { ar: 'ساعة — نموذج معاينة', en: 'Preview watch model' },
     options: {
-      dial: { label: { ar: 'لون الميناء', en: 'Dial' }, values: {
+      dial: { label: { ar: 'الميناء', en: 'Dial' }, values: {
         ivory: { ar: 'عاجي تجريبي', en: 'Preview ivory' },
         slate: { ar: 'رمادي تجريبي', en: 'Preview slate' },
         green: { ar: 'أخضر تجريبي', en: 'Preview green' },

@@ -12,7 +12,8 @@ export const localeParams = () => locales.map((locale) => ({ params: { locale } 
 // Option counts use each noun's correct Arabic form: واحد/مثنى for 1–2, plural for 3–10, singular from 11.
 type ArabicForms = readonly [one: string, two: string, few: string, many: string, other: string];
 const AR_COUNTS: Record<string, ArabicForms> = {
-  dial: ['لون ميناء واحد', 'لونا ميناء', 'ألوان ميناء', 'لون ميناء', 'لون ميناء'],
+  // A dial is not always a colour (stone, meteorite, paved), so Arabic counts dial options, as English counts dials.
+  dial: ['خيار ميناء واحد', 'خيارا ميناء', 'خيارات ميناء', 'خيار ميناء', 'خيار ميناء'],
   bracelet: ['سوار واحد', 'سواران', 'أساور', 'سوارًا', 'سوار'],
   bracelet_material: ['مادة سوار واحدة', 'مادتا سوار', 'مواد سوار', 'مادة سوار', 'مادة سوار'],
   colour: ['لون واحد', 'لونان', 'ألوان', 'لونًا', 'لون'],
@@ -109,11 +110,12 @@ const ar = {
   },
   variants: {
     group: 'خيارات هذا الطراز',
-    kinds: { dial: 'لون الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
+    kinds: { dial: 'الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
     count: arabicCount,
     changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
-    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات' },
+    // The only two changes the open-licence migration accepts, in reviewed Arabic.
+    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -213,7 +215,7 @@ const en: typeof ar = {
     count: englishCount,
     changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
     showing: (ref: string) => `Showing reference ${ref}`,
-    credit: { photo: 'Photo', source: 'Source', changes: 'Changes' },
+    credit: { photo: 'Photo', source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'WhatsApp inquiry',

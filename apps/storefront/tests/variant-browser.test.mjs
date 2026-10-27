@@ -52,11 +52,16 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       await page.goto(new URL(`/${locale}/catalog/`, base).href);
       const card = page.locator('article.card', {has: page.locator('a[href$="/products/preview-watch-ivory-three-link/"]')});
       assert.equal(await card.locator('.card__name').textContent(), model.name[locale]);
-      assert.equal(await card.locator('.variant-count').textContent(), locale === 'ar' ? '3 ألوان ميناء · 3 أساور' : '3 dials · 3 bracelets');
+      assert.equal(await card.locator('.variant-count').textContent(), locale === 'ar' ? '3 خيارات ميناء · 3 أساور' : '3 dials · 3 bracelets');
       assert.ok((await state()).overflow <= 0, 'catalog has no horizontal overflow at 390px');
       await shot('0-catalog');
 
+      // A product without variants keeps today's CTA note; only a grouped page labels its preview CTA.
+      const {t} = await import('../src/i18n/ui.ts');
+      await page.goto(new URL(`/${locale}/products/watch-study-03/`, base).href);
+      assert.equal(await page.locator('.pdp__cta .note').textContent(), t(locale).product.confirm);
       await page.goto(new URL(`/${locale}/products/preview-watch-ivory-three-link/`, base).href);
+      assert.equal(await page.locator('.pdp__cta .note').textContent(), `${t(locale).preview} — ${t(locale).product.confirm}`);
       await page.evaluate(() => { window.__variantMarker = 'same-document'; });
       let s = await state();
       assert.equal(await page.locator('h1').textContent(), model.name[locale]);
@@ -66,7 +71,7 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       for (const box of await page.locator('a[data-variant-link]').evaluateAll(as => as.map(a => a.getBoundingClientRect()).map(r => [r.width, r.height]))) {
         assert.ok(box[0] >= 44 && box[1] >= 44, `targets are at least 44px (${box})`);
       }
-      assert.match(await page.locator('.variant-option legend').first().textContent(), locale === 'ar' ? /^لون الميناء: / : /^Dial: /);
+      assert.match(await page.locator('.variant-option legend').first().textContent(), locale === 'ar' ? /^الميناء: / : /^Dial: /);
       await shot('1-initial');
 
       // Keyboard: Tab to the slate dial, then Enter. The focus ring is visible and focus survives the swap.
@@ -128,6 +133,17 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       s = await state();
       assert.deepEqual([s.path, s.current, s.marker], [`/${locale}/products/preview-watch-ivory-three-link/`, ['dial=ivory', 'bracelet=three-link'], 'same-document']);
       assert.deepEqual(errors, [], 'no page errors');
+
+      // From a photo-less variant at the top of the page, a gallery appears above the selector: the chosen
+      // value is scrolled back into view, never left focused below the screen.
+      await page.goto(new URL(`/${locale}/products/preview-watch-green-leather/`, base).href);
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await link('dial', 'ivory').focus();
+      await page.keyboard.press('Enter');
+      await shown(ref('preview-watch-ivory-three-link'));
+      const seen = await page.evaluate(() => { const r = document.activeElement.getBoundingClientRect(); return {active: `${document.activeElement.dataset.optionKind}=${document.activeElement.dataset.optionKey}`, top: r.top, bottom: r.bottom, height: innerHeight, gallery: Boolean(document.querySelector('.pdp__gallery img'))}; });
+      assert.deepEqual([seen.active, seen.gallery], ['dial=ivory', true]);
+      assert.ok(seen.top >= -1 && seen.bottom <= seen.height + 1, `focused value stays on screen (${seen.top}-${seen.bottom} of ${seen.height})`);
 
       // A colour-only model.
       await page.goto(new URL(`/${locale}/products/preview-handbag-black/`, base).href);

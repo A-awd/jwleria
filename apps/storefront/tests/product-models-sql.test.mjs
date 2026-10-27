@@ -182,7 +182,7 @@ test('options and specs carry reviewed Arabic, source units and an explicit Engl
     assert.deepEqual(m.get('m126200-0006').specs.map(s=>s.kind),['diameter','material','dial','bracelet','bracelet_material','movement','power_reserve','water_resistance']);
     assert.deepEqual(specs.diameter,{kind:'diameter',label:{ar:'القطر',en:'Diameter'},value:{ar:'36 مم',en:'36 mm'}});
     assert.equal(specs.power_reserve.value.ar,'حوالي 55 ساعة');
-    assert.equal(specs.water_resistance.value.ar,'مقاومة للماء حتى عمق 100 متر / 330 قدم');
+    assert.equal(specs.water_resistance.value.ar,'مقاومة للماء حتى عمق 100 متر / 330 قدمًا');
     assert.equal(specs.movement.value.ar,'Perpetual، ميكانيكية، ذاتية التعبئة');
     assert.equal(m.get('m126334-0001').specs.find(s=>s.kind==='material').value.ar,'White Rolesor - مزيج من Oystersteel والذهب الأبيض');
     const tote=Object.fromEntries(m.get('L1899089556').specs.map(s=>[s.kind,s]));
@@ -195,6 +195,11 @@ test('options and specs carry reviewed Arabic, source units and an explicit Engl
     const measure=async v=>(await db.query('select jwl_internal.arabic_measure($1) a',[v])).rows[0].a;
     assert.equal(await measure('41 mm'),'41 مم');assert.equal(await measure('12.5 x 8 in'),'12.5 x 8 إنش');
     assert.equal(await measure('Waterproof to 3,900 metres / 12,800 feet, helium escape valve'),'مقاومة للماء حتى عمق 3,900 متر / 12,800 قدم، مع صمام لتصريف الهيليوم');
+    // The counted noun follows the last two digits: 3-10 plural, 11-99 accusative, otherwise singular.
+    for(const [v,ar] of [['Waterproof to 50 metres / 165 feet','50 مترًا / 165 قدمًا'],['Waterproof to 1,220 metres / 4,000 feet','1,220 مترًا / 4,000 قدم'],
+      ['Waterproof to 300 metres / 1,000 feet','300 متر / 1,000 قدم'],['Waterproof to 3 metres / 10 feet','3 أمتار / 10 أقدام'],['Waterproof to 100 metres / 330 feet','100 متر / 330 قدمًا'],
+      ['Waterproof to 101 metres / 1,111 feet','101 متر / 1,111 قدمًا']])
+      assert.equal(await measure(v),'مقاومة للماء حتى عمق '+ar,v);
     for(const v of ['Approximately 5 hours','Approximately 100 hours','41mm','41 mm wide','about 3 cm'])assert.equal(await measure(v),null,v);
   }finally{await db.close();}
 });
@@ -247,7 +252,7 @@ test('the collapsed brand page keeps the brand page envelope and matches it exac
     assert.equal(models.items.find(i=>i.model_key==='rolex-official:126200').variant_count,4);
     assert.equal((await page('jwl_brand_models_page','rolex',1,999)).pageSize,48);
     assert.equal((await page('jwl_brand_models_page','rolex',99,4)).page,3);
-    for(const p of (await db.query("select proname,prosecdef,provolatile from pg_proc where proname in ('jwl_brand_models_page','jwl_product_model','derive_product_variants')")).rows){assert.equal(p.prosecdef,false,p.proname);assert.equal(p.provolatile,'s',p.proname);}
+    for(const p of (await db.query("select proname,prosecdef,provolatile from pg_proc where proname in ('jwl_brand_models_page','jwl_product_model','jwl_catalog_models_search','derive_product_variants')")).rows){assert.equal(p.prosecdef,false,p.proname);assert.equal(p.provolatile,'s',p.proname);}
   }finally{await db.close();}
 });
 
@@ -339,7 +344,7 @@ test('rollback drops only the proposed objects and leaves the catalog and its fu
     await db.exec(await readFile(rollback,'utf8'));
     for(const name of ['public.jwl_product_variants','public.jwl_catalog_models','jwl_internal.variant_evidence','jwl_internal.term_translations'])
       assert.equal((await db.query('select to_regclass($1) r',[name])).rows[0].r,null,name);
-    assert.equal((await db.query("select count(*)::int n from pg_proc where proname in ('jwl_product_model','jwl_brand_models_page','derive_product_variants','apply_product_variants','arabic_measure','unmap_changed_variant')")).rows[0].n,0);
+    assert.equal((await db.query("select count(*)::int n from pg_proc where proname in ('jwl_product_model','jwl_brand_models_page','jwl_catalog_models_search','derive_product_variants','apply_product_variants','arabic_measure','unmap_changed_variant')")).rows[0].n,0);
     assert.equal((await db.query("select count(*)::int n from pg_trigger where tgname='jwl_variant_revision_unmap'")).rows[0].n,0);
     assert.deepEqual((await db.query('select md5(string_agg(to_jsonb(c)::text,\',\' order by id)) h,count(*)::int n from public.jwl_catalog c')).rows[0],catalog);
     assert.deepEqual((await db.query("select public.jwl_brand_page('rolex',1,12) d")).rows,page.rows);

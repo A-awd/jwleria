@@ -42,6 +42,8 @@ alter table jwl_internal.media_grants add constraint jwl_open_license_grant_chec
   and length(source_page_url)<=2048 and source_page_url ~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$'
   and length(original_url)<=2048 and original_url ~ '^https://upload\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+\.([Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Ww][Ee][Bb][Pp])$'
   and split_part(original_url,'/',6)=left(split_part(original_url,'/',7),1)
+  -- The original is the credited page's own file: both canonical URLs encode the file name the same way.
+  and split_part(original_url,'/',8)=substring(source_page_url from '^https://commons\.wikimedia\.org/wiki/File:(.+)$')
   and owner_decision_reference ~ '^[a-z0-9][a-z0-9._:/-]{2,120}$',false)
   else num_nulls(license_code,license_url,creator,source_page_url,original_url,attribution_text,owner_decision_reference)=7 end);
 

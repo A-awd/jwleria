@@ -17,7 +17,8 @@ const escape=value=>value.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 const verificationChecks=['exact_reference','color_and_variant','authentic_product_photo','not_generated_or_altered','clear_product_view'];
 // Media requests name the site they serve, as Wikimedia's user-agent policy asks of every client.
 const mediaAgent=agent+' (+https://jwleria.com)';
-const credit=(value,max)=>text(value)&&value.length<=max&&!/\p{Cc}/u.test(value);
+// Measured in code points, as Postgres length() measures the same credit.
+const credit=(value,max)=>text(value)&&[...value].length<=max&&!/\p{Cc}/u.test(value);
 const licence=(label,url)=>Object.freeze({label,url});
 
 /**
