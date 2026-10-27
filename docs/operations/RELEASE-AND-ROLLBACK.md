@@ -44,7 +44,7 @@ Visible appearance stays the current production identity.
    - `/ar/` and `/en/catalog/` return 200, show the same identity as before, and have no horizontal overflow.
    - `/en/brands/rolex/`: once the migration has been applied, Rolex shows model cards with a neutral option count. Before the migration, it shows one card per reference.
    - `/ar/products/rolex-m126234-0015-e45f1880/` returns 200 with reference m126234-0015. With the migration applied, the dial and bracelet options link only to real variants, and `rel=canonical` points to the primary variant once the live release is enabled.
-   - `/en/catalog/?search=m126234-0015` shows that exact reference.
+   - `/en/catalog/?q=m126234-0015` shows exactly one piece, that reference. The search form's parameter is `q`; any other parameter name is ignored and shows the unfiltered catalogue.
    - `/en/products/rolex-m126200-0006-1765d475/` (an older variant URL) still renders.
    - Response headers: `X-JWL-Cache` moves from `MISS` to `HIT` and later to `STALE`, never `STALE` past 600 s; `Cache-Control: public, max-age=0, must-revalidate`.
 
@@ -61,4 +61,5 @@ These are lab results, not a production test.
 - Storefront suite: 135 pass, 0 fail, 3 skipped. The skipped tests are opt-in browser tests and are not counted as passed.
 - Intake suite: 103 pass.
 - `pnpm build:cloudflare` completed (74 output files).
-- The pre-migration fallback was checked against the live catalogue through a local node build: home, catalogue page 2, the Rolex brand page, two product pages and an exact-reference search all returned 200.
+- The pre-migration fallback was checked against the live catalogue through a local node build: home, catalogue page 2, the Rolex brand page and two product pages all returned 200.
+- Correction: the local search check used `?search=` instead of the form's `q`, so it did not test search. The live search was checked with `q` after the upload: one exact result each for m126234-0015 (English) and m126200-0006 (Arabic). This was a documentation error, not an application regression.

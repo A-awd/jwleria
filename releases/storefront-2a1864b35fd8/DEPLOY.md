@@ -10,7 +10,8 @@
 
 **Safe with the database still at 7 migrations: yes.**
 - With the models migration unapplied, the release reads `jwl_catalog` and `jwl_brand_page` exactly as the current Worker does. Its fallback triggers only when PostgREST reports the specific missing relation or function.
-- A local node build of the same commit was tested against the live 7-migration catalogue on 2026-10-27, reading the live database only. These pages all returned 200 with the expected references: home, catalogue page 2, the Rolex brand page, two product pages and an exact-reference search.
+- A local node build of the same commit was tested against the live 7-migration catalogue on 2026-10-27, reading the live database only. These pages all returned 200 with the expected references: home, catalogue page 2, the Rolex brand page and two product pages.
+- Correction (2026-10-27): the local "exact-reference search" check used the wrong parameter (`?search=`). The catalogue search form submits `q`, so that check only rendered the unfiltered catalogue and did not test search. After the upload, the live search was checked with the real parameter: `/en/catalog/?q=m126234-0015` and `/ar/catalog/?q=m126200-0006` each returned exactly one piece, linking to the matching product page. No application change was needed.
 - Non-release behaviour is kept: `noindex, nofollow`, robots `Disallow: /`, and the contact state stays pending.
 
 
@@ -41,7 +42,9 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json
 Check on a phone width (360/390/430 CSS px):
 - These pages return 200 with the same visual identity as before:
 
-  `https://jwleria.com/ar/`, `/en/catalog/`, `/en/brands/rolex/`, `/ar/products/rolex-m126234-0015-e45f1880/`, `/en/products/rolex-m126200-0006-1765d475/`, `/en/catalog/?search=m126234-0015`
+  `https://jwleria.com/ar/`, `/en/catalog/`, `/en/brands/rolex/`, `/ar/products/rolex-m126234-0015-e45f1880/`, `/en/products/rolex-m126200-0006-1765d475/`, `/en/catalog/?q=m126234-0015`
+
+- The search URL uses `q`, the parameter the catalogue search form submits. It must show exactly one piece, linking to `/en/products/rolex-m126234-0015-e45f1880/`.
 
 - No horizontal overflow.
 - `X-JWL-Cache` moves from `MISS` to `HIT`, later to `STALE`, and never shows `STALE` past 600 s.
