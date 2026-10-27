@@ -2,7 +2,7 @@ import {readFile,writeFile,rename} from 'node:fs/promises';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {privateRoot} from './source-queue.mjs';
-import {evaluateMediaGrant,keepOwnerOriginal,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from './media-pipeline.mjs';
+import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from './media-pipeline.mjs';
 import {uploadThroughFunction,verifyPublishedDerivatives} from './media.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
 
@@ -19,7 +19,8 @@ export function currentCandidate(row){
  * Exact media pilot, in separately reviewable phases. Nothing here records, uploads or publishes without
  * the previous phase's private output and the approvals between phases:
  * - originals: checks the recorded grant and preserves each untouched original by checksum (owner file, granted URL,
- *   or the one Commons original of an open-licence grant, which stays refused by the database until its migration)
+ *   or each Commons file of an open-licence grant: downloaded, or a held copy as Wikimedia served it via local_path;
+ *   the database refuses that kind until its migration)
  * - bundle: requires a complete visual verification per original, prepares bounded responsive derivatives and
  *   writes the approval bundle plus the exact connector statement that records it (run only after approval)
  * - upload: after the database receipt, uploads through the approval-bound function and verifies every public file
@@ -32,12 +33,14 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:input.originals?.[0]?.asset_url});
     if(decision.state!=='permitted')throw Error('Recorded grant does not permit this exact product: '+decision.reasons.join(','));
     if(!Array.isArray(input.originals)||!input.originals.length||input.originals.length>20)throw Error('Between one and twenty originals required');
-    if(grant.kind==='open_license'&&input.originals.length!==1)throw Error('An open-licence grant covers exactly one original file');
+    if(grant.kind==='open_license'&&new Set(input.originals.map(item=>item.asset_url)).size!==input.originals.length)throw Error('Each open-licence original must be a distinct granted file');
     const kept=[];
     for(const item of input.originals){
       kept.push(grant.kind==='owner_original'
         ?await keepOwnerOriginal({candidate,grant,local_path:item.local_path,output_directory:out})
-        :await acquireOriginal({candidate,asset_url:item.asset_url,grant,output_directory:out},{fetcher,...(pacer?{pacer}:{})}));
+        :grant.kind==='open_license'&&item.local_path!==undefined
+          ?await keepOpenLicenseFile({candidate,grant,file_url:item.asset_url,local_path:item.local_path,expected_sha256:item.sha256,output_directory:out})
+          :await acquireOriginal({candidate,asset_url:item.asset_url,grant,output_directory:out},{fetcher,...(pacer?{pacer}:{})}));
     }
     await save(join(out,'originals.json'),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,grant_reference:grant.grant_reference,originals:kept});
     // The reviewer now inspects each original by checksum and writes one verification record per original.

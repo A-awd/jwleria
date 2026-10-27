@@ -1,10 +1,12 @@
 -- PROPOSED, NOT APPLIED. Decision 0011 still rejects open licences. Applying this file is a separate
 -- owner-approved production change that follows the owner's recorded open-licence decision and the
 -- storefront's visible attribution; on approval it is registered and moved to ../migrations.
--- Adds one grant kind, open_license: one Wikimedia Commons file under an allowlisted free licence (CC0 1.0,
--- CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, with the owner decision
--- it relies on. Its images must carry the exact visible attribution derived from the grant. Creates no
--- grant, asset, approval or publication; closed sources, evidence, verification and revocation stay in force.
+-- Adds one grant kind, open_license: up to twenty Wikimedia Commons files by one creator under one allowlisted
+-- free licence (CC0 1.0, CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, with
+-- the owner decision it relies on. Each file is either its untouched Commons original or a Wikimedia-served
+-- thumbnail rendition of it, recorded as such with the rendition's width; derivatives never exceed a rendition's
+-- width. Its images must carry the exact visible attribution derived from the grant and the credited file. Creates
+-- no grant, asset, approval or publication; closed sources, evidence, verification and revocation stay in force.
 begin;
 
 -- The only accepted licences: SPDX id -> visible label and canonical deed. Ported versions need review.
@@ -27,25 +29,60 @@ alter table jwl_internal.media_grants
   add column license_code text,
   add column license_url text,
   add column creator text,
-  add column source_page_url text,
-  add column original_url text,
+  add column licensed_files jsonb,
   add column attribution_text text,
   add column owner_decision_reference text;
--- An open-licence grant names one exact candidate, one Commons file page and its untouched original on
--- upload.wikimedia.org (Commons only, never a brand origin). Other kinds carry none of these fields.
+
+-- The files an open-licence grant covers: 1..20 distinct Commons file pages, each with exactly one held file on
+-- upload.wikimedia.org (Commons only, never a brand origin or another wiki), recorded honestly as either
+--   {"file_kind":"original","rendition_width":null,"file_url":".../wikipedia/commons/<h>/<hh>/<File>"} or
+--   {"file_kind":"rendition","rendition_width":N,"file_url":".../wikipedia/commons/thumb/<h>/<hh>/<File>/<N>px-<File>"}
+-- where <File> is the page's own File name spelled the same way, <hh> starts with <h> and N is 100..4000.
+create function jwl_internal.valid_open_license_files(files jsonb)
+returns boolean language plpgsql immutable security invoker set search_path='' as $$
+declare f jsonb; page text; name text; url text; parts text[]; width numeric; seen_pages text[]:='{}'; seen_files text[]:='{}';
+begin
+ if jsonb_typeof(files) is distinct from 'array' or jsonb_array_length(files) not between 1 and 20 then return false;end if;
+ for f in select value from jsonb_array_elements(files) loop
+  if jsonb_typeof(f) is distinct from 'object' or not(f ?& array['source_page_url','file_url','file_kind','rendition_width'])
+    or f-array['source_page_url','file_url','file_kind','rendition_width']<>'{}'::jsonb then return false;end if;
+  if jsonb_typeof(f->'source_page_url') is distinct from 'string' or jsonb_typeof(f->'file_url') is distinct from 'string' then return false;end if;
+  page:=f->>'source_page_url';url:=f->>'file_url';parts:=string_to_array(url,'/');
+  if length(page)>2048 or length(url)>2048 or page !~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$' then return false;end if;
+  name:=substring(page from '^https://commons\.wikimedia\.org/wiki/File:(.+)$');
+  if name !~ '\.([Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Ww][Ee][Bb][Pp])$' then return false;end if;
+  if f->>'file_kind'='original' then
+   if f->'rendition_width'<>'null'::jsonb then return false;end if;
+   if url !~ '^https://upload\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+$'
+     or parts[6]<>left(parts[7],1) or parts[8]<>name then return false;end if;
+  elsif f->>'file_kind'='rendition' then
+   if jsonb_typeof(f->'rendition_width') is distinct from 'number' then return false;end if;
+   width:=(f->>'rendition_width')::numeric;
+   if width<>trunc(width) or width not between 100 and 4000 then return false;end if;
+   if url !~ '^https://upload\.wikimedia\.org/wikipedia/commons/thumb/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+/[1-9][0-9]*px-[^/?#[:space:]"<>\\]+$'
+     or parts[7]<>left(parts[8],1) or parts[9]<>name or parts[10]<>width::integer::text||'px-'||name then return false;end if;
+  else return false;
+  end if;
+  if page=any(seen_pages) or url=any(seen_files) then return false;end if;
+  seen_pages:=array_append(seen_pages,page);seen_files:=array_append(seen_files,url);
+ end loop;
+ return true;
+end $$;
+revoke all on function jwl_internal.valid_open_license_files(jsonb) from public,anon,authenticated;
+grant execute on function jwl_internal.valid_open_license_files(jsonb) to service_role;
+
+-- An open-licence grant names one exact candidate and its licensed files. The owner decision is a dated,
+-- single-line record of that decision. Other kinds carry none of these fields.
 alter table jwl_internal.media_grants add constraint jwl_open_license_grant_check check (case when kind='open_license' then coalesce(
   candidate_id is not null and source_id is not null and media_origins='[]'::jsonb
   and source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official')
   and jwl_internal.open_licenses() ? license_code and license_url=jwl_internal.open_licenses()->license_code->>'url'
   and length(trim(creator)) between 1 and 300 and creator !~ '[[:cntrl:]]'
   and length(trim(attribution_text)) between 1 and 500 and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
-  and length(source_page_url)<=2048 and source_page_url ~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$'
-  and length(original_url)<=2048 and original_url ~ '^https://upload\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+\.([Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Ww][Ee][Bb][Pp])$'
-  and split_part(original_url,'/',6)=left(split_part(original_url,'/',7),1)
-  -- The original is the credited page's own file: both canonical URLs encode the file name the same way.
-  and split_part(original_url,'/',8)=substring(source_page_url from '^https://commons\.wikimedia\.org/wiki/File:(.+)$')
-  and owner_decision_reference ~ '^[a-z0-9][a-z0-9._:/-]{2,120}$',false)
-  else num_nulls(license_code,license_url,creator,source_page_url,original_url,attribution_text,owner_decision_reference)=7 end);
+  and jwl_internal.valid_open_license_files(licensed_files)
+  and length(owner_decision_reference) between 12 and 300 and owner_decision_reference=trim(owner_decision_reference)
+  and owner_decision_reference !~ '[[:cntrl:]]' and owner_decision_reference ~ '(^|[^0-9])[0-9]{4}-[0-9]{2}-[0-9]{2}([^0-9]|$)',false)
+  else num_nulls(license_code,license_url,creator,licensed_files,attribution_text,owner_decision_reference)=6 end);
 
 -- The grant's candidate must belong to the grant's source, checked once when the grant is recorded.
 create function jwl_internal.require_open_license_binding() returns trigger
@@ -129,11 +166,12 @@ begin
  return true;
 end $$;
 
--- Same evidence rules as 20261026114541, plus: an open-licence file must be the granted Commons original
--- and its entry must carry the exact credit derived from the grant; no other grant kind may carry a credit.
+-- Same evidence rules as 20261026114541, plus: each open-licence entry credits one granted file, carries the exact
+-- credit derived from the grant and that file, cites that file as the original of every variant and, for a
+-- rendition, says it was resized and is never wider than the rendition. No other grant kind may carry a credit.
 create or replace function jwl_internal.require_media_evidence() returns trigger
 language plpgsql security invoker set search_path='' as $$
-declare c jwl_internal.candidates; g jwl_internal.media_grants; entry jsonb; variant jsonb; a jwl_internal.media_assets;
+declare c jwl_internal.candidates; g jwl_internal.media_grants; entry jsonb; variant jsonb; a jwl_internal.media_assets; f jsonb;
 begin
   if not new.image_verified or new.revoked_at is not null then return new; end if;
   select * into c from jwl_internal.candidates where candidate_id=new.candidate_id;
@@ -144,9 +182,13 @@ begin
   if (g.candidate_id is not null and g.candidate_id<>c.candidate_id) or (g.source_id is not null and g.source_id<>c.source_id) then raise exception 'Media grant covers another product or source';end if;
   if jsonb_typeof(new.approved_image_variants) is distinct from 'array' or jsonb_array_length(new.approved_image_variants)=0 then raise exception 'Responsive variants required for new media approval';end if;
   for entry in select value from jsonb_array_elements(new.approved_image_variants) loop
+    f:=null;
     if g.kind='open_license' then
-      if entry->'attribution' is distinct from jsonb_build_object('creator',g.creator,'license',jwl_internal.open_licenses()->g.license_code->>'label','license_url',g.license_url,'source_url',g.source_page_url,'changes',entry->'attribution'->'changes')
-        or coalesce(entry->'attribution'->>'changes' not in ('resized and converted to WebP','converted to WebP'),true) then
+      f:=(select l.value from jsonb_array_elements(g.licensed_files) l where l.value->>'source_page_url'=entry->'attribution'->>'source_url');
+      if f is null or entry->'attribution' is distinct from jsonb_build_object('creator',g.creator,'license',jwl_internal.open_licenses()->g.license_code->>'label','license_url',g.license_url,'source_url',f->>'source_page_url','changes',entry->'attribution'->'changes')
+        or coalesce(entry->'attribution'->>'changes' not in ('resized and converted to WebP','converted to WebP'),true)
+        -- A rendition is already a resize of the licensed original, so its credit always says so.
+        or (f->>'file_kind'='rendition' and entry->'attribution'->>'changes'<>'resized and converted to WebP') then
         raise exception 'Open-licence image needs its exact visible attribution';
       end if;
     elsif entry ? 'attribution' then raise exception 'Attribution is recorded only for open-licence images';
@@ -159,7 +201,10 @@ begin
       if g.kind='owner_original' then
         if a.original_source<>'owner-original:'||a.original_sha256 then raise exception 'Owner grant requires an owner original';end if;
       elsif g.kind='open_license' then
-        if a.original_source is distinct from g.original_url then raise exception 'Open-licence evidence must cite the granted original file';end if;
+        if a.original_source is distinct from f->>'file_url' then raise exception 'Open-licence evidence must cite the granted file its credit names';end if;
+        if f->>'file_kind'='rendition' and (variant->>'width')::integer>(f->>'rendition_width')::integer then
+          raise exception 'An open-licence derivative cannot be wider than its source rendition';
+        end if;
       else
         -- An official gallery URL is only usable under written permission for its exact origin.
         if not coalesce(c.content->'image_urls','[]'::jsonb) ? a.original_source then raise exception 'Original is not in the exact candidate gallery';end if;

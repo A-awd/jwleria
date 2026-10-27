@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile,readdir,mkdtemp,rm} from 'node:fs/promises';
+import {readFile,readdir,mkdtemp,rm,writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
-import {openLicenses,acquireOriginal,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {openLicenses,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {responsiveImages} from '../src/server/responsive-media.mjs';
 import {recordMediaApproval,publish} from '../../../scripts/catalog-intake/supabase.mjs';
 
@@ -17,7 +17,11 @@ const proposed=new URL('../supabase/proposed/jwleria_open_license_media.sql',imp
 const rollback=new URL('../supabase/proposed/jwleria_open_license_media.rollback.sql',import.meta.url);
 const sha=c=>c.repeat(64);
 const file=(width,c)=>`https://media.example.test/v1/${sha('d')}/${sha('a')}/${width}w-${sha(c)}.webp`;
-const commons=name=>{const md5=createHash('md5').update(name).digest('hex');return [`https://commons.wikimedia.org/wiki/File:${name}`,`https://upload.wikimedia.org/wikipedia/commons/${md5[0]}/${md5.slice(0,2)}/${name}`];};
+const commons=name=>{const md5=createHash('md5').update(decodeURIComponent(name)).digest('hex');return [`https://commons.wikimedia.org/wiki/File:${name}`,`https://upload.wikimedia.org/wikipedia/commons/${md5[0]}/${md5.slice(0,2)}/${name}`];};
+// A Wikimedia-served thumbnail: .../commons/thumb/<h>/<hh>/<File>/<N>px-<File>.
+const thumb=(name,width)=>{const [p,o]=commons(name);return [p,o.replace('/wikipedia/commons/','/wikipedia/commons/thumb/')+`/${width}px-${name}`];};
+const originalFile=(p,o)=>({source_page_url:p,file_url:o,file_kind:'original',rendition_width:null});
+const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width};};
 const [page,original]=commons('Synthetic_test_watch_REF-9.jpg');
 const credit={creator:'Synthetic Photographer',license:'CC BY-SA 4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',source_url:page,changes:'resized and converted to WebP'};
 const entry=(c,attribution=credit)=>({src:file(1600,c),width:1600,height:2000,variants:[{src:file(640,c==='e'?'b':String.fromCharCode(c.charCodeAt(0)+1)),width:640,height:800,bytes:50000},{src:file(1600,c),width:1600,height:2000,bytes:300000}],...(attribution?{attribution}:{})});
@@ -38,10 +42,12 @@ async function database({open=true}={}){
 const as=async(db,role,fn)=>{await db.exec('set role '+role);try{return await fn();}finally{await db.exec('reset role');}};
 const service=(db,sql,params)=>as(db,'service_role',()=>db.query(sql,params));
 const ingest=(db,records)=>service(db,'select public.jwl_ingest_missing_batch($1::jsonb) r',[JSON.stringify(records)]);
-const columns=['grant_reference','kind','source_id','candidate_id','media_origins','website_publication','resize','webp_encode','evidence_reference','license_code','license_url','creator','source_page_url','original_url','attribution_text','owner_decision_reference'];
+const columns=['grant_reference','kind','source_id','candidate_id','media_origins','website_publication','resize','webp_encode','evidence_reference','license_code','license_url','creator','licensed_files','attribution_text','owner_decision_reference'];
 const openGrant=(c,overrides={})=>({grant_reference:'grant-open-01',kind:'open_license',source_id:c.source_id,candidate_id:c.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
-  evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:credit.license_url,creator:credit.creator,source_page_url:page,original_url:original,
-  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'synthetic-owner-decision',...overrides});
+  evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:credit.license_url,creator:credit.creator,licensed_files:[originalFile(page,original)],
+  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'synthetic owner decision 2026-10-26',...overrides});
+// One licensed file of the default grant with some of its fields changed.
+const fileChange=change=>({licensed_files:[{...originalFile(page,original),...change}]});
 const insertGrant=(db,g)=>service(db,`insert into jwl_internal.media_grants(${columns.join(',')}) select ${columns.map(k=>`g.${k}`).join(',')} from jsonb_populate_record(null::jwl_internal.media_grants,$1::jsonb) g`,[JSON.stringify(g)]);
 const asset=(db,c,v,{grant_reference='grant-open-01',original_source=original}={})=>service(db,'insert into jwl_internal.media_assets(candidate_id,revision_hash,public_url,public_sha256,width,height,original_source,original_sha256,grant_reference,verified_reference,verification_reference) values($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',
   [c.candidate_id,c.revision_hash,v.src,v.src.match(/-([a-f0-9]{64})\.webp$/)[1],v.width,v.height,original_source,sha('a'),grant_reference,c.external_id,'synthetic visual check']);
@@ -64,7 +70,7 @@ test('the database allowlist and visible labels are exactly the pipeline allowli
   }finally{await db.close();}
 });
 
-test('an open-licence grant needs the owner decision, an allowlisted licence, a Commons original, attribution and one exact candidate of an open source',async()=>{
+test('an open-licence grant needs the owner decision, an allowlisted licence, Commons files, attribution and one exact candidate of an open source',async()=>{
   const db=await database();
   try{
     const c=row('test','REF-2'),other=row('test','REF-3'),cartier=row('cartier-official','CRW-1'),piaget=row('piaget-official','PGT-1');
@@ -83,14 +89,26 @@ test('an open-licence grant needs the owner decision, an allowlisted licence, a 
       [{attribution_text:'Via Wikimedia Commons'},/check constraint/],
       [{owner_decision_reference:null},/check constraint/],
       [{owner_decision_reference:'Owner said yes'},/check constraint/],
-      [{source_page_url:page.replace('commons.wikimedia.org','en.wikipedia.org')},/check constraint/],
-      [{source_page_url:null},/check constraint/],
-      [{original_url:'https://example.test/img/REF-2.png'},/check constraint/],
-      [{original_url:original.replace('/wikipedia/commons/','/wikipedia/en/')},/check constraint/],
-      [{original_url:original.replace(/\/([0-9a-f])\/([0-9a-f]{2})\//,'/thumb/$1/$2/')+'/640px-x.jpg'},/check constraint/],
-      [{original_url:original.replace(/\/([0-9a-f])\/([0-9a-f]{2})\//,(m,a,b)=>`/${a==='0'?'1':'0'}/${b}/`)},/check constraint/],
-      [{original_url:original.replace(/\.jpg$/,'.tif')},/check constraint/],
-      [{original_url:original+'?x'},/check constraint/],
+      [{owner_decision_reference:'synthetic-owner-decision'},/check constraint/,'an undated decision'],
+      [{owner_decision_reference:' synthetic owner decision 2026-10-26'},/check constraint/],
+      [{owner_decision_reference:'synthetic owner decision\n2026-10-26'},/check constraint/],
+      [{licensed_files:null},/check constraint/],
+      [{licensed_files:[]},/check constraint/],
+      [{licensed_files:originalFile(page,original)},/check constraint/],
+      [{licensed_files:[originalFile(page,original),originalFile(page,original)]},/check constraint/,'a file is listed once'],
+      [{licensed_files:Array.from({length:21},(_,i)=>originalFile(...commons(`File_${i}.jpg`)))},/check constraint/],
+      [fileChange({source_page_url:page.replace('commons.wikimedia.org','en.wikipedia.org')}),/check constraint/],
+      [fileChange({source_page_url:null}),/check constraint/],
+      [fileChange({file_url:'https://example.test/img/REF-2.png'}),/check constraint/],
+      [fileChange({file_url:original.replace('/wikipedia/commons/','/wikipedia/en/')}),/check constraint/],
+      [fileChange({file_url:original.replace(/\/([0-9a-f])\/([0-9a-f]{2})\//,'/thumb/$1/$2/')+'/640px-x.jpg'}),/check constraint/],
+      [fileChange({file_url:original.replace(/\/([0-9a-f])\/([0-9a-f]{2})\//,(m,a,b)=>`/${a==='0'?'1':'0'}/${b}/`)}),/check constraint/],
+      [fileChange({file_url:original.replace(/\.jpg$/,'.tif')}),/check constraint/],
+      [fileChange({file_url:original+'?x'}),/check constraint/],
+      [fileChange({file_kind:'thumbnail'}),/check constraint/],
+      [fileChange({rendition_width:960}),/check constraint/,'an original has no rendition width'],
+      [{licensed_files:[{source_page_url:page,file_url:original,file_kind:'original'}]},/check constraint/],
+      [{licensed_files:[{...originalFile(page,original),note:'x'}]},/check constraint/],
       [{media_origins:['https://upload.wikimedia.org']},/check constraint/],
       [{candidate_id:null},/check constraint|exact candidate of its source/],
       [{source_id:'cartier-official'},/exact candidate of its source/],
@@ -99,7 +117,8 @@ test('an open-licence grant needs the owner decision, an allowlisted licence, a 
     ];
     for(const [i,[change,error]] of refused.entries())await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-refused-'+i,...change})),error,JSON.stringify(change));
     await assert.rejects(insertGrant(db,{...openGrant(c),grant_reference:'grant-written-x',kind:'written_permission',media_origins:['https://example.test']}),/check constraint/,'other kinds carry no open-licence fields');
-    await insertGrant(db,openGrant(c,{source_page_url:otherPage,original_url:otherOriginal,grant_reference:'grant-open-other-file'}));
+    await insertGrant(db,openGrant(c,{licensed_files:[originalFile(otherPage,otherOriginal)],grant_reference:'grant-open-other-file'}));
+    await insertGrant(db,openGrant(c,{licensed_files:[originalFile(page,original),originalFile(otherPage,otherOriginal)],grant_reference:'grant-open-two-files'}));
     await insertGrant(db,openGrant(c));
     await insertGrant(db,openGrant(other,{grant_reference:'grant-open-cc0',license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'}));
     await assert.rejects(as(db,'service_role',()=>db.exec("update jwl_internal.media_grants set creator='Changed' where grant_reference='grant-open-01'")),/permission denied/,'a grant cannot be rewritten');
@@ -113,7 +132,7 @@ test('the original must be the credited page\'s own file, not another file with 
     const c=row('test','REF-6');await ingest(db,[c]);
     const [alicePage]=commons('CC0_photo_by_Alice.jpg'),[,bobOriginal]=commons('Unrelated_photo_by_Bob.jpg');
     assert.equal(commonsOriginal(alicePage,bobOriginal),false,'the pipeline already refuses the pair');
-    await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-mixed',source_page_url:alicePage,original_url:bobOriginal,license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'})),/check constraint/,
+    await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-mixed',licensed_files:[originalFile(alicePage,bobOriginal)],license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'})),/check constraint/,
       'a grant written by hand cannot credit one file\'s page for another file');
     await insertGrant(db,openGrant(c,{grant_reference:'grant-same-file'}));
   }finally{await db.close();}
@@ -145,7 +164,7 @@ test('open-licence images need the granted original and their exact credit; othe
     for(const attribution of [null,{...credit,creator:'Someone else'},{...credit,license:'CC BY 4.0'},{...credit,source_url:commons('Other.jpg')[0]},{...credit,changes:'cropped and recoloured'},{...credit,extra:'x'}])
       await assert.rejects(approve(db,c,'grant-open-01',[{...entry('e',null),...(attribution?{attribution}:{})}]),/exact visible attribution/,JSON.stringify(attribution));
     const brand=entry('5');for(const v of brand.variants)await asset(db,c,v,{original_source:'https://example.test/img/REF-4.png'});
-    await assert.rejects(approve(db,c,'grant-open-01',[brand]),/must cite the granted original/,'the brand gallery file is not the licensed file');
+    await assert.rejects(approve(db,c,'grant-open-01',[brand]),/must cite the granted file/,'the brand gallery file is not the licensed file');
     await assert.rejects(approve(db,other,'grant-open-01',[ok]),/covers another product/,'a grant binds one exact candidate');
     await service(db,"insert into jwl_internal.media_grants(grant_reference,kind,source_id,media_origins,website_publication,resize,webp_encode,evidence_reference) values('grant-written-01','written_permission','test','[\"https://example.test\"]',true,true,true,'synthetic private evidence')");
     const written=entry('1');for(const v of written.variants)await asset(db,other,v,{grant_reference:'grant-written-01',original_source:'https://example.test/img/REF-5.png'});
@@ -165,6 +184,104 @@ test('the responsive shape accepts only a bounded credit for an allowlisted lice
       {...credit,license_url:'https://creativecommons.org/licenses/by/4.0/'},{...credit,source_url:'https://example.test/photo'},{...credit,changes:7},'credit',[credit]])
       assert.equal(await valid({...entry('e',null),attribution}),false,JSON.stringify(attribution));
   }finally{await db.close();}
+});
+
+test('a grant may cite Wikimedia-served renditions honestly: same file name and hash directories, a recorded width of 100..4000',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-8');await ingest(db,[c]);
+    const name='Synthetic_rendition_(12345).jpg',encoded='Synthetic_rendition_%2812345%29.jpg';
+    const ok=renditionFile(name,960),okEncoded=renditionFile(encoded,960);
+    const [otherPage]=commons('Another_rendition.jpg');
+    const refused=[
+      [{...ok,rendition_width:undefined},'missing rendition_width'],
+      [{...ok,rendition_width:null},'null rendition_width'],
+      [{...ok,rendition_width:'960'},'a text width'],
+      [{...ok,rendition_width:960.5},'a fractional width'],
+      [{...ok,rendition_width:640},'a width other than the URL names'],
+      [renditionFile(name,99),'below 100 px'],
+      [renditionFile(name,4001),'above 4000 px'],
+      [{...ok,file_kind:'original'},'a rendition recorded as an original'],
+      [{...ok,source_page_url:otherPage},'another file page'],
+      [{...ok,file_url:ok.file_url.replace(/\/960px-.*$/,'/960px-Another_rendition.jpg')},'mismatched file name after the width'],
+      [{...ok,file_url:ok.file_url.replace(`/${name}/`,'/Another_rendition.jpg/')},'mismatched file name directory'],
+      [{...ok,file_url:ok.file_url.replace(/\/thumb\/([0-9a-f])\/([0-9a-f]{2})\//,(m,a,b)=>`/thumb/${a==='0'?'1':'0'}/${b}/`)},'wrong hash directory'],
+      [{...ok,file_url:ok.file_url.replace('/wikipedia/commons/thumb/','/wikipedia/en/thumb/')},'another wiki'],
+      [{...ok,file_url:ok.file_url.replace('/960px-','/960px-x')},'a prefixed thumbnail name'],
+      [{...ok,file_url:ok.file_url+'?x'},'a query'],
+      [{...ok,file_url:ok.file_url.replace('960px-','960px-').replace(/\/960px-/,'/0960px-')},'a padded width'],
+      [{...okEncoded,source_page_url:commons(name)[0]},'the page and rendition spell the name differently'],
+    ];
+    for(const [i,[file,label]] of refused.entries()){
+      const record=Object.fromEntries(Object.entries(file).filter(([,v])=>v!==undefined));
+      await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-rendition-refused-'+i,licensed_files:[record]})),/check constraint/,label);
+    }
+    await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-rendition-dup',licensed_files:[ok,renditionFile(name,640)]})),/check constraint/,'one held file per page');
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-rendition-01',licensed_files:[ok]}));
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-rendition-02',licensed_files:[okEncoded,originalFile(page,original),renditionFile('Small_one.png',100),renditionFile('Large_one.webp',4000)]}));
+  }finally{await db.close();}
+});
+
+test('rendition-backed images cite their rendition, are credited as resized and are never wider than the rendition',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-9');await ingest(db,[c]);
+    const a=renditionFile('Synthetic_dial_(111).jpg',960),b=renditionFile('Synthetic_box_(222).jpg',960);
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-rendition-03',licensed_files:[a,b]}));
+    const creditOf=(f,changes='resized and converted to WebP')=>({...credit,source_url:f.source_page_url,changes});
+    // widths in ascending order; the last is the canonical file; chars name distinct content hashes.
+    const sized=(chars,widths,attribution,ratio=0.75)=>{const top=widths.at(-1);
+      return {src:file(top,chars.at(-1)),width:top,height:Math.round(top*ratio),variants:widths.map((w,i)=>({src:file(w,chars[i]),width:w,height:Math.round(w*ratio),bytes:30000+i})),...(attribution?{attribution}:{})};};
+    const record=async(entry,f,original_source=f.file_url)=>{for(const v of entry.variants)await asset(db,c,v,{grant_reference:'grant-rendition-03',original_source});};
+    const first=sized(['1','2','3'],[320,640,960],creditOf(a)),second=sized(['4','5','6'],[320,640,960],creditOf(b),0.5625);
+    await record(first,a);await record(second,b);
+    const upscaled=sized(['7','8','9','0'],[320,640,960,1200],creditOf(a));await record(upscaled,a);
+    await assert.rejects(approve(db,c,'grant-rendition-03',[upscaled]),/wider than its source rendition/,'an upscaled derivative is refused');
+    await assert.rejects(approve(db,c,'grant-rendition-03',[{...first,attribution:creditOf(a,'converted to WebP')}]),/exact visible attribution/,'a rendition is always credited as resized');
+    await assert.rejects(approve(db,c,'grant-rendition-03',[{...first,attribution:creditOf(b)}]),/must cite the granted file its credit names/,'an image is credited to its own file only');
+    const viaOriginal=sized(['a','b','c'],[320,640,960],creditOf(a));await record(viaOriginal,a,a.file_url.replace('/thumb/','/').replace(/\/960px-.*$/,''));
+    await assert.rejects(approve(db,c,'grant-rendition-03',[viaOriginal]),/must cite the granted file/,'evidence cannot claim the original when a rendition is held');
+    await approve(db,c,'grant-rendition-03',[first,second]);
+    assert.deepEqual((await db.query('select approved_image_variants v from jwl_internal.publication_approvals where candidate_id=$1',[c.candidate_id])).rows[0].v.map(e=>e.attribution.source_url),[a.source_page_url,b.source_page_url]);
+  }finally{await db.close();}
+});
+
+test('end to end: held Wikimedia renditions for one product record, publish their credits and are withdrawn by one revocation',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-open-rendition-'));
+  const db=await database();
+  try{
+    const sharp=installedImageEngine();
+    const c=normalizeBatch([{source_id:'test',external_id:'m126234-9999',source_url:'https://example.test/p/m126234-9999',brand:'Test brand',collection:'Test collection',product_name:'Test watch',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:['https://brand.example.test/img/m126234-9999.png'],facts:[{key:'diameter',value:'36 mm'}]}])[0];
+    await ingest(db,[c]);
+    const files=[renditionFile('Synthetic_front_(1).jpg',960),renditionFile('Synthetic_angle_(2).jpg',960)];
+    const grant=openGrant(c,{grant_reference:'grant-rendition-e2e',licensed_files:files});await insertGrant(db,grant);
+    const items=[];
+    for(const [i,f] of files.entries()){
+      const local=join(root,`held-${i}.jpg`);
+      await writeFile(local,await sharp({create:{width:960,height:i?540:720,channels:3,background:i?'#3c3631':'#5a5048'}}).jpeg().toBuffer());
+      const kept=await keepOpenLicenseFile({candidate:c,grant,file_url:f.file_url,local_path:local,output_directory:join(root,'private')});
+      assert.deepEqual([kept.file_kind,kept.rendition_width,kept.width],['rendition',960,960]);
+      const assetFile={path:kept.path,source_url:kept.source_url,sha256:kept.sha256};
+      const prepared=await prepareGrantedMedia({source:{id:'test',origin:'https://example.test',publication_allowed:true},candidate:c,asset:assetFile,grant,output_directory:join(root,'private')});
+      items.push({asset:assetFile,manifest:prepared.manifest,performance_review_accepted:true,verification:{asset_sha256:kept.sha256,verified_reference:c.external_id,reviewer:'synthetic reviewer',verification_reference:'synthetic visual check',
+        checks:{exact_reference:true,color_and_variant:true,authentic_product_photo:true,not_generated_or_altered:true,clear_product_view:true}}});
+    }
+    const bundle=approvalBundle({candidate:c,grant,items,public_base_url:'https://project.supabase.co/storage/v1/object/public/jwl-product-media'});
+    assert.deepEqual(bundle.approval.approved_image_variants.map(e=>[e.width,e.attribution.source_url,e.attribution.changes]),files.map(f=>[960,f.source_page_url,'resized and converted to WebP']));
+    assert(bundle.evidence.every(e=>files.some(f=>f.file_url===e.original_source)&&e.width<=960));
+    const receipt=(await service(db,'select public.jwl_record_media_approval($1::jsonb,$2::jsonb) r',[JSON.stringify(bundle.evidence),JSON.stringify(bundle.approval)])).rows[0].r;
+    assert.equal(receipt.evidence_rows,bundle.evidence.length);
+    await db.exec("update jwl_internal.sources set publication_allowed=true where id='test'");
+    const review={candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-watch-m126234-9999',reference:c.external_id,brand_slug:'test-brand',brand_name:'Test brand',brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:'Test collection',
+      name_ar:c.name_ar,name_en:c.name_en,description_ar:c.description_ar,description_en:c.description_en,images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants};
+    const rpc=async(url,init)=>{const args=JSON.parse(init.body);return new Response(JSON.stringify((await service(db,'select public.jwl_publish_candidate($1,$2,$3::jsonb) r',[args.candidate,args.revision,JSON.stringify(args.product)])).rows[0].r));};
+    await publish(review,{url:'https://project.supabase.co',key:'synthetic-test-key'},rpc);
+    const live=(await as(db,'anon',()=>db.query('select image_variants from public.jwl_catalog where id=$1',[c.candidate_id]))).rows[0];
+    assert.deepEqual(live.image_variants.map(e=>e.attribution.source_url),files.map(f=>f.source_page_url),'each image shows its own credit');
+    await as(db,'service_role',()=>db.exec("update jwl_internal.media_grants set revoked_at=now() where grant_reference='grant-rendition-e2e'"));
+    assert.equal((await db.query('select active from public.jwl_catalog where id=$1',[c.candidate_id])).rows[0].active,false,'one revocation withdraws the product');
+    assert.deepEqual((await service(db,'select public.jwl_revoked_media_files() r')).rows[0].r.sort(),bundle.evidence.map(e=>e.public_url).sort());
+  }finally{await db.close();await rm(root,{recursive:true,force:true});}
 });
 
 test('end to end: an open-licence bundle from the pipeline records, publishes its credit and is withdrawn by revocation',async()=>{

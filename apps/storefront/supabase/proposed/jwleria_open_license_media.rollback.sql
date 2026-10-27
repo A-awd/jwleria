@@ -100,12 +100,12 @@ alter table jwl_internal.media_grants
   drop column license_code,
   drop column license_url,
   drop column creator,
-  drop column source_page_url,
-  drop column original_url,
+  drop column licensed_files,
   drop column attribution_text,
   drop column owner_decision_reference;
 alter table jwl_internal.media_grants drop constraint media_grants_kind_check;
 alter table jwl_internal.media_grants add constraint media_grants_kind_check check (kind in ('owner_original','written_permission'));
+drop function jwl_internal.valid_open_license_files(jsonb);
 drop function jwl_internal.valid_media_attribution(jsonb);
 drop function jwl_internal.open_licenses();
 
