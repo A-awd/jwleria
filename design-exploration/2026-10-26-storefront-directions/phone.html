@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>معاينة الجوال · Jwleria</title>
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg: #f4f2ee; --fg: #1d1b18; --muted: #6a645b; --line: #dcd6cc; --on: #1d1b18; --onfg: #fff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.6 system-ui, "Segoe UI", Tahoma, sans-serif; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; padding: 12px max(16px, env(safe-area-inset-left, 0px)) 8px max(16px, env(safe-area-inset-right, 0px)); }
+  .bar a, .bar button { min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--fg); font: inherit; text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; }
+  .bar button[aria-pressed="true"] { background: var(--on); color: var(--onfg); border-color: var(--on); }
+  .bar .sub { border-style: dashed; }
+  .note { text-align: center; color: var(--muted); font-size: 13px; margin: 0 16px 10px; }
+  .stage { display: flex; justify-content: center; padding: 0 0 24px; }
+  .phone { width: 410px; max-width: 100%; padding: 10px; border-radius: 36px; background: #111; }
+  iframe { display: block; width: 390px; max-width: 100%; height: min(844px, calc(100vh - 170px)); border: 0; border-radius: 26px; background: #fff; }
+  @media (max-width: 440px) { .phone { padding: 0; background: none; border-radius: 0; width: 100%; } iframe { width: 100%; border-radius: 0; height: calc(100vh - 150px); } }
+  :focus-visible { outline: 2px solid #7c5e34; outline-offset: 3px; }
+</style>
+</head>
+<body>
+<div class="bar" role="group" aria-label="الاتجاه">
+  <button type="button" data-d="a" aria-pressed="true">أ — الدار</button>
+  <button type="button" data-d="b" aria-pressed="false">ب — الفهرس</button>
+  <button type="button" data-d="c" aria-pressed="false">ج — المعرض</button>
+</div>
+<div class="bar" role="group" aria-label="الصفحة">
+  <button type="button" class="sub" data-p="product" aria-pressed="true">الساعة المصوَّرة</button>
+  <button type="button" class="sub" data-p="catalog" aria-pressed="false">الكتالوج</button>
+  <button type="button" class="sub" data-p="home" aria-pressed="false">الرئيسية</button>
+  <a href="index.html">كل الاتجاهات</a>
+</div>
+<p class="note">إطار بعرض داخلي ٣٩٠ بكسل. الصور بترخيص مفتوح من طرف ثالث وليست صورًا رسمية، ومقترحة غير معتمدة للموقع.</p>
+<div class="stage"><div class="phone"><iframe id="f" title="معاينة الجوال" src="a/product.html?model=rolex-datejust-36-126234&amp;ref=m126234-0015"></iframe></div></div>
+<script>
+  const P = { product: 'product.html?model=rolex-datejust-36-126234&ref=m126234-0015', catalog: 'catalog.html', home: 'home.html' };
+  let d = 'a', p = 'product';
+  const f = document.getElementById('f');
+  const go = () => {
+    f.src = d + '/' + P[p];
+    document.querySelectorAll('[data-d]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.d === d)));
+    document.querySelectorAll('[data-p]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.p === p)));
+  };
+  document.addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.d) d = b.dataset.d;
+    if (b.dataset.p) p = b.dataset.p;
+    go();
+  });
+</script>
+</body>
+</html>
