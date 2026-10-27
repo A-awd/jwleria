@@ -61,8 +61,9 @@ function card(m, v, sizes) {
   const sw = J.axesOf(m).find((a) => a.kind !== 'size' && a.values.length > 1), MAX = 6, sum = J.summaryAr(m);
   v = v || J.cardVariant(m);
   const imgs = J.imagesOf(m, v);
-  const dots = sw ? `<span class="dots">${sw.values.slice(0, MAX).map((x) =>
-    `<a class="dot${/diamond/i.test(x.en) ? ' is-gem' : ''}" href="${esc(J.url(m, J.nearest(m, v, sw.kind, x.id)))}" style="--c:${x.tone}" aria-label="${esc(`${m.name}، ${sw.kind === 'dial' ? 'الميناء' : 'اللون'} ${x.ar}`)}"${v[sw.kind] === x.id ? ' aria-current="true"' : ''}><i></i></a>`).join('')}` +
+  // Decorative tone dots; the real options are links on the product page.
+  const dots = sw ? `<span class="dots" aria-hidden="true">${sw.values.slice(0, MAX).map((x) =>
+    `<span class="dot${/diamond/i.test(x.en) ? ' is-gem' : ''}${v[sw.kind] === x.id ? ' is-on' : ''}" style="--c:${x.tone}"><i></i></span>`).join('')}` +
     `${sw.values.length > MAX ? `<span class="dots-more" aria-hidden="true">+${ar(sw.values.length - MAX)}</span>` : ''}</span>` : '';
   const face = imgs.length ? cardPhoto(imgs[0], sizes || GRID_SIZES) : J.hasStandInImage(m) ? ph(m, v, '', 'card') : fo(m, v);
   return `<article class="card${imgs.length ? ' card--photo' : ''}">${face}<div class="card-body"><p class="card-brand">${lat(m.brand)}</p>` +
@@ -302,20 +303,38 @@ if (page === 'product') {
     const n = IMGS.length || (stand ? VIEWS.length : 0);
     const count = n > 1 ? `<p class="gallery-count" aria-hidden="true"><span data-gi>١</span> / ${ar(n)}</p>` : '';
     if (IMGS.length) {
-      media.innerHTML = `<div class="gallery gallery--photo" data-gallery aria-label="${esc('صور المرجع ' + V.ref)}" role="group">${IMGS.map((img, i) =>
+      const ratio = Math.min(1.25, Math.max(0.66, ...IMGS.map((i) => i.h / i.w)));
+      media.innerHTML = `<div class="gallery gallery--photo" style="--ratio:${ratio.toFixed(3)}" data-gallery aria-label="${esc('صور المرجع ' + V.ref)}" role="group">${IMGS.map((img, i) =>
         `<figure class="slide slide--photo"><button class="zoom" type="button" data-zoom="${i}" aria-label="${esc(`تكبير الصورة ${ar(i + 1)} من ${ar(IMGS.length)}: ${img.alt}`)}">` +
-        `<img src="${esc(smallest(img))}" srcset="${esc(J.srcset(img))}" sizes="${i ? '(min-width: 960px) 27vw, 100vw' : '(min-width: 960px) 55vw, 100vw'}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${i ? 'loading="lazy"' : 'loading="eager" fetchpriority="high"'} decoding="async">` +
+        // Later slides carry their sources in data-* until they come near view (see hydrate).
+        `<img ${i ? 'data-' : ''}src="${esc(smallest(img))}" ${i ? 'data-' : ''}srcset="${esc(J.srcset(img))}" sizes="${i ? '(min-width: 960px) 27vw, 100vw' : '(min-width: 960px) 55vw, 100vw'}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${i ? 'loading="lazy"' : 'loading="eager" fetchpriority="high"'} decoding="async">` +
         `<span class="zoom-hint" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" width="18" height="18" focusable="false"><circle cx="10.5" cy="10.5" r="6.25"/><path d="M15.2 15.2 20 20M10.5 8v5M8 10.5h5"/></svg></span></button>` +
         `<figcaption>${credit(img)}</figcaption></figure>`).join('')}</div>${count}`;
+      hydrate();
     } else if (stand) {
       media.innerHTML = `<div class="gallery" data-gallery>${VIEWS.map((w, i) => `<figure class="slide">${ph(M, V, w, MODS[i])}</figure>`).join('')}</div>${count}<p class="standin-note">ألوان تقريبية لتجربة التبديل فقط؛ لا توجد صورة أصلية معتمدة لهذا المرجع بعد.</p>`;
     } else media.innerHTML = fo(M, V, true);
   }
+  // A swipe gallery fills only the visible slide and its neighbours; a stacked
+  // (desktop) gallery hands every slide to native lazy loading.
+  const slideAt = (gal) => { const x = Math.abs(gal.scrollLeft), n = gal.children.length; return x >= gal.scrollWidth - gal.clientWidth - 2 ? n - 1 : Math.round(x / gal.children[0].offsetWidth); };
+  function hydrate(only) {
+    const gal = $('[data-gallery].gallery--photo', media); if (!gal) return;
+    const swipe = gal.scrollWidth > gal.clientWidth + 2, at = only != null ? only : slideAt(gal);
+    $$('img[data-srcset]', gal).forEach((im) => {
+      const i = [...gal.children].indexOf(im.closest('.slide'));
+      if (swipe && Math.abs(i - at) > 1) return;
+      im.srcset = im.dataset.srcset; im.src = im.dataset.src; im.removeAttribute('data-srcset'); im.removeAttribute('data-src');
+    });
+  }
+  addEventListener('resize', () => hydrate());
+  media.addEventListener('focusin', (e) => { const s = e.target.closest('.slide'); if (s) hydrate([...s.parentNode.children].indexOf(s)); });
   media.addEventListener('scroll', (e) => {
     const gal = e.target, gi = $('[data-gi]', media);
-    if (!gal.matches || !gal.matches('[data-gallery]') || !gi) return;
-    const x = Math.abs(gal.scrollLeft), n = gal.children.length;
-    gi.textContent = ar(x >= gal.scrollWidth - gal.clientWidth - 2 ? n : Math.round(x / gal.children[0].offsetWidth) + 1);
+    if (!gal.matches || !gal.matches('[data-gallery]')) return;
+    const at = slideAt(gal);
+    if (gi) gi.textContent = ar(at + 1);
+    hydrate(at);
   }, { capture: true, passive: true });
 
   /* Full-screen viewer: loads the 1200 derivative only on demand */

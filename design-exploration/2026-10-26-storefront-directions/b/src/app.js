@@ -56,9 +56,11 @@ const phN = n => n === 1 ? 'صورة واحدة' : n === 2 ? 'صورتان' : A(
 const SAMPLE = 'عيّنة بترخيص مفتوح لمراجعة التصميم';
 const cr = (img, c2) => { const c = img.credit || {}; return `<p class="cr${c2 ? ' ' + c2 : ''}"><span class="cr-s">${SAMPLE}</span><span class="cr-l">${L(c.creator)}<span aria-hidden="true"> · </span><a href="${esc(c.license_url)}" rel="license noopener" target="_blank">${L(c.license)}</a><span aria-hidden="true"> · </span><a href="${esc(c.source_url)}" rel="noopener" target="_blank">المصدر</a><span aria-hidden="true"> · </span><span>صورة مصغّرة ومحوّلة</span></span></p>`; };
 /* cards and inline slides request at most 800w; only the zoom viewer asks for 1200 */
-const pimg = (img, sizes, first) => {
-  const ws = img.widths.filter(w => w <= 800);
-  return `<img src="${esc(img.base)}-${ws[0]}.webp" srcset="${esc(J.srcset(Object.assign({}, img, { widths: ws })))}" sizes="${sizes}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${first ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+/* `defer`: off-screen gallery slides keep their sources in data-* until the gallery scrolls near them
+   (native lazy loading fetches every slide of a horizontal scroller at once) */
+const pimg = (img, sizes, first, defer) => {
+  const ws = img.widths.filter(w => w <= 800), p = defer ? 'data-' : '';
+  return `<img ${p}src="${esc(img.base)}-${ws[0]}.webp" ${p}srcset="${esc(J.srcset(Object.assign({}, img, { widths: ws })))}" sizes="${sizes}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${first ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
 };
 const CSZ = '(max-width: 767px) calc(50vw - 22px), (max-width: 1279px) 30vw, 260px';
 /* facts-only: card face is reference-first (brand and model sit in the caption below) */
@@ -413,7 +415,7 @@ function product() {
     if (!im.length && !st) return H('#gw', foL(m, v));
     const n = im.length || VW.length;
     H('#gw', (im.length
-      ? `<div class="gal gal--p${n === 1 ? ' one' : ''}" id="gal" role="region" aria-roledescription="معرض صور" aria-label="${esc('صور المرجع ' + v.ref)}" tabindex="-1">${im.map((x, i) => `<figure class="sl"><button type="button" class="zm" data-i="${i}" aria-label="${esc(`تكبير الصورة ${A(i + 1)} من ${A(n)}: ${x.alt}`)}">${pimg(x, PSZ, !i)}<span class="zm-i" aria-hidden="true">${sv('<circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4M8.5 6v5M6 8.5h5"/>', 1.5)}</span></button><figcaption>${cr(x)}</figcaption></figure>`).join('')}</div>`
+      ? `<div class="gal gal--p${n === 1 ? ' one' : ''}" id="gal" role="region" aria-roledescription="معرض صور" aria-label="${esc('صور المرجع ' + v.ref)}" tabindex="-1">${im.map((x, i) => `<figure class="sl"><button type="button" class="zm" data-i="${i}" aria-label="${esc(`تكبير الصورة ${A(i + 1)} من ${A(n)}: ${x.alt}`)}">${pimg(x, PSZ, !i, i > 0)}<span class="zm-i" aria-hidden="true">${sv('<circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4M8.5 6v5M6 8.5h5"/>', 1.5)}</span></button><figcaption>${cr(x)}</figcaption></figure>`).join('')}</div>`
       : `<div class="gal" id="gal" role="region" aria-roledescription="معرض" aria-label="بدائل تخطيطية للطراز، ليست صورًا" tabindex="-1">${VW.map((w, i) => ph(m, v, w, i)).join('')}</div>`) + ctl(n, im.length ? 'الصورة' : 'البديل'));
     const gl = $('#gal'), sl = [...gl.children];
     if (n > 1) {
@@ -425,6 +427,15 @@ function product() {
       }), { root: gl, threshold: 0.6 });
       sl.forEach(c => io.observe(c));
       $$('.gal-b').forEach(b => b.addEventListener('click', () => { const t = sl[Math.max(0, Math.min(n - 1, cur + +b.dataset.d))]; t.scrollIntoView({ block: 'nearest', inline: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }));
+    }
+    if (im.length > 1) {
+      /* hydrate a slide when it comes within one slide width of view (current + next only) */
+      const ho = new IntersectionObserver(es => es.forEach(e => {
+        if (!e.isIntersecting) return;
+        const i = $('img[data-src]', e.target); if (i) { i.srcset = i.dataset.srcset; i.src = i.dataset.src; i.removeAttribute('data-srcset'); i.removeAttribute('data-src'); }
+        ho.unobserve(e.target);
+      }), { root: gl, rootMargin: '0px 60% 0px 60%' });
+      sl.slice(1).forEach(x => ho.observe(x));
     }
     if (im.length) gl.addEventListener('click', e => { const b = e.target.closest('.zm'); if (!b) return; zIm = im; zSet(+b.dataset.i); zm.open(b); });
   }
