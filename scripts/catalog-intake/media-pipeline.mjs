@@ -76,10 +76,14 @@ export function commonsFile(file){
 export function licensedFile(grant,file_url){
   return Array.isArray(grant?.licensed_files)?grant.licensed_files.find(file=>file?.file_url===file_url):undefined;
 }
-// The owner decision an open-licence grant relies on is a recorded decision file of this repository
-// (decisions/NNNN-slug.md), never free text: a dated sentence is not a decision record.
-export const ownerDecisionPattern=/^decisions\/[0-9]{4}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
-const ownerDecision=value=>typeof value==='string'&&value.length<=120&&ownerDecisionPattern.test(value);
+// The owner decisions an open-licence grant may rely on: exactly these recorded decision files of this repository, each
+// with the catalogue references it covers. Free text, dated or relayed sentences, decision 0011 (which rejects open
+// licences) and any other file are refused. Widening this list, or a decision's references, needs the decision file
+// amended first and a reviewed migration: the proposed SQL holds the same list in jwl_internal.open_license_decisions().
+export const openLicenseDecisions=Object.freeze({
+  'decisions/0013-open-licence-exact-product-photos.md':Object.freeze({references:Object.freeze(['m126234-0015'])}),
+});
+const ownerDecision=value=>typeof value==='string'&&Object.hasOwn(openLicenseDecisions,value);
 function openLicenseGaps(grant){
   const reasons=[],deed=Object.hasOwn(openLicenses,grant.license_code??'')?openLicenses[grant.license_code]:null;
   if(!ownerDecision(grant.owner_decision_reference))reasons.push('owner_decision_reference_missing');
@@ -135,6 +139,8 @@ export function evaluateMediaGrant(grant,{candidate,asset_url,now=Date.now()}={}
     if(grant.source_id!==candidate?.source_id)reasons.push('grant_covers_another_source');
     if(recordedSourceStops[candidate?.source_id])reasons.push('source_acquisition_restricted');
     reasons.push(...openLicenseGaps(grant));
+    // The cited decision covers only the references it lists; another reference needs that decision amended first.
+    if(ownerDecision(grant.owner_decision_reference)&&!openLicenseDecisions[grant.owner_decision_reference].references.includes(candidate?.external_id))reasons.push('owner_decision_does_not_cover_reference');
     // A grant covers only its own Commons files; the brand gallery is never a download target here.
     if(asset_url!==undefined&&!licensedFile(grant,asset_url))reasons.push('asset_not_a_granted_file');
   }else{

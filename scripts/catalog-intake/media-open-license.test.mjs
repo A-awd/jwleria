@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {normalizeBatch} from './normalize.mjs';
 import {installedImageEngine} from './responsive-media.mjs';
-import {openLicenses,commonsOriginal,commonsRendition,commonsFile,evaluateMediaGrant,mediaReadiness,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle} from './media-pipeline.mjs';
+import {openLicenses,openLicenseDecisions,commonsOriginal,commonsRendition,commonsFile,evaluateMediaGrant,mediaReadiness,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle} from './media-pipeline.mjs';
 import {mediaRun} from './media-run.mjs';
 
 // Synthetic fixtures only: no request leaves the process and no real file, person or licence record is named.
@@ -18,10 +18,11 @@ const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_
 const [page,original]=commons('Synthetic_test_watch_m126610ln-0001.jpg');
 const gallery='https://media.example.test/watches/m126610ln-0001_front.png';
 const record=(source_id,external_id)=>normalizeBatch([{source_id,external_id,source_url:'https://brand.example.test/watches/'+external_id,brand:'Synthetic',collection:'Submariner',product_name:'Synthetic Submariner Date',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:[gallery],facts:[{key:'diameter',value:'41 mm'}]}])[0];
-const candidate=record('synthetic-official','m126610ln-0001');
+// The candidate uses the one reference decision 0013 covers; every other fixture value is synthetic.
+const candidate=record('synthetic-official','m126234-0015');
 const open={grant_reference:'synthetic-open-01',kind:'open_license',source_id:'synthetic-official',candidate_id:candidate.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',creator:'Synthetic Photographer',
-  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'};
+  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md'};
 const source={id:'synthetic-official',origin:'https://brand.example.test',publication_allowed:true};
 const base='https://project.supabase.co/storage/v1/object/public/jwl-product-media';
 const now=Date.parse('2026-10-26T00:00:00Z');
@@ -61,6 +62,11 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
     [{owner_decision_reference:'../decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
     [{owner_decision_reference:'decisions/0013-open--licence.md'},'owner_decision_reference_missing'],
     [{owner_decision_reference:'https://example.test/decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
+    // A well-formed path is not enough: only the pinned decision file is accepted. 0011 rejects open licences.
+    [{owner_decision_reference:'decisions/0011-per-origin-queues-and-exact-media-evidence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence-exact-product-photos'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'toString'},'owner_decision_reference_missing'],
     [{licensed_files:[]},'licensed_file_not_an_allowlisted_commons_file'],
     [{licensed_files:[{...open.licensed_files[0],rendition_width:960}]},'licensed_file_not_an_allowlisted_commons_file'],
     [{creator:''},'attribution_creator_missing'],
@@ -80,6 +86,22 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
     const closed=record(source_id,'CLOSED-1');
     assert(evaluateMediaGrant({...open,source_id,candidate_id:closed.candidate_id},{candidate:closed,asset_url:original,now}).reasons.includes('source_acquisition_restricted'),source_id);
   }
+});
+
+test('a grant may cite only the pinned decision 0013, and only for the reference it covers',async()=>{
+  assert.deepEqual(Object.keys(openLicenseDecisions),['decisions/0013-open-licence-exact-product-photos.md']);
+  assert.deepEqual(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references,['m126234-0015']);
+  assert(Object.isFrozen(openLicenseDecisions)&&Object.isFrozen(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references));
+  // Each pinned decision is a file of this repository that names every reference it covers.
+  for(const [path,{references}] of Object.entries(openLicenseDecisions)){
+    const body=await readFile(new URL('../../'+path,import.meta.url),'utf8');
+    for(const reference of references)assert(body.includes(reference),path+' names '+reference);
+  }
+  // The same decision for another exact product is refused until the decision itself is amended.
+  const sibling=record('synthetic-official','m126234-0016');
+  assert.deepEqual(evaluateMediaGrant({...open,candidate_id:sibling.candidate_id},{candidate:sibling,asset_url:original,now}).reasons,['owner_decision_does_not_cover_reference']);
+  const unrelated=record('synthetic-official','m126610ln-0001');
+  assert.deepEqual(evaluateMediaGrant({...open,candidate_id:unrelated.candidate_id},{candidate:unrelated,asset_url:original,now}).reasons,['owner_decision_does_not_cover_reference']);
 });
 
 test('only the canonical Commons original of the same file page qualifies, never a brand, local-wiki or thumbnail file',()=>{

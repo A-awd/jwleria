@@ -31,11 +31,13 @@ The helper generates 320, 640 and 960 pixel-wide WebP files only when the uprigh
 
 Encoding is lossy WebP with a measured, deterministic quality search (decision 0009, delivery addendum of 27 October 2026):
 
-- Each derivative takes the highest quality of the fixed ladder 92, 90, 88, 85, 82, 80, 78, 75 whose bytes fit its budget and whose fidelity meets its floor.
-- Budgets: 150 KiB for a card size (320/640/960), 600 KiB for the detail file. Floors: card luma SSIM >= 0.97; detail luma SSIM >= 0.985 and quality >= 85, because zoom must retain source detail.
-- When the detail width equals a card width (for example a 960px source), it is one shared file and must meet both: 150 KiB, SSIM >= 0.985, quality >= 85.
-- Fidelity is measured against an in-memory Lanczos3 resize of the same pipeline at the same width (never written): mean luma (BT.601) SSIM with an 11x11 Gaussian window, sigma 1.5, plus RGB PSNR, implemented in `image-fidelity.mjs` on decoded pixels.
-- When no ladder step meets both budget and floor, the helper keeps the smallest file that still meets the floor (or the top step when none does), marks it `over_budget` and/or `fidelity_floor_met: false`, and sets `performance_review_required`. It never lowers quality below a floor and never waives the budget.
+- Each derivative takes the highest quality of the fixed ladder 92, 90, 88, 85, 82, 80, 78, 75 whose bytes fit its byte budget and whose fidelity is at or above the minimum floor.
+- Byte budgets: 150,000 bytes for a card size (320/640/960), the "about 80–150 KB per card derivative" of `docs/STOREFRONT-PERFORMANCE-2026-10-21.md`; 600,000 bytes for a detail-only file (wider than 960 px). The budget is a release requirement and is never waived.
+- The deployed storefront puts every variant of at most 960 px into the card `srcset`, so when the detail width is also a card width (a source of at most 960 px), the one shared file carries the card budget.
+- Minimum fidelity floor for every file: luma SSIM >= 0.97 against an in-memory Lanczos3 resize of the same pipeline at the same width (never written), so that no file is destructively compressed. SSIM is mean luma (BT.601) SSIM with an 11x11 Gaussian window, sigma 1.5; RGB PSNR is recorded too. Both are implemented in `image-fidelity.mjs` on decoded pixels.
+- Detail target, a recorded preference only: SSIM >= 0.985 at quality >= 85 for a file that serves the detail view. `detail_target_met` records it for the visual comparison; it never blocks a file and no approval depends on it. No decision sets a numeric fidelity threshold.
+- When no ladder step meets budget and floor, the helper keeps the top step, marks it `over_budget` and/or `fidelity_floor_met: false` and sets `performance_review_required`; such a file cannot be approved.
+- Lossy WebP is used only after a visual comparison: every manifest says `visual_comparison_required: true`. The helper cannot do that comparison; an independent reviewer records it per derivative before any approval.
 - Every encoder option is pinned (`preset: photo`, `effort: 6`, `smartSubsample: true`, `smartDeblock: false`, `alphaQuality: 100`, no near-lossless), so the same input gives byte-identical output; a test proves it.
 - Lossy WebP stores colour as 4:2:0 YUV, as every lossy WebP does; no colour adjustment is made. Embedded ICC profiles are kept; EXIF/GPS are not copied.
 
@@ -49,14 +51,15 @@ Repeating identical work verifies/reuses identical files. An existing output wit
 
 The private manifest contains:
 
-- `schema_version: 1`, `purpose`, `publication_state: private-prepared`, `image_verification_state: pending`.
+- `schema_version: 3`, `purpose`, `publication_state: private-prepared`, `image_verification_state: pending`.
 - `binding`: exact source/candidate/revision, permission reference, source asset URL and checksum.
 - `original`: original local path, format, raw dimensions, original EXIF `orientation`, upright `visual_width`/`visual_height`, byte length and checksum.
-- `processing`: engine/version, kernel, `webp_lossless: false`, the pinned `webp_encoder` options, `webp_quality_ladder`, `byte_budgets`, `fidelity_floors`, the fidelity metric, `orientation_applied`, `orientation_normalized` and explicit transformation/metadata behavior.
-- `variants` and `detail`: private relative path, MIME type, actual width/height/bytes/checksum, `roles` (`card`, `detail` or both), `webp_quality`, `ssim_luma`, `psnr_rgb_db` (null means identical pixels), `budget_limit_bytes`, `over_budget`, `ssim_floor`, `min_quality`, `fidelity_floor_met` and `ladder_measured` (bytes and fidelity of every step tried).
-- `performance_review_required`: true if any derivative exceeds its budget or misses its fidelity floor.
+- `processing`: engine/version, kernel, `webp_lossless: false`, the pinned `webp_encoder` options, `webp_quality_ladder`, `byte_budgets`, `fidelity_floor`, `detail_target`, the `selection` rule, the fidelity metric, `orientation_applied`, `orientation_normalized` and explicit transformation/metadata behavior.
+- `variants` and `detail`: private relative path, MIME type, actual width/height/bytes/checksum, `roles` (`card`, `detail` or both), `webp_quality`, `ssim_luma`, `psnr_rgb_db` (null means identical pixels), `budget_limit_bytes`, `over_budget`, `ssim_floor`, `fidelity_floor_met`, `detail_target_met` (null for a card-only file) and `ladder_measured` (bytes and fidelity of every step tried).
+- `performance_review_required`: true if any derivative exceeds its budget or misses the fidelity floor.
+- `visual_comparison_required`: always true for lossy output.
 
-The manifest `schema_version` is 2. These are preparation measurements, not release approval: a file that needs a performance review stays out of an approval until a reviewed exception exists.
+These are preparation measurements, not release approval: a file that needs a performance review cannot be approved, and every derivative still needs its recorded visual comparison.
 
 ## Promotion and public integration boundary
 
@@ -72,7 +75,7 @@ Include the canonical detail derivative among the mapped `variants` as well. For
 
 ## Verification
 
-The focused tests create synthetic/editorial pixels labelled TEST ONLY in temporary local directories, verify actual outputs and original preservation, reject grant/identity/checksum mismatches, prove no upscaling, prove byte-identical output for the same input, recompute the recorded SSIM/PSNR independently from the files, check the shared 960px card/detail file against both budgets and floors, and prove with noisy test data that a file failing its budget or floor is flagged without going below the floor. An orientation-6 JPEG test independently checks its upright dimensions and four known corner colors, and confirms the original checksum is unchanged. Temporary files are deleted. These tests prove preparation behavior; they are not a real product media review, promotion or live-page acceptance.
+The focused tests create synthetic/editorial pixels labelled TEST ONLY in temporary local directories, verify actual outputs and original preservation, reject grant/identity/checksum mismatches, prove no upscaling, prove byte-identical output for the same input, reproduce the recorded SSIM/PSNR by re-running the same resize and decode on the written files (this uses the same metric code), check the metric code itself against a fixed known-value vector computed by a separate numpy implementation, check that the shared 960px card/detail file carries the card budget, and prove with noisy test data that each file takes the highest step within budget and floor, or keeps the top step and is flagged. An orientation-6 JPEG test independently checks its upright dimensions and four known corner colors, and confirms the original checksum is unchanged. Temporary files are deleted. These tests prove preparation behavior; they are not a real product media review, promotion or live-page acceptance.
 
 ```sh
 node --test scripts/catalog-intake/responsive-media.test.mjs

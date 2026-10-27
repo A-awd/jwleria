@@ -162,5 +162,6 @@ drop function jwl_internal.valid_media_attribution(jsonb);
 drop function jwl_internal.open_licenses();
 drop function jwl_internal.open_license_lane(text,text);
 drop function jwl_internal.percent_decode(text);
+drop function jwl_internal.open_license_decisions();
 
 commit;

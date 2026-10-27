@@ -3,16 +3,19 @@
 -- scope only, once the storefront shows the visible attribution; on approval it is registered and moved to ../migrations.
 -- Adds one grant kind, open_license: up to twenty Wikimedia Commons files by one creator under one allowlisted
 -- free licence (CC0 1.0, CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, citing
--- the recorded decision file it relies on (decisions/NNNN-slug.md). Each file is either its untouched Commons
+-- exactly decisions/0013-open-licence-exact-product-photos.md, which covers only m126234-0015 (any other decision or
+-- reference needs that decision amended and a reviewed migration). Each file is either its untouched Commons
 -- original or a Wikimedia-served thumbnail rendition of it, recorded as such with the rendition's width, under
 -- MediaWiki's md5 hash directories of the decoded file name; derivatives never exceed a rendition's width. Its images
 -- must carry the exact visible attribution derived from the grant and the credited file.
 -- Source flag (decision 0011 keeps a source's publication_allowed with the owner): an open-licence photograph is not
 -- the source's own media, so a live open-licence approval of a product that is ALREADY public as facts at the same
 -- revision may publish its images without the source's publication_allowed, and that flag alone does not withdraw
--- it. Nothing else changes: other grant kinds still need the flag and are still withdrawn by it, a disabled source
--- still withdraws every media publication, facts are untouched, and revoking the grant or approval or a new revision
--- still withdraws the product. Creates no grant, asset, approval or publication.
+-- it; such a call changes only images and media state, never a displayed fact or the search text. Nothing else
+-- changes: other grant kinds still need the flag and are still withdrawn by it, a disabled source still withdraws
+-- every media publication, facts are untouched, and revoking the grant or approval or a new revision still withdraws
+-- the product. This exemption changes decision 0011's source-flag rule, so the owner's approval of this migration
+-- must name it as its own line. Creates no grant, asset, approval or publication.
 begin;
 
 -- The only accepted licences: SPDX id -> visible label and canonical deed. Ported versions need review.
@@ -60,6 +63,16 @@ end $$;
 revoke all on function jwl_internal.percent_decode(text) from public,anon,authenticated;
 grant execute on function jwl_internal.percent_decode(text) to service_role;
 
+-- The only owner decisions an open-licence grant may cite, each with the catalogue references it covers. This is the
+-- same list as openLicenseDecisions in scripts/catalog-intake/media-pipeline.mjs (a test compares them). Decision 0011
+-- rejects open licences and is never accepted here; widening this list needs the decision amended and a new migration.
+create function jwl_internal.open_license_decisions() returns jsonb
+language sql immutable security invoker set search_path='' as $$
+  select '{"decisions/0013-open-licence-exact-product-photos.md":{"references":["m126234-0015"]}}'::jsonb
+$$;
+revoke all on function jwl_internal.open_license_decisions() from public,anon,authenticated;
+grant execute on function jwl_internal.open_license_decisions() to service_role;
+
 -- The files an open-licence grant covers: 1..20 distinct Commons file pages, each with exactly one held file on
 -- upload.wikimedia.org (Commons only, never a brand origin or another wiki), recorded honestly as either
 --   {"file_kind":"original","rendition_width":null,"file_url":".../wikipedia/commons/<h>/<hh>/<File>"} or
@@ -101,9 +114,9 @@ end $$;
 revoke all on function jwl_internal.valid_open_license_files(jsonb) from public,anon,authenticated;
 grant execute on function jwl_internal.valid_open_license_files(jsonb) to service_role;
 
--- An open-licence grant names one exact candidate and its licensed files. The owner decision is the repository path
--- of the recorded decision file (decisions/NNNN-slug.md); free text, however dated, is refused. Other kinds carry none
--- of these fields.
+-- An open-licence grant names one exact candidate and its licensed files. The owner decision is exactly one of the
+-- recorded decision files above; free text, however dated, and any other file are refused. Other kinds carry none of
+-- these fields.
 alter table jwl_internal.media_grants add constraint jwl_open_license_grant_check check (case when kind='open_license' then coalesce(
   candidate_id is not null and source_id is not null and media_origins='[]'::jsonb
   and source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official')
@@ -111,15 +124,23 @@ alter table jwl_internal.media_grants add constraint jwl_open_license_grant_chec
   and length(trim(creator)) between 1 and 300 and creator !~ '[[:cntrl:]]'
   and length(trim(attribution_text)) between 1 and 500 and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
   and jwl_internal.valid_open_license_files(licensed_files)
-  and length(owner_decision_reference)<=120 and owner_decision_reference ~ '^decisions/[0-9]{4}-[a-z0-9]+(-[a-z0-9]+)*\.md$',false)
+  and jwl_internal.open_license_decisions() ? owner_decision_reference,false)
   else num_nulls(license_code,license_url,creator,licensed_files,attribution_text,owner_decision_reference)=6 end);
 
--- The grant's candidate must belong to the grant's source, checked once when the grant is recorded.
+-- The grant's candidate must belong to the grant's source, and its reference must be one the cited decision covers,
+-- checked once when the grant is recorded.
 create function jwl_internal.require_open_license_binding() returns trigger
 language plpgsql security invoker set search_path='' as $$
+declare c jwl_internal.candidates;
 begin
-  if new.kind='open_license' and not exists(select 1 from jwl_internal.candidates c where c.candidate_id=new.candidate_id and c.source_id=new.source_id) then
-    raise exception 'An open-licence grant must name one exact candidate of its source';
+  if new.kind='open_license' then
+    select * into c from jwl_internal.candidates where candidate_id=new.candidate_id and source_id=new.source_id;
+    if c.candidate_id is null then raise exception 'An open-licence grant must name one exact candidate of its source'; end if;
+    -- An unlisted or missing decision is left to the check constraint, which refuses it.
+    if jwl_internal.open_license_decisions() ? new.owner_decision_reference
+      and not (jwl_internal.open_license_decisions()->new.owner_decision_reference->'references' ? c.external_id) then
+      raise exception 'The cited owner decision does not cover this reference';
+    end if;
   end if;
   return new;
 end $$;
@@ -277,12 +298,17 @@ begin
   -- The source flag governs the source's own media. A live open-licence approval of a product already public as facts at
   -- this exact revision does not use it; every other publication still does, and a disabled source refuses all.
   if not source.enabled or (not source.publication_allowed and not jwl_internal.open_license_lane(candidate,revision)) then raise exception 'Source publication not approved'; end if;
-  -- Without the flag the lane only adds images to the existing public row: every displayed fact must stay as it is.
+  -- Without the flag the lane only adds images to the existing public row: every displayed fact and the search text
+  -- must stay exactly as they are (NULL-safe comparisons, so a NULL column must also stay NULL).
   if not source.publication_allowed and not exists(select 1 from public.jwl_catalog k where k.id=candidate and k.active
-    and k.slug=product->>'slug' and k.reference=product->>'reference' and k.brand_slug=product->>'brand_slug' and k.brand_name=product->>'brand_name' and k.brand_tier=product->>'brand_tier'
-    and k.category_slug=product->>'category_slug' and k.collection_slug=product->>'collection_slug' and k.collection_ar=product->>'collection_ar' and k.collection_en=product->>'collection_en'
-    and k.collection_kind=coalesce(product->>'collection_kind','collection') and k.name_ar=product->>'name_ar' and k.name_en=product->>'name_en'
-    and k.description_ar=product->>'description_ar' and k.description_en=product->>'description_en') then
+    and k.slug is not distinct from product->>'slug' and k.reference is not distinct from product->>'reference'
+    and k.brand_slug is not distinct from product->>'brand_slug' and k.brand_name is not distinct from product->>'brand_name'
+    and k.brand_tier is not distinct from product->>'brand_tier' and k.category_slug is not distinct from product->>'category_slug'
+    and k.collection_slug is not distinct from product->>'collection_slug' and k.collection_ar is not distinct from product->>'collection_ar'
+    and k.collection_en is not distinct from product->>'collection_en' and k.collection_kind is not distinct from coalesce(product->>'collection_kind','collection')
+    and k.name_ar is not distinct from product->>'name_ar' and k.name_en is not distinct from product->>'name_en'
+    and k.description_ar is not distinct from product->>'description_ar' and k.description_en is not distinct from product->>'description_en'
+    and k.search_text is not distinct from product->>'search_text') then
     raise exception 'Source publication not approved';
   end if;
   if product->>'reference' is distinct from c.external_id or product->>'brand_name' is distinct from c.content->>'brand' or product->>'collection_en' is distinct from c.content->>'collection' or product->>'name_ar' is distinct from c.content->>'name_ar' or product->>'name_en' is distinct from c.content->>'name_en' then raise exception 'Product identity differs from current candidate';end if;

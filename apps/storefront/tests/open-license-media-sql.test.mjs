@@ -7,7 +7,7 @@ import {createHash} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
-import {openLicenses,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,commonsFile,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {openLicenses,openLicenseDecisions,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,commonsFile,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {responsiveImages} from '../src/server/responsive-media.mjs';
 import {recordMediaApproval,publish,publicationProduct} from '../../../scripts/catalog-intake/supabase.mjs';
 
@@ -27,11 +27,20 @@ const credit={creator:'Synthetic Photographer',license:'CC BY-SA 4.0',license_ur
 const entry=(c,attribution=credit)=>({src:file(1600,c),width:1600,height:2000,variants:[{src:file(640,c==='e'?'b':String.fromCharCode(c.charCodeAt(0)+1)),width:640,height:800,bytes:50000},{src:file(1600,c),width:1600,height:2000,bytes:300000}],...(attribution?{attribution}:{})});
 const row=(source_id,external_id)=>normalizeBatch([{source_id,external_id,source_url:'https://example.test/p/'+external_id,brand:'Test brand',collection:'Test collection',product_name:'Test watch '+external_id,name_ar:'ساعة اختبار',translation_state:'provided',image_urls:['https://example.test/img/'+external_id+'.png'],facts:[{key:'diameter',value:'41 mm'}]}])[0];
 
-async function database({open=true}={}){
+const DECISION='decisions/0013-open-licence-exact-product-photos.md';
+// TEST ONLY: decision 0013 covers m126234-0015 alone. The mechanics tests below use synthetic references, so they widen
+// the in-memory scope of that one decision after the real migration ran; the scope tests use the unwidened database.
+const SYNTHETIC_REFERENCES=['REF-1','REF-2','REF-3','REF-4','REF-5','REF-6','REF-7','REF-8','REF-9','REF-H','OL-1','OL-2','CRW-1','PGT-1'];
+async function widenScope(db){
+  const real=(await db.query('select jwl_internal.open_license_decisions() d')).rows[0].d;
+  const widened={...real,[DECISION]:{references:[...real[DECISION].references,...SYNTHETIC_REFERENCES]}};
+  await db.exec(`create or replace function jwl_internal.open_license_decisions() returns jsonb language sql immutable security invoker set search_path='' as $$ select '${JSON.stringify(widened)}'::jsonb $$`);
+}
+async function database({open=true,scope='widened'}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
   for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
-  if(open)await db.exec(await readFile(proposed,'utf8'));
+  if(open){await db.exec(await readFile(proposed,'utf8'));if(scope==='widened')await widenScope(db);}
   // Closed sources are registered as open for acquisition here on purpose: the grant must still be refused.
   await db.exec(`insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values
     ('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true),
@@ -45,7 +54,7 @@ const ingest=(db,records)=>service(db,'select public.jwl_ingest_missing_batch($1
 const columns=['grant_reference','kind','source_id','candidate_id','media_origins','website_publication','resize','webp_encode','evidence_reference','license_code','license_url','creator','licensed_files','attribution_text','owner_decision_reference'];
 const openGrant=(c,overrides={})=>({grant_reference:'grant-open-01',kind:'open_license',source_id:c.source_id,candidate_id:c.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:credit.license_url,creator:credit.creator,licensed_files:[originalFile(page,original)],
-  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md',...overrides});
+  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:DECISION,...overrides});
 // One licensed file of the default grant with some of its fields changed.
 const fileChange=change=>({licensed_files:[{...originalFile(page,original),...change}]});
 const insertGrant=(db,g)=>service(db,`insert into jwl_internal.media_grants(${columns.join(',')}) select ${columns.map(k=>`g.${k}`).join(',')} from jsonb_populate_record(null::jwl_internal.media_grants,$1::jsonb) g`,[JSON.stringify(g)]);
@@ -67,6 +76,21 @@ test('the database allowlist and visible labels are exactly the pipeline allowli
   try{
     assert.deepEqual((await service(db,'select jwl_internal.open_licenses() l')).rows[0].l,JSON.parse(JSON.stringify(openLicenses)));
     for(const role of ['anon','authenticated'])await assert.rejects(as(db,role,()=>db.query('select jwl_internal.open_licenses()')),/permission denied/);
+  }finally{await db.close();}
+});
+
+test('the only citable decision is 0013, for m126234-0015 alone, exactly as the pipeline pins it',async()=>{
+  const db=await database({scope:'real'});
+  try{
+    assert.deepEqual((await service(db,'select jwl_internal.open_license_decisions() d')).rows[0].d,JSON.parse(JSON.stringify(openLicenseDecisions)),'the SQL and JS lists are the same');
+    for(const role of ['anon','authenticated'])await assert.rejects(as(db,role,()=>db.query('select jwl_internal.open_license_decisions()')),/permission denied/);
+    const exact=row('test','m126234-0015'),sibling=row('test','m126234-0016'),other=row('test','REF-1');await ingest(db,[exact,sibling,other]);
+    await assert.rejects(insertGrant(db,openGrant(exact,{grant_reference:'grant-0011',owner_decision_reference:'decisions/0011-per-origin-queues-and-exact-media-evidence.md'})),/check constraint/,'0011 rejects open licences');
+    await assert.rejects(insertGrant(db,openGrant(exact,{grant_reference:'grant-0099',owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'})),/check constraint/,'a nonexistent decision');
+    await assert.rejects(insertGrant(db,openGrant(sibling,{grant_reference:'grant-sibling'})),/does not cover this reference/,'a sibling reference needs 0013 amended first');
+    await assert.rejects(insertGrant(db,openGrant(other,{grant_reference:'grant-other'})),/does not cover this reference/);
+    await insertGrant(db,openGrant(exact,{grant_reference:'grant-exact'}));
+    assert.equal((await db.query("select count(*)::int n from jwl_internal.media_grants where kind='open_license'")).rows[0].n,1);
   }finally{await db.close();}
 });
 
@@ -92,8 +116,11 @@ test('an open-licence grant needs the owner decision, an allowlisted licence, Co
       [{owner_decision_reference:'synthetic-owner-decision'},/check constraint/,'not a decision record'],
       [{owner_decision_reference:'synthetic owner decision 2026-10-26'},/check constraint/,'a dated sentence is not a decision record'],
       [{owner_decision_reference:'owner continuation instruction 2026-10-27 relayed by Codex: complete the reviewed open-licence sample path'},/check constraint/,'a relayed instruction is not a decision record'],
-      [{owner_decision_reference:' decisions/0099-synthetic-open-licence-decision.md'},/check constraint/],
-      [{owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md\n'},/check constraint/],
+      [{owner_decision_reference:' '+DECISION},/check constraint/],
+      [{owner_decision_reference:DECISION+'\n'},/check constraint/],
+      // A well-formed decision path is not enough: only the pinned file. 0011 is the decision that rejects open licences.
+      [{owner_decision_reference:'decisions/0011-per-origin-queues-and-exact-media-evidence.md'},/check constraint/,'decision 0011 rejects open licences'],
+      [{owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'},/check constraint/,'a nonexistent decision'],
       [{owner_decision_reference:'decisions/99-synthetic.md'},/check constraint/],
       [{owner_decision_reference:'decisions/0099-Synthetic.md'},/check constraint/],
       [{owner_decision_reference:'decisions/0099-synthetic--decision.md'},/check constraint/],
@@ -191,7 +218,15 @@ const publishFacts=(db,c)=>service(db,'select public.jwl_publish_factual_batch($
 const reviewOf=(c,entries)=>({candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-'+c.external_id.toLowerCase(),reference:c.external_id,brand_slug:'test-brand',brand_name:c.brand,brand_tier:'luxury',category_slug:'watches',
   collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:c.collection,name_ar:c.name_ar,name_en:c.name_en,description_ar:c.description_ar,description_en:c.description_en,images:entries.map(e=>e.src),image_variants:entries});
 const publishMedia=(db,review)=>{const {candidate,revision,product}=publicationProduct(review);return service(db,'select public.jwl_publish_candidate($1,$2,$3::jsonb) r',[candidate,revision,JSON.stringify(product)]);};
-const catalog=db=>db.query('select id,active,media_state,images,image_variants,name_en,description_en from public.jwl_catalog order by id').then(r=>r.rows);
+// The open-licence lane keeps the public row's existing search text, so a lane call passes it unchanged (as the batch does).
+const rawPublish=(db,candidate,revision,product)=>service(db,'select public.jwl_publish_candidate($1,$2,$3::jsonb) r',[candidate,revision,JSON.stringify(product)]);
+async function publishLane(db,review,change={}){
+  const {candidate,revision,product}=publicationProduct(review);
+  const search_text=(await db.query('select search_text from public.jwl_catalog where id=$1',[candidate])).rows[0]?.search_text;
+  const lane={...product,search_text,...change};for(const [k,v] of Object.entries(lane))if(v===undefined)delete lane[k];
+  return rawPublish(db,candidate,revision,lane);
+}
+const catalog=db=>db.query('select * from public.jwl_catalog order by id').then(r=>r.rows);
 const without=(rows,id)=>rows.filter(r=>r.id!==id);
 const activeOf=async(db,c)=>(await db.query('select active from public.jwl_catalog where id=$1',[c.candidate_id])).rows[0]?.active;
 const sourceUpdate=(db,set)=>as(db,'postgres',()=>db.exec(`update jwl_internal.sources set ${set} where id='test'`));
@@ -236,13 +271,19 @@ test('the open-licence lane publishes an already-public candidate without the so
     await assert.rejects(publishMedia(db,reviewOf(written,[w])),/Source publication not approved/,'other grant kinds still need the source flag');
     await assert.rejects(publishMedia(db,reviewOf(unpublished,[e2])),/Source publication not approved/,'only a product already public as facts at this revision');
     for(const change of [{slug:'test-renamed'},{category_slug:'jewelry'},{collection_slug:'other-collection'},{collection_ar:'أخرى'},{brand_slug:'other-brand'},{brand_tier:'accessible'}])
-      await assert.rejects(publishMedia(db,{...reviewOf(target,[e]),...change}),/Source publication not approved/,'without the flag only images may change: '+JSON.stringify(change));
+      await assert.rejects(publishLane(db,{...reviewOf(target,[e]),...change}),/Source publication not approved/,'without the flag only images may change: '+JSON.stringify(change));
+    // The search text is part of the public row too: the lane cannot rewrite it, and a missing field (NULL) is refused.
+    await assert.rejects(publishLane(db,reviewOf(target,[e]),{search_text:'rewritten search index'}),/Source publication not approved/,'the lane cannot rewrite search_text');
+    await assert.rejects(publishMedia(db,reviewOf(target,[e])),/Source publication not approved/,'a recomputed search text that differs from the public row is refused');
+    for(const field of ['search_text','collection_ar','description_en'])
+      await assert.rejects(publishLane(db,reviewOf(target,[e]),{[field]:undefined}),/Source publication not approved/,'missing '+field);
     const before=await catalog(db);
-    await publishMedia(db,reviewOf(target,[e]));
+    await publishLane(db,reviewOf(target,[e]));
     const after=await catalog(db);
     assert.deepEqual(without(after,target.candidate_id),without(before,target.candidate_id),'no other row changed');
     const live=after.find(r=>r.id===target.candidate_id);assert.equal(live.active,true);assert.equal(live.media_state,'approved_media');assert.deepEqual(live.image_variants,[e]);
-    await publishMedia(db,reviewOf(target,[e]));assert.deepEqual(await catalog(db),after,'a replay is idempotent');
+    assert.equal(live.search_text,before.find(r=>r.id===target.candidate_id).search_text,'search text unchanged');
+    await publishLane(db,reviewOf(target,[e]));assert.deepEqual(await catalog(db),after,'a replay is idempotent');
     const others=()=>catalog(db).then(rows=>without(rows,target.candidate_id));const othersBefore=await others();
     // Source-row updates that leave the flag false (the trigger fires on every update) and a flag toggle.
     await sourceUpdate(db,'acquisition_allowed=false');await sourceUpdate(db,'min_interval_seconds=90');
@@ -257,14 +298,16 @@ test('the open-licence lane publishes an already-public candidate without the so
     await db.exec('begin');
     await sourceUpdate(db,'enabled=false');
     assert.equal(await activeOf(db,target),false);for(const c of facts)assert.equal(await activeOf(db,c),true);
+    // Inside this transaction the call is made directly (a role reset after an error would itself fail).
     const {candidate:id,revision,product}=publicationProduct(reviewOf(target,[e]));
-    await assert.rejects(db.query('select public.jwl_publish_candidate($1,$2,$3::jsonb)',[id,revision,JSON.stringify(product)]),/Source publication not approved/);
+    const kept=(await db.query('select search_text from public.jwl_catalog where id=$1',[id])).rows[0].search_text;
+    await assert.rejects(db.query('select public.jwl_publish_candidate($1,$2,$3::jsonb)',[id,revision,JSON.stringify({...product,search_text:kept})]),/Source publication not approved/);
     await db.exec('rollback');
     // Revocation still withdraws the product; nothing else moves.
     const othersNow=await others();
     await as(db,'service_role',()=>db.exec("update jwl_internal.media_grants set revoked_at=now() where grant_reference='grant-lane'"));
     assert.equal(await activeOf(db,target),false);assert.deepEqual(await others(),othersNow);
-    await assert.rejects(publishMedia(db,reviewOf(target,[e])),/approval missing or revoked/i);
+    await assert.rejects(publishLane(db,reviewOf(target,[e])),/approval missing or revoked/i);
   }finally{await db.close();}
 });
 
@@ -381,7 +424,7 @@ test('end to end: held Wikimedia renditions for one product record, publish thei
   const db=await database();
   try{
     const sharp=installedImageEngine();
-    const c=normalizeBatch([{source_id:'test',external_id:'m126234-9999',source_url:'https://example.test/p/m126234-9999',brand:'Test brand',collection:'Test collection',product_name:'Test watch',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:['https://brand.example.test/img/m126234-9999.png'],facts:[{key:'diameter',value:'36 mm'}]}])[0];
+    const c=normalizeBatch([{source_id:'test',external_id:'m126234-0015',source_url:'https://example.test/p/m126234-0015',brand:'Test brand',collection:'Test collection',product_name:'Test watch',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:['https://brand.example.test/img/m126234-0015.png'],facts:[{key:'diameter',value:'36 mm'}]}])[0];
     await ingest(db,[c]);
     const files=[renditionFile('Synthetic_front_(1).jpg',960),renditionFile('Synthetic_angle_(2).jpg',960)];
     const grant=openGrant(c,{grant_reference:'grant-rendition-e2e',licensed_files:files});await insertGrant(db,grant);
@@ -402,7 +445,7 @@ test('end to end: held Wikimedia renditions for one product record, publish thei
     const receipt=(await service(db,'select public.jwl_record_media_approval($1::jsonb,$2::jsonb) r',[JSON.stringify(bundle.evidence),JSON.stringify(bundle.approval)])).rows[0].r;
     assert.equal(receipt.evidence_rows,bundle.evidence.length);
     await db.exec("update jwl_internal.sources set publication_allowed=true where id='test'");
-    const review={candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-watch-m126234-9999',reference:c.external_id,brand_slug:'test-brand',brand_name:'Test brand',brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:'Test collection',
+    const review={candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-watch-m126234-0015',reference:c.external_id,brand_slug:'test-brand',brand_name:'Test brand',brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:'Test collection',
       name_ar:c.name_ar,name_en:c.name_en,description_ar:c.description_ar,description_en:c.description_en,images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants};
     const rpc=async(url,init)=>{const args=JSON.parse(init.body);return new Response(JSON.stringify((await service(db,'select public.jwl_publish_candidate($1,$2,$3::jsonb) r',[args.candidate,args.revision,JSON.stringify(args.product)])).rows[0].r));};
     await publish(review,{url:'https://project.supabase.co',key:'synthetic-test-key'},rpc);
@@ -419,8 +462,8 @@ test('end to end: an open-licence bundle from the pipeline records, publishes it
   const db=await database();
   try{
     const sharp=installedImageEngine();
-    const gallery='https://brand.example.test/img/m126610ln-0001.png';
-    const c=normalizeBatch([{source_id:'test',external_id:'m126610ln-0001',source_url:'https://example.test/p/m126610ln-0001',brand:'Test brand',collection:'Test collection',product_name:'Test watch',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:[gallery],facts:[{key:'diameter',value:'41 mm'}]}])[0];
+    const gallery='https://brand.example.test/img/m126234-0015.png';
+    const c=normalizeBatch([{source_id:'test',external_id:'m126234-0015',source_url:'https://example.test/p/m126234-0015',brand:'Test brand',collection:'Test collection',product_name:'Test watch',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:[gallery],facts:[{key:'diameter',value:'41 mm'}]}])[0];
     await ingest(db,[c]);
     const grant=openGrant(c);await insertGrant(db,grant);
     const jpeg=await sharp({create:{width:1200,height:1500,channels:3,background:'#3c3631'}}).jpeg().toBuffer();
@@ -440,7 +483,7 @@ test('end to end: an open-licence bundle from the pipeline records, publishes it
     const tampered=structuredClone(bundle);tampered.approval.approved_image_variants[0].attribution.creator='Someone else';
     await assert.rejects(recordMediaApproval(tampered,config,rpc),/exact visible attribution/,'the database re-derives the credit from the grant');
     assert.equal((await recordMediaApproval(bundle,config,rpc)).evidence_rows,bundle.evidence.length,'the pipeline credit matches the database derivation exactly');
-    const review={candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-watch-m126610ln-0001',reference:c.external_id,brand_slug:'test-brand',brand_name:'Test brand',brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:'Test collection',
+    const review={candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-watch-m126234-0015',reference:c.external_id,brand_slug:'test-brand',brand_name:'Test brand',brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:'Test collection',
       name_ar:c.name_ar,name_en:c.name_en,description_ar:c.description_ar,description_en:c.description_en,images:bundle.approval.approved_images,image_variants:bundle.approval.approved_image_variants};
     await assert.rejects(publish(review,config,rpc),/Source publication not approved/,'the source publication flag stays a separate owner decision');
     await db.exec("update jwl_internal.sources set publication_allowed=true where id='test'");
@@ -478,7 +521,7 @@ test('the migration keeps existing evidence valid, and the rollback restores the
     await db.exec(await readFile(rollback,'utf8'));
     assert.deepEqual(await snapshot(db),before,'rollback restores every function, privilege, constraint, column and trigger');
     assert.deepEqual(await data(),rows,'existing evidence is unchanged');
-    await db.exec(await readFile(proposed,'utf8'));
+    await db.exec(await readFile(proposed,'utf8'));await widenScope(db);
     await insertGrant(db,openGrant(c));
     await assert.rejects(db.exec(await readFile(rollback,'utf8')),/rollback refused/);
     await db.exec('rollback');
