@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&amp;family=Bodoni+Moda:opsz,wght@6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;display=swap">
 <link rel="stylesheet" href="style.css">
 <script src="../shared/catalog-data.js" defer></script>
+<script src="../shared/photos.js" defer></script>
 <script src="../shared/variants.js" defer></script>
 <script src="app.js" defer></script>
 </head>
@@ -63,7 +64,7 @@
     <nav class="crumbs" aria-label="مسار التنقل"><ol data-crumbs><li><a href="home.html">الرئيسية</a></li><li><span aria-current="page">الكتالوج</span></li></ol></nav>
     <header class="page-head">
       <h1 data-title>الكتالوج</h1>
-      <p class="page-lead">يضم الكتالوج المنشور ٤٬٠٩٧ مرجعًا، وتعرض هذه المعاينة ١١ طرازًا للتوضيح.</p>
+      <p class="page-lead" data-lead>يضم الكتالوج المنشور ٤٬٠٩٧ مرجعًا.</p>
     </header>
     <form class="filters" role="search" aria-label="تصفية الكتالوج" data-filters>
       <ul class="cat-tabs" data-cat-tabs></ul>
@@ -75,12 +76,13 @@
       </div>
     </form>
     <div class="results-bar">
-      <p class="count" aria-live="polite" data-count></p>
+      <p class="count" aria-live="polite" tabindex="-1" data-count></p>
       <p class="results-note">طراز واحد لكل منتج، والألوان والمقاسات داخل صفحة المنتج.</p>
     </div>
     <h2 class="sr-only">النتائج</h2>
     <div class="grid" data-results></div>
     <nav class="pager" aria-label="صفحات النتائج" data-pager></nav>
+    <p class="pager-note" data-pager-note></p>
   </div>
 </main>
 <footer class="site-footer" id="about">

@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri&amp;family=Bodoni+Moda:opsz,wght@6..96,400..500&amp;family=IBM+Plex+Sans+Arabic:wght@400;500&amp;display=swap">
 <link rel="stylesheet" href="style.css">
 <script src="../shared/catalog-data.js" defer></script>
+<script src="../shared/photos.js" defer></script>
 <script src="../shared/variants.js" defer></script>
 <script src="app.js" defer></script>
 </head>
@@ -64,17 +65,24 @@
       <p class="kicker">٤١ علامة عالمية · ٩ فئات</p>
       <h1 id="hero-title">الفخامة،<br> بكل تفاصيلها</h1>
       <p class="hero-sub">مختارات من العلامات العالمية، والتفاصيل عبر واتساب.</p>
+      <form class="home-search" action="catalog.html" method="get" role="search" aria-label="البحث في الكتالوج">
+        <label class="sr-only" for="home-q">البحث في الكتالوج</label>
+        <svg class="ico" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.25"/><path d="M15.2 15.2 20 20"/></svg>
+        <input id="home-q" type="search" name="q" autocomplete="off" enterkeyhint="search" placeholder="ابحث بعلامة أو طراز أو مرجع">
+        <button class="home-search-btn" type="submit">بحث</button>
+      </form>
     </div>
     <div class="wrap hero-spread">
-      <div class="hero-index">
+      <nav class="hero-index" aria-label="الفئات والعلامات">
         <h2 class="hi-title" id="hi-title">الفئات</h2>
         <ol class="hi-list" aria-labelledby="hi-title" data-cat-index></ol>
-        <p class="hero-links"><a class="text-link" href="#brands">العلامات<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a><a class="text-link" href="catalog.html">الكتالوج<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></p>
+        <h2 class="hi-title" id="hb-title">العلامات في هذه المعاينة</h2>
+        <ul class="hb-list" aria-labelledby="hb-title" data-brand-quick></ul>
+      </nav>
+      <div class="hero-feature">
+        <div class="hf-head"><h2 class="hi-title" id="featured-title">من الكتالوج</h2><a class="text-link" href="catalog.html">الكتالوج كاملًا<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a></div>
+        <div class="feature-rail" data-featured></div>
       </div>
-      <figure class="hero-media">
-        <img src="../shared/img/hero-editorial-1600.webp" srcset="../shared/img/hero-editorial-800.webp 800w, ../shared/img/hero-editorial-1600.webp 1600w" sizes="(min-width: 760px) 56vw, 100vw" width="1600" height="900" alt="صورة توضيحية: حقيبة جلدية وساعة وسوار على درج حجري" fetchpriority="high" decoding="async">
-        <figcaption class="caption">صورة توضيحية</figcaption>
-      </figure>
     </div>
   </section>
 
@@ -86,12 +94,16 @@
   <section class="section wrap" id="categories" aria-labelledby="cats-title">
     <div class="section-head">
       <div><p class="kicker">عن قرب</p><h2 class="h2" id="cats-title">من الساعات إلى حقائب السفر</h2></div>
+      <figure class="atmo">
+        <img src="../shared/img/hero-editorial-800.webp" srcset="../shared/img/hero-editorial-800.webp 800w, ../shared/img/hero-editorial-1600.webp 1600w" sizes="(min-width: 760px) 420px, 100vw" width="1600" height="900" alt="صورة توضيحية: حقيبة جلدية وساعة وسوار على درج حجري" loading="lazy" decoding="async">
+        <figcaption class="caption">صورة توضيحية مولّدة، ليست منتجًا</figcaption>
+      </figure>
     </div>
     <div class="stories">
       <article class="story">
         <figure class="story-media">
           <img src="../shared/img/watch-640.webp" srcset="../shared/img/watch-320.webp 320w, ../shared/img/watch-640.webp 640w" sizes="(min-width: 960px) 40vw, 100vw" width="640" height="640" alt="" loading="lazy" decoding="async">
-          <figcaption class="caption">صورة توضيحية</figcaption>
+          <figcaption class="caption">صورة توضيحية مولّدة</figcaption>
         </figure>
         <div class="story-copy">
           <p class="story-index">٠١</p>
@@ -103,7 +115,7 @@
       <article class="story">
         <figure class="story-media">
           <img src="../shared/img/handbag-640.webp" srcset="../shared/img/handbag-320.webp 320w, ../shared/img/handbag-640.webp 640w" sizes="(min-width: 960px) 40vw, 100vw" width="640" height="640" alt="" loading="lazy" decoding="async">
-          <figcaption class="caption">صورة توضيحية</figcaption>
+          <figcaption class="caption">صورة توضيحية مولّدة</figcaption>
         </figure>
         <div class="story-copy">
           <p class="story-index">٠٢</p>
@@ -115,7 +127,7 @@
       <article class="story">
         <figure class="story-media">
           <img src="../shared/img/luggage-640.webp" srcset="../shared/img/luggage-320.webp 320w, ../shared/img/luggage-640.webp 640w" sizes="(min-width: 960px) 40vw, 100vw" width="640" height="640" alt="" loading="lazy" decoding="async">
-          <figcaption class="caption">صورة توضيحية</figcaption>
+          <figcaption class="caption">صورة توضيحية مولّدة</figcaption>
         </figure>
         <div class="story-copy">
           <p class="story-index">٠٣</p>
@@ -124,16 +136,6 @@
           <a class="text-link" href="catalog.html?category=luggage">عرض حقائب السفر<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
         </div>
       </article>
-    </div>
-  </section>
-
-  <section class="section section--featured" aria-labelledby="featured-title">
-    <div class="wrap">
-      <div class="section-head">
-        <div><p class="kicker">من الكتالوج</p><h2 class="h2" id="featured-title">طرازات مختارة</h2></div>
-        <a class="text-link" href="catalog.html">الكتالوج كاملًا<svg class="arr" viewBox="0 0 22 10" width="22" height="10" aria-hidden="true" focusable="false"><path d="M21 5H1.5M5.5 1 1.5 5l4 4"/></svg></a>
-      </div>
-      <div class="feature-grid" data-featured></div>
     </div>
   </section>
 

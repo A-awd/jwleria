@@ -38,12 +38,12 @@ const lum = h => rgb(h).reduce((s, x, i) => (x /= 255, s + [.2126, .7152, .0722]
 /* keep the real tone at the edges (black stays near-black); lift the light spot by luminance */
 const tint = (m, v) => { const t = J.toneOf(m, v), l = lum(t) > .4; return { a: mix(t, l ? .5 : .74), b: mix(t, l ? .9 : .97), dk: lum(mix(t, l ? .7 : .85)) < .2 }; };
 const axv = (m, v) => J.axesOf(m).map(x => J.valueOf(m, x.kind, v[x.kind])).filter(Boolean);
-const phL = (m, v, w) => [m.name, ...axv(m, v).map(o => o.ar), w].filter(Boolean).join('، ') + ' — مكان الصورة الأصلية للمرجع ' + ISO(v.ref) + '، صورة مؤقتة';
+const phL = (m, v, w) => 'بديل تخطيطي وليس صورة: ' + [m.name, ...axv(m, v).map(o => o.ar), w].filter(Boolean).join('، ') + ' — مكان الصورة الأصلية للمرجع ' + ISO(v.ref);
 const ph = (m, v, w, i) => {
   const t = tint(m, v);
   return `<div class="ph${t.dk ? ' dk' : ''}${w ? ' v' + i : ''}" role="img" aria-label="${esc(phL(m, v, w))}" style="--a:${t.a};--b:${t.b}">` +
     (w ? `<span class="ph-w" aria-hidden="true">${A('0' + (i + 1))} · ${w}</span>` : '') + sv(GL[m.category] || GL.bag, 1.1, 48) +
-    `<span class="ph-l" aria-hidden="true"><span>مكان الصورة الأصلية</span>${RF(v.ref)}</span></div>`;
+    `<span class="ph-l" aria-hidden="true"><span>بديل تخطيطي<span class="ph-x"> · ليس صورة</span></span>${RF(v.ref)}</span></div>`;
 };
 const paint = (el, m, v, w) => {
   const t = tint(m, v);
@@ -51,6 +51,16 @@ const paint = (el, m, v, w) => {
   el.setAttribute('aria-label', phL(m, v, w));
   const r = $('.ref', el); r.textContent = v.ref; r.style.setProperty('--w', RW(v.ref));
 };
+/* ——— exact-reference photographs (shared/photos.js) ——— */
+const phN = n => n === 1 ? 'صورة واحدة' : n === 2 ? 'صورتان' : A(n) + (n % 100 >= 3 && n % 100 <= 10 ? ' صور' : ' صورة');
+const SAMPLE = 'عيّنة بترخيص مفتوح لمراجعة التصميم';
+const cr = (img, c2) => { const c = img.credit || {}; return `<p class="cr${c2 ? ' ' + c2 : ''}"><span class="cr-s">${SAMPLE}</span><span class="cr-l">${L(c.creator)}<span aria-hidden="true"> · </span><a href="${esc(c.license_url)}" rel="license noopener" target="_blank">${L(c.license)}</a><span aria-hidden="true"> · </span><a href="${esc(c.source_url)}" rel="noopener" target="_blank">المصدر</a><span aria-hidden="true"> · </span><span>صورة مصغّرة ومحوّلة</span></span></p>`; };
+/* cards and inline slides request at most 800w; only the zoom viewer asks for 1200 */
+const pimg = (img, sizes, first) => {
+  const ws = img.widths.filter(w => w <= 800);
+  return `<img src="${esc(img.base)}-${ws[0]}.webp" srcset="${esc(J.srcset(Object.assign({}, img, { widths: ws })))}" sizes="${sizes}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${first ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+};
+const CSZ = '(max-width: 767px) calc(50vw - 22px), (max-width: 1279px) 30vw, 260px';
 /* facts-only: card face is reference-first (brand and model sit in the caption below) */
 const fo = (m, v) => `<div class="fo"><p class="fo-k">المرجع</p><p class="fo-r">${RF(v.ref)}</p><p class="fo-s">${NO}</p></div>`;
 const foL = (m, v) => {
@@ -61,11 +71,12 @@ const foL = (m, v) => {
 
 /* ——— model card: one per model; `v` is the variant shown (defaults to the primary) ——— */
 function card(m, v) {
-  v = v || J.primary(m);
+  v = v || J.cardVariant(m);
+  const im = J.imagesOf(m, v), face = im.length ? `<div class="pm">${pimg(im[0], CSZ)}</div>${cr(im[0], 'cr--c')}` : J.hasStandInImage(m) ? ph(m, v) : fo(m, v);
   const s = J.summaryAr(m), x = J.axesOf(m).find(a => a.kind !== 'size' && a.values.length > 1), k = x && x.kind;
   const ds = x ? x.values.slice().sort((a, b) => (b.id === v[k]) - (a.id === v[k])) : [];
   const dots = x ? `<span class="dots">${ds.slice(0, 4).map(o => `<a href="${J.url(m, J.nearest(m, v, k, o.id))}" tabindex="-1"${o.id === v[k] ? ' class="on"' : ''} style="--c:${o.tone}" aria-label="${esc(o.ar + '، ' + m.name)}" title="${esc(o.ar)}"><i class="${dm(o)}"></i></a>`).join('')}${ds.length > 4 ? `<em aria-hidden="true">+${A(ds.length - 4)}</em>` : ''}</span>` : '';
-  return `<article class="card">${J.hasStandInImage(m) ? ph(m, v) : fo(m, v)}<div class="card-b"><p class="card-brand">${L(m.brand)}</p><h3 class="card-name"><a href="${J.url(m, v)}">${L(m.name)}</a></h3><p class="card-type">${esc(m.typeAr)}</p>` +
+  return `<article class="card${im.length ? ' card--p' : ''}">${face}<div class="card-b"><p class="card-brand">${L(m.brand)}</p><h3 class="card-name"><a href="${J.url(m, v)}">${L(m.name)}</a></h3><p class="card-type">${esc(m.typeAr)}</p>` +
     (dots || s ? `<div class="card-v">${dots}${s ? `<span>${s}</span>` : ''}</div>` : '') + '</div></article>';
 }
 
@@ -90,7 +101,7 @@ const azC = (p, t, cut) => {
 const TOPS = Object.keys(D.brandCounts).sort((a, b) => D.brandCounts[b] - D.brandCounts[a]);
 /* footer lists only brands that have a model in this preview, so no link opens an empty catalog */
 const PB = [...new Set(D.models.map(m => m.brand))].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
-const FEAT = [['longchamp-le-pliage-one-handbag', 'L1621979163'], ['rolex-datejust-41-126334'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['audemars-piguet-royal-oak-15202or'], ['longchamp-le-pliage-one-backpack', '10284979105']];
+const FEAT = [['rolex-datejust-36-126234'], ['longchamp-le-pliage-one-handbag', 'L1621979163'], ['rolex-datejust-36-126200'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['rolex-datejust-41-126334'], ['longchamp-le-pliage-one-backpack', '10284979105']];
 const FILL = {
   'az-mb': () => azL('mb', 1) + azC('mb', 'span'),
   'az-dz': () => azC('dz', 'span'),
@@ -105,6 +116,8 @@ const FILL = {
     return `<li><a class="cat" href="${cU(c.slug)}"><span class="cat-n">${A(String(i + 1).padStart(2, '0'))}</span><span class="cat-x"><span class="cat-ar">${c.ar}</span><span class="c-en" lang="en">${c.en}</span></span>` +
       `<figure class="cat-f${alt ? ' alt' : ''}"><img src="${src}-${w[0]}.webp" srcset="${src}-${w[0]}.webp ${w[0]}w, ${src}-${w[1]}.webp ${w[1]}w" sizes="${alt ? '240px' : '(max-width: 767px) 64px, 112px'}" width="${w[0]}" height="${alt ? 400 : 320}" alt="" loading="lazy" decoding="async"><figcaption>صورة توضيحية</figcaption></figure></a></li>`;
   }).join(''),
+  qcats: () => D.categories.map(c => `<li><a href="${cU(c.slug)}">${c.ar}</a></li>`).join(''),
+  qbrands: () => `<li><a class="az-e" href="${page === 'home' ? '' : 'home.html'}#az"><span><bdi lang="en" dir="ltr">A–Z</bdi> · كل العلامات (${A(D.brands.length)})</span></a></li>` + PB.map(b => `<li><a href="${bU(b)}">${L(b)}</a></li>`).join(''),
   feat: () => FEAT.map(([id, r]) => { const m = J.byId(id); return card(m, r && J.variantOf(m, r)); }).join(''),
   nb: () => A(D.brands.length), nc: () => A(D.categories.length), nr: () => AN(D.meta.catalogReferences),
   date: () => A(+dt[2]) + ' أكتوبر ' + A(dt[0]), year: () => A(dt[0])
@@ -116,16 +129,34 @@ function toast() {
   const t = $('#toast'); t.textContent = 'معاينة تصميم فقط'; t.classList.add('show');
   clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), 2400);
 }
-function modal(el, opener, onClose) {
-  let last;
+/* history entry per open layer, so the phone Back gesture closes it instead of leaving the page */
+const ours = id => history.state && history.state.jwl === id;
+function modal(el, opener, onClose, first) {
+  let last, back = false;
+  const id = el.id;
   const fx = () => $$('a[href]:not([tabindex="-1"]),button:not([disabled]),input:not([disabled]),select', el).filter(x => x.getClientRects().length);
-  const open = () => { last = document.activeElement; el.hidden = false; document.body.classList.add('lock'); opener.setAttribute('aria-expanded', 'true'); (fx()[0] || el).focus(); };
+  const open = from => {
+    if (!el.hidden) return;
+    last = from || document.activeElement; el.hidden = false; document.body.classList.add('lock');
+    if (opener) opener.setAttribute('aria-expanded', 'true');
+    history.pushState({ jwl: id }, '');
+    ((first && first()) || fx()[0] || el).focus();
+  };
+  const hide = () => {
+    el.hidden = true; document.body.classList.remove('lock');
+    if (opener) opener.setAttribute('aria-expanded', 'false');
+    const t = last && last.isConnected && last.getClientRects().length ? last : opener;
+    if (t) t.focus({ preventScroll: true });
+  };
   const close = () => {
     if (el.hidden) return;
-    el.hidden = true; document.body.classList.remove('lock'); opener.setAttribute('aria-expanded', 'false');
-    if (onClose) onClose();
-    (last && last.isConnected ? last : opener).focus();
+    hide();
+    if (ours(id)) { back = true; history.back(); } else if (onClose) onClose();
   };
+  addEventListener('popstate', () => {
+    if (back) { back = false; if (onClose) onClose(); return; }
+    if (!el.hidden && !ours(id)) { hide(); if (onClose) onClose(); }
+  });
   el.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); close(); return; }
     if (e.key !== 'Tab') return;
@@ -133,7 +164,7 @@ function modal(el, opener, onClose) {
     if (e.shiftKey && document.activeElement === a) { e.preventDefault(); z.focus(); } else if (!e.shiftKey && document.activeElement === z) { e.preventDefault(); a.focus(); }
   });
   el.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
-  return { open, close };
+  return { open, close, get on() { return !el.hidden; } };
 }
 const desk = fn => matchMedia('(min-width: 960px)').addEventListener('change', e => { if (e.matches) fn(); });
 function shell() {
@@ -173,8 +204,10 @@ function shell() {
   }
   sb.addEventListener('click', () => { const o = ms.hidden; ms.hidden = !o; sb.setAttribute('aria-expanded', String(o)); if (o) $('input', ms).focus(); });
   const mb = $('.ib-m'), dw = modal($('#drawer'), mb);
-  mb.addEventListener('click', dw.open);
+  mb.addEventListener('click', () => dw.open());
   desk(() => { dw.close(); ms.hidden = true; sb.setAttribute('aria-expanded', 'false'); });
+  /* chip rows that scroll sideways on phones fade at the end edge until the end is reached */
+  $$('.qchips').forEach(r => { const f = () => r.classList.toggle('end', Math.abs(r.scrollLeft) + r.clientWidth >= r.scrollWidth - 4); r.addEventListener('scroll', f, { passive: true }); addEventListener('resize', f); f(); });
 }
 
 /* ——— CATALOG ——— */
@@ -199,7 +232,7 @@ function catalog() {
       if (c) return near(c);
     }
     const c = S.color.map(k => cs.find(x => ck(x) === k)).find(Boolean);
-    return c ? near(c) : P;
+    return c ? near(c) : J.cardVariant(m);
   };
   const opt = (f, v, l) => `<li><label class="ck"><input type="checkbox" name="${f}" value="${esc(v)}"><span class="t">${l}</span><span class="n" data-n></span></label></li>`;
   H('#f-brand', [...new Set(ms.map(m => m.brand).concat(S.brand))].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' })).map(b => opt('brand', b, L(b))).join(''));
@@ -218,10 +251,24 @@ function catalog() {
   $('#sort').value = S.sort;
   const clearQ = () => { S.q = ''; $$('.srch input').forEach(x => { x.value = ''; }); };
 
+  /* phones get short pages (12 models), larger screens up to 48 */
+  const PH = matchMedia('(max-width: 767px)');
+  const qs = (o = {}) => {
+    const u = new URLSearchParams(), T = Object.assign({}, S, o);
+    ['brand', 'category', 'color'].forEach(f => T[f].forEach(x => u.append(f, x)));
+    if (T.q) u.set('q', T.q); if (T.sort !== 'default') u.set('sort', T.sort); if (T.page > 1) u.set('page', T.page);
+    return u.toString() ? '?' + u : 'catalog.html';
+  };
+  const qcs = () => {
+    const base = ms.filter(m => ok(m, 'category')), all = !S.category.length;
+    H('#qc', `<li><a href="${qs({ category: [], page: 1 })}" data-qc=""${all ? ' aria-current="true"' : ''}>الكل <span class="n">${A(base.length)}</span></a></li>` +
+      D.categories.map(c => ({ c, n: base.filter(m => m.category === c.slug).length })).filter(x => x.n || S.category.includes(x.c.slug))
+        .map(({ c, n }) => `<li><a href="${qs({ category: [c.slug], page: 1 })}" data-qc="${c.slug}"${S.category.length === 1 && S.category[0] === c.slug ? ' aria-current="true"' : ''}>${c.ar} <span class="n">${A(n)}</span></a></li>`).join(''));
+  };
   function render() {
     let list = ms.filter(m => ok(m));
     if (S.sort === 'name') list = list.slice().sort((a, b) => a.name.localeCompare(b.name, 'en'));
-    const per = 48, pages = Math.max(1, Math.ceil(list.length / per)), c = J.counts(list);
+    const per = PH.matches ? 12 : 48, pages = Math.max(1, Math.ceil(list.length / per)), c = J.counts(list);
     S.page = Math.min(S.page, pages);
     H('#grid', list.length ? list.slice((S.page - 1) * per, S.page * per).map(m => card(m, pick(m))).join('') :
       `<div class="empty"><p class="empty-t">لا توجد طرازات مطابقة.</p><p>تضم هذه المعاينة ${J.countAr(ms.length, 'model')} من الكتالوج العام فقط.</p><button type="button" class="btn btn--ghost" data-clear>مسح عوامل التصفية</button></div>`);
@@ -238,15 +285,16 @@ function catalog() {
     document.title = (oc ? oc.ar + ' — ' : ob ? ISO(ob) + ' — ' : '') + 'الكتالوج · ' + ISO('Jwleria');
     const chips = [...S.brand.map(b => ['brand', b, L(b)]), ...S.category.map(x => ['category', x, esc(CAT[x].ar)]), ...S.color.map(k => ['color', k, esc(COLS.find(x => x.k === k).ar)]), ...(S.q ? [['q', S.q, 'البحث: <bdi>' + esc(S.q) + '</bdi>']] : [])];
     H('#act', chips.map(x => `<li><button type="button" class="ac" data-f="${x[0]}" data-v="${esc(x[1])}"><span class="vh">إزالة عامل التصفية: </span>${x[2]}${IX}</button></li>`).join('') + (chips.length > 1 ? '<li><button type="button" class="ac-x" data-clear>مسح الكل</button></li>' : ''));
-    const pb = (p, l, dis, cur, aria) => `<button type="button" data-p="${p}"${dis ? ' disabled' : ''}${cur ? ' aria-current="page"' : ''}${aria ? ` aria-label="${aria}"` : ''}>${l}</button>`;
+    /* real links: each page has its own URL and works without script */
+    const pb = (p, l, dis, cur, aria, c) => dis ? `<span class="pg-d${c ? ' ' + c : ''}" aria-disabled="true">${l}</span>` : `<a href="${qs({ page: p })}" data-p="${p}"${c ? ` class="${c}"` : ''}${cur ? ' aria-current="page"' : ''}${aria ? ` aria-label="${aria}"` : ''}>${l}</a>`;
     let nums = ''; for (let i = 1; i <= pages; i++) nums += '<li>' + pb(i, A(i), 0, i === S.page, 'الصفحة ' + A(i)) + '</li>';
     /* no results, no pager */
     $('#pg').hidden = !list.length;
-    H('#pg', !list.length ? '' : pb(S.page - 1, 'السابق', S.page <= 1) + `<ol>${nums}</ol>` + pb(S.page + 1, 'التالي', S.page >= pages) + `<p class="pg-i">الصفحة ${A(S.page)} من ${A(pages)} · حتى ${A(per)} طرازًا في الصفحة</p>`);
-    const u = new URLSearchParams();
-    ['brand', 'category', 'color'].forEach(f => S[f].forEach(x => u.append(f, x)));
-    if (S.q) u.set('q', S.q); if (S.sort !== 'default') u.set('sort', S.sort); if (S.page > 1) u.set('page', S.page);
-    history.replaceState(null, '', u.toString() ? '?' + u : 'catalog.html');
+    H('#pg', !list.length ? '' : pb(S.page - 1, 'السابق', S.page <= 1, 0, 'الصفحة السابقة', 'pg-pv') + `<ol>${nums}</ol>` + pb(S.page + 1, 'التالي', S.page >= pages, 0, 'الصفحة التالية', 'pg-nx') + `<p class="pg-i">الصفحة ${A(S.page)} من ${A(pages)} · حتى ${A(per)} طرازًا في الصفحة</p>`);
+    /* keep an open sheet's history entry (Back closes it) */
+    history.replaceState(history.state, '', qs());
+    qcs();
+    $$('.srch input').forEach(x => { if (x !== document.activeElement) x.value = S.q; });
     $$('#ff input').forEach(i => {
       const f = i.name, n = ms.filter(m => ok(m, f) && has(m, f, i.value)).length;
       i.checked = S[f].includes(i.value); i.disabled = !n && !i.checked;
@@ -262,10 +310,21 @@ function catalog() {
     if (e.target.closest('[data-clear]')) { S.brand = []; S.category = []; S.color = []; clearQ(); S.page = 1; render(); if (!e.target.closest('.sheet')) $('#count').focus(); return; }
     const a = e.target.closest('.ac');
     if (a) { const f = a.dataset.f; if (f === 'q') clearQ(); else S[f] = S[f].filter(x => x !== a.dataset.v); S.page = 1; render(); $('#count').focus(); return; }
-    const p = e.target.closest('#pg [data-p]');
-    if (p && !p.disabled) { S.page = +p.dataset.p; render(); $('#count').focus(); }
+    if (e.metaKey || e.ctrlKey || e.shiftKey) return;
+    const p = e.target.closest('#pg a[data-p]');
+    if (p) { e.preventDefault(); S.page = +p.dataset.p; render(); $('#count').focus(); return; }
+    const q = e.target.closest('#qc a[data-qc]');
+    if (q) { e.preventDefault(); S.category = q.dataset.qc ? [q.dataset.qc] : []; S.page = 1; render(); $(`#qc a[data-qc="${q.dataset.qc}"]`).focus({ preventScroll: true }); }
   });
-  const sh = modal($('#sheet'), $('#fbtn'), () => { $('#fslot').appendChild($('#ff')); fit(); });
+  /* every search field on this page filters in place; the URL keeps ?q= */
+  $$('form.srch').forEach(f => f.addEventListener('submit', e => {
+    e.preventDefault(); S.q = $('input', f).value.trim(); S.page = 1; render();
+    if (f.closest('#msrch')) $('.ib-s').click();
+    $('#count').focus();
+  }));
+  $$('form.srch input').forEach(i => i.addEventListener('search', () => { if (!i.value && S.q) { S.q = ''; S.page = 1; render(); } }));
+  PH.addEventListener('change', render);
+  const sh = modal($('#sheet'), $('#fbtn'), () => { $('#fslot').appendChild($('#ff')); render(); });
   $('#fbtn').addEventListener('click', () => { $('#sslot').appendChild($('#ff')); sh.open(); });
   desk(sh.close);
   render();
@@ -289,13 +348,28 @@ function product() {
   H('#pn', L(m.name));
   H('#pt', esc(m.typeAr) + (m.nameAr ? ' · ' + esc(A(m.nameAr)) : ''));
   H('#ps', J.summaryAr(m));
-  H('#acc1', `<p>${m.variants.length > 1 ? `صفحة واحدة لهذا الطراز تضم ${J.countAr(m.variants.length, 'ref')}، ويتغيّر المرجع مع كل اختيار.` : 'طراز بمرجع واحد.'} ${st ? 'الصور المعروضة أماكن مؤقتة إلى حين اعتماد الصور الأصلية.' : NO}</p>`);
+  const pRefs = m.variants.filter(x => J.imagesOf(m, x).length).length;
+  H('#acc1', `<p>${m.variants.length > 1 ? `صفحة واحدة لهذا الطراز تضم ${J.countAr(m.variants.length, 'ref')}، ويتغيّر المرجع مع كل اختيار.` : 'طراز بمرجع واحد.'} ${st ? 'المربعات الملوّنة بدائل تخطيطية وليست صورًا، إلى حين اعتماد الصور الأصلية.' : pRefs ? `الصور عيّنة بترخيص مفتوح لمراجعة التصميم، وتظهر فقط للمرجع الذي صُوِّر فعلًا (${J.countAr(pRefs, 'ref')})؛ بقية المراجع تعرض المواصفات فقط.` : NO}</p>`);
   H('#acc2', `<p>علامة ${L(m.brand)} مدرجة في دليل العلامات على ${L('Jwleria')}${n ? `، ولها ${pub(n)} في الكتالوج العام` : ''}. الإدراج في الدليل لا يعني ارتباطًا بالعلامة.</p><a class="lnk" href="${bU(m.brand)}">كل طرازات ${L(m.brand)} في الكتالوج</a>`);
   H('#rel-t', mates.length ? 'قطع أخرى من ' + L(m.brand) : 'من الفئة نفسها');
   H('#rel-a', mates.length ? 'كل طرازات ' + L(m.brand) : 'كل ' + cat.ar).href = mates.length ? bU(m.brand) : cU(cat.slug);
   H('#rel-g', rel.map(x => card(x)).join(''));
-  $('#gw').classList.toggle('is-fo', !st);
   document.body.classList.add('has-buy');
+  /* zoom viewer: the 1200 derivative is requested only here, on demand */
+  const zv = $('#zv'), zi = $('#zv-i'), zst = $('#zv-st'), zz = $('#zv-z');
+  let zIm = [], zN = 0;
+  const zSet = i => {
+    zN = (i + zIm.length) % zIm.length; const im = zIm[zN];
+    zst.classList.remove('z2'); zz.setAttribute('aria-pressed', 'false'); zz.textContent = 'تكبير';
+    zi.removeAttribute('src'); zi.width = im.w; zi.height = im.h; zi.alt = im.alt; zi.src = im.base + '-' + Math.max(...im.widths) + '.webp';
+    H('#zv-n', `${A(zN + 1)} من ${A(zIm.length)}`); H('#zv-cr', cr(im, 'cr--z'));
+    $$('.zv-p').forEach(b => { b.hidden = zIm.length < 2; });
+  };
+  const zm = modal(zv, null, null, () => $('.x', zv));
+  const zTog = () => { const on = !zst.classList.contains('z2'); zst.classList.toggle('z2', on); zz.setAttribute('aria-pressed', String(on)); zz.textContent = on ? 'تصغير' : 'تكبير'; if (on) { zst.scrollTop = (zst.scrollHeight - zst.clientHeight) / 2; zst.scrollLeft = -(zst.scrollWidth - zst.clientWidth) / 2; } };
+  zz.addEventListener('click', zTog); zi.addEventListener('click', zTog);
+  $$('.zv-p').forEach(b => b.addEventListener('click', () => zSet(zN + +b.dataset.d)));
+  zv.addEventListener('keydown', e => { if (zIm.length > 1 && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) { e.preventDefault(); zSet(zN + (e.key === 'ArrowLeft' ? 1 : -1)); } });
 
   function opts() {
     let h = J.axesOf(m).map(x => {
@@ -325,19 +399,42 @@ function product() {
     (m.facts || []).forEach(f => r.push([esc(f.ar), V(f.v)]));
     return r.map(x => `<tr><th scope="row">${x[0]}</th><td>${x[1]}</td></tr>`).join('');
   }
+  /* gallery mode follows the exact reference: its photos, the layout stand-in, or facts only */
+  let gKey = '';
+  const PSZ = '(max-width: 959px) 86vw, (max-width: 1279px) 28vw, 400px';
+  const ctl = (n, lbl) => n < 2 ? '' : `<div class="gal-c"><button type="button" class="gal-b" data-d="-1" aria-label="${lbl} السابقة" aria-controls="gal">${sv('<path d="m8 5 5 5-5 5"/>', 1.4)}</button><p class="gal-n" aria-live="polite"><span class="vh">${lbl} </span><span id="gal-i">${A(1)}</span> / ${A(n)}</p><div class="gal-dots" aria-hidden="true">${Array.from({ length: n }, (_, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div><button type="button" class="gal-b" data-d="1" aria-label="${lbl} التالية" aria-controls="gal">${sv('<path d="m12 5-5 5 5 5"/>', 1.4)}</button></div>`;
   function gal() {
-    if (!st) return H('#gw', foL(m, v));
-    if ($('#gal')) return $$('#gal .ph').forEach((el, i) => paint(el, m, v, VW[i]));
-    H('#gw', `<div class="gal" id="gal" role="group" aria-label="صور مؤقتة للطراز">${VW.map((w, i) => ph(m, v, w, i)).join('')}</div><div class="gal-dots" aria-hidden="true">${VW.map((w, i) => `<i${i ? '' : ' class="on"'}></i>`).join('')}</div>`);
-    const gl = $('#gal'), io = new IntersectionObserver(es => es.forEach(e => {
-      if (e.isIntersecting) $$('.gal-dots i').forEach((d, j) => d.classList.toggle('on', [...gl.children].indexOf(e.target) === j));
-    }), { root: gl, threshold: 0.6 });
-    [...gl.children].forEach(c => io.observe(c));
+    const im = J.imagesOf(m, v), key = im.length ? 'p:' + v.ref : st ? 'st' : 'fo:' + v.ref;
+    $('#gw').classList.toggle('is-fo', !im.length && !st);
+    $('#gw').classList.toggle('is-p', !!im.length);
+    if (key === gKey && key === 'st') return $$('#gal .ph').forEach((el, i) => paint(el, m, v, VW[i]));
+    if (key === gKey) return;
+    gKey = key;
+    if (!im.length && !st) return H('#gw', foL(m, v));
+    const n = im.length || VW.length;
+    H('#gw', (im.length
+      ? `<div class="gal gal--p${n === 1 ? ' one' : ''}" id="gal" role="region" aria-roledescription="معرض صور" aria-label="${esc('صور المرجع ' + v.ref)}" tabindex="-1">${im.map((x, i) => `<figure class="sl"><button type="button" class="zm" data-i="${i}" aria-label="${esc(`تكبير الصورة ${A(i + 1)} من ${A(n)}: ${x.alt}`)}">${pimg(x, PSZ, !i)}<span class="zm-i" aria-hidden="true">${sv('<circle cx="8.5" cy="8.5" r="5.5"/><path d="m13 13 4 4M8.5 6v5M6 8.5h5"/>', 1.5)}</span></button><figcaption>${cr(x)}</figcaption></figure>`).join('')}</div>`
+      : `<div class="gal" id="gal" role="region" aria-roledescription="معرض" aria-label="بدائل تخطيطية للطراز، ليست صورًا" tabindex="-1">${VW.map((w, i) => ph(m, v, w, i)).join('')}</div>`) + ctl(n, im.length ? 'الصورة' : 'البديل'));
+    const gl = $('#gal'), sl = [...gl.children];
+    if (n > 1) {
+      let cur = 0;
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        if (!e.isIntersecting) return;
+        cur = sl.indexOf(e.target); $('#gal-i').textContent = A(cur + 1);
+        $$('.gal-dots i').forEach((d, j) => d.classList.toggle('on', cur === j));
+      }), { root: gl, threshold: 0.6 });
+      sl.forEach(c => io.observe(c));
+      $$('.gal-b').forEach(b => b.addEventListener('click', () => { const t = sl[Math.max(0, Math.min(n - 1, cur + +b.dataset.d))]; t.scrollIntoView({ block: 'nearest', inline: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); }));
+    }
+    if (im.length) gl.addEventListener('click', e => { const b = e.target.closest('.zm'); if (!b) return; zIm = im; zSet(+b.dataset.i); zm.open(b); });
   }
   function update() {
     const names = axv(m, v).map(o => o.ar);
     opts(); gal();
     $('#ref').textContent = v.ref;
+    const pn = J.imagesOf(m, v).length;
+    H('#pst', pn ? `${phN(pn)} لهذا المرجع فقط · ${SAMPLE}` : st ? 'بدائل تخطيطية ملوّنة، ليست صورًا للمنتج.' : NO);
+    $('#pst').classList.toggle('on', !!pn);
     H('#facts', facts());
     H('#buys', L(v.ref, 'ref') + names.map(x => `<span>·</span><span>${esc(x)}</span>`).join(''));
     document.title = [ISO(m.name), ...names, ISO(v.ref)].join(' · ') + ' — ' + ISO('Jwleria');
@@ -347,11 +444,13 @@ function product() {
     if (!a || e.metaKey || e.ctrlKey || e.shiftKey) return;
     e.preventDefault();
     const k = a.dataset.k, val = a.dataset.v, href = a.getAttribute('href');
+    const y0 = a.getBoundingClientRect().top;
     v = J.variantOf(m, new URLSearchParams(href.split('?')[1]).get('ref'));
-    history.replaceState(null, '', href);
+    history.replaceState(history.state, '', href);
     update();
     const f = $(`#opts a[data-k="${k}"][data-v="${CSS.escape(val)}"]`) || $(`#opts [data-axis="${k}"] [aria-current]`);
-    if (f) f.focus({ preventScroll: true });
+    /* the gallery above may change height (photos ↔ facts only): keep the tapped option under the finger */
+    if (f) { const d = f.getBoundingClientRect().top - y0; if (Math.abs(d) > 1) scrollBy(0, d); f.focus({ preventScroll: true }); }
   });
   update();
 }
