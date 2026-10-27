@@ -1,3 +1,16 @@
+## Current handoff — website foundation — 2026-10-27
+
+Continue in the existing foundation conversation "تأسيس موقع جويلري" on `claude/admiring-dirac-nfavfx`; the designer conversation "تصميم موقع جويلري" owns visuals. Read the top STATE entry, `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`, `docs/PRODUCT-MODELS-DRY-RUN-2026-10-26.md` and `docs/WEBSITE-MEDIA-COVERAGE-2026-10-26.md`. The earlier B1–B6 backlog is superseded.
+
+Next actions:
+1. With the owner's exact approval: apply the models migration (move the proposed file into `supabase/migrations` with a timestamp), run `jwl_internal.apply_product_variants()` once, read back the counts against the dry run.
+2. Deploy the Worker from this branch through the owner's/Codex's authenticated Wrangler with the current live build inputs; verify home, catalog, a grouped model page and a legacy variant URL on a phone width.
+3. Photos: on an owner decision to accept open licences for the named images, apply the open-licence migration, create the bucket, deploy the upload function, record grants and visual verifications for m126234-0015 and m126200-0006 (fetch the full originals once Commons stops rate-limiting), upload derivatives, then publish image variants; they show only after a deploy that carries the credit line. Official or owner-original photographs need written permission or the owner's own photos.
+4. Integrate the chosen design when the owner selects one.
+5. Inactive intake runner: fix the recorded verified defects before any schedule activation.
+
+Never deploy, apply, upload or publish without the matching approval. Keep provider identifiers, session links, private exports and originals out of Git.
+
 ## Current handoff — continue in ONE new conversation — 2026-10-26
 
 Start one new conversation in the approved dedicated Jwleria environment (Full egress) with Opus 5.5 Ultracode, Auto permissions and the same existing connectors and scopes. No new credential, broader scope or security bypass is authorized, and a new conversation does not guarantee zero approval prompts. Easy Life is permanently cancelled; do not recreate or invoke it.

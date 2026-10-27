@@ -1,3 +1,26 @@
+## Website-only foundation checkpoint — 2026-10-27
+
+**Owner priority since 2026-10-26: website only.** The acceptance target is real exact-product photographs visible on jwleria.com and one card/page per real model with its genuine variants. Phone use comes first. Contact/WhatsApp, social, ads and non-website operations are deferred and are not website gates. The old B1–B6 backlog below is superseded.
+
+**Roles.** The conversation "تأسيس موقع جويلري" is the foundation stream: data, media evidence, variant behaviour, performance, integration and tests. The conversation "تصميم موقع جويلري" is the website designer: visual direction, layouts, typography, responsive presentation and the styling of the gallery/variant controls. A chosen preview becomes the visual authority; the foundation integrates it against the then-current data and image contracts. Isolation is by file ownership and branches, not by connector toggles.
+
+**Prepared and tested on `claude/admiring-dirac-nfavfx` (not deployed, not applied):**
+- Models/variants: contract `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`; proposed additive migration `apps/storefront/supabase/proposed/jwleria_product_models.sql` with rollback and PGlite tests. Read-only production dry run (`docs/PRODUCT-MODELS-DRY-RUN-2026-10-26.md`): 4,097 variants -> 2,886 displayed models; 283 grouped models hold 1,494 variants; 0 key collisions. Rolex 1,465 -> 674, LOEWE 407 -> 232, Longchamp 390 -> 145; Prada, Cartier, VCA and the 3-row watch brands stay one model per row (no linking evidence). No size option exists in the data; none is invented.
+- Storefront: one page per model, every existing variant URL valid, canonical to the primary, option links only to real variants, per-variant galleries (never another variant's photo), attribution credit lines, translated specs. Exact fallback to today's reads until the migration exists. Styling is one scoped removable `.variant-*/.gallery-*` block for the designer.
+- End-to-end proof: PGlite-backed PostgREST stand-in shows the SQL and the storefront agree; private local mobile preview (390x844, ar/en) with synthetic data.
+- Performance: bounded stale-while-revalidate (60 s fresh, <= 600 s stale; decision 0009 updated), local lab only.
+- Media: uploads bound to the current revision's own live approval, grant and cited file; one-day derivative cache; gated open-licence grant path as a proposed migration (inactive without an owner decision).
+- Source safety: Piaget and Panerai closed in code after reading their terms. A verified-defect list for the inactive intake/n8n runner is recorded (review journal); its fixes are not yet done.
+- Suites at merge `18c2332`: storefront 135 pass / 0 fail / 3 opt-in skips; intake 103 pass.
+
+**Media (evidence in `docs/WEBSITE-MEDIA-COVERAGE-2026-10-26.md`):**
+- Live: 0 approved images, 0 grants, 0 buckets; catalog hash unchanged.
+- Official brand images eligible: 0. No brand permits commercial display of its photographs.
+- Open-licence exact matches (third-party, never "official"): m126234-0015 (6 Ajay Suresh photos, CC BY 2.0) and m126200-0006 (Remi Mathis, CC BY-SA 4.0) form the lower-risk sample. m126500ln-0001, m126900-0001 and m126713grnr-0001 are exact but carry provenance risk. Three photos are unresolved between sibling references and are excluded.
+- A private phone preview of the 7-image sample with credits and WebP derivatives was published as a private Artifact and handed to the designer session. It is not website publication. Commons answered HTTP 429; nothing was retried or bypassed.
+
+**Gates still in force:** applying the models migration and writing its mapping; Worker deploy (no deploy tool in this environment — the owner's/Codex's authenticated Wrangler is the path); open-licence public use (owner decision, open-licence migration, bucket + upload function, then a deploy that carries the credit line); any factual batch; schedule activation. Migration `20261026114541` stays applied once.
+
 ## Claude execution checkpoint — handoff to one new conversation — 2026-10-26
 
 The owner requested a safe checkpoint so execution continues in ONE new conversation in which current connector tool policies load from the start. Use the approved dedicated Jwleria environment (Full egress), Opus 5.5 Ultracode, Auto permissions and the same existing connectors and scopes. This supersedes every launch-pending or not-launched checkpoint below: that conversation ran and its outcome is recorded here. Full detail, the requirements ledger and ready briefs are in [docs/CLAUDE-CONTINUATION-2026-10-26.md](docs/CLAUDE-CONTINUATION-2026-10-26.md).
