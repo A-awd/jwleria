@@ -1,5 +1,6 @@
 /*
- * Exact-reference product photographs for the private design review.
+ * CANDIDATE exact-reference photographs proposed to the foundation stream (owner of
+ * photo clearance) for the private design review. Not approved and not live.
  * Each entry is bound to ONE catalog reference and is never shown for any other
  * variant. Filled by the photo preparation step from Wikimedia Commons
  * open-licence files (see ../PHOTO-SAMPLE.md). Not approved for jwleria.com:
