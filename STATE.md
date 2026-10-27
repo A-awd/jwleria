@@ -192,7 +192,7 @@ Claude Code implemented, tested and self-reviewed the remaining background-proce
   - Gallery binding: 3,103 candidates have every gallery URL naming the exact reference (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 372, Bottega 8). 1,047 do not (Cartier, VCA, AP, IWC, JLC, Panerai, Piaget, 19 Longchamp). This is identity evidence only; no media permission exists.
   - Migration history:
     - The first attempt was denied by the Claude Code auto-mode classifier as `[Production Deploy]`. No card was offered, and nothing was applied (6 migrations remained). Permission modes and allow rules were not changed, and no `execute_sql` workaround was used.
-    - The owner then explicitly approved this exact production update, relayed by Codex: project `saymzvrvtfrjftmtqtor`, migration `jwleria_media_evidence_and_missing_intake`, file SHA-256 `0a09c65e…999b24` at commit `3036d7a`.
+    - The owner then explicitly approved this exact production update, relayed by Codex: the Jwleria Supabase project, migration `jwleria_media_evidence_and_missing_intake`, file SHA-256 `0a09c65e…999b24` at commit `3036d7a`.
     - The pre-check listed 6 migrations, so it was not a duplicate. `apply_migration` succeeded. Its statements were the file's, minus the outer `begin;`/`commit;`, because the tool supplies its own transaction.
     - The registered version is `20261026114541`, and the repository file was renamed to match.
   - **Post-apply readback:**
