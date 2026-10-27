@@ -1,3 +1,30 @@
+## Foundation and media checkpoint: what is live and what is not, 2026-10-27
+
+**Live (deployed by the operator; this session has no deploy tool):**
+- Worker `jwleria-storefront` runs the prebuilt foundation release from source commit `2a1864b` (`releases/storefront-2a1864b35fd8/`). Codex uploaded it and read it back: the new version is active at 100%, the rollback target is recorded privately, and domains, secrets and bindings are unchanged. `noindex` and robots `Disallow: /` are kept. Version IDs stay out of this repository.
+- Search works with the form's `q` parameter. Codex confirmed exactly one result for `/en/catalog/?q=m126234-0015` and `/ar/catalog/?q=m126234-0015`. Only `X-JWL-Cache: MISS` was observed; HIT and STALE are unconfirmed.
+- Database: 7 registered migrations, unchanged. Live approved product images: 0. Bucket: absent (read-only check at 11:53 UTC).
+
+**Not applied (blocked by the database confirmation path):**
+- Models migration `jwleria_product_models`. Two `apply_migration` attempts timed out after 60 s because the action-time confirmation was not answered. There was no third attempt and no other tool was used. Until it is applied, the site runs in the exact fallback: one card per reference.
+- Open-licence migration (`apps/storefront/supabase/proposed/jwleria_open_license_media.sql`), the media bucket, the upload function and every media write.
+
+**Prepared, reviewed and merged on this branch (merge `b1e5838` of `wf/olmedia` at `24d4f2c`):**
+- Open-licence grants may cite Wikimedia renditions, recorded as renditions with their width. MediaWiki md5 hash directories are checked in SQL and JS. Derivatives are never wider than the rendition. A held copy needs its sha256 and is never accepted as an original.
+- Decision 0013 (`decisions/0013-open-licence-exact-product-photos.md`) covers m126234-0015 only. The decision reference is pinned in code and SQL. Decision 0011 cross-references the source-flag exemption, which needs its own owner approval line.
+- Web delivery: measured lossy WebP replaces lossless output. No approved decision required lossless; the canonical budget is about 150 KB per card file. Each file takes the highest ladder quality that fits its budget at SSIM 0.97 or above. Any exception needs an independent record; there is no waiver flag.
+- The open-licence publish lane adds images to a row already public as facts. It never reads or writes the source flag, and every displayed fact and the stored search text stay as they are. The source trigger withdraws only media-lane rows: 0 such rows exist for Rolex, and the 1,464 other Rolex rows are facts only.
+- Reviews: provenance and gates, performance and fidelity, a re-review, a final review and a close-out. All actionable findings were fixed. Suites on the merged tree: storefront 145 tests, 142 pass, 0 fail, 3 opt-in skips; intake 117 of 117 pass.
+
+**Photo batch for m126234-0015 (private execution bundle; nothing executed):**
+- One photograph passes every gate: `Rolex_Datejust_126234.jpg`, a 960 px rendition. Its creator states "ref. 126234, 36 mm, black dial, Jubilee", and the independent visual record confirms the variant. It is delivered as 320, 640 and 960 px WebP files (27,378, 78,538 and 145,594 B), with no visible detail loss in the independent comparison.
+- Four photographs are excluded: their creator states no reference, and three have an uncertain dial shade. "Presentation Ready" (330 px) and m126200-0006 (500 px) stay out.
+- The bundle (rendered SQL in execution order with sha256, evidence, rollback, scripts and the three files) is in a private Artifact held by the owner. It is not in Git because source bindings stay private (decision 0009).
+
+**Remaining external gates, in order:** owner approval of the open-licence migration as two lines (the grant kind, and the source-flag exemption); the action-time database confirmation for each write; owner approval of the bucket and the upload-function deploy; licence-reviewer confirmation of the CC BY 2.0 title/URI point; `confirm-renditions --network` for the front rendition before step (d); a fresh read that still matches. The same database confirmation path also blocks the models migration.
+
+**Reported, not changed:** on phones the gallery's 4:5 `object-fit: cover` frame shows about 60% of a 4:3 photo's width. The fix (`contain`, or a frame that matches the photo's aspect ratio) belongs to the designer stream and needs a Worker release.
+
 ## Foundation release deployed (operator) — 2026-10-27
 
 - **Worker upload: done by the operator (Codex), not by this cloud session.** Codex deployed the exact prebuilt package from `releases/storefront-2a1864b35fd8/` (source commit `2a1864b`) with the upload-only command. Codex read back: the new version is active at 100%, the previous version is recorded privately as the rollback target, and custom domains, secrets and bindings are unchanged. `PUBLIC_*` variables are absent, and `noindex` and robots `Disallow: /` are kept. Version IDs are kept out of this public repository.
