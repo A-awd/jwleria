@@ -1,3 +1,10 @@
+## Current handoff — after the finishing pass on `wf/finish` — 2026-10-27
+
+1. Integrate `wf/finish` into the foundation branch. Then build a new upload-only release package. It carries the credit title support, the copy and the photo framing; the operator uploads it before any titled credit is recorded.
+2. Re-render the private m126234-0015 execution bundle against the updated proposed SQL, with `"title": "Rolex Datejust 36 - Up High"` on the front file, then re-hash it and repeat the fresh read.
+3. Ask the owner for the open-licence migration as three separate lines ([decision and approval ledger](docs/spec/DECISION-APPROVAL-LEDGER.md)). Ask also for the bucket and the upload function.
+4. Run database writes from an interactive session, where the action-time question can be answered ([runbook](docs/spec/STOP-RECOVERY-RUNBOOK.md), playbook DB-1). Never replay `20261026114541`.
+
 ## Foundation and media checkpoint: what is live and what is not, 2026-10-27
 
 **Live (deployed by the operator; this session has no deploy tool):**

@@ -1,3 +1,12 @@
+## Finishing pass on `wf/finish`: credit title, copy, photo framing and project records, 2026-10-27
+
+All prepared on this branch; nothing applied, uploaded or deployed. Live state is unchanged from the entry below.
+- **Credit title (prepared):** CC BY 2.0 section 4(b) requires the work's title "if supplied". The front m126234-0015 photograph's author supplies "Rolex Datejust 36 - Up High" in its embedded metadata, so each licensed file now records `title` (or `null`), and the credit carries it end to end: proposed SQL, pipeline and storefront. Five-field credits stay valid. Two consequences: the private execution bundle must be re-rendered and re-hashed, because the proposed SQL changed; and a Worker that accepts `title` must be live before any titled credit is recorded. The live Worker would refuse that image.
+- **Copy (prepared):** the copy audit's replacements are applied. Directory brands no longer claim "selections" or availability, the home, latest and own-collection leads describe a directory and pieces on view, and the concierge key and DOM id are gone.
+- **Photo framing (prepared):** approved product photographs use `contain` in the gallery and on cards, inside the unchanged 4:5 frame. Local preview at 360/390/430 px in both locales: 99.4–100% of the width and 100% of the height visible, CLS 0, no overflow. Editorial imagery keeps `cover`.
+- **Rendition confirmation: done** (observed live, 18:09Z). HTTP 200, and the served sha256 equals the held bytes.
+- **Records:** `CLAUDE.md` and `docs/spec/` (execution spec, requirements and evidence ledger, decision and approval ledger, stop and recovery runbook, maintenance backlog, coverage and source registry). The open-licence approval needs **three** owner lines, not two: (a) the grant kind, (b) the source-flag exemption and (c) the creator-stated-reference identity route.
+
 ## Foundation and media checkpoint: what is live and what is not, 2026-10-27
 
 **Live (deployed by the operator; this session has no deploy tool):**
