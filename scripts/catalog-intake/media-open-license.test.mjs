@@ -21,7 +21,7 @@ const record=(source_id,external_id)=>normalizeBatch([{source_id,external_id,sou
 const candidate=record('synthetic-official','m126610ln-0001');
 const open={grant_reference:'synthetic-open-01',kind:'open_license',source_id:'synthetic-official',candidate_id:candidate.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',creator:'Synthetic Photographer',
-  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'synthetic owner decision 2026-10-26'};
+  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'};
 const source={id:'synthetic-official',origin:'https://brand.example.test',publication_allowed:true};
 const base='https://project.supabase.co/storage/v1/object/public/jwl-product-media';
 const now=Date.parse('2026-10-26T00:00:00Z');
@@ -51,6 +51,16 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
     [{owner_decision_reference:undefined},'owner_decision_reference_missing'],
     [{owner_decision_reference:'  '},'owner_decision_reference_missing'],
     [{owner_decision_reference:'synthetic-owner-decision'},'owner_decision_reference_missing'],
+    // A dated sentence is not a decision record, however plausible.
+    [{owner_decision_reference:'owner continuation instruction 2026-10-27 relayed: complete the sample path'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'synthetic owner decision 2026-10-26'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md '},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/13-open-licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-Open-Licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence.md\n'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'../decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open--licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'https://example.test/decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
     [{licensed_files:[]},'licensed_file_not_an_allowlisted_commons_file'],
     [{licensed_files:[{...open.licensed_files[0],rendition_width:960}]},'licensed_file_not_an_allowlisted_commons_file'],
     [{creator:''},'attribution_creator_missing'],
@@ -204,10 +214,15 @@ test('a held rendition is kept without any request, must decode to its recorded 
     const held=async(width,height,name)=>{const bytes=await sharp({create:{width,height,channels:3,background:'#4a423b'}}).jpeg().toBuffer();const path=join(root,name);await writeFile(path,bytes);return {path,bytes};};
     const front=await held(960,720,'front.jpg'),box=await held(300,225,'box.jpg'),wrong=await held(1200,900,'wrong.jpg');
     const out=join(root,'private');
-    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:wrong.path,output_directory:out}),/recorded rendition width/);
+    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:wrong.path,expected_sha256:sha(wrong.bytes),output_directory:out}),/recorded rendition width/,'decoded width must equal rendition_width');
     await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:front.path,expected_sha256:'0'.repeat(64),output_directory:out}),/recorded checksum/);
-    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:original,local_path:front.path,output_directory:out}),/asset_not_a_granted_file/);
-    await assert.rejects(keepOpenLicenseFile({candidate,grant:{...grant,owner_decision_reference:undefined},file_url:files[0].file_url,local_path:front.path,output_directory:out}),/owner_decision_reference_missing/);
+    for(const missing of [undefined,null,'',sha(front.bytes).toUpperCase(),sha(front.bytes).slice(1)])
+      await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:front.path,expected_sha256:missing,output_directory:out}),/needs its recorded sha256/,'a held copy always needs its sha256: '+missing);
+    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:original,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/asset_not_a_granted_file/);
+    // A held copy can never be recorded as an original, whatever bytes it holds: originals are downloaded and checked.
+    const withOriginal={...grant,licensed_files:[...files,open.licensed_files[0]]};
+    await assert.rejects(keepOpenLicenseFile({candidate,grant:withOriginal,file_url:original,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/only for a recorded rendition/);
+    await assert.rejects(keepOpenLicenseFile({candidate,grant:{...grant,owner_decision_reference:undefined},file_url:files[0].file_url,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/owner_decision_reference_missing/);
     const prepare=async(file,local)=>{
       const kept=await keepOpenLicenseFile({candidate,grant,file_url:file.file_url,local_path:local.path,expected_sha256:sha(local.bytes),output_directory:out});
       assert.deepEqual([kept.source_url,kept.sha256,kept.file_kind,kept.rendition_width,kept.width],[file.file_url,sha(local.bytes),'rendition',file.rendition_width,file.rendition_width]);

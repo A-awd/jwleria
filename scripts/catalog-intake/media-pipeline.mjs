@@ -76,7 +76,10 @@ export function commonsFile(file){
 export function licensedFile(grant,file_url){
   return Array.isArray(grant?.licensed_files)?grant.licensed_files.find(file=>file?.file_url===file_url):undefined;
 }
-const ownerDecision=value=>typeof value==='string'&&value===value.trim()&&[...value].length>=12&&[...value].length<=300&&!/\p{Cc}/u.test(value)&&/(^|[^0-9])[0-9]{4}-[0-9]{2}-[0-9]{2}([^0-9]|$)/.test(value);
+// The owner decision an open-licence grant relies on is a recorded decision file of this repository
+// (decisions/NNNN-slug.md), never free text: a dated sentence is not a decision record.
+export const ownerDecisionPattern=/^decisions\/[0-9]{4}-[a-z0-9]+(?:-[a-z0-9]+)*\.md$/;
+const ownerDecision=value=>typeof value==='string'&&value.length<=120&&ownerDecisionPattern.test(value);
 function openLicenseGaps(grant){
   const reasons=[],deed=Object.hasOwn(openLicenses,grant.license_code??'')?openLicenses[grant.license_code]:null;
   if(!ownerDecision(grant.owner_decision_reference))reasons.push('owner_decision_reference_missing');
@@ -250,26 +253,31 @@ export async function keepOwnerOriginal({candidate,grant,local_path,output_direc
 }
 
 /**
- * Preserves a local, untouched copy of one Commons file an open-licence grant names, as Wikimedia served it,
- * without any network request. A rendition must decode to exactly its recorded width; an expected checksum,
- * when given, must match the bytes.
+ * Preserves a local, untouched copy of one Wikimedia-served rendition an open-licence grant names, without any
+ * network request. The copy is bound to its URL only by recorded values, so it must match its recorded sha256 and
+ * decode to exactly the recorded rendition width. A held copy can never stand for an original: originals are
+ * downloaded with acquireOriginal and checked against what Commons serves, so thumbnail bytes cannot be recorded
+ * under an original URL.
  */
 export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,expected_sha256,output_directory}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:file_url});
   if(decision.state!=='permitted'||grant.kind!=='open_license')throw Error('Permitted open-licence grant for this file required: '+decision.reasons.join(','));
-  const file=licensedFile(grant,file_url),root=await privateRoot(output_directory);
+  const file=licensedFile(grant,file_url);
+  if(file.file_kind!=='rendition')throw Error('A held copy is accepted only for a recorded rendition; download an original instead');
+  if(!hashPattern.test(expected_sha256??''))throw Error('A held rendition needs its recorded sha256');
+  const root=await privateRoot(output_directory);
   const stat=await lstat(local_path);
   if(!stat.isFile()||stat.isSymbolicLink()||stat.size<1||stat.size>maxBytes)throw Error('Held Commons file must be a regular file within 15 MiB');
   const bytes=await readFile(local_path);
-  if(expected_sha256!==undefined&&digest(bytes)!==expected_sha256)throw Error('Held Commons file differs from its recorded checksum');
+  if(digest(bytes)!==expected_sha256)throw Error('Held Commons file differs from its recorded checksum');
   const head=bytes.subarray(0,12).toString('latin1');
   const extension=head.startsWith('\xff\xd8\xff')?'jpg':head.startsWith('\x89PNG')?'png':head.startsWith('RIFF')&&head.slice(8,12)==='WEBP'?'webp':null;
   if(!extension)throw Error('Unsupported held Commons file format');
-  const metadata=await installedImageEngine()(bytes,{failOn:'warning'}).metadata();
-  const width=(metadata.orientation??1)>=5?metadata.height:metadata.width,height=(metadata.orientation??1)>=5?metadata.width:metadata.height;
-  if(file.file_kind==='rendition'&&width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
+  // Decode the pixels (not only the header) upright, as the derivative pipeline will see them.
+  const {info}=await installedImageEngine()(bytes,{failOn:'warning'}).autoOrient().raw().toBuffer({resolveWithObject:true});
+  if(info.width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
   const kept=await keepOriginal(root,bytes,extension);
-  return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width,height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
+  return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
 }
 
 /** Builds the exact per-asset derivative binding the responsive helper requires, then prepares files. */

@@ -1,12 +1,18 @@
--- PROPOSED, NOT APPLIED. Decision 0011 still rejects open licences. Applying this file is a separate
--- owner-approved production change that follows the owner's recorded open-licence decision and the
--- storefront's visible attribution; on approval it is registered and moved to ../migrations.
+-- PROPOSED, NOT APPLIED. Applying this file is a separate owner-approved production change. It implements decision
+-- 0013 (open-licence exact-product photographs), which narrows decision 0011's open-licence rejection for that
+-- scope only, once the storefront shows the visible attribution; on approval it is registered and moved to ../migrations.
 -- Adds one grant kind, open_license: up to twenty Wikimedia Commons files by one creator under one allowlisted
--- free licence (CC0 1.0, CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, with
--- the owner decision it relies on. Each file is either its untouched Commons original or a Wikimedia-served
--- thumbnail rendition of it, recorded as such with the rendition's width; derivatives never exceed a rendition's
--- width. Its images must carry the exact visible attribution derived from the grant and the credited file. Creates
--- no grant, asset, approval or publication; closed sources, evidence, verification and revocation stay in force.
+-- free licence (CC0 1.0, CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, citing
+-- the recorded decision file it relies on (decisions/NNNN-slug.md). Each file is either its untouched Commons
+-- original or a Wikimedia-served thumbnail rendition of it, recorded as such with the rendition's width, under
+-- MediaWiki's md5 hash directories of the decoded file name; derivatives never exceed a rendition's width. Its images
+-- must carry the exact visible attribution derived from the grant and the credited file.
+-- Source flag (decision 0011 keeps a source's publication_allowed with the owner): an open-licence photograph is not
+-- the source's own media, so a live open-licence approval of a product that is ALREADY public as facts at the same
+-- revision may publish its images without the source's publication_allowed, and that flag alone does not withdraw
+-- it. Nothing else changes: other grant kinds still need the flag and are still withdrawn by it, a disabled source
+-- still withdraws every media publication, facts are untouched, and revoking the grant or approval or a new revision
+-- still withdraws the product. Creates no grant, asset, approval or publication.
 begin;
 
 -- The only accepted licences: SPDX id -> visible label and canonical deed. Ported versions need review.
@@ -33,14 +39,36 @@ alter table jwl_internal.media_grants
   add column attribution_text text,
   add column owner_decision_reference text;
 
+-- Strict percent-decoding of a URL path segment into UTF-8 text, as JavaScript's decodeURIComponent does (no "+"
+-- rule): a malformed escape or invalid UTF-8 returns null, so every check that uses it fails closed.
+create function jwl_internal.percent_decode(value text) returns text
+language plpgsql immutable strict security invoker set search_path='' as $$
+declare bytes bytea:=''::bytea; i integer:=1; n integer:=length(value); ch text;
+begin
+ while i<=n loop
+  ch:=substr(value,i,1);
+  if ch='%' then
+   if substr(value,i+1,2) !~ '^[0-9A-Fa-f]{2}$' then return null;end if;
+   bytes:=bytes||decode(substr(value,i+1,2),'hex');i:=i+3;
+  else
+   bytes:=bytes||convert_to(ch,'UTF8');i:=i+1;
+  end if;
+ end loop;
+ return convert_from(bytes,'UTF8');
+exception when others then return null;
+end $$;
+revoke all on function jwl_internal.percent_decode(text) from public,anon,authenticated;
+grant execute on function jwl_internal.percent_decode(text) to service_role;
+
 -- The files an open-licence grant covers: 1..20 distinct Commons file pages, each with exactly one held file on
 -- upload.wikimedia.org (Commons only, never a brand origin or another wiki), recorded honestly as either
 --   {"file_kind":"original","rendition_width":null,"file_url":".../wikipedia/commons/<h>/<hh>/<File>"} or
 --   {"file_kind":"rendition","rendition_width":N,"file_url":".../wikipedia/commons/thumb/<h>/<hh>/<File>/<N>px-<File>"}
--- where <File> is the page's own File name spelled the same way, <hh> starts with <h> and N is 100..4000.
+-- where <File> is the page's own File name spelled the same way, N is 100..4000, and <h>/<hh> are the first one and
+-- two hex digits of md5(<File> percent-decoded), as MediaWiki stores it (underscores, as in the URL).
 create function jwl_internal.valid_open_license_files(files jsonb)
 returns boolean language plpgsql immutable security invoker set search_path='' as $$
-declare f jsonb; page text; name text; url text; parts text[]; width numeric; seen_pages text[]:='{}'; seen_files text[]:='{}';
+declare f jsonb; page text; name text; hash text; url text; parts text[]; width numeric; seen_pages text[]:='{}'; seen_files text[]:='{}';
 begin
  if jsonb_typeof(files) is distinct from 'array' or jsonb_array_length(files) not between 1 and 20 then return false;end if;
  for f in select value from jsonb_array_elements(files) loop
@@ -51,16 +79,18 @@ begin
   if length(page)>2048 or length(url)>2048 or page !~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$' then return false;end if;
   name:=substring(page from '^https://commons\.wikimedia\.org/wiki/File:(.+)$');
   if name !~ '\.([Jj][Pp][Ee]?[Gg]|[Pp][Nn][Gg]|[Ww][Ee][Bb][Pp])$' then return false;end if;
+  hash:=md5(jwl_internal.percent_decode(name));
+  if hash is null then return false;end if;
   if f->>'file_kind'='original' then
    if f->'rendition_width'<>'null'::jsonb then return false;end if;
    if url !~ '^https://upload\.wikimedia\.org/wikipedia/commons/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+$'
-     or parts[6]<>left(parts[7],1) or parts[8]<>name then return false;end if;
+     or parts[6]<>left(hash,1) or parts[7]<>left(hash,2) or parts[8]<>name then return false;end if;
   elsif f->>'file_kind'='rendition' then
    if jsonb_typeof(f->'rendition_width') is distinct from 'number' then return false;end if;
    width:=(f->>'rendition_width')::numeric;
    if width<>trunc(width) or width not between 100 and 4000 then return false;end if;
    if url !~ '^https://upload\.wikimedia\.org/wikipedia/commons/thumb/[0-9a-f]/[0-9a-f]{2}/[^/?#[:space:]"<>\\]+/[1-9][0-9]*px-[^/?#[:space:]"<>\\]+$'
-     or parts[7]<>left(parts[8],1) or parts[9]<>name or parts[10]<>width::integer::text||'px-'||name then return false;end if;
+     or parts[7]<>left(hash,1) or parts[8]<>left(hash,2) or parts[9]<>name or parts[10]<>width::integer::text||'px-'||name then return false;end if;
   else return false;
   end if;
   if page=any(seen_pages) or url=any(seen_files) then return false;end if;
@@ -71,8 +101,9 @@ end $$;
 revoke all on function jwl_internal.valid_open_license_files(jsonb) from public,anon,authenticated;
 grant execute on function jwl_internal.valid_open_license_files(jsonb) to service_role;
 
--- An open-licence grant names one exact candidate and its licensed files. The owner decision is a dated,
--- single-line record of that decision. Other kinds carry none of these fields.
+-- An open-licence grant names one exact candidate and its licensed files. The owner decision is the repository path
+-- of the recorded decision file (decisions/NNNN-slug.md); free text, however dated, is refused. Other kinds carry none
+-- of these fields.
 alter table jwl_internal.media_grants add constraint jwl_open_license_grant_check check (case when kind='open_license' then coalesce(
   candidate_id is not null and source_id is not null and media_origins='[]'::jsonb
   and source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official')
@@ -80,8 +111,7 @@ alter table jwl_internal.media_grants add constraint jwl_open_license_grant_chec
   and length(trim(creator)) between 1 and 300 and creator !~ '[[:cntrl:]]'
   and length(trim(attribution_text)) between 1 and 500 and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
   and jwl_internal.valid_open_license_files(licensed_files)
-  and length(owner_decision_reference) between 12 and 300 and owner_decision_reference=trim(owner_decision_reference)
-  and owner_decision_reference !~ '[[:cntrl:]]' and owner_decision_reference ~ '(^|[^0-9])[0-9]{4}-[0-9]{2}-[0-9]{2}([^0-9]|$)',false)
+  and length(owner_decision_reference)<=120 and owner_decision_reference ~ '^decisions/[0-9]{4}-[a-z0-9]+(-[a-z0-9]+)*\.md$',false)
   else num_nulls(license_code,license_url,creator,licensed_files,attribution_text,owner_decision_reference)=6 end);
 
 -- The grant's candidate must belong to the grant's source, checked once when the grant is recorded.
@@ -212,6 +242,92 @@ begin
       end if;
     end loop;
   end loop;
+  return new;
+end $$;
+
+
+-- The open-licence lane: the current revision of the candidate has a live, verified approval citing a live
+-- open_license grant for this exact candidate and its source, and that same revision is already published as facts.
+create function jwl_internal.open_license_lane(p_candidate text, p_revision text) returns boolean
+language sql stable security invoker set search_path='' as $$
+  select exists(select 1 from jwl_internal.candidates c
+    join jwl_internal.publication_approvals a on a.candidate_id=c.candidate_id and a.revision_hash=c.revision_hash
+    join jwl_internal.media_grants g on g.grant_reference=a.media_reference
+    join jwl_internal.factual_publications f on f.catalog_id=c.candidate_id and f.candidate_id=c.candidate_id and f.revision_hash=c.revision_hash
+    where c.candidate_id=p_candidate and c.revision_hash=p_revision and a.image_verified and a.revoked_at is null
+      and g.kind='open_license' and g.revoked_at is null and g.expires_at is null and g.candidate_id=c.candidate_id and g.source_id=c.source_id)
+$$;
+revoke all on function jwl_internal.open_license_lane(text,text) from public,anon,authenticated;
+grant execute on function jwl_internal.open_license_lane(text,text) to service_role;
+
+-- Same as 20261021101140 except the source check above.
+create or replace function public.jwl_publish_candidate(candidate text, revision text, product jsonb)
+returns text language plpgsql security invoker set search_path='' as $$
+declare c jwl_internal.candidates; approval jwl_internal.publication_approvals; source jwl_internal.sources; responsive jsonb;
+begin
+  select * into c from jwl_internal.candidates where candidate_id=candidate;
+  select * into approval from jwl_internal.publication_approvals where candidate_id=candidate and revision_hash=revision;
+  select * into source from jwl_internal.sources where id=c.source_id;
+  if c.candidate_id is null or c.revision_hash<>revision then raise exception 'Candidate revision changed'; end if;
+  if product ? 'collection_kind' then
+   if jsonb_typeof(product->'collection_kind') is distinct from 'string' or product->>'collection_kind' not in ('collection','source_group') then raise exception 'Invalid collection kind';end if;
+  end if;
+  if coalesce(product->>'collection_kind','collection') is distinct from coalesce(c.content->>'collection_kind','collection') then raise exception 'Collection kind differs from current candidate';end if;
+  if approval.candidate_id is null or not approval.image_verified or approval.revoked_at is not null then raise exception 'Image approval missing or revoked'; end if;
+  -- The source flag governs the source's own media. A live open-licence approval of a product already public as facts at
+  -- this exact revision does not use it; every other publication still does, and a disabled source refuses all.
+  if not source.enabled or (not source.publication_allowed and not jwl_internal.open_license_lane(candidate,revision)) then raise exception 'Source publication not approved'; end if;
+  -- Without the flag the lane only adds images to the existing public row: every displayed fact must stay as it is.
+  if not source.publication_allowed and not exists(select 1 from public.jwl_catalog k where k.id=candidate and k.active
+    and k.slug=product->>'slug' and k.reference=product->>'reference' and k.brand_slug=product->>'brand_slug' and k.brand_name=product->>'brand_name' and k.brand_tier=product->>'brand_tier'
+    and k.category_slug=product->>'category_slug' and k.collection_slug=product->>'collection_slug' and k.collection_ar=product->>'collection_ar' and k.collection_en=product->>'collection_en'
+    and k.collection_kind=coalesce(product->>'collection_kind','collection') and k.name_ar=product->>'name_ar' and k.name_en=product->>'name_en'
+    and k.description_ar=product->>'description_ar' and k.description_en=product->>'description_en') then
+    raise exception 'Source publication not approved';
+  end if;
+  if product->>'reference' is distinct from c.external_id or product->>'brand_name' is distinct from c.content->>'brand' or product->>'collection_en' is distinct from c.content->>'collection' or product->>'name_ar' is distinct from c.content->>'name_ar' or product->>'name_en' is distinct from c.content->>'name_en' then raise exception 'Product identity differs from current candidate';end if;
+  if jsonb_typeof(product->'images') is distinct from 'array' or jsonb_array_length(product->'images')=0 then raise exception 'Missing publication images'; end if;
+  if product->'images' is distinct from approval.approved_images then raise exception 'Images differ from approved media'; end if;
+  responsive:=coalesce(product->'image_variants','[]'::jsonb);
+  if responsive is distinct from approval.approved_image_variants then raise exception 'Image variants differ from approved media';end if;
+  if not jwl_internal.valid_image_variants(product->'images',responsive) then raise exception 'Invalid responsive image metadata';end if;
+  if exists(select 1 from jsonb_array_elements_text(product->'images') i where i !~ '^https://[^/@]+/' or i ~ '^https://[^/]*@') then raise exception 'Invalid image destination'; end if;
+  if coalesce(trim(product->>'description_ar'),'')='' or coalesce(trim(product->>'description_en'),'')='' then raise exception 'Factual descriptions missing'; end if;
+  if product->>'description_ar' is distinct from c.content->>'description_ar' or product->>'description_en' is distinct from c.content->>'description_en' then raise exception 'Descriptions differ from current candidate'; end if;
+  insert into public.jwl_catalog(id,slug,reference,brand_slug,brand_name,brand_tier,category_slug,collection_slug,collection_ar,collection_en,collection_kind,name_ar,name_en,description_ar,description_en,images,image_variants,media_state,search_text)
+    values(candidate,product->>'slug',product->>'reference',product->>'brand_slug',product->>'brand_name',product->>'brand_tier',product->>'category_slug',product->>'collection_slug',product->>'collection_ar',product->>'collection_en',coalesce(product->>'collection_kind','collection'),product->>'name_ar',product->>'name_en',product->>'description_ar',product->>'description_en',product->'images',responsive,'approved_media',product->>'search_text')
+    on conflict(id) do update set slug=excluded.slug,reference=excluded.reference,brand_slug=excluded.brand_slug,brand_name=excluded.brand_name,brand_tier=excluded.brand_tier,category_slug=excluded.category_slug,collection_slug=excluded.collection_slug,collection_ar=excluded.collection_ar,collection_en=excluded.collection_en,collection_kind=excluded.collection_kind,name_ar=excluded.name_ar,name_en=excluded.name_en,description_ar=excluded.description_ar,description_en=excluded.description_en,images=excluded.images,image_variants=excluded.image_variants,media_state='approved_media',search_text=excluded.search_text,active=true;
+  insert into jwl_internal.published_revisions(catalog_id,candidate_id,revision_hash) values(candidate,candidate,revision)
+    on conflict(catalog_id) do update set revision_hash=excluded.revision_hash;
+  return candidate;
+end $$;
+revoke all on function public.jwl_publish_candidate(text,text,jsonb) from public,anon,authenticated;
+grant execute on function public.jwl_publish_candidate(text,text,jsonb) to service_role;
+
+-- Same as 20261004102822 except the sources branch: a disabled source still withdraws every media publication; a
+-- source without publication_allowed withdraws every media publication except the open-licence lane's.
+create or replace function jwl_internal.withdraw_revoked() returns trigger language plpgsql security invoker set search_path='' as $$
+begin
+  if tg_table_name='publication_approvals' then
+    if new.revoked_at is not null or not new.image_verified then
+      update public.jwl_catalog set active=false where id in
+        (select catalog_id from jwl_internal.published_revisions where candidate_id=new.candidate_id and revision_hash=new.revision_hash);
+    end if;
+  elsif tg_table_name='sources' then
+    if not new.enabled then
+      update public.jwl_catalog set active=false where id in
+        (select p.catalog_id from jwl_internal.published_revisions p join jwl_internal.candidates c using(candidate_id) where c.source_id=new.id);
+    elsif not new.publication_allowed then
+      -- Exactly the publications the open-licence lane may make without the flag are not withdrawn by it.
+      update public.jwl_catalog set active=false where id in
+        (select p.catalog_id from jwl_internal.published_revisions p join jwl_internal.candidates c using(candidate_id) where c.source_id=new.id
+          and not jwl_internal.open_license_lane(p.candidate_id,p.revision_hash));
+    end if;
+  elsif tg_table_name='candidates' then
+    if new.revision_hash<>old.revision_hash then
+      update public.jwl_catalog set active=false where id=new.candidate_id;
+    end if;
+  end if;
   return new;
 end $$;
 

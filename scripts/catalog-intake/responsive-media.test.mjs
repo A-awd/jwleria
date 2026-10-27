@@ -5,7 +5,8 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
-import {installedImageEngine,prepareResponsiveMedia} from './responsive-media.mjs';
+import {installedImageEngine,prepareResponsiveMedia,webpQualityLadder,byteBudgets,fidelityFloors} from './responsive-media.mjs';
+import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const sharp=installedImageEngine();
 async function inputFor(root,bytes){
@@ -24,6 +25,9 @@ test('private derivative files have actual geometry/digests, preserve the origin
    const file=await readFile(join(input.output_directory,record.path));const actual=await sharp(file).metadata();
    assert.equal(file.length,record.bytes);assert.equal(sha(file),record.sha256);assert.equal(actual.width,record.width);assert.equal(actual.height,record.height);assert.equal(actual.format,'webp');assert.equal(actual.exif,undefined);assert.equal(record.over_budget,false);assert.ok(record.path.includes(record.sha256));
   }
+  assert.equal(m.processing.webp_lossless,false);assert.deepEqual(m.processing.webp_quality_ladder,[92,90,88,85,82,80,78,75]);
+  for(const record of m.variants)assert.ok(record.webp_quality===92&&record.ssim_luma>=0.97&&record.fidelity_floor_met&&record.budget_limit_bytes===150*1024&&record.roles.join()==='card');
+  assert.ok(m.detail.ssim_luma>=0.985&&m.detail.webp_quality>=85&&m.detail.budget_limit_bytes===600*1024&&m.detail.roles.join()==='detail');
   assert.equal(sha(await readFile(input.asset.path)),sha(bytes));assert.deepEqual((await prepareResponsiveMedia(input)).manifest,m);
   const small=await inputFor(root,await sharp({create:{width:500,height:300,channels:3,background:'#abc'}}).png().toBuffer());
   const smallM=(await prepareResponsiveMedia(small)).manifest;assert.deepEqual(smallM.variants.map(v=>v.width),[320]);assert.equal(smallM.detail.width,500);assert.equal(smallM.detail.height,300);
@@ -37,16 +41,71 @@ test('missing or mismatched exact grants, source/candidate revisions and origina
   for(const bad of cases)await assert.rejects(prepareResponsiveMedia(bad),/grant|asset|candidate|checksum/i);
  }finally{await rm(root,{recursive:true,force:true});}
 });
-test('lossless noisy editorial derivatives report actual over-budget review flags',async()=>{
+test('noisy editorial pixels: lossy derivatives never go below their floor and report the measured review flags',async()=>{
  const root=await mkdtemp(join(tmpdir(),'jwl-responsive-TEST-ONLY-'));
  try{
-  const raw=Buffer.alloc(1024*768*3);let state=12345;for(let n=0;n<raw.length;n++){state=(Math.imul(state,1664525)+1013904223)>>>0;raw[n]=state>>>24;}
-  const bytes=await sharp(raw,{raw:{width:1024,height:768,channels:3}}).png().toBuffer();
+  const raw=Buffer.alloc(700*500*3);let state=12345;for(let n=0;n<raw.length;n++){state=(Math.imul(state,1664525)+1013904223)>>>0;raw[n]=state>>>24;}
+  const bytes=await sharp(raw,{raw:{width:700,height:500,channels:3}}).png().toBuffer();
   const input=await inputFor(root,bytes);const m=(await prepareResponsiveMedia(input)).manifest;
-  assert.equal(m.performance_review_required,true);assert.equal(m.detail.budget_limit_bytes,600*1024);assert.equal(m.detail.over_budget,true);
-  assert.ok(m.variants.some(v=>v.over_budget&&v.budget_limit_bytes===150*1024));
+  assert.equal(m.performance_review_required,true);assert.equal(m.detail.budget_limit_bytes,600*1024);
+  for(const record of [...m.variants,m.detail]){
+   // A record that fits neither budget and floor tried the whole ladder and kept the smallest file still above the floor, or the top step.
+   if(record.over_budget||!record.fidelity_floor_met)assert.deepEqual(record.ladder_measured.map(s=>s.quality),[...webpQualityLadder]);
+   const meeting=record.ladder_measured.filter(s=>s.ssim_luma>=record.ssim_floor&&s.quality>=record.min_quality);
+   if(meeting.length)assert.ok(record.fidelity_floor_met&&record.ssim_luma>=record.ssim_floor,'quality is never lowered below a floor that a ladder step met');
+   else assert.ok(!record.fidelity_floor_met&&record.webp_quality===92,'with no step at the floor the top step is kept and flagged');
+   const step=record.ladder_measured.find(s=>s.quality===record.webp_quality);assert.equal(step.bytes,record.bytes);
+  }
+  assert.ok([...m.variants,m.detail].some(r=>!r.fidelity_floor_met||r.over_budget));
  }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('a 960 px original shares one file between the 960 card and the detail view, which must meet both budgets and floors',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'jwl-responsive-TEST-ONLY-'));
+ try{
+  const w=960,h=720,raw=Buffer.alloc(w*h*3);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++)raw.set([Math.round(40+150*x/w),Math.round(60+120*y/h),Math.round(90+60*(x+y)/(w+h))],(y*w+x)*3);
+  const bytes=await sharp(raw,{raw:{width:w,height:h,channels:3}}).jpeg({quality:95}).toBuffer();
+  const input=await inputFor(root,bytes);const m=(await prepareResponsiveMedia(input)).manifest;
+  assert.deepEqual(m.variants.map(v=>v.width),[320,640,960]);assert.equal(m.detail.width,960);assert.deepEqual(m.variants[2],m.detail);
+  assert.deepEqual(m.detail.roles,['card','detail']);assert.equal(m.detail.budget_limit_bytes,Math.min(byteBudgets.card,byteBudgets.detail));
+  assert.equal(m.detail.ssim_floor,fidelityFloors.detail.ssim);assert.equal(m.detail.min_quality,85);
+  assert.equal(m.performance_review_required,false);
+  // The recorded fidelity is reproducible from the files: decode the derivative and an independent Lanczos3 resize.
+  for(const record of [...m.variants]){
+   const file=await readFile(join(input.output_directory,record.path));
+   const ref=await sharp(await sharp(bytes).resize({width:record.width,kernel:'lanczos3'}).webp({lossless:true}).toBuffer()).flatten({background:'#ffffff'}).raw().toBuffer({resolveWithObject:true});
+   const got=await sharp(file).flatten({background:'#ffffff'}).raw().toBuffer({resolveWithObject:true});
+   assert.equal(Number(lumaSsim(ref.data,got.data,got.info.width,got.info.height).toFixed(5)),record.ssim_luma);
+   assert.equal(Number(rgbPsnr(ref.data,got.data,got.info.width,got.info.height).toFixed(2)),record.psnr_rgb_db);
+  }
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('lossy derivatives are deterministic: the same input gives byte-identical files in a fresh directory',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'jwl-responsive-TEST-ONLY-'));
+ try{
+  const w=800,h=600,raw=Buffer.alloc(w*h*3);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){const v=Math.round(128+100*Math.sin(x/17)*Math.cos(y/23));raw.set([v,255-v,(x*y)%256],(y*w+x)*3);}
+  const bytes=await sharp(raw,{raw:{width:w,height:h,channels:3}}).jpeg({quality:90}).toBuffer();
+  const first=await inputFor(join(root),bytes);
+  const a=(await prepareResponsiveMedia(first)).manifest;
+  const b=(await prepareResponsiveMedia({...first,output_directory:join(root,'second-output')})).manifest;
+  assert.deepEqual([...b.variants,b.detail].map(r=>[r.width,r.sha256,r.bytes,r.webp_quality]),[...a.variants,a.detail].map(r=>[r.width,r.sha256,r.bytes,r.webp_quality]));
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('fidelity metrics: identical pixels give SSIM 1 and infinite PSNR; a uniform offset gives the expected PSNR',()=>{
+ const w=32,h=24,a=Buffer.alloc(w*h*3);for(let i=0;i<a.length;i++)a[i]=(i*37)%251;
+ assert.equal(lumaSsim(a,a,w,h),1);assert.equal(rgbPsnr(a,a,w,h),Infinity);
+ const b=Buffer.from(a.map(v=>Math.min(255,v+4)));const clipped=[...a].filter(v=>v>251).length;
+ const mse=([...a].reduce((s,v)=>s+(Math.min(255,v+4)-v)**2,0))/a.length;
+ assert.ok(Math.abs(rgbPsnr(a,b,w,h)-10*Math.log10(255*255/mse))<1e-9,String(clipped));
+ assert.ok(lumaSsim(a,b,w,h)<1&&lumaSsim(a,b,w,h)>0.9);
+ const tiny=Buffer.alloc(5*5*3,100);assert.equal(lumaSsim(tiny,tiny,5,5),1,'small images use one global window');
+ assert.throws(()=>lumaSsim(a,b.subarray(3),w,h),/same size/);
+});
+
 test('public geometry limits reject unsuitable images and sub-320 originals produce detail only',async()=>{
  const root=await mkdtemp(join(tmpdir(),'jwl-responsive-TEST-ONLY-'));
  try{

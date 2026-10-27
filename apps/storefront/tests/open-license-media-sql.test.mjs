@@ -7,9 +7,9 @@ import {createHash} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
-import {openLicenses,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {openLicenses,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,commonsFile,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {responsiveImages} from '../src/server/responsive-media.mjs';
-import {recordMediaApproval,publish} from '../../../scripts/catalog-intake/supabase.mjs';
+import {recordMediaApproval,publish,publicationProduct} from '../../../scripts/catalog-intake/supabase.mjs';
 
 // Synthetic fixtures only; the proposed migration is exercised in memory and applied nowhere.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
@@ -45,7 +45,7 @@ const ingest=(db,records)=>service(db,'select public.jwl_ingest_missing_batch($1
 const columns=['grant_reference','kind','source_id','candidate_id','media_origins','website_publication','resize','webp_encode','evidence_reference','license_code','license_url','creator','licensed_files','attribution_text','owner_decision_reference'];
 const openGrant=(c,overrides={})=>({grant_reference:'grant-open-01',kind:'open_license',source_id:c.source_id,candidate_id:c.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:credit.license_url,creator:credit.creator,licensed_files:[originalFile(page,original)],
-  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'synthetic owner decision 2026-10-26',...overrides});
+  attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md',...overrides});
 // One licensed file of the default grant with some of its fields changed.
 const fileChange=change=>({licensed_files:[{...originalFile(page,original),...change}]});
 const insertGrant=(db,g)=>service(db,`insert into jwl_internal.media_grants(${columns.join(',')}) select ${columns.map(k=>`g.${k}`).join(',')} from jsonb_populate_record(null::jwl_internal.media_grants,$1::jsonb) g`,[JSON.stringify(g)]);
@@ -89,9 +89,15 @@ test('an open-licence grant needs the owner decision, an allowlisted licence, Co
       [{attribution_text:'Via Wikimedia Commons'},/check constraint/],
       [{owner_decision_reference:null},/check constraint/],
       [{owner_decision_reference:'Owner said yes'},/check constraint/],
-      [{owner_decision_reference:'synthetic-owner-decision'},/check constraint/,'an undated decision'],
-      [{owner_decision_reference:' synthetic owner decision 2026-10-26'},/check constraint/],
-      [{owner_decision_reference:'synthetic owner decision\n2026-10-26'},/check constraint/],
+      [{owner_decision_reference:'synthetic-owner-decision'},/check constraint/,'not a decision record'],
+      [{owner_decision_reference:'synthetic owner decision 2026-10-26'},/check constraint/,'a dated sentence is not a decision record'],
+      [{owner_decision_reference:'owner continuation instruction 2026-10-27 relayed by Codex: complete the reviewed open-licence sample path'},/check constraint/,'a relayed instruction is not a decision record'],
+      [{owner_decision_reference:' decisions/0099-synthetic-open-licence-decision.md'},/check constraint/],
+      [{owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md\n'},/check constraint/],
+      [{owner_decision_reference:'decisions/99-synthetic.md'},/check constraint/],
+      [{owner_decision_reference:'decisions/0099-Synthetic.md'},/check constraint/],
+      [{owner_decision_reference:'decisions/0099-synthetic--decision.md'},/check constraint/],
+      [{owner_decision_reference:'docs/0099-synthetic.md'},/check constraint/],
       [{licensed_files:null},/check constraint/],
       [{licensed_files:[]},/check constraint/],
       [{licensed_files:originalFile(page,original)},/check constraint/],
@@ -135,6 +141,130 @@ test('the original must be the credited page\'s own file, not another file with 
     await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-mixed',licensed_files:[originalFile(alicePage,bobOriginal)],license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'})),/check constraint/,
       'a grant written by hand cannot credit one file\'s page for another file');
     await insertGrant(db,openGrant(c,{grant_reference:'grant-same-file'}));
+  }finally{await db.close();}
+});
+
+test('hash directories are MediaWiki\'s md5 of the percent-decoded name, for originals and renditions, in the database and the pipeline',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-H');await ingest(db,[c]);
+    const md5=name=>createHash('md5').update(name).digest('hex');
+    // The five m126234-0015 batch files: their URL names and the hash directories Wikimedia serves them under.
+    const batch=[['Rolex_Datejust_126234.jpg','8/81'],['Rolex_Datejust_36_-_Black_Sunburst_Dial_%2850826887656%29.jpg','7/77'],['Rolex_Datejust_36_-_At_an_Angle_%2850826143003%29.jpg','2/2c'],
+      ['Rolex_Datejust_36_-_On_Display_%2850826140918%29.jpg','9/97'],['Rolex_Datejust_36_-_Ready_in_the_Box_%2850826141328%29.jpg','c/ce']];
+    const decode=name=>(service(db,'select jwl_internal.percent_decode($1) d',[name])).then(r=>r.rows[0].d);
+    for(const [name,dirs] of batch){
+      assert.equal(await decode(name),decodeURIComponent(name));
+      const h=md5(decodeURIComponent(name));assert.equal(`${h[0]}/${h.slice(0,2)}`,dirs,name);
+      const t=`https://upload.wikimedia.org/wikipedia/commons/thumb/${dirs}/${name}/960px-${name}`;
+      const f={source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:t,file_kind:'rendition',rendition_width:960};
+      assert.equal(commonsFile(f),true,name);
+      assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([f])])).rows[0].ok,true,name);
+      // A directory pair that is internally consistent (<hh> starts with <h>) but is not the md5 of the name.
+      const other=(dirs[0]==='f'?'e':'f');const wrong=t.replace(`/thumb/${dirs}/`,`/thumb/${other}/${other}${dirs[3]}/`);
+      const wrongFile={...f,file_url:wrong};
+      assert.equal(commonsFile(wrongFile),false);
+      assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([wrongFile])])).rows[0].ok,false,'wrong directory: '+name);
+      const swapped={...f,file_url:t.replace(`/thumb/${dirs}/`,`/thumb/${dirs[0]}/${dirs[0]}${dirs[3]==='0'?'1':'0'}/`)};
+      assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([swapped])])).rows[0].ok,false,'wrong second directory: '+name);
+    }
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-batch-names',licensed_files:batch.map(([name,dirs])=>({source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/thumb/${dirs}/${name}/960px-${name}`,file_kind:'rendition',rendition_width:960}))}));
+    const [, wrongOriginal]=commons('Rolex_Datejust_126234.jpg');
+    await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-wrong-dir',licensed_files:[originalFile('https://commons.wikimedia.org/wiki/File:Rolex_Datejust_126234.jpg',wrongOriginal.replace('/8/81/','/8/8a/'))]})),/check constraint/,'an original under a wrong md5 directory');
+    // Non-ASCII names hash their UTF-8 bytes after decoding; malformed escapes fail closed in both.
+    const utf='Montre_%C3%A9t%C3%A9_%E2%80%94_test.jpg';assert.equal(await decode(utf),'Montre_été_—_test.jpg');
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-utf8',licensed_files:[originalFile(...commons(utf))]}));
+    for(const bad of ['Bad_%E9_byte.jpg','Bad_%2_escape.jpg','Bad_%zz_escape.jpg','Bad_trailing_%.jpg','Bad_%C3_truncated.jpg']){
+      assert.equal(await decode(bad),null,bad);
+      assert.throws(()=>decodeURIComponent(bad),URIError,'the pipeline refuses it too: '+bad);
+      const h='0',hh='00',f={source_page_url:`https://commons.wikimedia.org/wiki/File:${bad}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/${h}/${hh}/${bad}`,file_kind:'original',rendition_width:null};
+      assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([f])])).rows[0].ok,false,bad);
+      assert.equal(commonsFile(f),false,bad);
+    }
+  }finally{await db.close();}
+});
+
+// Facts-only publication of one candidate through the existing factual lane (no source flag, no images).
+const publishFacts=(db,c)=>service(db,'select public.jwl_publish_factual_batch($1::jsonb,$2) r',[JSON.stringify([{candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-'+c.external_id.toLowerCase(),reference:c.external_id,
+  brand_slug:'test-brand',brand_name:c.brand,brand_tier:'luxury',category_slug:'watches',collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:c.collection,name_ar:c.name_ar,name_en:c.name_en,
+  description_ar:c.description_ar,description_en:c.description_en,search_text:c.external_id.toLowerCase()}]),'synthetic facts-only instruction']);
+const reviewOf=(c,entries)=>({candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-'+c.external_id.toLowerCase(),reference:c.external_id,brand_slug:'test-brand',brand_name:c.brand,brand_tier:'luxury',category_slug:'watches',
+  collection_slug:'test-collection',collection_ar:'مجموعة',collection_en:c.collection,name_ar:c.name_ar,name_en:c.name_en,description_ar:c.description_ar,description_en:c.description_en,images:entries.map(e=>e.src),image_variants:entries});
+const publishMedia=(db,review)=>{const {candidate,revision,product}=publicationProduct(review);return service(db,'select public.jwl_publish_candidate($1,$2,$3::jsonb) r',[candidate,revision,JSON.stringify(product)]);};
+const catalog=db=>db.query('select id,active,media_state,images,image_variants,name_en,description_en from public.jwl_catalog order by id').then(r=>r.rows);
+const without=(rows,id)=>rows.filter(r=>r.id!==id);
+const activeOf=async(db,c)=>(await db.query('select active from public.jwl_catalog where id=$1',[c.candidate_id])).rows[0]?.active;
+const sourceUpdate=(db,set)=>as(db,'postgres',()=>db.exec(`update jwl_internal.sources set ${set} where id='test'`));
+
+test('applied migrations only: toggling a source flag withdraws only that source\'s media-lane rows, never its facts-only rows',async()=>{
+  const db=await database({open:false});
+  try{
+    const facts=['F-1','F-2','F-3'].map(r=>row('test',r)),media=row('test','M-1');
+    await ingest(db,[...facts,media]);for(const c of [...facts,media])await publishFacts(db,c);
+    await service(db,"insert into jwl_internal.media_grants(grant_reference,kind,source_id,media_origins,website_publication,resize,webp_encode,evidence_reference) values('grant-written-t','written_permission','test','[\"https://example.test\"]',true,true,true,'synthetic private evidence')");
+    const e=entry('7',null);for(const v of e.variants)await asset(db,media,v,{grant_reference:'grant-written-t',original_source:'https://example.test/img/M-1.png'});
+    await approve(db,media,'grant-written-t',[e]);
+    const factsBefore=without(await catalog(db),media.candidate_id);
+    await sourceUpdate(db,'publication_allowed=true');
+    await publishMedia(db,reviewOf(media,[e]));
+    assert.equal(await activeOf(db,media),true);
+    await sourceUpdate(db,'publication_allowed=false');
+    assert.equal(await activeOf(db,media),false,'set-true / publish / set-false withdraws the media-lane row');
+    assert.deepEqual(without(await catalog(db),media.candidate_id),factsBefore,'every facts-only row of the source is unchanged');
+    await sourceUpdate(db,'acquisition_allowed=false');await sourceUpdate(db,'enabled=false');
+    assert.deepEqual(without(await catalog(db),media.candidate_id),factsBefore,'later source updates and disabling still leave facts-only rows active');
+  }finally{await db.close();}
+});
+
+test('the open-licence lane publishes an already-public candidate without the source flag, changes no other row, and only its own revocations withdraw it',async()=>{
+  const db=await database();
+  try{
+    const facts=['F-1','F-2','F-3'].map(r=>row('test',r)),target=row('test','OL-1'),unpublished=row('test','OL-2'),written=row('test','W-1');
+    await ingest(db,[...facts,target,unpublished,written]);
+    for(const c of [...facts,target,written])await publishFacts(db,c);
+    const f=renditionFile('Synthetic_lane_(1).jpg',960);
+    await insertGrant(db,openGrant(target,{grant_reference:'grant-lane',licensed_files:[f]}));
+    await insertGrant(db,openGrant(unpublished,{grant_reference:'grant-lane-2',licensed_files:[f]}));
+    const credited=(c,chars)=>{const top=960;return {src:file(top,chars[2]),width:top,height:720,variants:[320,640,960].map((w,i)=>({src:file(w,chars[i]),width:w,height:w*3/4,bytes:40000+i})),attribution:{...credit,license:'CC BY-SA 4.0',source_url:f.source_page_url}};};
+    const e=credited(target,['1','2','3']),e2=credited(unpublished,['4','5','6']);
+    for(const v of e.variants)await asset(db,target,v,{grant_reference:'grant-lane',original_source:f.file_url});
+    for(const v of e2.variants)await asset(db,unpublished,v,{grant_reference:'grant-lane-2',original_source:f.file_url});
+    await approve(db,target,'grant-lane',[e]);await approve(db,unpublished,'grant-lane-2',[e2]);
+    await service(db,"insert into jwl_internal.media_grants(grant_reference,kind,source_id,media_origins,website_publication,resize,webp_encode,evidence_reference) values('grant-written-l','written_permission','test','[\"https://example.test\"]',true,true,true,'synthetic private evidence')");
+    const w=entry('8',null);for(const v of w.variants)await asset(db,written,v,{grant_reference:'grant-written-l',original_source:'https://example.test/img/W-1.png'});
+    await approve(db,written,'grant-written-l',[w]);
+    await assert.rejects(publishMedia(db,reviewOf(written,[w])),/Source publication not approved/,'other grant kinds still need the source flag');
+    await assert.rejects(publishMedia(db,reviewOf(unpublished,[e2])),/Source publication not approved/,'only a product already public as facts at this revision');
+    for(const change of [{slug:'test-renamed'},{category_slug:'jewelry'},{collection_slug:'other-collection'},{collection_ar:'أخرى'},{brand_slug:'other-brand'},{brand_tier:'accessible'}])
+      await assert.rejects(publishMedia(db,{...reviewOf(target,[e]),...change}),/Source publication not approved/,'without the flag only images may change: '+JSON.stringify(change));
+    const before=await catalog(db);
+    await publishMedia(db,reviewOf(target,[e]));
+    const after=await catalog(db);
+    assert.deepEqual(without(after,target.candidate_id),without(before,target.candidate_id),'no other row changed');
+    const live=after.find(r=>r.id===target.candidate_id);assert.equal(live.active,true);assert.equal(live.media_state,'approved_media');assert.deepEqual(live.image_variants,[e]);
+    await publishMedia(db,reviewOf(target,[e]));assert.deepEqual(await catalog(db),after,'a replay is idempotent');
+    const others=()=>catalog(db).then(rows=>without(rows,target.candidate_id));const othersBefore=await others();
+    // Source-row updates that leave the flag false (the trigger fires on every update) and a flag toggle.
+    await sourceUpdate(db,'acquisition_allowed=false');await sourceUpdate(db,'min_interval_seconds=90');
+    assert.equal(await activeOf(db,target),true,'an unrelated source update does not withdraw the open-licence row');
+    await sourceUpdate(db,'publication_allowed=true');await publishMedia(db,reviewOf(written,[w]));
+    await sourceUpdate(db,'publication_allowed=false');
+    assert.equal(await activeOf(db,written),false,'the flag still withdraws other media');
+    assert.equal(await activeOf(db,target),true,'the flag does not withdraw the open-licence lane');
+    for(const c of facts)assert.equal(await activeOf(db,c),true);
+    assert.deepEqual((await others()).filter(r=>r.id!==written.candidate_id),othersBefore.filter(r=>r.id!==written.candidate_id));
+    // A disabled source refuses and withdraws every media publication, the open-licence lane included.
+    await db.exec('begin');
+    await sourceUpdate(db,'enabled=false');
+    assert.equal(await activeOf(db,target),false);for(const c of facts)assert.equal(await activeOf(db,c),true);
+    const {candidate:id,revision,product}=publicationProduct(reviewOf(target,[e]));
+    await assert.rejects(db.query('select public.jwl_publish_candidate($1,$2,$3::jsonb)',[id,revision,JSON.stringify(product)]),/Source publication not approved/);
+    await db.exec('rollback');
+    // Revocation still withdraws the product; nothing else moves.
+    const othersNow=await others();
+    await as(db,'service_role',()=>db.exec("update jwl_internal.media_grants set revoked_at=now() where grant_reference='grant-lane'"));
+    assert.equal(await activeOf(db,target),false);assert.deepEqual(await others(),othersNow);
+    await assert.rejects(publishMedia(db,reviewOf(target,[e])),/approval missing or revoked/i);
   }finally{await db.close();}
 });
 
@@ -259,7 +389,7 @@ test('end to end: held Wikimedia renditions for one product record, publish thei
     for(const [i,f] of files.entries()){
       const local=join(root,`held-${i}.jpg`);
       await writeFile(local,await sharp({create:{width:960,height:i?540:720,channels:3,background:i?'#3c3631':'#5a5048'}}).jpeg().toBuffer());
-      const kept=await keepOpenLicenseFile({candidate:c,grant,file_url:f.file_url,local_path:local,output_directory:join(root,'private')});
+      const kept=await keepOpenLicenseFile({candidate:c,grant,file_url:f.file_url,local_path:local,expected_sha256:createHash('sha256').update(await readFile(local)).digest('hex'),output_directory:join(root,'private')});
       assert.deepEqual([kept.file_kind,kept.rendition_width,kept.width],['rendition',960,960]);
       const assetFile={path:kept.path,source_url:kept.source_url,sha256:kept.sha256};
       const prepared=await prepareGrantedMedia({source:{id:'test',origin:'https://example.test',publication_allowed:true},candidate:c,asset:assetFile,grant,output_directory:join(root,'private')});

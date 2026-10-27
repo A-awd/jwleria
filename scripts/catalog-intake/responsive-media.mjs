@@ -4,11 +4,25 @@ import {readFile,mkdir,open,realpath,lstat} from 'node:fs/promises';
 import {isAbsolute,join,resolve,relative,dirname,basename,sep} from 'node:path';
 import {homedir} from 'node:os';
 import {fileURLToPath,pathToFileURL} from 'node:url';
+import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const hashPattern=/^[a-f0-9]{64}$/;
 const text=value=>typeof value==='string'&&value.trim()&&value.length<=2000;
 const widths=[320,640,960];
+/**
+ * Lossy WebP delivery (decision 0009 addendum of 2026-10-27). Each derivative takes the highest quality of this fixed
+ * descending ladder whose bytes fit its budget and whose fidelity meets its floor, measured against an in-memory
+ * Lanczos3 resize of the same pipeline at the same width. A file that is both a card size and the detail file must
+ * meet both. When no step meets budget and floor, the smallest file that still meets the floor is kept (or the top
+ * step when none does) and the manifest requires a performance review: quality is never lowered below a floor.
+ */
+export const webpQualityLadder=Object.freeze([92,90,88,85,82,80,78,75]);
+export const byteBudgets=Object.freeze({card:150*1024,detail:600*1024});
+export const fidelityFloors=Object.freeze({card:Object.freeze({ssim:0.97,min_quality:0}),detail:Object.freeze({ssim:0.985,min_quality:85})});
+// Every encoder option is pinned so the same input always produces the same bytes.
+const webpEncoder=Object.freeze({lossless:false,nearLossless:false,alphaQuality:100,effort:6,preset:'photo',smartSubsample:true,smartDeblock:false});
+const round=(value,places)=>Number.isFinite(value)?Number(value.toFixed(places)):null;
 const repository=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const knownWebRoots=[join(homedir(),'Sites'),'/Library/WebServer/Documents','/var/www','/srv/www','/usr/share/nginx/html','/usr/local/var/www','/opt/homebrew/var/www'];
 const within=(root,path)=>{const tail=relative(root,path);return !tail||(!tail.startsWith('..'+sep)&&tail!=='..'&&!isAbsolute(tail));};
@@ -110,30 +124,60 @@ export async function prepareResponsiveMedia(input){
   if(targetWidths.some(width=>width>4096||Math.round(visualHeight*width/visualWidth)>8192))throw new Error('Derivative geometry exceeds public manifest limits');
   const relativeRoot=`v1/${digest(JSON.stringify(binding))}/${binding.asset_sha256}`;
   await privateDirectory(outputRoot,relativeRoot);
+  const detailWidth=Math.min(visualWidth,1600);
+  // A card width equal to the detail width is one shared file, so it carries both roles' budget and floor.
+  const roles=new Map();
+  for(const width of widths)if(width<=visualWidth)roles.set(width,['card']);
+  roles.set(detailWidth,[...(roles.get(detailWidth)??[]),'detail']);
+  const pipeline=width=>sharp(original,{failOn:'warning',limitInputPixels:60000000})
+    .autoOrient()
+    .resize({width,withoutEnlargement:true,fit:'inside',kernel:'lanczos3'})
+    .keepIccProfile();
+  // Metric pixels: both images are decoded the same way (flattened on white, 8-bit RGB) so only the encoding differs.
+  const pixels=async bytes=>sharp(bytes,{failOn:'warning'}).flatten({background:'#ffffff'}).raw().toBuffer({resolveWithObject:true});
   const generated=new Map();
   async function encode(width){
     if(generated.has(width))return generated.get(width);
-    const bytes=await sharp(original,{failOn:'warning',limitInputPixels:60000000})
-      .autoOrient()
-      .resize({width,withoutEnlargement:true,fit:'inside',kernel:'lanczos3'})
-      .keepIccProfile().webp({lossless:true,effort:4}).toBuffer();
+    const applied=roles.get(width);
+    const budget=Math.min(...applied.map(role=>byteBudgets[role]));
+    const floor=Math.max(...applied.map(role=>fidelityFloors[role].ssim)),minimum=Math.max(...applied.map(role=>fidelityFloors[role].min_quality));
+    // The reference is held in memory only; it is never written or published.
+    const reference=await pixels(await pipeline(width).webp({lossless:true,effort:0}).toBuffer());
+    const tried=[];let chosen;
+    for(const quality of webpQualityLadder){
+      const bytes=await pipeline(width).webp({...webpEncoder,quality}).toBuffer();
+      const decoded=await pixels(bytes);
+      if(decoded.info.width!==reference.info.width||decoded.info.height!==reference.info.height)throw new Error('Derivative geometry differs from its fidelity reference');
+      const step={quality,bytes,ssim:lumaSsim(reference.data,decoded.data,decoded.info.width,decoded.info.height),psnr:rgbPsnr(reference.data,decoded.data,decoded.info.width,decoded.info.height)};
+      step.floor_met=step.ssim>=floor&&quality>=minimum;
+      tried.push(step);
+      if(step.floor_met&&bytes.length<=budget){chosen=step;break;}
+    }
+    if(!chosen){const kept=tried.filter(step=>step.floor_met).sort((a,b)=>a.bytes.length-b.bytes.length);chosen=kept[0]??tried[0];}
+    const bytes=chosen.bytes;
     const actual=await sharp(bytes,{failOn:'warning'}).metadata();
     const expectedHeight=Math.round(visualHeight*width/visualWidth);
     if(actual.format!=='webp'||actual.width!==width||actual.height!==expectedHeight||actual.width>visualWidth||actual.height>visualHeight||actual.width>4096||actual.height>8192)throw new Error('Derivative geometry differs from requested uncropped resize or public manifest limits');
     const sha256=digest(bytes);
     const path=`${relativeRoot}/${actual.width}w-${sha256}.webp`;
     await immutableFile(join(outputRoot,path),bytes);
-    const record={path,sha256,bytes:bytes.length,width:actual.width,height:actual.height,mime_type:'image/webp'};
+    const record={path,sha256,bytes:bytes.length,width:actual.width,height:actual.height,mime_type:'image/webp',roles:applied,
+      webp_quality:chosen.quality,ssim_luma:round(chosen.ssim,5),psnr_rgb_db:round(chosen.psnr,2),
+      budget_limit_bytes:budget,over_budget:bytes.length>budget,ssim_floor:floor,min_quality:minimum,fidelity_floor_met:chosen.floor_met,
+      ladder_measured:tried.map(step=>({quality:step.quality,bytes:step.bytes.length,ssim_luma:round(step.ssim,5),psnr_rgb_db:round(step.psnr,2)}))};
     generated.set(width,record);return record;
   }
-  const budget=(record,limit)=>({...record,budget_limit_bytes:limit,over_budget:record.bytes>limit});
   const variants=[];
-  for(const width of widths)if(width<=visualWidth)variants.push(budget(await encode(width),150*1024));
-  const detail=budget(await encode(Math.min(visualWidth,1600)),600*1024);
-  const manifest={schema_version:1,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
+  for(const width of widths)if(width<=visualWidth)variants.push(await encode(width));
+  const detail=await encode(detailWidth);
+  const review=record=>record.over_budget||!record.fidelity_floor_met;
+  const manifest={schema_version:2,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
     original:{local_path:originalPath,sha256:binding.asset_sha256,bytes:original.length,width:metadata.width,height:metadata.height,orientation,visual_width:visualWidth,visual_height:visualHeight,format:metadata.format},
-    processing:{engine:'sharp',version:sharp.versions.sharp,libvips_version:sharp.versions.vips,kernel:'lanczos3',webp_lossless:true,crop:false,upscale:false,color_adjustments:false,orientation_applied:orientation,orientation_normalized:orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied'},
-    performance_review_required:detail.over_budget||variants.some(record=>record.over_budget),variants,detail};
+    processing:{engine:'sharp',version:sharp.versions.sharp,libvips_version:sharp.versions.vips,kernel:'lanczos3',webp_lossless:false,webp_encoder:webpEncoder,webp_quality_ladder:webpQualityLadder,
+      byte_budgets:byteBudgets,fidelity_floors:fidelityFloors,
+      fidelity_metric:'luma (BT.601) SSIM, 11x11 Gaussian window sigma 1.5, and RGB PSNR, against an in-memory Lanczos3 resize of the same pipeline at the same width',
+      crop:false,upscale:false,color_adjustments:false,orientation_applied:orientation,orientation_normalized:orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied'},
+    performance_review_required:review(detail)||variants.some(review),variants,detail};
   const manifestBytes=Buffer.from(JSON.stringify(manifest,null,2)+'\n');
   const manifestPath=`${relativeRoot}/manifest-${digest(manifestBytes)}.json`;
   await immutableFile(join(outputRoot,manifestPath),manifestBytes);
