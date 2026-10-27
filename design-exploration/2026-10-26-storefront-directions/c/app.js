@@ -316,7 +316,7 @@ ${rel.length ? `<section class="rel" aria-labelledby="rh"><div class="sec-h"><h2
 <div class="actbar off" id="actbar"><button class="btn btn-s" type="button" data-inert aria-describedby="inq">${INQ}</button></div>`;
 
     let im = [], at = 0;
-    const photoGal = () => `<div class="pstage stage is-ph" id="media"><div class="gx" id="gx" tabindex="0" aria-label="${esc(`صور المرجع ${v.ref}، ${AR(im.length)} صور، اسحب للتنقل`)}">` +
+    const photoGal = () => `<div class="pstage stage is-ph" id="media"><div class="gx" id="gx" tabindex="0" aria-label="${esc(`صور المرجع ${v.ref}، ${AR(im.length)} صور، التنقل بالسحب`)}">` +
       im.map((img, i) => `<figure class="gx-s"><button class="gx-z" type="button" data-z="${i}" aria-label="${esc(`تكبير الصورة ${AR(i + 1)} من ${AR(im.length)}: ${img.alt}`)}">${pimg(img, '(max-width: 699px) 100vw, 50vw', !i)}</button></figure>`).join('') +
       `</div>${im.length > 1 ? `<p class="gx-n" aria-hidden="true"><span id="gxn">${AR(1)}</span> / ${AR(im.length)}</p>` : ''}</div>` +
       (im.length > 1 ? `<div class="gx-th" role="group" aria-label="اختيار الصورة">${im.map((img, i) => `<button class="gx-t" type="button" data-go="${i}" aria-pressed="${!i}" aria-label="${esc(`الصورة ${AR(i + 1)}: ${img.view}`)}"><img src="${esc(small(img))}" width="${img.w}" height="${img.h}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>` : '') +
