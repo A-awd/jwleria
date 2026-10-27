@@ -26,7 +26,7 @@ const page = dir => `<!doctype html><html lang="${dir === 'rtl' ? 'ar' : 'en'}" 
   <article class="card" id="editorial"><a class="media" href="#e"><img class="art art--1" src="/images/watch.webp" width="800" height="1000" alt=""></a></article>
   <div class="pdp__gallery" id="gallery"><div class="media"><img class="art" srcset="/g-640.webp 640w, /g-960.webp 960w" sizes="600px" src="/g-960.webp" width="960" height="720" alt=""></div></div>
 </div>
-<article class="card" style="width:160px" id="narrow"><p class="gallery-credit gallery-credit--card">${dir === 'rtl' ? 'الصورة' : 'Photo'}: “<bdi>Rolex Datejust 36 - Up High</bdi>” — <bdi>ajay_suresh</bdi> · <a href="https://creativecommons.org/licenses/by/2.0/" rel="license nofollow"><bdi>CC BY 2.0</bdi></a> · <a href="#s" rel="nofollow">${dir === 'rtl' ? 'المصدر' : 'Source'}</a></p></article>
+<article class="card" style="width:160px" id="narrow"><p class="gallery-credit gallery-credit--card">${dir === 'rtl' ? 'الصورة' : 'Photo'}: ${dir === 'rtl' ? '«' : '“'}<bdi>Rolex Datejust 36 - Up High</bdi>${dir === 'rtl' ? '»' : '”'} — <bdi>ajay_suresh</bdi> · <a href="https://creativecommons.org/licenses/by/2.0/" rel="license nofollow"><bdi>CC BY 2.0</bdi></a> · <a href="#s" rel="nofollow">${dir === 'rtl' ? 'المصدر' : 'Source'}</a></p></article>
 </body></html>`;
 
 test('on a hover-capable desktop, approved photos stay whole and unzoomed on hover; editorial art still zooms', {skip: playwright ? false : 'playwright is not installed', timeout: 60000}, async () => {

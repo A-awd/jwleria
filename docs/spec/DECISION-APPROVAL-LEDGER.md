@@ -45,7 +45,7 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | `confirm-renditions --network` for the front rendition | evidence obtainable | **done** | 2026-10-27 18:09Z: HTTP 200, served sha256 equals the held bytes; gate closed |
 | Licence title outcome | evidence obtainable | **done** | title supplied: "Rolex Datejust 36 - Up High" (embedded short title); recorded on the licensed file and shown in the credit |
 | Licence URI outcome | evidence obtainable | **done** | no licensor-specified URI found; the credit's source link is the Commons file page, which carries the licence notice and names the Flickr original; see below |
-| Fresh read that still matches the prepared bundle | evidence obtainable | to repeat before execution | the bundle must be re-rendered for the title change first |
+| Fresh read that still matches the prepared bundle | evidence obtainable | to repeat before execution | the bundle must be re-rendered for the title and blank-credit SQL changes first |
 | Verified WhatsApp number | genuine owner decision (owner input) | open | blocks `PUBLIC_RELEASE=live` |
 | Lifting a closed source (Cartier, Van Cleef & Arpels, CELINE, RIMOWA, Piaget, Panerai) | genuine owner decision, plus a reviewed code change | closed | terms, robots or challenge recorded |
 | Activating the intake schedule; enabling the n8n database nodes | genuine owner decision | open | the recorded runner defects must be fixed first |
