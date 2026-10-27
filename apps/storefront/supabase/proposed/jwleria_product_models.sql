@@ -142,10 +142,15 @@ language sql immutable security invoker set search_path='' as $$
     -- From 11 to 99 hours the counted noun stays singular in Arabic; other counts are left untranslated.
     when value ~ '^Approximately [1-9][0-9] hours$' and substring(value from '[0-9]+')::integer>=11
       then 'حوالي '||substring(value from '[0-9]+')||' ساعة'
+    -- The counted noun follows the last two digits, as the storefront's counts do: 3-10 plural, 11-99
+    -- accusative singular, otherwise singular (100 متر, 330 قدمًا, 50 مترًا, 3 أمتار).
     when value ~ '^Waterproof to [0-9][0-9,]* metres / [0-9][0-9,]* feet(, helium escape valve)?$'
-      then 'مقاومة للماء حتى عمق '||substring(value from '^Waterproof to ([0-9][0-9,]*) metres')||' متر / '||substring(value from '([0-9][0-9,]*) feet')||' قدم'
+      then 'مقاومة للماء حتى عمق '||m||' '||case when m100 between 3 and 10 then 'أمتار' when m100>=11 then 'مترًا' else 'متر' end
+        ||' / '||f||' '||case when f100 between 3 and 10 then 'أقدام' when f100>=11 then 'قدمًا' else 'قدم' end
         ||case when value like '%, helium escape valve' then '، مع صمام لتصريف الهيليوم' else '' end
   end
+  from (select substring(value from '^Waterproof to ([0-9][0-9,]*) metres') m,substring(value from ' / ([0-9][0-9,]*) feet') f) n
+  cross join lateral (select right(replace(n.m,',',''),2)::integer m100,right(replace(n.f,',',''),2)::integer f100) d
 $$;
 revoke all on function jwl_internal.arabic_measure(text) from public,anon,authenticated;
 grant execute on function jwl_internal.arabic_measure(text) to service_role;
@@ -403,6 +408,27 @@ where c.active and (v.product_id is null or not exists(select 1 from public.jwl_
   where w.model_key=v.model_key and w.position<v.position));
 revoke all on public.jwl_catalog_models from public,anon,authenticated;
 grant select on public.jwl_catalog_models to anon,authenticated,service_role;
+
+-- Search keeps one card per model but shows the variant the term found: the first visible variant (lowest
+-- position) whose own text contains the term, else the card's own row. A visitor who types an exact
+-- reference sees and opens that reference. Model fields (key, name, count, options) stay the model's, and
+-- PostgREST applies the listing's filters, order and range to the result as it does to the view.
+create function public.jwl_catalog_models_search(p_term text) returns setof public.jwl_catalog_models
+language sql stable security invoker set search_path='' as $$
+  select h.id,h.slug,h.reference,h.brand_slug,h.brand_name,h.brand_tier,h.category_slug,h.collection_slug,h.collection_ar,h.collection_en,
+    h.name_ar,h.name_en,h.images,m.search_text,h.published_at,h.active,h.description_ar,h.description_en,h.media_state,h.image_variants,h.collection_kind,
+    m.model_key,m.model_name,m.variant_count,m.options_summary
+  from public.jwl_catalog_models m
+  cross join lateral (
+    select c.* from public.jwl_catalog c left join public.jwl_product_variants w on w.product_id=c.id
+    where c.active and ((m.model_key is null and c.id=m.id) or w.model_key=m.model_key)
+    order by c.search_text ilike '%'||left(coalesce(p_term,''),200)||'%' desc,w.position nulls first,c.id
+    limit 1
+  ) h
+  where m.search_text ilike '%'||left(coalesce(p_term,''),200)||'%';
+$$;
+revoke all on function public.jwl_catalog_models_search(text) from public;
+grant execute on function public.jwl_catalog_models_search(text) to anon,authenticated,service_role;
 
 -- Any variant slug gives its whole model in one round trip: at most 60 visible variants ordered by
 -- position, always including the requested one. The first visible variant is the primary.

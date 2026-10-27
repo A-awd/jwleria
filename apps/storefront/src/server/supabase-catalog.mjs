@@ -107,10 +107,13 @@ const localized = (value, message) => {
   if (!value || typeof value !== 'object' || Array.isArray(value) || !present(value.ar) || !present(value.en)) throw new Error(message);
   return {ar: value.ar, en: value.en};
 };
-// A value without a reviewed Arabic translation keeps its English text and is marked as English.
-const valueLang = (value, message) => {
-  if (![undefined, null, 'ar', 'en'].includes(value)) throw new Error(message);
-  return value === 'en' ? {valueLang: /** @type {'en'} */ ('en')} : {};
+// A value without a reviewed Arabic translation keeps its English text and is marked as English. So is a
+// reviewed "translation" that keeps a trademark in Latin script (Oystersteel, Sundust, D-blue): the Arabic
+// page shows Latin text either way, and it needs lang/dir marking to be read and spoken correctly.
+const latinOnly = text => /[A-Za-z]/.test(text) && !/[\u0600-\u06ff\u0750-\u077f\u08a0-\u08ff]/.test(text);
+const valueLang = (lang, value, message) => {
+  if (![undefined, null, 'ar', 'en'].includes(lang)) throw new Error(message);
+  return lang === 'en' || (lang !== 'ar' && latinOnly(value.ar)) ? {valueLang: /** @type {'en'} */ ('en')} : {};
 };
 
 /** @returns {import('../contracts/catalog').ModelSummary | undefined} */
@@ -137,6 +140,8 @@ export function publicModelRow(row) {
 
 const CATALOG = {relation: 'jwl_catalog', fields: FIELDS, map: publicProduct, unit: 'products'};
 const MODELS = {relation: 'jwl_catalog_models', fields: MODEL_FIELDS, map: publicModelRow, unit: 'models', feature: 'jwl_catalog_models'};
+// A searched card shows the variant the term found (its reference, link and inquiry), still one card per model.
+const MODEL_SEARCH = {...MODELS, relation: 'rpc/jwl_catalog_models_search', feature: 'jwl_catalog_models_search', searchArg: 'p_term'};
 
 /** @returns {Promise<import('../contracts/catalog').ProductPage>} */
 export function queryCatalog(config, query = {}, fetcher = fetch) { return listing(config, query, fetcher, CATALOG); }
@@ -144,7 +149,8 @@ export function queryCatalog(config, query = {}, fetcher = fetch) { return listi
 /** One card per model; today's catalog read only while the model view does not exist yet.
  * @returns {Promise<import('../contracts/catalog').ProductPage>} */
 export function queryModels(config, query = {}, fetcher = fetch) {
-  return withFallback(config, MODELS.feature, () => listing(config, query, fetcher, MODELS), () => queryCatalog(config, query, fetcher));
+  const source = normalizeSearch(query.search) ? MODEL_SEARCH : MODELS;
+  return withFallback(config, source.feature, () => listing(config, query, fetcher, source), () => queryCatalog(config, query, fetcher));
 }
 
 async function listing(config, query, fetcher, source) {
@@ -159,7 +165,9 @@ async function listing(config, query, fetcher, source) {
   }
   if (query.collection) params.set('collection_kind','eq.collection');
   const term = normalizeSearch(query.search);
-  if (term) params.set('search_text', `ilike.*${term.replace(/[*,()%_\\]/g, ' ').replace(/\s+/g, ' ')}*`);
+  const pattern = term.replace(/[*,()%_\\]/g, ' ').replace(/\s+/g, ' ');
+  if (term && source.searchArg) params.set(source.searchArg, pattern);
+  else if (term) params.set('search_text', `ilike.*${pattern}*`);
   const { rows, total } = await request(config, params, fetcher, source.relation, source.feature);
   const pages = Math.ceil(total / pageSize);
   if (page > Math.max(1, pages)) return listing(config, {...query,page:Math.max(1,pages)}, fetcher, source);
@@ -178,7 +186,7 @@ function variantOptions(value) {
   return value.map(o => {
     if (!o || typeof o !== 'object' || !kindPattern.test(o.kind) || kinds.has(o.kind) || !identifier(o.key)) throw new Error('Invalid variant options');
     kinds.add(o.kind);
-    return {kind: o.kind, key: o.key, label: localized(o.label, 'Invalid variant options'), value: localized(o.value, 'Invalid variant options'), ...valueLang(o.value_lang, 'Invalid variant options')};
+    return {kind: o.kind, key: o.key, label: localized(o.label, 'Invalid variant options'), value: localized(o.value, 'Invalid variant options'), ...valueLang(o.value_lang, o.value, 'Invalid variant options')};
   });
 }
 
@@ -186,7 +194,7 @@ function variantSpecs(value) {
   if (!Array.isArray(value) || value.length > 40) throw new Error('Invalid variant specs');
   return value.map(s => {
     if (!s || typeof s !== 'object' || !kindPattern.test(s.kind)) throw new Error('Invalid variant specs');
-    return {kind: s.kind, label: localized(s.label, 'Invalid variant specs'), value: localized(s.value, 'Invalid variant specs'), ...valueLang(s.value_lang, 'Invalid variant specs')};
+    return {kind: s.kind, label: localized(s.label, 'Invalid variant specs'), value: localized(s.value, 'Invalid variant specs'), ...valueLang(s.value_lang, s.value, 'Invalid variant specs')};
   });
 }
 

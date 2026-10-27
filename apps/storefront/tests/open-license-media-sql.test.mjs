@@ -7,7 +7,8 @@ import {createHash} from 'node:crypto';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
-import {openLicenses,acquireOriginal,createMediaPacer,prepareGrantedMedia,approvalBundle} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {openLicenses,acquireOriginal,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
+import {responsiveImages} from '../src/server/responsive-media.mjs';
 import {recordMediaApproval,publish} from '../../../scripts/catalog-intake/supabase.mjs';
 
 // Synthetic fixtures only; the proposed migration is exercised in memory and applied nowhere.
@@ -103,6 +104,35 @@ test('an open-licence grant needs the owner decision, an allowlisted licence, a 
     await insertGrant(db,openGrant(other,{grant_reference:'grant-open-cc0',license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'}));
     await assert.rejects(as(db,'service_role',()=>db.exec("update jwl_internal.media_grants set creator='Changed' where grant_reference='grant-open-01'")),/permission denied/,'a grant cannot be rewritten');
     for(const role of ['anon','authenticated'])await assert.rejects(as(db,role,()=>db.query('select creator from jwl_internal.media_grants')),/permission denied/);
+  }finally{await db.close();}
+});
+
+test('the original must be the credited page\'s own file, not another file with valid hash directories',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-6');await ingest(db,[c]);
+    const [alicePage]=commons('CC0_photo_by_Alice.jpg'),[,bobOriginal]=commons('Unrelated_photo_by_Bob.jpg');
+    assert.equal(commonsOriginal(alicePage,bobOriginal),false,'the pipeline already refuses the pair');
+    await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-mixed',source_page_url:alicePage,original_url:bobOriginal,license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'})),/check constraint/,
+      'a grant written by hand cannot credit one file\'s page for another file');
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-same-file'}));
+  }finally{await db.close();}
+});
+
+test('the longest creator the database accepts renders on the storefront',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-7');await ingest(db,[c]);
+    // 300 code points, the database bound; astral characters are two UTF-16 units each in JavaScript.
+    for(const [i,creator] of ['x'.repeat(300),'\u{1D49C}'.repeat(300),'A'+'\u{1F4F7}'.repeat(150)+'b'.repeat(149)].entries()){
+      await insertGrant(db,openGrant(c,{grant_reference:'grant-long-'+i,creator,attribution_text:creator}));
+      const attribution=openLicenseAttribution({...openGrant(c),creator},'resized and converted to WebP');
+      const e=entry('e',attribution);
+      assert.equal((await db.query('select jwl_internal.valid_image_variants($1::jsonb,$2::jsonb) ok',[JSON.stringify([e.src]),JSON.stringify([e])])).rows[0].ok,true,'the database accepts it');
+      assert.equal(responsiveImages([e],[e.src],false)[0].attribution.creator,creator,'and the storefront renders it');
+    }
+    const over={...credit,creator:'x'.repeat(301)};
+    assert.throws(()=>responsiveImages([entry('e',over)],[entry('e').src],false),/attribution/,'one past the bound is refused by both');
   }finally{await db.close();}
 });
 

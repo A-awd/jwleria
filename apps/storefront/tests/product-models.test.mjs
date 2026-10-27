@@ -24,8 +24,12 @@ const envelope=(slug='m126334-0002')=>({product:{...row,slug,reference:slug,id:`
 test('listings read one bounded, counted model page with the same filters and search',async()=>{
  let requested,headers;
  const result=await queryModels(config(),{brand:'rolex',collection:'datejust',category:'watches',search:'ديت',page:1,pageSize:100},async(url,options)=>{requested=url;headers=options.headers;return page([modelRow],80);});
- assert.equal(requested.pathname,'/rest/v1/jwl_catalog_models');assert.equal(headers.Prefer,'count=exact');assert.equal(params(requested).limit,'48');
- for(const [k,v] of [['brand_slug','eq.rolex'],['collection_slug','eq.datejust'],['category_slug','eq.watches'],['collection_kind','eq.collection'],['search_text','ilike.*ديت*']])assert.equal(requested.searchParams.get(k),v);
+ // A search reads the search-aware model rows, so a matched variant (not the primary) is the card.
+ assert.equal(requested.pathname,'/rest/v1/rpc/jwl_catalog_models_search');assert.equal(headers.Prefer,'count=exact');assert.equal(params(requested).limit,'48');
+ for(const [k,v] of [['brand_slug','eq.rolex'],['collection_slug','eq.datejust'],['category_slug','eq.watches'],['collection_kind','eq.collection'],['p_term','ديت']])assert.equal(requested.searchParams.get(k),v);
+ assert.equal(requested.searchParams.has('search_text'),false,'the function applies the term itself');
+ const browse=[];await queryModels(config(),{brand:'rolex'},async url=>{browse.push(url);return page([modelRow],1);});
+ assert.deepEqual([browse[0].pathname,browse[0].searchParams.has('p_term')],['/rest/v1/jwl_catalog_models',false],'without a term the view is read');
  assert.match(requested.searchParams.get('select'),/model_key,model_name,variant_count,options_summary$/);assert.ok(!requested.searchParams.get('select').includes('price'));
  assert.equal(result.unit,'models');assert.equal(result.total,80);
  const [item]=result.items;assert.equal(item.model.name.en,'Datejust 41');assert.equal(item.model.variantCount,30);
@@ -46,7 +50,7 @@ test('model text is never stricter than the catalog row it comes from',async()=>
  assert.equal(listed.items[0].model.name.en.length,1000,'the same row through the model view');
  const joined=`${long(400)}, ${long(400)}`;
  const big=[
-  variant('m126334-0001',0,[{...option('dial',long(409),long(400),long(400)),value_lang:'en'}],{specs:[{kind:'material',label:{ar:'المادة',en:'Material'},value:{ar:joined,en:joined},value_lang:'en'},{kind:'lining',label:{ar:'البطانة',en:'Lining'},value:{ar:long(400),en:long(400)}}]}),
+  variant('m126334-0001',0,[{...option('dial',long(409),long(400),long(400)),value_lang:'en'}],{specs:[{kind:'material',label:{ar:'المادة',en:'Material'},value:{ar:joined,en:joined},value_lang:'en'},{kind:'lining',label:{ar:'البطانة',en:'Lining'},value:{ar:'ب'.repeat(400),en:long(400)}}]}),
   variant('m126334-0002',1,[option('dial','blue','أزرق','Blue')]),
  ];
  const model=productModel({...envelope('m126334-0001'),model_name:{ar:named.name_ar,en:named.name_en},variants:big},'m126334-0001');
@@ -58,6 +62,15 @@ test('model text is never stricter than the catalog row it comes from',async()=>
   assert.throws(()=>productModel({...envelope(),variants:[{...variants[0],options:[option('dial',key,'أزرق','Blue')]},...variants.slice(1)]},'m126334-0002'),/options/);
 });
 
+test('a reviewed value that keeps a trademark in Latin script is marked as English on Arabic pages',()=>{
+ const steel={kind:'material',label:{ar:'المادة',en:'Material'},value:{ar:'Oystersteel',en:'Oystersteel'}};
+ const latin=[{...variants[0],options:[option('dial','blue','أزرق','Blue'),{...option('bracelet','sundust','Sundust','Sundust')}],specs:[steel,{...steel,kind:'case_diameter',value:{ar:'41 مم',en:'41 mm'}},{...steel,kind:'ring_size',value:{ar:'52',en:'52'}},{...steel,kind:'lining',value:{ar:'تيتانيوم RLX',en:'RLX titanium'}}]},...variants.slice(1)];
+ const model=productModel({...envelope('m126334-0001'),variants:latin},'m126334-0001');
+ assert.deepEqual(model.selected.options.map(o=>o.valueLang),[undefined,'en'],'Sundust is Latin text on the Arabic page');
+ assert.deepEqual(model.selected.specs.map(s=>s.valueLang),['en',undefined,undefined,undefined],'Oystersteel is marked; Arabic, digit-only and mixed values are not');
+ assert.equal('valueLang' in productModel({...envelope('m126334-0001'),variants:[{...latin[0],specs:[{...steel,value_lang:'ar'}]},...variants.slice(1)]},'m126334-0001').selected.specs[0],false,'an explicit Arabic marker is kept');
+});
+
 test('an option value kept in its English source text is marked as English, like a spec value',()=>{
  const english=[{...variants[0],options:[{...option('dial','candy-pink','Candy pink','Candy pink'),value_lang:'en'},option('bracelet','jubilee','جوبيلي','Jubilee')]},...variants.slice(1)];
  const model=productModel({...envelope('m126334-0001'),variants:english},'m126334-0001');
@@ -65,6 +78,16 @@ test('an option value kept in its English source text is marked as English, like
  assert.equal('valueLang' in model.selected.options[1],false,'a translated value carries no marker');
  assert.equal('valueLang' in productModel({...envelope(),variants:[{...variants[0],options:[{...option('dial','blue','أزرق','Blue'),value_lang:'ar'}]},...variants.slice(1)]},'m126334-0002').variants[0].options[0],false);
  assert.throws(()=>productModel({...envelope(),variants:[{...variants[0],options:[{...option('dial','blue','أزرق','Blue'),value_lang:'fr'}]},...variants.slice(1)]},'m126334-0002'),/options/);
+});
+
+test('a missing search function falls back to today\'s catalog search, which returns the exact variant',async()=>{
+ const c=config();const calls=[];
+ const fetcher=async url=>{calls.push(url);return url.pathname.endsWith('jwl_catalog_models_search')?missing('PGRST202','jwl_catalog_models_search'):page([row],1);};
+ const result=await queryModels(c,{search:'m126334-0001'},fetcher);
+ assert.deepEqual(calls.map(u=>u.pathname),['/rest/v1/rpc/jwl_catalog_models_search','/rest/v1/jwl_catalog']);
+ assert.equal(calls[1].searchParams.get('search_text'),'ilike.*m126334-0001*');assert.equal(result.unit,'products');
+ await queryModels(c,{},fetcher);
+ assert.equal(calls[2].pathname,'/rest/v1/jwl_catalog_models','a missing search function does not hide the model view from browsing');
 });
 
 test('a missing model view falls back to today\'s catalog read and is remembered briefly',async()=>{

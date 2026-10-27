@@ -58,8 +58,8 @@ const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
           {s.cta}
         </a> : <button class="cta cta--solid" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
-        {/* The variant links put other product URLs in this block, so a preview CTA carries its own label. */}
-        <p class="note">{product.isPreview && `${s.preview} — `}{s.product.confirm}</p>
+        {/* A grouped page's variant links put other product URLs in this block, so its preview CTA carries its own label. */}
+        <p class="note">{grouped && product.isPreview && `${s.preview} — `}{s.product.confirm}</p>
       </div>
     </article>
     {grouped && <p class="variant-status" role="status" aria-live="polite" data-variant-status data-template={s.variants.showing('{ref}')}></p>}
@@ -98,7 +98,12 @@ const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
       const languages = next.querySelectorAll<HTMLAnchorElement>('a[hreflang]');
       document.querySelectorAll<HTMLAnchorElement>('a[hreflang]').forEach((a, i) => { const h = languages[i]?.getAttribute('href'); if (h) a.setAttribute('href', h); });
       history.replaceState(history.state, '', url.pathname + url.search);
-      block.querySelector<HTMLElement>(`[data-option-kind="${CSS.escape(kind)}"][data-option-key="${CSS.escape(key)}"]`)?.focus({ preventScroll: true });
+      const chip = block.querySelector<HTMLElement>(`[data-option-kind="${CSS.escape(kind)}"][data-option-key="${CSS.escape(key)}"]`);
+      chip?.focus({ preventScroll: true });
+      // The page keeps its scroll position unless the new block moved the chosen value off screen, as
+      // when a gallery appears above the selector on a phone.
+      const box = chip?.getBoundingClientRect();
+      if (chip && box && (box.top < 0 || box.bottom > innerHeight)) chip.scrollIntoView({ block: 'nearest' });
       const status = document.querySelector<HTMLElement>('[data-variant-status]');
       if (status) status.textContent = (status.dataset.template ?? '').replace('{ref}', block.dataset.reference);
     } catch (error) {

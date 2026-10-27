@@ -5,15 +5,17 @@ function publicUrl(value){
  try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&u.href===value;}catch{return false;}
 }
 
-const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&value.length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
+// Lengths are code points, as Postgres length() counts them, so a credit the database accepted always renders.
+const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&[...value].length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
 function creditUrl(value){
  if(typeof value!=='string'||value.length>2048)return false;
  try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}
 }
 
-/** An open-licence credit (decision 0011 keeps such grants inactive until the owner decides). */
+/** An open-licence credit (decision 0011 keeps such grants inactive until the owner decides). Its bounds are
+ * jwl_internal.valid_media_attribution's: every field but source_url up to 300 characters. */
 export function imageAttribution(value){
- if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['creator','license','license_url','source_url','changes'].includes(k))||!text(value.creator,200)||!text(value.license,80)||!creditUrl(value.license_url)||!creditUrl(value.source_url)||(value.changes!==undefined&&value.changes!==null&&!text(value.changes,300)))throw new Error('Invalid image attribution');
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['creator','license','license_url','source_url','changes'].includes(k))||!text(value.creator,300)||!text(value.license,300)||!creditUrl(value.license_url)||!creditUrl(value.source_url)||(value.changes!==undefined&&value.changes!==null&&!text(value.changes,300)))throw new Error('Invalid image attribution');
  return {creator:value.creator.trim(),license:value.license.trim(),licenseUrl:value.license_url,sourceUrl:value.source_url,...(value.changes?{changes:value.changes.trim()}:{})};
 }
 

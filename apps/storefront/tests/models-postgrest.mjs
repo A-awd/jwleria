@@ -72,6 +72,8 @@ export async function modelsDatabase(){
 // The relations and functions the storefront reads, with PostgREST's argument types for the RPCs.
 const RELATIONS=new Set(['jwl_catalog','jwl_catalog_models','jwl_collections','jwl_brands']);
 const RPCS={jwl_product_model:{p_slug:'text'},jwl_brand_models_page:{p_brand:'text',p_page:'integer',p_page_size:'integer'},jwl_brand_page:{p_brand:'text',p_page:'integer',p_page_size:'integer'}};
+// Set-returning RPCs: PostgREST applies select, filters, order, range and count to their rows like a relation's.
+const ROW_RPCS={jwl_catalog_models_search:{p_term:'text'}};
 const ident=/^[a-z_][a-z0-9_]*$/;
 const json=(status,body,headers={})=>({status,headers:{'content-type':'application/json; charset=utf-8',...headers},body:typeof body==='string'?body:JSON.stringify(body)});
 const fail=(status,code,message)=>json(status,{code,message,details:null,hint:null});
@@ -90,7 +92,8 @@ export function postgrest(db,{key}={}){
     const path=url.pathname.replace(/^\/rest\/v1\//,'');
     if(path===url.pathname)return fail(404,'PGRST125','Invalid path specified in request URL');
     try{
-      if(path.startsWith('rpc/')){
+      const rowFn=path.startsWith('rpc/')&&ROW_RPCS[path.slice(4)]?path.slice(4):null;
+      if(path.startsWith('rpc/')&&!rowFn){
         const fn=path.slice(4),args=RPCS[fn];
         if(!args)return fail(404,'PGRST202',`Could not find the function public.${fn} without parameters in the schema cache`);
         const names=[...url.searchParams.keys()];
@@ -99,9 +102,16 @@ export function postgrest(db,{key}={}){
         const {rows}=await anon(sql,names.map(n=>url.searchParams.get(n)));
         return json(200,rows[0].body??'null');
       }
-      if(!RELATIONS.has(path))return fail(404,'PGRST205',`Could not find the table 'public.${path}' in the schema cache`);
-      const where=[],values=[];let select='*',order='',limit=null,offset=0;
+      if(!rowFn&&!RELATIONS.has(path))return fail(404,'PGRST205',`Could not find the table 'public.${path}' in the schema cache`);
+      const where=[],values=[];let select='*',order='',limit=null,offset=0,from=`public.${path}`;
+      if(rowFn){
+        const args=ROW_RPCS[rowFn],given=Object.keys(args).filter(n=>url.searchParams.has(n));
+        if(given.length!==Object.keys(args).length)return fail(404,'PGRST202',`Could not find the function public.${rowFn} without parameters in the schema cache`);
+        for(const n of given)values.push(url.searchParams.get(n));
+        from=`public.${rowFn}(${given.map((n,i)=>`${n} => $${i+1}::${args[n]}`).join(',')})`;
+      }
       for(const [name,value] of url.searchParams){
+        if(rowFn&&name in ROW_RPCS[rowFn])continue;
         if(name==='select'){const cols=value.split(',');if(cols.some(c=>!ident.test(c)))return fail(400,'PGRST100','Unsupported select');select=cols.map(c=>`"${c}"`).join(',');}
         else if(name==='order'){const terms=value.split(',').map(t=>t.split('.'));if(terms.some(([c,d='asc'])=>!ident.test(c)||!['asc','desc'].includes(d)))return fail(400,'PGRST100','Unsupported order');order=' order by '+terms.map(([c,d='asc'])=>`"${c}" ${d}`).join(',');}
         else if(name==='limit')limit=Number(value);
@@ -115,11 +125,11 @@ export function postgrest(db,{key}={}){
       }
       if(![limit??0,offset].every(n=>Number.isSafeInteger(n)&&n>=0))return fail(400,'PGRST100','Unsupported range');
       const filter=where.length?' where '+where.join(' and '):'';
-      const page=`select ${select} from public.${path}${filter}${order}${limit===null?'':` limit ${limit}`} offset ${offset}`;
+      const page=`select ${select} from ${from}${filter}${order}${limit===null?'':` limit ${limit}`} offset ${offset}`;
       const {rows}=await anon(`select coalesce(json_agg(t),'[]')::text as body,count(*)::int as n from (${page}) t`,values);
       if(!/count=exact/.test(headers.Prefer??headers.prefer??''))return json(200,rows[0].body);
       // PostgREST's range status: 416 past the end, 206 for a partial page, 200 for everything.
-      const total=(await anon(`select count(*)::int as n from public.${path}${filter}`,values)).rows[0].n;
+      const total=(await anon(`select count(*)::int as n from ${from}${filter}`,values)).rows[0].n;
       if(offset>total)return json(416,{code:'PGRST103',message:'Requested range not satisfiable'},{'content-range':`*/${total}`});
       return json(rows[0].n<total?206:200,rows[0].body,{'content-range':rows[0].n?`${offset}-${offset+rows[0].n-1}/${total}`:`*/${total}`});
     }catch(error){return fail(400,error.code??'XX000',error.message);}

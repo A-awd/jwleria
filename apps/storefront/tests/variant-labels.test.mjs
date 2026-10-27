@@ -5,7 +5,7 @@ const {arabicCount,englishCount,optionCounts,optionLabel,pageLinks,resultCount,t
 const plain=parts=>parts.map(p=>typeof p==='string'?p:p.value).join('');
 
 test('Arabic option counts use the grammatical form for each number',()=>{
- assert.deepEqual([1,2,3,10,11,26,100,103,111].map(n=>arabicCount('dial',n)),['لون ميناء واحد','لونا ميناء','3 ألوان ميناء','10 ألوان ميناء','11 لون ميناء','26 لون ميناء','100 لون ميناء','103 ألوان ميناء','111 لون ميناء']);
+ assert.deepEqual([1,2,3,10,11,26,100,103,111].map(n=>arabicCount('dial',n)),['خيار ميناء واحد','خيارا ميناء','3 خيارات ميناء','10 خيارات ميناء','11 خيار ميناء','26 خيار ميناء','100 خيار ميناء','103 خيارات ميناء','111 خيار ميناء']);
  assert.deepEqual([1,2,3,11,100].map(n=>arabicCount('bracelet',n)),['سوار واحد','سواران','3 أساور','11 سوارًا','100 سوار']);
  assert.deepEqual([2,3,12].map(n=>arabicCount('colour',n)),['لونان','3 ألوان','12 لونًا']);
  assert.deepEqual([1,2,3,11].map(n=>arabicCount('bracelet_material',n)),['مادة سوار واحدة','مادتا سوار','3 مواد سوار','11 مادة سوار']);
@@ -20,7 +20,7 @@ test('English counts are neutral and pluralised',()=>{
 
 test('cards mention only kinds that offer a real choice, with no price, stock or availability wording',()=>{
  const model={variantCount:52,options:[{kind:'dial',count:26},{kind:'bracelet',count:2},{kind:'colour',count:1}]};
- assert.equal(optionCounts('ar',model),'26 لون ميناء · سواران');assert.equal(optionCounts('en',model),'26 dials · 2 bracelets');
+ assert.equal(optionCounts('ar',model),'26 خيار ميناء · سواران');assert.equal(optionCounts('en',model),'26 dials · 2 bracelets');
  assert.equal(optionCounts('en',{variantCount:1,options:[]}),'');assert.equal(optionCounts('ar',undefined),'');
  for(const l of ['ar','en'])assert.doesNotMatch(optionCounts(l,model),/price|stock|availab|سعر|متوفر|توفر|مخزون/i);
  // A product page reads at most 60 variants, so a larger model would count values its page cannot offer.
@@ -29,16 +29,24 @@ test('cards mention only kinds that offer a real choice, with no price, stock or
 });
 
 test('option labels come from the reviewed i18n strings, falling back to the catalog label',()=>{
- assert.equal(optionLabel('ar','dial',{ar:'x',en:'x'}),'لون الميناء');assert.equal(optionLabel('en','dial',{ar:'x',en:'x'}),'Dial');
+ assert.equal(optionLabel('ar','dial',{ar:'x',en:'x'}),'الميناء','not "dial colour": many dials are stone, meteorite or paved');assert.equal(optionLabel('en','dial',{ar:'x',en:'x'}),'Dial');
  assert.equal(optionLabel('ar','bracelet',{ar:'x',en:'x'}),'السوار');assert.equal(optionLabel('en','colour',{ar:'x',en:'x'}),'Colour');
  assert.equal(optionLabel('ar','ring_size',{ar:'x',en:'x'}),'مقاس الخاتم');assert.equal(optionLabel('en','strap_width',{ar:'عرض الحزام',en:'Strap width'}),'Strap width');
  assert.equal(optionLabel('ar','bracelet_material',{ar:'x',en:'x'}),'مادة السوار');assert.equal(optionLabel('en','bracelet_material',{ar:'x',en:'x'}),'Bracelet material');
  assert.equal(plain(t('ar').variants.changes([{label:'السوار',value:'جلد'}])),'يغيّر السوار إلى جلد');
  assert.equal(plain(t('en').variants.changes([{label:'Bracelet',value:'Leather'}])),'Changes bracelet to Leather');
  const oyster={label:'السوار',value:'Oyster, three-piece solid links',valueLang:'en'};
- const note=t('ar').variants.changes([oyster,{label:'لون الميناء',value:'أزرق'}]);
- assert.equal(plain(note),'يغيّر السوار إلى Oyster, three-piece solid links، لون الميناء إلى أزرق');
+ const note=t('ar').variants.changes([oyster,{label:'الميناء',value:'أزرق'}]);
+ assert.equal(plain(note),'يغيّر السوار إلى Oyster, three-piece solid links، الميناء إلى أزرق');
  assert.deepEqual(note.filter(p=>typeof p!=='string').map(p=>p.valueLang),['en',undefined],'each value stays its own part, so an English one can be marked');
+});
+
+test('the two credit changes the open-licence migration accepts read in Arabic on Arabic pages',async()=>{
+ const sql=await (await import('node:fs/promises')).readFile(new URL('../supabase/proposed/jwleria_open_license_media.sql',import.meta.url),'utf8');
+ const allowed=[...sql.match(/'changes' not in \(([^)]*)\)/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
+ assert.deepEqual(Object.keys(t('ar').variants.credit.changed).sort(),[...allowed].sort());
+ assert.deepEqual(Object.keys(t('en').variants.credit.changed).sort(),[...allowed].sort());
+ for(const value of allowed){assert.match(t('ar').variants.credit.changed[value],/[\u0600-\u06ff]/);assert.equal(t('en').variants.credit.changed[value],value);}
 });
 
 test('listing totals name what they count: models from the model projection, catalog rows otherwise',()=>{

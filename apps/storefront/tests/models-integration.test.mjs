@@ -77,7 +77,7 @@ test('the listing reads one card per model from jwl_catalog_models and the adapt
   assert.equal(card('m126200-0005').model.name.en,'Rolex Datejust 36 watch: Oystersteel - m126200-0005');
   for(const item of result.items)assert.deepEqual([item.mediaKind,item.image,item.images],['facts-only',null,[]],'no image is invented');
   // The card's neutral option count, exactly as ProductCard renders it.
-  assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('m126200-0001').model)),['3 ألوان ميناء · سواران','3 dials · 2 bracelets']);
+  assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('m126200-0001').model)),['3 خيارات ميناء · سواران','3 dials · 2 bracelets']);
   assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('L1899089001').model)),['3 ألوان','3 colours']);
   assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('B4084600').model)),['','']);
 });
@@ -89,8 +89,7 @@ test('listing filters, search and pagination give the same model cards as SQL',a
   const datejust=await read(f=>queryModels(config(),{brand:'rolex',collection:'datejust'},f));
   assert.equal(datejust.log[0].searchParams.get('collection_kind'),'eq.collection');
   assert.deepEqual(refs(datejust.result.items).sort(),['m126200-0001','m126200-0005','m126200-0029']);
-  assert.deepEqual(refs((await list({search:'M126200-0010'})).items),['m126200-0001'],'any variant reference finds its model card');
-  assert.deepEqual(refs((await list({search:'le pliage'})).items),['L1899089001'],'a model is found once, not once per variant');
+  assert.deepEqual(refs((await list({search:'le pliage'})).items),['L1899089001'],'a model is found once, not once per variant, by its primary when every variant matches');
   for(const search of [WITHDRAWN_AFTER,WITHDRAWN_BEFORE])assert.equal((await list({search})).total,0,`a withdrawn reference (${search}) finds nothing`);
   const page=await list({pageSize:2,page:4});
   assert.deepEqual([page.total,page.pages,page.page,page.items.length],[7,4,4,1]);
@@ -99,6 +98,26 @@ test('listing filters, search and pagination give the same model cards as SQL',a
   const all=new Set();
   for(let p=1;p<=4;p++)for(const item of (await list({pageSize:2,page:p})).items)all.add(item.model.key);
   assert.equal(all.size,7,'pages neither repeat nor skip a model');
+});
+
+test('searching a variant\'s exact reference shows and links that variant on its one model card',async()=>{
+  const s=await setup();
+  for(const [search,ref,key,count] of [['M126200-0010','m126200-0010','rolex-official:126200',4],['m126200-0006','m126200-0006','rolex-official:126200',4],
+    ['l1899089556','L1899089556','longchamp-official:L1899089',3],['navy','L1899089556','longchamp-official:L1899089',3],['m126200-0001','m126200-0001','rolex-official:126200',4]]){
+    const {result,log}=await read(f=>queryModels(config(),{search},f));
+    assert.deepEqual(log.map(u=>u.pathname),['/rest/v1/rpc/jwl_catalog_models_search'],search);
+    assert.equal(log[0].searchParams.get('p_term'),search.toLowerCase());assert.equal(log[0].searchParams.has('search_text'),false);
+    assert.deepEqual([result.unit,result.total,refs(result.items)],['models',1,[ref]],search);
+    const [card]=result.items;
+    assert.deepEqual([card.slug,card.model.key,card.model.variantCount],[slugOf(ref),key,count],`${search}: the card names and opens the reference that was searched`);
+    assert.deepEqual(result.items,(await s.body(log[0].pathname+log[0].search,{Prefer:'count=exact'})).map(publicModelRow),'the adapter result is the SQL rows, parsed');
+  }
+  // The searched variant replaces its model's card in place: same filters, still one card per model.
+  assert.deepEqual(refs((await read(f=>queryModels(config(),{brand:'rolex',collection:'datejust',search:'m126200-0006'},f))).result.items),['m126200-0006']);
+  assert.equal((await read(f=>queryModels(config(),{brand:'loewe',search:'m126200-0006'},f))).result.total,0);
+  const rolex=(await read(f=>queryModels(config(),{search:'rolex datejust'},f))).result;
+  assert.deepEqual(refs(rolex.items).sort(),['m126200-0001','m126200-0005','m126200-0029'],'a term every variant shares keeps each model\'s primary');
+  for(const search of [WITHDRAWN_AFTER,WITHDRAWN_BEFORE])assert.equal((await read(f=>queryModels(config(),{search},f))).result.total,0,`a withdrawn reference (${search}) is never shown`);
 });
 
 test('jwl_product_model gives the adapter one model for any variant slug and nothing for an unknown one',async()=>{
@@ -120,10 +139,12 @@ test('jwl_product_model gives the adapter one model for any variant slug and not
     assert.equal(model.selected.reference,ref);assert.equal(model.selected.slug,slugOf(ref));
     assert.equal(model.primary.slug,primary,'the canonical twin is the primary variant');
     assert.deepEqual(model.variants.map(v=>v.isPrimary),[true,false,false,false]);
-    // Every variant carries its own mapped options and specs; value_lang 'en' becomes valueLang 'en'.
+    // Every variant carries its own mapped options and specs; value_lang 'en' becomes valueLang 'en', and so
+    // does an Arabic value that is Latin text only (a trademark kept in Latin script, such as Oystersteel).
     for(const v of raw.variants){
       const parsed=model.variants.find(x=>x.slug===v.slug);
-      const lang=({value_lang,...o})=>({...o,...(value_lang==='en'?{valueLang:'en'}:{})});
+      const latin=t=>/[A-Za-z]/.test(t)&&!/[\u0600-\u06ff]/.test(t);
+      const lang=({value_lang,...o})=>({...o,...(value_lang==='en'||latin(o.value.ar)?{valueLang:'en'}:{})});
       assert.deepEqual(parsed.options,v.options.map(lang),v.reference);assert.deepEqual(parsed.specs,v.specs.map(lang),v.reference);
       assert.deepEqual([parsed.name.en,parsed.reference],[v.name_en,v.reference]);
     }
@@ -136,6 +157,7 @@ test('jwl_product_model gives the adapter one model for any variant slug and not
   assert.deepEqual(variant('m126200-0010').options[0],{kind:'dial',key:'candy-pink',label:{ar:'الميناء',en:'Dial'},value:{ar:'Candy pink',en:'Candy pink'},valueLang:'en'});
   assert.deepEqual(model.selected.specs.map(s=>s.kind),['diameter','material','dial','bracelet','bracelet_material','movement','power_reserve','water_resistance']);
   assert.deepEqual(model.selected.specs[0],{kind:'diameter',label:{ar:'القطر',en:'Diameter'},value:{ar:'36 مم',en:'36 mm'}});
+  assert.deepEqual(model.selected.specs[1],{kind:'material',label:{ar:'المادة',en:'Material'},value:{ar:'Oystersteel',en:'Oystersteel'},valueLang:'en'},'a Latin trademark is marked on the Arabic page');
   assert.deepEqual([model.selected.mediaKind,model.selected.images],['facts-only',[]]);
 
   const tote=(await load(slugOf('L1899089556'))).model;
@@ -302,7 +324,7 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       assert.deepEqual(hrefs.map(h=>h.split('/')[3]).sort(),['B4084600','m126200-0001','m126200-0005','m126200-0029','m126610ln-0001','328.24.W10-1100','L1899089001'].map(slugOf).sort());
       const card=ref=>page.locator('article.card',{has:page.locator(`.card__name a[href="/${locale}/products/${slugOf(ref)}/"]`)});
       assert.equal(await card('m126200-0001').locator('.card__name').textContent(),MODEL[locale]);
-      assert.equal(await card('m126200-0001').locator('.variant-count').textContent(),locale==='ar'?'3 ألوان ميناء · سواران':'3 dials · 2 bracelets');
+      assert.equal(await card('m126200-0001').locator('.variant-count').textContent(),locale==='ar'?'3 خيارات ميناء · سواران':'3 dials · 2 bracelets');
       assert.equal(await card('L1899089001').locator('.card__name').textContent(),TOTE[locale]);
       assert.equal(await card('L1899089001').locator('.variant-count').textContent(),locale==='ar'?'3 ألوان':'3 colours');
       assert.equal(await card('B4084600').locator('.variant-count').count(),0,'a single shows no option count');
