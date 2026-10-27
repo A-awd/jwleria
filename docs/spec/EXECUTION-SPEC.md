@@ -39,7 +39,7 @@ This spec turns the owner's brief into requirements that can be checked. It is s
 
 - D1. The storefront is an Astro server build on the existing Cloudflare Worker. It reads the catalogue through PostgREST with a publishable key, under RLS and security-invoker functions.
 - D2. Releases are immutable, checksummed packages (`releases/`), uploaded by the operator with the upload-only command. A package records its source commit; Cloudflare version IDs stay private.
-- D3. The public projection validates every field it renders. An unknown key in image metadata makes that image invalid, so a credit field must be supported by the live Worker before any row carries it.
+- D3. The public projection validates every field it renders. An unknown key in image metadata is a hard error, not a dropped image: it fails the product page and every catalogue, brand or home listing that includes the product, because listings map rows without per-row recovery. A credit field must therefore be supported by the live Worker before any row carries it (runbook RL-3).
 
 ## 6. Performance
 

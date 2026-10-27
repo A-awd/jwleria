@@ -22,17 +22,23 @@ test('home, latest and own-collection leads describe a directory and pieces on v
  assert.equal(t('en').hero.lead,'A directory of brands and a selection of pieces, with details on WhatsApp.');
  assert.equal(t('ar').latest.lead,'أحدث القطع المعروضة من الأزياء والساعات والمجوهرات.');
  assert.equal(t('en').latest.lead,'The latest pieces on view across fashion, watches and jewellery.');
- assert.equal(t('ar').brands.ownLead,'قطع معاينة من مختاراتنا الخاصة.');
+ assert.equal(t('ar').brands.ownLead,'قطع للمعاينة من مختاراتنا الخاصة.');
  for(const locale of ['ar','en'])assert.doesNotMatch(t(locale).hero.lead+t(locale).latest.lead,/houses|دور الأزياء|من العلامات العالمية،/,locale);
 });
 
-test('a directory brand summary names the directory and an enquiry, never selections or availability',()=>{
+test('a directory brand summary names the directory and an inquiry, never selections or availability',()=>{
  const source=readFileSync(new URL('../src/server/catalog.ts',import.meta.url),'utf8');
- assert.match(source,/\$\{b\.name\} ضمن دليل العلامات\. الاستفسار عبر واتساب\./);
- assert.match(source,/\$\{b\.name\} in the brand directory\. Enquiries via WhatsApp\./);
+ assert.match(source,/\$\{b\.name\} مدرجة في دليل العلامات\. الاستفسار عبر واتساب\./);
+ assert.match(source,/\$\{b\.name\} in the brand directory\. Inquiries via WhatsApp\./);
  assert.doesNotMatch(source,/availability via WhatsApp|التوفر عبر واتساب/);
  const live=readFileSync(new URL('../src/server/supabase-catalog.mjs',import.meta.url),'utf8');
  assert.doesNotMatch(live,/availability via WhatsApp|التوفر عبر واتساب/,'a brand with published pieces makes no availability promise either');
+});
+
+test('visible English copy spells inquiry one way, and a published brand summary reads plainly',()=>{
+ const sources=['../src/i18n/ui.ts','../src/server/catalog.ts','../src/server/supabase-catalog.mjs'].map(p=>readFileSync(new URL(p,import.meta.url),'utf8')).join('\n');
+ assert.doesNotMatch(sources,/[Ee]nquir/,'"inquiry" everywhere, as the dialog says');
+ assert.match(sources,/\$\{r\.brand_name\} selections\. Ask about the details on WhatsApp\./);
 });
 
 test('a supplied photo title keeps its own text and takes only the locale quotation marks',()=>{

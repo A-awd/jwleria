@@ -369,7 +369,8 @@ test('a title its author supplied is recorded per licensed file, bounded, and ca
     assert.equal(commonsFile(titled),true);
     const {title:_,...untitled}=originalFile(page,original);
     for(const [f,label] of [[untitled,'the key is required'],[{...titled,title:''},'empty'],[{...titled,title:'   '},'blank'],[{...titled,title:'x'.repeat(301)},'over 300'],
-      [{...titled,title:'a\nb'},'control character'],[{...titled,title:7},'a number'],[{...titled,title:[title]},'an array']]){
+      [{...titled,title:'a\nb'},'control character'],[{...titled,title:7},'a number'],[{...titled,title:[title]},'an array'],
+      [{...titled,title:'\u00a0'},'a no-break space'],[{...titled,title:'\u3000\u2003'},'ideographic and em spaces'],[{...titled,title:'\ufeff\u202f'},'a BOM and a narrow no-break space']]){
       assert.equal(await filesOk(f),false,label);
       assert.equal(commonsFile(f),false,'the pipeline refuses it too: '+label);
     }
@@ -393,6 +394,28 @@ test('a title its author supplied is recorded per licensed file, bounded, and ca
   }finally{await db.close();}
 });
 
+test('a credit string the database accepts is never one the storefront or pipeline refuses as blank',async()=>{
+  const db=await database();
+  try{
+    // Every code point JavaScript's trim() strips (ECMAScript WhiteSpace and LineTerminator), from the full range.
+    const blank=[];for(let c=1;c<=0x10ffff;c++)if((c<0xd800||c>0xdfff)&&String.fromCodePoint(c).trim()==='')blank.push(c);
+    assert.ok(blank.includes(0xa0)&&blank.includes(0x3000)&&blank.includes(0xfeff),'the set includes Unicode spaces Postgres trim() keeps');
+    const visible=(t)=>service(db,'select jwl_internal.visible_credit_text($1) ok',[t]).then(r=>r.rows[0].ok);
+    const accepted=(await service(db,'select array_agg(c) cs from unnest($1::int[]) c where jwl_internal.visible_credit_text(chr(c))',[blank])).rows[0].cs;
+    assert.equal(accepted,null,'no single blank character is accepted');
+    assert.equal(await visible(blank.map(c=>String.fromCodePoint(c)).join('')),false,'nor all of them together');
+    for(const t of ['a','\u00a0x\u3000','ساعة','\u{1D49C}'])assert.equal(await visible(t),true,JSON.stringify(t));
+    // The same rule holds where the credit fields are checked: title, the grant's creator and attribution text, and the
+    // other credit fields.
+    const c=row('test','REF-7');await ingest(db,[c]);
+    for(const [overrides,label] of [[{creator:'\u00a0\u00a0'},'creator'],[{attribution_text:'\u3000'},'attribution text']])
+      await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-blank-'+label.replace(' ','-'),...overrides})),/jwl_open_license_grant_check/,label);
+    for(const field of ['creator','license','changes'])
+      assert.equal((await service(db,'select jwl_internal.valid_media_attribution($1::jsonb) ok',[JSON.stringify({...credit,[field]:'\u2003'})])).rows[0].ok,false,field);
+    assert.throws(()=>responsiveImages([entry('e',{...credit,title:'\u00a0'})],[entry('e').src],false),/Invalid image attribution/,'the storefront refuses the same title');
+  }finally{await db.close();}
+});
+
 test('the responsive shape accepts only a bounded credit for an allowlisted licence and stays compatible without one',async()=>{
   const db=await database();
   try{
@@ -401,7 +424,7 @@ test('the responsive shape accepts only a bounded credit for an allowlisted lice
     assert.equal(await valid(entry('e')),true);
     assert.equal(await valid(entry('e',{...credit,title:'A supplied title'})),true,'an optional title');
     assert.equal(await valid(entry('e',{...credit,title:null})),true,'a null title');
-    for(const attribution of [{...credit,title:''},{...credit,title:'x'.repeat(301)},{...credit,title:'a\tb'},{...credit,title:3},{...credit,extra:'x'},{...credit,creator:''},{...credit,creator:'x'.repeat(301)},{...credit,creator:'a\nb'},{...credit,license:'CC BY-NC 4.0',license_url:'https://creativecommons.org/licenses/by-nc/4.0/'},
+    for(const attribution of [{...credit,title:''},{...credit,title:'x'.repeat(301)},{...credit,title:'a\tb'},{...credit,title:3},{...credit,title:'\u00a0'},{...credit,title:'\u3000'},{...credit,creator:'\u2002\u00a0'},{...credit,changes:'\u205f'},{...credit,extra:'x'},{...credit,creator:''},{...credit,creator:'x'.repeat(301)},{...credit,creator:'a\nb'},{...credit,license:'CC BY-NC 4.0',license_url:'https://creativecommons.org/licenses/by-nc/4.0/'},
       {...credit,license_url:'https://creativecommons.org/licenses/by/4.0/'},{...credit,source_url:'https://example.test/photo'},{...credit,changes:7},'credit',[credit]])
       assert.equal(await valid({...entry('e',null),attribution}),false,JSON.stringify(attribution));
   }finally{await db.close();}

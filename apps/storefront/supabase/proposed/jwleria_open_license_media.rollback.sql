@@ -160,6 +160,7 @@ alter table jwl_internal.media_grants add constraint media_grants_kind_check che
 drop function jwl_internal.valid_open_license_files(jsonb);
 drop function jwl_internal.valid_media_attribution(jsonb);
 drop function jwl_internal.valid_credit_title(jsonb);
+drop function jwl_internal.visible_credit_text(text);
 drop function jwl_internal.open_licenses();
 drop function jwl_internal.open_license_lane(text,text);
 drop function jwl_internal.percent_decode(text);

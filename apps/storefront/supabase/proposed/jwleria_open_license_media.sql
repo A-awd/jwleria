@@ -73,6 +73,17 @@ $$;
 revoke all on function jwl_internal.open_license_decisions() from public,anon,authenticated;
 grant execute on function jwl_internal.open_license_decisions() to service_role;
 
+-- A credit string must contain a character that JavaScript's String.prototype.trim() keeps. Postgres trim() strips
+-- only U+0020, so "length(trim(x))>0" alone accepts a string of no-break, ideographic or other Unicode spaces that the
+-- pipeline and the storefront refuse; such a row would pass the database and then fail the storefront read. The set
+-- below is ECMAScript WhiteSpace and LineTerminator ([[:space:]] covers the ASCII ones).
+create function jwl_internal.visible_credit_text(value text)
+returns boolean language sql immutable security invoker set search_path='' as $$
+  select coalesce(value ~ '[^[:space:]\u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]',false)
+$$;
+revoke all on function jwl_internal.visible_credit_text(text) from public,anon,authenticated;
+grant execute on function jwl_internal.visible_credit_text(text) to service_role;
+
 -- The files an open-licence grant covers: 1..20 distinct Commons file pages, each with exactly one held file on
 -- upload.wikimedia.org (Commons only, never a brand origin or another wiki), recorded honestly as either
 --   {"file_kind":"original","rendition_width":null,"file_url":".../wikipedia/commons/<h>/<hh>/<File>"} or
@@ -84,7 +95,7 @@ grant execute on function jwl_internal.open_license_decisions() to service_role;
 -- name or a caption written by others is not a supplied title.
 create function jwl_internal.valid_credit_title(title jsonb)
 returns boolean language sql immutable security invoker set search_path='' as $$
-  select coalesce(jsonb_typeof(title)='string' and length(trim(title#>>'{}'))>0 and length(title#>>'{}')<=300 and title#>>'{}' !~ '[[:cntrl:]]',false)
+  select coalesce(jsonb_typeof(title)='string' and jwl_internal.visible_credit_text(title#>>'{}') and length(title#>>'{}')<=300 and title#>>'{}' !~ '[[:cntrl:]]',false)
 $$;
 revoke all on function jwl_internal.valid_credit_title(jsonb) from public,anon,authenticated;
 grant execute on function jwl_internal.valid_credit_title(jsonb) to service_role;
@@ -132,8 +143,8 @@ alter table jwl_internal.media_grants add constraint jwl_open_license_grant_chec
   candidate_id is not null and source_id is not null and media_origins='[]'::jsonb
   and source_id not in ('cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official')
   and jwl_internal.open_licenses() ? license_code and license_url=jwl_internal.open_licenses()->license_code->>'url'
-  and length(trim(creator)) between 1 and 300 and creator !~ '[[:cntrl:]]'
-  and length(trim(attribution_text)) between 1 and 500 and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
+  and length(trim(creator)) between 1 and 300 and jwl_internal.visible_credit_text(creator) and creator !~ '[[:cntrl:]]'
+  and length(trim(attribution_text)) between 1 and 500 and jwl_internal.visible_credit_text(attribution_text) and attribution_text !~ '[[:cntrl:]]' and position(creator in attribution_text)>0
   and jwl_internal.valid_open_license_files(licensed_files)
   and jwl_internal.open_license_decisions() ? owner_decision_reference,false)
   else num_nulls(license_code,license_url,creator,licensed_files,attribution_text,owner_decision_reference)=6 end);
@@ -168,7 +179,7 @@ begin
  if jsonb_typeof(credit) is distinct from 'object' or not(credit ?& array['creator','license','license_url','source_url','changes']) or credit-array['creator','license','license_url','source_url','changes','title']<>'{}'::jsonb then return false;end if;
  if credit ? 'title' and credit->'title'<>'null'::jsonb and not jwl_internal.valid_credit_title(credit->'title') then return false;end if;
  foreach field in array array['creator','license','license_url','source_url','changes'] loop
-  if jsonb_typeof(credit->field) is distinct from 'string' or length(trim(credit->>field))=0 or length(credit->>field)>(case field when 'source_url' then 2048 else 300 end) or credit->>field ~ '[[:cntrl:]]' then return false;end if;
+  if jsonb_typeof(credit->field) is distinct from 'string' or not jwl_internal.visible_credit_text(credit->>field) or length(credit->>field)>(case field when 'source_url' then 2048 else 300 end) or credit->>field ~ '[[:cntrl:]]' then return false;end if;
  end loop;
  if not exists(select 1 from jsonb_each(jwl_internal.open_licenses()) l where l.value->>'label'=credit->>'license' and l.value->>'url'=credit->>'license_url') then return false;end if;
  return credit->>'source_url' ~ '^https://commons\.wikimedia\.org/wiki/File:[^/?#[:space:]"<>\\]+$';

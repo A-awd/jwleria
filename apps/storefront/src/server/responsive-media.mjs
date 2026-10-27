@@ -5,7 +5,8 @@ function publicUrl(value){
  try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password&&!u.search&&!u.hash&&u.href===value;}catch{return false;}
 }
 
-// Lengths are code points, as Postgres length() counts them, so a credit the database accepted always renders.
+// Lengths are code points, as Postgres length() counts them, and "blank" is what trim() strips, as
+// jwl_internal.visible_credit_text refuses it, so a credit the database accepted always renders.
 const text=(value,max)=>typeof value==='string'&&value.trim().length>0&&[...value].length<=max&&!/[\u0000-\u001f\u007f]/.test(value);
 function creditUrl(value){
  if(typeof value!=='string'||value.length>2048)return false;

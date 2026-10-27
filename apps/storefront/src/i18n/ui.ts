@@ -74,7 +74,7 @@ const ar = {
     all: 'الكل',
     count: (n: number) => `${n} علامة`,
     ownTitle: 'مختاراتنا',
-    ownLead: 'قطع معاينة من مختاراتنا الخاصة.',
+    ownLead: 'قطع للمعاينة من مختاراتنا الخاصة.',
     pendingTitle: 'المختارات قيد الإعداد',
     pendingText: 'لا توجد قطع معروضة لهذه العلامة حالياً.',
     ask: 'الاستفسار عن هذه العلامة',
@@ -185,7 +185,7 @@ const en: typeof ar = {
   tiers: { luxury: 'Luxury', accessible: 'Accessible luxury', contemporary: 'Contemporary' },
   categories: { title: 'Browse by category', lead: 'From watches to luggage.', empty: 'No pieces are shown in this category yet.', other: 'Other categories' },
   latest: { title: 'Latest in the edit', lead: 'The latest pieces on view across fashion, watches and jewellery.' },
-  inquiryBand: { title: 'Item details via WhatsApp', text: 'Price and availability enquiries are available on WhatsApp with the item\'s reference or photo.' },
+  inquiryBand: { title: 'Item details via WhatsApp', text: 'Price and availability inquiries are available on WhatsApp with the item\'s reference or photo.' },
   catalog: {
     title: 'Catalogue',
     lead: 'Every piece currently on view.',

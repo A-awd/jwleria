@@ -27,7 +27,7 @@ Website foundation: real exact-product photographs visible on jwleria.com, and o
 ## Roles
 
 - **Claude** implements, tests, reviews and integrates (decision 0010). Claude owns technical delivery choices such as byte budgets, fidelity floors and test design, and records them as implementation rules, never as owner approvals.
-- **Codex** coordinates, audits and operates. Provider uploads and deploys are made by Codex (or another authorised operator) from immutable, checksummed packages that Claude prepared.
+- **Codex** coordinates, relays and operates. It does not duplicate Claude's implementation or perform a separate code audit (decision 0010). Provider uploads and deploys are made by Codex (or another authorised operator) from immutable, checksummed packages that Claude prepared.
 - **Designer stream** owns visuals: layout, typography, responsive presentation and the look of the gallery and variant controls. Directions A, B and C are unselected. Until the owner selects one, keep the current identity: El Messiri for Arabic display (decision 0006) and the lighter palette (decision 0007).
 - **Owner** makes the genuine owner decisions listed in `docs/spec/DECISION-APPROVAL-LEDGER.md`.
 
