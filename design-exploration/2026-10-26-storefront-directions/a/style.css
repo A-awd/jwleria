@@ -417,23 +417,25 @@ body[data-page="product"] .toast{bottom:110px}
 .search-submit{padding:0 16px}
 .preview-strip p{min-height:44px}
 .preview-strip a{min-height:44px;padding-block:0}
-.hero{padding-block:12px 28px}
+.hero{padding-block:10px 28px}
 .hero-head .kicker{display:none}
-.hero h1{font-size:30px;line-height:1.5}
+.hero h1{font-size:28px;line-height:1.5}
 .hero h1 br{display:none}
 .hero-sub{margin-top:0;font-size:15px;line-height:1.7}
-.home-search{margin-top:14px;max-width:none}
-.hero-spread{grid-template-columns:minmax(0,1fr);gap:20px;margin-top:16px}
+.home-search{margin-top:10px;max-width:none;min-height:50px}
+.hero-spread{grid-template-columns:minmax(0,1fr);gap:14px;margin-top:12px}
 .hero-index{border-top:0}
-.hi-title{padding-block:0 6px;font-size:14px}
-.hi-list{display:grid;grid-auto-flow:column;grid-template-rows:repeat(2,auto);grid-auto-columns:max-content;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--gut)*-1);padding-inline:var(--gut);scroll-padding-inline:var(--gut)}
+.hi-title{padding-block:0 4px;font-size:14px}
+.hi-list{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-template-rows:repeat(2,auto);grid-auto-columns:max-content;gap:8px;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--gut)*-1);padding-inline:var(--gut);scroll-padding-inline:var(--gut)}
 .hi-list a{align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--hair-2);background:var(--surface);white-space:nowrap}
 .hi-list .n{font-size:12px;min-width:0}
 .hi-list .t{font-size:17px;line-height:1.5}
-.hero-index .hi-list + .hi-title{margin-top:14px}
+.hero-index .hi-list + .hi-title{margin-top:10px}
 .hb-list{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-inline:calc(var(--gut)*-1);padding:0 var(--gut) 2px;scroll-padding-inline:var(--gut)}
 .hb-list li{flex:none}
-.hf-head{padding-top:4px}
+.hero-feature{border-top:0}
+.hf-head{padding-top:0}
+.hf-head .text-link{min-height:44px}
 .feature-rail{grid-auto-columns:74%;gap:14px;margin-inline:calc(var(--gut)*-1);padding-inline:var(--gut);scroll-padding-inline:var(--gut);scrollbar-width:none}
 .atmo{flex-basis:100%;width:100%}
 .section-note,.story-text,.footer-about,.empty p + p{font-size:15px}
