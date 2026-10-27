@@ -4,7 +4,7 @@ import {join} from 'node:path';
 import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
-import {prepareResponsiveMedia} from './responsive-media.mjs';
+import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
@@ -35,31 +35,70 @@ export const openLicenses=Object.freeze({
   'CC-BY-SA-2.0':licence('CC BY-SA 2.0','https://creativecommons.org/licenses/by-sa/2.0/'),
 });
 
+const commonsPage=/^https:\/\/commons\.wikimedia\.org\/wiki\/File:([^/?#\s"<>\\]+)$/;
+const commonsOriginalUrl=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#\s"<>\\]+)$/;
+const commonsRenditionUrl=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/thumb\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#\s"<>\\]+)\/([1-9][0-9]*)px-([^/?#\s"<>\\]+)$/;
+// The page and the held file spell the same File name byte for byte (as the database compares them), the name is
+// a still image, and the hash directories are MediaWiki's md5 of the decoded name.
+function sameCommonsFile(page_url,file_url,pattern){
+  const page=commonsPage.exec(page_url??''),file=pattern.exec(file_url??'');
+  if(!page||!file||page_url.length>2048||file_url.length>2048||new URL(page_url).href!==page_url||new URL(file_url).href!==file_url)return null;
+  let name;try{name=decodeURIComponent(page[1]);decodeURIComponent(file[3]);}catch{return null;}
+  if(file[3]!==page[1]||!/\.(jpe?g|png|webp)$/i.test(page[1]))return null;
+  const hash=createHash('md5').update(name).digest('hex');
+  return file[1]===hash[0]&&file[2]===hash.slice(0,2)?file:null;
+}
 /**
  * Whether original_url is the untouched Wikimedia Commons original of the file page page_url: canonical URLs,
  * the same file name and MediaWiki's md5 hash directories. Checked offline; brand origins never qualify.
  */
 export function commonsOriginal(page_url,original_url){
-  const page=/^https:\/\/commons\.wikimedia\.org\/wiki\/File:([^/?#\s"<>\\]+)$/.exec(page_url??'');
-  const file=/^https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/([0-9a-f])\/([0-9a-f]{2})\/([^/?#\s"<>\\]+)$/.exec(original_url??'');
-  if(!page||!file||page_url.length>2048||original_url.length>2048||new URL(page_url).href!==page_url||new URL(original_url).href!==original_url)return false;
-  let name;try{name=decodeURIComponent(file[3]);if(decodeURIComponent(page[1])!==name)return false;}catch{return false;}
-  const hash=createHash('md5').update(name).digest('hex');
-  return /\.(jpe?g|png|webp)$/i.test(file[3])&&file[1]===hash[0]&&file[2]===hash.slice(0,2);
+  return sameCommonsFile(page_url,original_url,commonsOriginalUrl)!==null;
 }
+/**
+ * Whether rendition_url is the Wikimedia-served thumbnail of the file page page_url at exactly width pixels
+ * (`.../commons/thumb/<h>/<hh>/<File>/<width>px-<File>`, 100..4000): same name, hash directories and width.
+ */
+export function commonsRendition(page_url,rendition_url,width){
+  const file=sameCommonsFile(page_url,rendition_url,commonsRenditionUrl);
+  return file!==null&&file[5]===file[3]&&Number.isInteger(width)&&width>=100&&width<=4000&&file[4]===String(width);
+}
+/** Whether one licensed-file record of an open-licence grant is an honest original or rendition of its page. */
+export function commonsFile(file){
+  if(!file||typeof file!=='object'||Array.isArray(file))return false;
+  const keys=Object.keys(file).sort().join(',');
+  if(keys!=='file_kind,file_url,rendition_width,source_page_url')return false;
+  if(file.file_kind==='original')return file.rendition_width===null&&commonsOriginal(file.source_page_url,file.file_url);
+  if(file.file_kind==='rendition')return commonsRendition(file.source_page_url,file.file_url,file.rendition_width);
+  return false;
+}
+/** The licensed file of an open-licence grant held at file_url, or undefined. */
+export function licensedFile(grant,file_url){
+  return Array.isArray(grant?.licensed_files)?grant.licensed_files.find(file=>file?.file_url===file_url):undefined;
+}
+// The owner decisions an open-licence grant may rely on: exactly these recorded decision files of this repository, each
+// with the catalogue references it covers. Free text, dated or relayed sentences, decision 0011 (which rejects open
+// licences) and any other file are refused. Widening this list, or a decision's references, needs the decision file
+// amended first and a reviewed migration: the proposed SQL holds the same list in jwl_internal.open_license_decisions().
+export const openLicenseDecisions=Object.freeze({
+  'decisions/0013-open-licence-exact-product-photos.md':Object.freeze({references:Object.freeze(['m126234-0015'])}),
+});
+const ownerDecision=value=>typeof value==='string'&&Object.hasOwn(openLicenseDecisions,value);
 function openLicenseGaps(grant){
   const reasons=[],deed=Object.hasOwn(openLicenses,grant.license_code??'')?openLicenses[grant.license_code]:null;
-  if(!/^[a-z0-9][a-z0-9._:/-]{2,120}$/.test(grant.owner_decision_reference??''))reasons.push('owner_decision_reference_missing');
+  if(!ownerDecision(grant.owner_decision_reference))reasons.push('owner_decision_reference_missing');
   if(!deed)reasons.push('license_not_allowed');else if(grant.license_url!==deed.url)reasons.push('license_url_mismatch');
   if(!credit(grant.creator,300))reasons.push('attribution_creator_missing');
   if(!credit(grant.attribution_text,500)||!grant.attribution_text.includes(grant.creator))reasons.push('attribution_text_missing');
-  if(!commonsOriginal(grant.source_page_url,grant.original_url))reasons.push('original_not_an_allowlisted_commons_file');
+  const files=grant.licensed_files;
+  if(!Array.isArray(files)||!files.length||files.length>20||!files.every(commonsFile)
+    ||new Set(files.map(f=>f.file_url)).size!==files.length||new Set(files.map(f=>f.source_page_url)).size!==files.length)reasons.push('licensed_file_not_an_allowlisted_commons_file');
   if(Array.isArray(grant.media_origins)&&grant.media_origins.length)reasons.push('open_license_names_one_file_not_origins');
   return reasons;
 }
-/** The visible credit of an open-licence image, exactly as the proposed migration re-derives it from the grant. */
-export function openLicenseAttribution(grant,changes){
-  return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:grant.source_page_url,changes};
+/** The visible credit of one licensed file's image, exactly as the proposed migration re-derives it from the grant. */
+export function openLicenseAttribution(grant,changes,file=grant.licensed_files?.[0]){
+  return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:file.source_page_url,changes};
 }
 
 /**
@@ -100,8 +139,10 @@ export function evaluateMediaGrant(grant,{candidate,asset_url,now=Date.now()}={}
     if(grant.source_id!==candidate?.source_id)reasons.push('grant_covers_another_source');
     if(recordedSourceStops[candidate?.source_id])reasons.push('source_acquisition_restricted');
     reasons.push(...openLicenseGaps(grant));
-    // One grant covers one Commons original; the brand gallery is never a download target here.
-    if(asset_url!==undefined&&asset_url!==grant.original_url)reasons.push('asset_not_the_granted_original');
+    // The cited decision covers only the references it lists; another reference needs that decision amended first.
+    if(ownerDecision(grant.owner_decision_reference)&&!openLicenseDecisions[grant.owner_decision_reference].references.includes(candidate?.external_id))reasons.push('owner_decision_does_not_cover_reference');
+    // A grant covers only its own Commons files; the brand gallery is never a download target here.
+    if(asset_url!==undefined&&!licensedFile(grant,asset_url))reasons.push('asset_not_a_granted_file');
   }else{
     if(grant.source_id!==candidate?.source_id)reasons.push('grant_covers_another_source');
     // Restricted sources stay closed to downloads until a reviewed code change lifts the stop.
@@ -121,7 +162,7 @@ export function mediaReadiness(candidates,{grants=[]}={}){
     row.candidates++;
     galleryBinding(candidate).exact_gallery?row.exact_reference_gallery++:row.unbound_gallery++;
     const grant=grants.find(g=>g.candidate_id===candidate.candidate_id)??grants.find(g=>!g.candidate_id&&g.source_id===candidate.source_id);
-    const decision=evaluateMediaGrant(grant,{candidate,asset_url:grant?.kind==='open_license'?grant.original_url:candidate.image_urls?.[0]});
+    const decision=evaluateMediaGrant(grant,{candidate,asset_url:grant?.kind==='open_license'?grant.licensed_files?.[0]?.file_url:candidate.image_urls?.[0]});
     row[decision.state]++;for(const reason of decision.reasons)row.reasons[reason]=(row.reasons[reason]??0)+1;
   }
   return {sources:bySource,approved_photo_library:false};
@@ -167,8 +208,8 @@ export function createMediaPacer({min_interval_seconds=2,robots_ttl_seconds=3600
 const defaultPacer=createMediaPacer();
 
 /**
- * Downloads one exact original: a gallery file under a permitted written grant, or the one Commons original
- * an open-licence grant names. Robots, refusals, rate limits and redirects stop the transfer; the untouched
+ * Downloads one exact original: a gallery file under a permitted written grant, or one Commons file (original
+ * or recorded rendition) an open-licence grant names. Robots, refusals, rate limits and redirects stop the transfer; the untouched
  * original is preserved privately by checksum.
  */
 export async function acquireOriginal({candidate,asset_url,grant,output_directory},{fetcher=fetch,pacer=defaultPacer}={}){
@@ -217,46 +258,178 @@ export async function keepOwnerOriginal({candidate,grant,local_path,output_direc
   return {source_url:'owner-original:'+kept.sha256,sha256:kept.sha256,bytes:bytes.length,path:kept.path,grant_reference:grant.grant_reference};
 }
 
+/**
+ * Preserves a local, untouched copy of one Wikimedia-served rendition an open-licence grant names, without any
+ * network request. The copy is bound to its URL only by recorded values, so it must match its recorded sha256 and
+ * decode to exactly the recorded rendition width. A held copy can never stand for an original: originals are
+ * downloaded with acquireOriginal and checked against what Commons serves, so thumbnail bytes cannot be recorded
+ * under an original URL.
+ */
+export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,expected_sha256,output_directory}){
+  const decision=evaluateMediaGrant(grant,{candidate,asset_url:file_url});
+  if(decision.state!=='permitted'||grant.kind!=='open_license')throw Error('Permitted open-licence grant for this file required: '+decision.reasons.join(','));
+  const file=licensedFile(grant,file_url);
+  if(file.file_kind!=='rendition')throw Error('A held copy is accepted only for a recorded rendition; download an original instead');
+  if(!hashPattern.test(expected_sha256??''))throw Error('A held rendition needs its recorded sha256');
+  const root=await privateRoot(output_directory);
+  const stat=await lstat(local_path);
+  if(!stat.isFile()||stat.isSymbolicLink()||stat.size<1||stat.size>maxBytes)throw Error('Held Commons file must be a regular file within 15 MiB');
+  const bytes=await readFile(local_path);
+  if(digest(bytes)!==expected_sha256)throw Error('Held Commons file differs from its recorded checksum');
+  const head=bytes.subarray(0,12).toString('latin1');
+  const extension=head.startsWith('\xff\xd8\xff')?'jpg':head.startsWith('\x89PNG')?'png':head.startsWith('RIFF')&&head.slice(8,12)==='WEBP'?'webp':null;
+  if(!extension)throw Error('Unsupported held Commons file format');
+  // Decode the pixels (not only the header) upright, as the derivative pipeline will see them.
+  const {info}=await installedImageEngine()(bytes,{failOn:'warning'}).autoOrient().raw().toBuffer({resolveWithObject:true});
+  if(info.width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
+  const kept=await keepOriginal(root,bytes,extension);
+  return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
+}
+
 /** Builds the exact per-asset derivative binding the responsive helper requires, then prepares files. */
 export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
   // The source's own publication flag stays a separate owner decision; it is passed through, never set here.
-  // An open-licence original is outside the brand gallery: the binding sees only the one file its grant names.
+  // An open-licence file is outside the brand gallery: the binding sees only the one granted file being prepared.
   const open=grant.kind==='open_license';
-  const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(grant.original_url).origin]:grant.media_origins??[]};
-  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[grant.original_url]}:candidate,asset,output_directory,
+  const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(asset.source_url).origin]:grant.media_origins??[]};
+  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,
     grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
       revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
       website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode}});
 }
 
-/** A human or agent visual check of one exact original. Code never creates a passing record itself. */
-export function requireVerification(record,{candidate,asset}){
-  if(!record||record.asset_sha256!==asset.sha256||record.verified_reference!==candidate.external_id)throw Error('Verification must name this exact original and reference');
-  if(!text(record.reviewer)||!text(record.verification_reference))throw Error('Verification reviewer and private record required');
-  const failed=verificationChecks.filter(check=>record.checks?.[check]!==true);
+// A verification record quotes its reviewers' reasons unabridged, so it may be longer than a short text field.
+const record=value=>typeof value==='string'&&value.trim().length>0&&value.length<=8000;
+const reference=value=>String(value).toLowerCase().replace(/[^a-z0-9]/g,'');
+/**
+ * The only forms of a catalogue reference that a creator's statement may give, normalised (lower case, letters and
+ * digits only): the full reference (m126234-0015), the full reference without a brand prefix letter (126234-0015),
+ * the model segment before the first hyphen (m126234) and that segment without its prefix letter (126234). A
+ * fragment such as "1262" (the shared stem of sibling references 126200, 126231, 126233, 126234 ...), "6234",
+ * "34-00" or the variant suffix "0015" alone is none of these and is refused; so is a sibling such as 126334.
+ */
+export function catalogueReferenceForms(external_id){
+  const full=String(external_id??'').trim().toLowerCase();
+  const model=full.split('-')[0];
+  const unprefixed=value=>/^[a-z][0-9]/.test(value)?value.slice(1):value;
+  return [...new Set([full,unprefixed(full),model,unprefixed(model)].map(reference))].filter(form=>form.length>=4);
+}
+export const statedReferenceMatches=(stated,external_id)=>typeof stated==='string'&&catalogueReferenceForms(external_id).includes(reference(stated));
+
+/**
+ * Why an independent identity determination cannot settle exact_reference for this file, or null when it can. It
+ * applies only where the visual record left exact_reference "uncertain" (never false): it must name the exact
+ * original by sha256, say identity_established literally true, carry the creator-stated reference (equal to the full
+ * catalogue reference or to its model segment, catalogueReferenceForms; a fragment or a sibling such as 126334 is refused) and be quoted, reviewer and reason, in the
+ * verification record. The determination is a separate reviewer's record; code never creates one.
+ */
+export function identityDeterminationProblem(verification,{candidate,asset}){
+  const d=verification?.identity_determination;
+  if(!d||typeof d!=='object')return 'no identity determination';
+  if(d.asset_sha256!==asset.sha256)return 'identity determination names other bytes';
+  if(d.identity_established!==true)return 'identity_established is not true';
+  if(!text(d.creator_stated_reference)||reference(d.creator_stated_reference).length<4)return 'no creator-stated reference';
+  if(!statedReferenceMatches(d.creator_stated_reference,candidate.external_id))return 'creator-stated reference is not this catalogue reference';
+  if(!text(d.reviewer)||!record(d.reason))return 'identity determination needs its reviewer and reason';
+  // A name comparison only (both names come from the same input): the visual reviewer cannot settle its own uncertain
+  // check. Independence of the identity reviewer is otherwise procedural.
+  if(String(d.reviewer).trim().toLowerCase()===String(verification.reviewer).trim().toLowerCase())return 'identity determination must name a reviewer other than the visual reviewer';
+  const quoted=verification.verification_reference??'';
+  if(!quoted.includes(d.reviewer)||!quoted.includes(d.reason)||!quoted.includes(d.creator_stated_reference))return 'verification record does not quote the identity determination';
+  return null;
+}
+
+/**
+ * A human or agent visual check of one exact original. Code never creates a passing record itself. Every check must
+ * be literally true, except that exact_reference may be "uncertain" (never false) when an independent identity
+ * determination establishes the reference from the creator's own statement (identityDeterminationProblem).
+ */
+export function requireVerification(verification,{candidate,asset}){
+  if(!verification||verification.asset_sha256!==asset.sha256||verification.verified_reference!==candidate.external_id)throw Error('Verification must name this exact original and reference');
+  if(!text(verification.reviewer)||!record(verification.verification_reference))throw Error('Verification reviewer and private record required');
+  const failed=verificationChecks.filter(check=>check!=='exact_reference'&&verification.checks?.[check]!==true);
+  const exact=verification.checks?.exact_reference;
+  if(exact!==true){
+    const problem=exact==='uncertain'?identityDeterminationProblem(verification,{candidate,asset}):'not true or uncertain';
+    if(problem)failed.unshift(`exact_reference (${problem})`);
+  }
   if(failed.length)throw Error('Visual verification incomplete: '+failed.join(','));
-  return record;
+  return verification;
+}
+
+const exceptionKinds=['byte_budget','fidelity_floor'];
+const sameName=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase();
+/**
+ * An independent reviewed performance exception (docs/STOREFRONT-PERFORMANCE-2026-10-21.md: "a reviewed exception
+ * rather than destructive compression where details suffer"). It is a file written by a reviewer who is not the batch
+ * writer; the tooling only reads it, there is no default, and nothing here creates one. Shape:
+ *   {reviewer, reviewed_at, independent_of_batch_writer: true, basis,
+ *    exceptions: [{asset_sha256, width, sha256, bytes, accepted: ["byte_budget"|"fidelity_floor"], reason}]}
+ * prepared_by names the batch writer; a record whose reviewer is that writer is refused as self-granted. This is a name
+ * comparison on values the runner input supplies, and independent_of_batch_writer is declared by the record itself:
+ * independence is guaranteed by procedure (who writes the file), not technically enforced here.
+ */
+export function performanceExceptionRecord(value,{prepared_by}={}){
+  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Performance exception record must be an object');
+  if(!text(value.reviewer)||!text(value.reviewed_at)||!text(value.basis))throw Error('Performance exception needs its reviewer, reviewed_at and basis');
+  if(value.independent_of_batch_writer!==true)throw Error('Performance exception must be independent of the batch writer');
+  if(!text(prepared_by))throw Error('Performance exception needs the batch writer named (prepared_by) to refuse a self-granted record');
+  if(sameName(value.reviewer,prepared_by))throw Error('Performance exception refused: self-granted by the batch writer');
+  if(!Array.isArray(value.exceptions)||!value.exceptions.length||value.exceptions.length>160)throw Error('Performance exception needs one entry per excepted derivative');
+  const seen=new Set();
+  for(const e of value.exceptions){
+    if(!hashPattern.test(e?.asset_sha256??'')||!hashPattern.test(e.sha256??'')||!Number.isInteger(e.width)||!Number.isInteger(e.bytes)||!text(e.reason))throw Error('Performance exception entry needs asset_sha256, width, sha256, bytes and reason');
+    if(!Array.isArray(e.accepted)||!e.accepted.length||new Set(e.accepted).size!==e.accepted.length||e.accepted.some(k=>!exceptionKinds.includes(k)))throw Error('Performance exception entry must accept byte_budget and/or fidelity_floor');
+    if(seen.has(e.sha256))throw Error('Duplicate performance exception entry');
+    seen.add(e.sha256);
+  }
+  return value;
+}
+// The exception entries that cover exactly this manifest's flagged derivatives; any gap or extra entry is refused.
+function exceptedDerivatives(manifest,asset,exception){
+  const files=[...manifest.variants,manifest.detail].filter((file,i,all)=>all.findIndex(other=>other.width===file.width)===i);
+  const flagged=files.filter(f=>f.over_budget||!f.fidelity_floor_met);
+  const entries=(exception?.exceptions??[]).filter(e=>e.asset_sha256===asset.sha256);
+  if(!flagged.length){
+    if(entries.length)throw Error('Performance exception names a derivative that needs none');
+    return [];
+  }
+  if(!exception)throw Error('Derivative byte budget needs review before approval: no independent performance exception recorded');
+  for(const f of flagged){
+    const want=[...(f.over_budget?['byte_budget']:[]),...(!f.fidelity_floor_met?['fidelity_floor']:[])];
+    const e=entries.find(x=>x.sha256===f.sha256);
+    if(!e||e.width!==f.width||e.bytes!==f.bytes||[...e.accepted].sort().join()!==want.sort().join())
+      throw Error(`Derivative byte budget needs review before approval: no exact exception for ${f.width}w ${f.sha256}`);
+  }
+  if(entries.some(e=>!flagged.some(f=>f.sha256===e.sha256)))throw Error('Performance exception names a derivative that needs none');
+  return entries;
 }
 
 /**
  * Turns verified, prepared derivatives into exact public URLs, evidence rows and an approval that
  * mirror the database contract. Nothing is uploaded, recorded or published by this function.
  */
-export function approvalBundle({candidate,grant,items,public_base_url}){
+export function approvalBundle({candidate,grant,items,public_base_url,performance_exception=null,prepared_by}){
   const base=new URL(public_base_url);
   if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/storage/v1/object/public/jwl-product-media'))throw Error('Public product-media bucket URL required');
   if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Between one and twenty prepared images required');
-  const evidence=[],entries=[],uploads=[];
-  for(const {asset,manifest,verification,performance_review_accepted} of items){
+  const exception=performance_exception===null||performance_exception===undefined?null:performanceExceptionRecord(performance_exception,{prepared_by});
+  const evidence=[],entries=[],uploads=[],excepted=[];
+  for(const item of items){
+    const {asset,manifest,verification}=item;
+    if('performance_review_accepted' in item)throw Error('performance_review_accepted is not accepted: record an independent performance exception file');
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
     if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
     requireVerification(verification,{candidate,asset});
     const b=manifest?.binding;
     if(manifest?.publication_state!=='private-prepared'||b?.candidate_id!==candidate.candidate_id||b.revision_hash!==candidate.revision_hash||b.asset_sha256!==asset.sha256||b.asset_source_url!==asset.source_url||b.media_permission_reference!==grant.grant_reference)
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
-    if(manifest.performance_review_required&&performance_review_accepted!==true)throw Error('Derivative byte budget needs review before approval');
+    // A flagged derivative passes only with an exact entry in an independent reviewed exception record (never default).
+    const covered=exceptedDerivatives(manifest,asset,exception);
+    if(manifest.performance_review_required&&!covered.length)throw Error('Derivative byte budget needs review before approval');
+    excepted.push(...covered);
     const files=[...manifest.variants,manifest.detail].filter((file,i,all)=>all.findIndex(other=>other.width===file.width)===i).sort((a,b)=>a.width-b.width);
     const variants=files.map(file=>{
       if(!hashPattern.test(file.sha256)||!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(file.path)||!file.path.includes(file.sha256))throw Error('Derivative path must be content-addressed');
@@ -271,14 +444,22 @@ export function approvalBundle({candidate,grant,items,public_base_url}){
     const entry={src:canonical.src,width:canonical.width,height:canonical.height,variants};
     if(grant.kind==='open_license'){
       // The credit states exactly what the recorded processing did: uncropped, not enlarged, colours unchanged.
-      const p=manifest.processing,visual=manifest.original?.visual_width;
+      const p=manifest.processing,visual=manifest.original?.visual_width,file=licensedFile(grant,asset.source_url);
       if(p?.crop!==false||p.upscale!==false||p.color_adjustments!==false||!Number.isInteger(visual))throw Error('Open-licence derivatives must be recorded uncropped resizes');
-      entry.attribution=openLicenseAttribution(grant,files.some(file=>file.width<visual)?'resized and converted to WebP':'converted to WebP');
+      if(file.file_kind==='rendition'){
+        // A rendition is honest only at its recorded width, and nothing published from it may be wider.
+        if(visual!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
+        if(files.some(f=>f.width>file.rendition_width))throw Error('Open-licence derivatives cannot be wider than their source rendition');
+      }
+      // A rendition is already a resize of the licensed original.
+      entry.attribution=openLicenseAttribution(grant,file.file_kind==='rendition'||files.some(f=>f.width<visual)?'resized and converted to WebP':'converted to WebP',file);
     }
     entries.push(entry);
   }
   if(new Set(entries.map(e=>e.src)).size!==entries.length)throw Error('Duplicate approved image');
+  if(exception&&exception.exceptions.length!==excepted.length)throw Error('Performance exception names a derivative that is not in this bundle');
   return {
+    ...(exception?{performance_exception:{reviewer:exception.reviewer,reviewed_at:exception.reviewed_at,basis:exception.basis,exceptions:excepted}}:{}),
     approval:{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_reference:grant.grant_reference,image_verified:true,approved_images:entries.map(e=>e.src),approved_image_variants:entries},
     evidence,uploads,publication_state:'verified-not-uploaded',
   };

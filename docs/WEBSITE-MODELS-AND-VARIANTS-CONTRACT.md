@@ -64,5 +64,5 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
 - An image is publishable only through the existing evidence contract (decision 0011): an exact candidate revision, a recorded grant, checksums, derivatives and a recorded visual verification of the exact reference and colour/variant.
 - Today the database accepts only `owner_original` and `written_permission` grants. Zero grants exist.
 - A public image URL, a successful request, robots allowance or the absence of an automation clause is never permission. Press images limited to editorial use do not cover this commercial showcase.
-- Open licences (CC BY, CC BY-SA, CC0) need visible attribution and an explicit owner decision under decision 0011, plus a reviewed migration adding that grant kind. Any such candidate is verified visually against the exact reference before it is even proposed.
+- Open licences (CC BY, CC BY-SA, CC0) need visible attribution, the owner decision now recorded as decision 0013 (which narrows decision 0011 for exact-reference photographs only), and the approved application of the reviewed migration adding that grant kind. Any such candidate is verified visually against the exact reference before it is even proposed.
 - Per-brand/model/variant coverage is tracked in a ledger with genuine gaps; no global completion percentage is invented.

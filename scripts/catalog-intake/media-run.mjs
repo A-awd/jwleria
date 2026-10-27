@@ -1,12 +1,49 @@
-import {readFile,writeFile,rename} from 'node:fs/promises';
-import {join} from 'node:path';
+import {readFile,writeFile,rename,realpath} from 'node:fs/promises';
+import {join,isAbsolute,relative,resolve,sep} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {privateRoot} from './source-queue.mjs';
-import {evaluateMediaGrant,keepOwnerOriginal,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from './media-pipeline.mjs';
+import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle,performanceExceptionRecord} from './media-pipeline.mjs';
 import {uploadThroughFunction,verifyPublishedDerivatives} from './media.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
 
 const hash=/^[a-f0-9]{64}$/;
+const inside=(root,path)=>{const tail=relative(root,path);return !tail||(!tail.startsWith('..'+sep)&&tail!=='..'&&!isAbsolute(tail));};
+
+/**
+ * Reads the independent reviewed performance exception record, if one is named. There is no default: without
+ * performance_exception_file a flagged derivative cannot be approved. The file must sit outside the private output
+ * directory, which this tooling writes, and its reviewer must not be the batch writer named in prepared_by. That name
+ * check and independent_of_batch_writer are what the code can see: both come from the same runner input, so the
+ * reviewer's independence is a procedural guarantee (who writes the file), not a technical one.
+ */
+export async function readPerformanceException(input,out){
+  if('performance_review_accepted' in input)throw Error('performance_review_accepted is not accepted: name an independent performance exception file (performance_exception_file)');
+  if(input.performance_exception_file===undefined||input.performance_exception_file===null)return null;
+  const path=input.performance_exception_file;
+  if(typeof path!=='string'||!isAbsolute(path))throw Error('performance_exception_file must be an absolute path');
+  // Both sides are compared as given and with every symlink resolved, so a symlinked parent of either path cannot hide
+  // a file that is inside the output directory.
+  const outs=[resolve(out),await realpath(out)],paths=[resolve(path),await realpath(path)];
+  if(outs.some(o=>paths.some(p=>inside(o,p))))throw Error('performance_exception_file must not be inside the output directory this tooling writes');
+  return performanceExceptionRecord(JSON.parse(await readFile(path,'utf8')),{prepared_by:input.prepared_by});
+}
+/**
+ * The upload function's request headers. A kept input file carries only the literal {{FUNCTION_CALLER_TOKEN}}; the
+ * caller credential is read from the environment (JWL_FUNCTION_CALLER_TOKEN) at upload time and never written to a file.
+ * A placeholder without that variable is refused rather than sent.
+ */
+export const FUNCTION_CALLER_TOKEN='{{FUNCTION_CALLER_TOKEN}}';
+export function functionHeaders(headers,env=process.env){
+  if(headers===undefined||headers===null)return {};
+  if(typeof headers!=='object'||Array.isArray(headers))throw Error('function_headers must be an object');
+  const token=env.JWL_FUNCTION_CALLER_TOKEN;
+  return Object.fromEntries(Object.entries(headers).map(([name,value])=>{
+    if(typeof value!=='string')throw Error('function_headers values must be strings');
+    if(!value.includes(FUNCTION_CALLER_TOKEN))return [name,value];
+    if(typeof token!=='string'||!token.trim())throw Error('Set JWL_FUNCTION_CALLER_TOKEN in the environment: the input file keeps only the {{FUNCTION_CALLER_TOKEN}} placeholder');
+    return [name,value.replaceAll(FUNCTION_CALLER_TOKEN,token.trim())];
+  }));
+}
 const save=async(path,value)=>{await writeFile(path+'.tmp',JSON.stringify(value,null,2),{mode:0o600});await rename(path+'.tmp',path);};
 
 /** A fresh connector row ({candidate_id, source_id, external_id, revision_hash, content}) as the media helpers expect it. */
@@ -19,10 +56,14 @@ export function currentCandidate(row){
  * Exact media pilot, in separately reviewable phases. Nothing here records, uploads or publishes without
  * the previous phase's private output and the approvals between phases:
  * - originals: checks the recorded grant and preserves each untouched original by checksum (owner file, granted URL,
- *   or the one Commons original of an open-licence grant, which stays refused by the database until its migration)
+ *   or each Commons file of an open-licence grant: downloaded, or a held copy as Wikimedia served it via local_path;
+ *   the database refuses that kind until its migration)
  * - bundle: requires a complete visual verification per original, prepares bounded responsive derivatives and
- *   writes the approval bundle plus the exact connector statement that records it (run only after approval)
- * - upload: after the database receipt, uploads through the approval-bound function and verifies every public file
+ *   writes the approval bundle plus the exact connector statement that records it (run only after approval). A
+ *   derivative over its byte budget or under the fidelity floor is approved only with an exact entry in an
+ *   independent reviewed exception record (performance_exception_file, read never written; no default)
+ * - upload: after the database receipt, uploads through the approval-bound function and verifies every public file;
+ *   the function caller token comes from JWL_FUNCTION_CALLER_TOKEN, never from a kept file (functionHeaders)
  */
 export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
   const out=await privateRoot(input.output_directory);
@@ -32,12 +73,14 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:input.originals?.[0]?.asset_url});
     if(decision.state!=='permitted')throw Error('Recorded grant does not permit this exact product: '+decision.reasons.join(','));
     if(!Array.isArray(input.originals)||!input.originals.length||input.originals.length>20)throw Error('Between one and twenty originals required');
-    if(grant.kind==='open_license'&&input.originals.length!==1)throw Error('An open-licence grant covers exactly one original file');
+    if(grant.kind==='open_license'&&new Set(input.originals.map(item=>item.asset_url)).size!==input.originals.length)throw Error('Each open-licence original must be a distinct granted file');
     const kept=[];
     for(const item of input.originals){
       kept.push(grant.kind==='owner_original'
         ?await keepOwnerOriginal({candidate,grant,local_path:item.local_path,output_directory:out})
-        :await acquireOriginal({candidate,asset_url:item.asset_url,grant,output_directory:out},{fetcher,...(pacer?{pacer}:{})}));
+        :grant.kind==='open_license'&&item.local_path!==undefined
+          ?await keepOpenLicenseFile({candidate,grant,file_url:item.asset_url,local_path:item.local_path,expected_sha256:item.sha256,output_directory:out})
+          :await acquireOriginal({candidate,asset_url:item.asset_url,grant,output_directory:out},{fetcher,...(pacer?{pacer}:{})}));
     }
     await save(join(out,'originals.json'),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,grant_reference:grant.grant_reference,originals:kept});
     // The reviewer now inspects each original by checksum and writes one verification record per original.
@@ -46,15 +89,16 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
   if(phase==='bundle'){
     const recorded=JSON.parse(await readFile(join(out,'originals.json'),'utf8'));
     if(recorded.candidate_id!==candidate.candidate_id||recorded.revision_hash!==candidate.revision_hash||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate revision or grant');
+    const exception=await readPerformanceException(input,out);
     const verifications=new Map((input.verifications??[]).map(v=>[v.asset_sha256,v]));
     const items=[];
     for(const original of recorded.originals){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
       const verification=requireVerification(verifications.get(original.sha256),{candidate,asset});
       const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out});
-      items.push({asset,manifest:prepared.manifest,verification,performance_review_accepted:input.performance_review_accepted===true});
+      items.push({asset,manifest:prepared.manifest,verification});
     }
-    const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url});
+    const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url,performance_exception:exception,prepared_by:input.prepared_by});
     await save(join(out,'approval-bundle.json'),bundle);
     await writeFile(join(out,'record-approval.sql'),mediaApprovalSql(bundle)+'\n',{mode:0o600});
     return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,
@@ -63,7 +107,7 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
   if(phase==='upload'){
     const bundle=JSON.parse(await readFile(join(out,'approval-bundle.json'),'utf8'));
     if(bundle.approval?.candidate_id!==candidate.candidate_id||bundle.approval?.revision_hash!==candidate.revision_hash)throw Error('Bundle belongs to another candidate revision');
-    const uploaded=await uploadThroughFunction(bundle,{output_directory:out,approval_receipt:input.approval_receipt,function_url:input.function_url,public_base_url:input.public_base_url,headers:input.function_headers??{}},fetcher);
+    const uploaded=await uploadThroughFunction(bundle,{output_directory:out,approval_receipt:input.approval_receipt,function_url:input.function_url,public_base_url:input.public_base_url,headers:functionHeaders(input.function_headers)},fetcher);
     const verified=await verifyPublishedDerivatives(bundle,fetcher);
     const report={phase,uploaded:uploaded.length,verified:verified.length,files:verified,published:0};
     await save(join(out,'upload-report.json'),report);

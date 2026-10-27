@@ -6,20 +6,23 @@ import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {normalizeBatch} from './normalize.mjs';
 import {installedImageEngine} from './responsive-media.mjs';
-import {openLicenses,commonsOriginal,evaluateMediaGrant,mediaReadiness,acquireOriginal,createMediaPacer,prepareGrantedMedia,approvalBundle} from './media-pipeline.mjs';
+import {openLicenses,openLicenseDecisions,commonsOriginal,commonsRendition,commonsFile,evaluateMediaGrant,mediaReadiness,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle} from './media-pipeline.mjs';
 import {mediaRun} from './media-run.mjs';
 
 // Synthetic fixtures only: no request leaves the process and no real file, person or licence record is named.
 const sharp=installedImageEngine();
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const commons=name=>{const md5=createHash('md5').update(decodeURIComponent(name)).digest('hex');return [`https://commons.wikimedia.org/wiki/File:${name}`,`https://upload.wikimedia.org/wikipedia/commons/${md5[0]}/${md5.slice(0,2)}/${name}`];};
+const thumb=(name,width)=>{const [p,o]=commons(name);return [p,o.replace('/wikipedia/commons/','/wikipedia/commons/thumb/')+`/${width}px-${name}`];};
+const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width};};
 const [page,original]=commons('Synthetic_test_watch_m126610ln-0001.jpg');
 const gallery='https://media.example.test/watches/m126610ln-0001_front.png';
 const record=(source_id,external_id)=>normalizeBatch([{source_id,external_id,source_url:'https://brand.example.test/watches/'+external_id,brand:'Synthetic',collection:'Submariner',product_name:'Synthetic Submariner Date',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:[gallery],facts:[{key:'diameter',value:'41 mm'}]}])[0];
-const candidate=record('synthetic-official','m126610ln-0001');
+// The candidate uses the one reference decision 0013 covers; every other fixture value is synthetic.
+const candidate=record('synthetic-official','m126234-0015');
 const open={grant_reference:'synthetic-open-01',kind:'open_license',source_id:'synthetic-official',candidate_id:candidate.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',creator:'Synthetic Photographer',
-  source_page_url:page,original_url:original,attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'synthetic-owner-decision'};
+  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md'};
 const source={id:'synthetic-official',origin:'https://brand.example.test',publication_allowed:true};
 const base='https://project.supabase.co/storage/v1/object/public/jwl-product-media';
 const now=Date.parse('2026-10-26T00:00:00Z');
@@ -48,6 +51,24 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
   const gaps=[
     [{owner_decision_reference:undefined},'owner_decision_reference_missing'],
     [{owner_decision_reference:'  '},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'synthetic-owner-decision'},'owner_decision_reference_missing'],
+    // A dated sentence is not a decision record, however plausible.
+    [{owner_decision_reference:'owner continuation instruction 2026-10-27 relayed: complete the sample path'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'synthetic owner decision 2026-10-26'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md '},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/13-open-licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-Open-Licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence.md\n'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'../decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open--licence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'https://example.test/decisions/0013-open-licence.md'},'owner_decision_reference_missing'],
+    // A well-formed path is not enough: only the pinned decision file is accepted. 0011 rejects open licences.
+    [{owner_decision_reference:'decisions/0011-per-origin-queues-and-exact-media-evidence.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0099-synthetic-open-licence-decision.md'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'decisions/0013-open-licence-exact-product-photos'},'owner_decision_reference_missing'],
+    [{owner_decision_reference:'toString'},'owner_decision_reference_missing'],
+    [{licensed_files:[]},'licensed_file_not_an_allowlisted_commons_file'],
+    [{licensed_files:[{...open.licensed_files[0],rendition_width:960}]},'licensed_file_not_an_allowlisted_commons_file'],
     [{creator:''},'attribution_creator_missing'],
     [{creator:'Synthetic\u0007Photographer'},'attribution_creator_missing'],
     [{attribution_text:undefined},'attribution_text_missing'],
@@ -60,11 +81,27 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
   assert(decide({...open,source_id:'other-official'}).reasons.includes('grant_covers_another_source'));
   assert(decide({...open,revoked_at:'2026-10-01T00:00:00Z'}).reasons.includes('grant_revoked'));
   assert(decide({...open,resize:false}).reasons.includes('usage_rights_incomplete'));
-  assert.deepEqual(decide(open,{asset_url:gallery}).reasons,['asset_not_the_granted_original'],'the brand gallery is never an open-licence download');
+  assert.deepEqual(decide(open,{asset_url:gallery}).reasons,['asset_not_a_granted_file'],'the brand gallery is never an open-licence download');
   for(const source_id of ['cartier-official','van-cleef-and-arpels-official','celine-official','rimowa-official','piaget-official','panerai-official']){
     const closed=record(source_id,'CLOSED-1');
     assert(evaluateMediaGrant({...open,source_id,candidate_id:closed.candidate_id},{candidate:closed,asset_url:original,now}).reasons.includes('source_acquisition_restricted'),source_id);
   }
+});
+
+test('a grant may cite only the pinned decision 0013, and only for the reference it covers',async()=>{
+  assert.deepEqual(Object.keys(openLicenseDecisions),['decisions/0013-open-licence-exact-product-photos.md']);
+  assert.deepEqual(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references,['m126234-0015']);
+  assert(Object.isFrozen(openLicenseDecisions)&&Object.isFrozen(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references));
+  // Each pinned decision is a file of this repository that names every reference it covers.
+  for(const [path,{references}] of Object.entries(openLicenseDecisions)){
+    const body=await readFile(new URL('../../'+path,import.meta.url),'utf8');
+    for(const reference of references)assert(body.includes(reference),path+' names '+reference);
+  }
+  // The same decision for another exact product is refused until the decision itself is amended.
+  const sibling=record('synthetic-official','m126234-0016');
+  assert.deepEqual(evaluateMediaGrant({...open,candidate_id:sibling.candidate_id},{candidate:sibling,asset_url:original,now}).reasons,['owner_decision_does_not_cover_reference']);
+  const unrelated=record('synthetic-official','m126610ln-0001');
+  assert.deepEqual(evaluateMediaGrant({...open,candidate_id:unrelated.candidate_id},{candidate:unrelated,asset_url:original,now}).reasons,['owner_decision_does_not_cover_reference']);
 });
 
 test('only the canonical Commons original of the same file page qualifies, never a brand, local-wiki or thumbnail file',()=>{
@@ -100,7 +137,7 @@ test('the Commons original is downloaded alone under robots and pacing and kept 
     const jpeg=await sharp({create:{width:40,height:50,channels:3,background:'#223'}}).jpeg().toBuffer();
     const calls=[],pacer=createMediaPacer({sleep:async()=>{}});
     const refuse=async()=>{throw Error('must not fetch');};
-    await assert.rejects(acquireOriginal({candidate,asset_url:gallery,grant:open,output_directory:root},{fetcher:refuse,pacer}),/asset_not_the_granted_original/);
+    await assert.rejects(acquireOriginal({candidate,asset_url:gallery,grant:open,output_directory:root},{fetcher:refuse,pacer}),/asset_not_a_granted_file/);
     await assert.rejects(acquireOriginal({candidate,asset_url:original,grant:{...open,owner_decision_reference:undefined},output_directory:root},{fetcher:refuse,pacer}),/owner_decision_reference_missing/);
     await assert.rejects(acquireOriginal({candidate,asset_url:original,grant:{...open,license_code:'CC-BY-NC-4.0'},output_directory:root},{fetcher:refuse,pacer}),/license_not_allowed/);
     const kept=await acquireOriginal({candidate,asset_url:original,grant:open,output_directory:root},{fetcher:commonsFetcher(jpeg,calls),pacer});
@@ -142,14 +179,14 @@ test('derivatives stay uncropped resizes and the approval bundle carries the exa
   }finally{await rm(root,{recursive:true,force:true});}
 });
 
-test('the phased runner takes exactly one Commons original per open-licence grant and still waits for verification',async()=>{
+test('the phased runner takes each Commons original of an open-licence grant once and still waits for verification',async()=>{
   const root=await mkdtemp(join(tmpdir(),'jwl-open-run-'));
   try{
     const jpeg=await sharp({create:{width:1000,height:1250,channels:3,background:'#48403a'}}).jpeg().toBuffer();
     const row={candidate_id:candidate.candidate_id,source_id:candidate.source_id,external_id:candidate.external_id,revision_hash:candidate.revision_hash,content:{image_urls:candidate.image_urls,source_url:candidate.source_url}};
     const input={output_directory:join(root,'private'),candidate:row,grant:open,source,originals:[{asset_url:original}],public_base_url:base};
     const options={fetcher:commonsFetcher(jpeg),pacer:createMediaPacer({sleep:async()=>{}})};
-    await assert.rejects(mediaRun('originals',{...input,originals:[{asset_url:original},{asset_url:original}]},options),/exactly one original/);
+    await assert.rejects(mediaRun('originals',{...input,originals:[{asset_url:original},{asset_url:original}]},options),/distinct granted file/);
     await assert.rejects(mediaRun('originals',{...input,grant:{...open,attribution_text:''}},options),/attribution_text_missing/);
     const kept=await mediaRun('originals',input,options);
     assert.deepEqual([kept.verification_required,kept.originals[0].source_url,kept.originals[0].sha256],[1,original,sha(jpeg)]);
@@ -159,5 +196,88 @@ test('the phased runner takes exactly one Commons original per open-licence gran
     const bundle=JSON.parse(await readFile(join(root,'private','approval-bundle.json'),'utf8'));
     assert.equal(bundle.approval.approved_image_variants[0].attribution.source_url,page);
     assert.match(await readFile(join(root,'private','record-approval.sql'),'utf8'),/"attribution":\{"creator":"Synthetic Photographer"/);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('a Wikimedia rendition qualifies only as the same file at its recorded width, and is recorded as a rendition',()=>{
+  const name='Synthetic_dial_%2850826887656%29.jpg',[p,t]=thumb(name,960);
+  assert.equal(commonsRendition(p,t,960),true);
+  assert.equal(commonsOriginal(p,t),false,'a rendition is never an original');
+  assert.equal(commonsRendition(...commons(name),960),false,'an original is never a rendition');
+  const [otherPage]=commons('Other_dial.jpg');
+  const refused=[
+    [p,t,640,'a width other than the URL names'],[p,t,undefined,'missing width'],[p,t,'960','text width'],
+    [otherPage,t,960,'another page'],
+    [p,t.replace(/\/960px-.*$/,'/960px-Other_dial.jpg'),960,'mismatched name after the width'],
+    [p,t.replace(/\/thumb\/([0-9a-f])\//,(m,a)=>`/thumb/${a==='0'?'1':'0'}/`),960,'wrong hash directory'],
+    [p.replace('%28','(').replace('%29',')'),t,960,'the page spells the name differently'],
+    [...thumb(name,99),99,'below 100 px'],[...thumb(name,4001),4001,'above 4000 px'],
+    [p,t+'?x',960,'a query'],[p,t.replace('/wikipedia/commons/','/wikipedia/en/'),960,'another wiki'],
+  ];
+  for(const [pp,tt,w,label] of refused)assert.equal(commonsRendition(pp,tt,w),false,label);
+  const file=renditionFile(name,960);
+  assert.equal(commonsFile(file),true);
+  assert.equal(commonsFile({...file,file_kind:'original'}),false);
+  const {rendition_width,...missing}=file;
+  assert.equal(commonsFile(missing),false,'rendition_width is required');
+  assert.equal(commonsFile({...file,rendition_width:null}),false);
+  const grant={...open,licensed_files:[file,open.licensed_files[0]]};
+  assert.deepEqual(decide(grant,{asset_url:file.file_url}),{state:'permitted',reasons:[],grant_reference:open.grant_reference});
+  assert.deepEqual(decide(grant,{asset_url:t.replace('960px-','640px-')}).reasons,['asset_not_a_granted_file'],'only the recorded width is granted');
+  assert(decide({...open,licensed_files:[missing]}).reasons.includes('licensed_file_not_an_allowlisted_commons_file'));
+  assert(decide({...open,licensed_files:[file,file]}).reasons.includes('licensed_file_not_an_allowlisted_commons_file'));
+});
+
+test('a held rendition is kept without any request, must decode to its recorded width and never yields wider derivatives',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-open-rendition-'));
+  try{
+    const files=[renditionFile('Synthetic_front_(1).jpg',960),renditionFile('Synthetic_box_(2).jpg',300)];
+    const grant={...open,licensed_files:files};
+    const held=async(width,height,name)=>{const bytes=await sharp({create:{width,height,channels:3,background:'#4a423b'}}).jpeg().toBuffer();const path=join(root,name);await writeFile(path,bytes);return {path,bytes};};
+    const front=await held(960,720,'front.jpg'),box=await held(300,225,'box.jpg'),wrong=await held(1200,900,'wrong.jpg');
+    const out=join(root,'private');
+    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:wrong.path,expected_sha256:sha(wrong.bytes),output_directory:out}),/recorded rendition width/,'decoded width must equal rendition_width');
+    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:front.path,expected_sha256:'0'.repeat(64),output_directory:out}),/recorded checksum/);
+    for(const missing of [undefined,null,'',sha(front.bytes).toUpperCase(),sha(front.bytes).slice(1)])
+      await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:files[0].file_url,local_path:front.path,expected_sha256:missing,output_directory:out}),/needs its recorded sha256/,'a held copy always needs its sha256: '+missing);
+    await assert.rejects(keepOpenLicenseFile({candidate,grant,file_url:original,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/asset_not_a_granted_file/);
+    // A held copy can never be recorded as an original, whatever bytes it holds: originals are downloaded and checked.
+    const withOriginal={...grant,licensed_files:[...files,open.licensed_files[0]]};
+    await assert.rejects(keepOpenLicenseFile({candidate,grant:withOriginal,file_url:original,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/only for a recorded rendition/);
+    await assert.rejects(keepOpenLicenseFile({candidate,grant:{...grant,owner_decision_reference:undefined},file_url:files[0].file_url,local_path:front.path,expected_sha256:sha(front.bytes),output_directory:out}),/owner_decision_reference_missing/);
+    const prepare=async(file,local)=>{
+      const kept=await keepOpenLicenseFile({candidate,grant,file_url:file.file_url,local_path:local.path,expected_sha256:sha(local.bytes),output_directory:out});
+      assert.deepEqual([kept.source_url,kept.sha256,kept.file_kind,kept.rendition_width,kept.width],[file.file_url,sha(local.bytes),'rendition',file.rendition_width,file.rendition_width]);
+      const asset={path:kept.path,source_url:kept.source_url,sha256:kept.sha256};
+      return {asset,manifest:(await prepareGrantedMedia({source,candidate,asset,grant,output_directory:out})).manifest,verification:verification(asset)};
+    };
+    const items=[await prepare(files[0],front),await prepare(files[1],box)];
+    const bundle=approvalBundle({candidate,grant,items,public_base_url:base});
+    assert.deepEqual(bundle.approval.approved_image_variants.map(e=>e.variants.map(v=>v.width)),[[320,640,960],[300]],'derivatives never exceed the rendition');
+    assert.deepEqual(bundle.approval.approved_image_variants.map(e=>[e.attribution.source_url,e.attribution.changes]),[[files[0].source_page_url,'resized and converted to WebP'],[files[1].source_page_url,'resized and converted to WebP']],
+      'a rendition is credited as resized even when it is published at its own width');
+    assert(bundle.evidence.every(e=>files.some(f=>f.file_url===e.original_source)));
+    const upscaled=structuredClone(items[0]);upscaled.manifest.detail={...upscaled.manifest.detail,width:1200,height:900};
+    assert.throws(()=>approvalBundle({candidate,grant,items:[upscaled],public_base_url:base}),/wider than their source rendition/);
+    const misrecorded=structuredClone(items[0]);misrecorded.manifest.original.visual_width=1200;
+    assert.throws(()=>approvalBundle({candidate,grant,items:[misrecorded],public_base_url:base}),/recorded rendition width/);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('the phased runner keeps several held renditions of one grant without any request and still waits for verification',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-open-run-renditions-'));
+  try{
+    const files=[renditionFile('Synthetic_front_(1).jpg',960),renditionFile('Synthetic_angle_(2).jpg',960)];
+    const grant={...open,licensed_files:files};
+    const originals=[];
+    for(const [i,f] of files.entries()){const bytes=await sharp({create:{width:960,height:i?540:720,channels:3,background:'#504840'}}).jpeg().toBuffer();const local_path=join(root,`held-${i}.jpg`);await writeFile(local_path,bytes);originals.push({asset_url:f.file_url,local_path,sha256:sha(bytes)});}
+    const row={candidate_id:candidate.candidate_id,source_id:candidate.source_id,external_id:candidate.external_id,revision_hash:candidate.revision_hash,content:{image_urls:candidate.image_urls,source_url:candidate.source_url}};
+    const input={output_directory:join(root,'private'),candidate:row,grant,source,originals,public_base_url:base};
+    const refuse={fetcher:async()=>{throw Error('must not fetch');}};
+    const kept=await mediaRun('originals',input,refuse);
+    assert.deepEqual(kept.originals.map(o=>o.source_url),files.map(f=>f.file_url));
+    await assert.rejects(mediaRun('bundle',input),/exact original/,'no verification record, no derivatives');
+    const bundled=await mediaRun('bundle',{...input,verifications:kept.originals.map(o=>verification({sha256:o.sha256}))});
+    assert.deepEqual([bundled.approved_images,bundled.attributed_images,bundled.uploaded,bundled.published],[2,2,0,0]);
   }finally{await rm(root,{recursive:true,force:true});}
 });

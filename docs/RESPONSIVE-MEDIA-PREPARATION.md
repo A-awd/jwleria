@@ -27,7 +27,31 @@ These checks match a supplied grant record to this asset/revision; they do not e
 
 The original remains unchanged. Supported single-frame, 8-bit sRGB originals are resized without cropping, enlargement or color adjustments. Normal phone EXIF orientation is honored during decoding before resizing, so derivatives appear upright; this requires no additional permission gate. The untouched original retains its original EXIF and bytes. Embedded ICC profiles are retained in derivatives; EXIF/GPS metadata is not copied. Unsupported color space/depth inputs are rejected as technical limitations.
 
-The helper generates 320, 640 and 960 pixel-wide WebP files only when the upright visual image is wide enough, plus a detail derivative at that visual width or 1600 pixels, whichever is smaller. Upright images narrower than 320px produce only the detail derivative. Every generated image must fit the public manifest limit of 4096px width and 8192px height; unsuitable geometry is rejected rather than silently cropped or enlarged. All are lossless WebP; resizing uses Lanczos3. It decodes every result to verify actual dimensions and records its actual byte length and SHA-256. Files use immutable paths:
+The helper generates 320, 640 and 960 pixel-wide WebP files only when the upright visual image is wide enough, plus a detail derivative at that visual width or 1600 pixels, whichever is smaller. Upright images narrower than 320px produce only the detail derivative. Every generated image must fit the public manifest limit of 4096px width and 8192px height; unsuitable geometry is rejected rather than silently cropped or enlarged. Resizing uses Lanczos3. It decodes every result to verify actual dimensions and records its actual byte length and SHA-256.
+
+Encoding is lossy WebP with a measured, deterministic quality search (decision 0009, delivery addendum of 27 October 2026):
+
+- Each derivative takes the highest quality of the fixed ladder 92, 90, 88, 85, 82, 80, 78, 75 whose bytes fit its byte budget and whose fidelity is at or above the minimum floor.
+- What is canonical and what is a default. Only the card budget is canonical: "about 80–150KB per normal card derivative, with a reviewed exception rather than destructive compression where details suffer" (`docs/STOREFRONT-PERFORMANCE-2026-10-21.md` line 37), applied here as 150,000 bytes per card size (320/640/960). The 600,000-byte budget for a detail-only file (wider than 960 px) and the SSIM 0.97 floor below are implementation defaults chosen by the implementation owner (decision 0010); no approved decision sets them.
+- A budget or floor is never waived silently, by a flag or by default. The canonical text's "reviewed exception" is recorded instead (below).
+- The deployed storefront puts every variant of at most 960 px into the card `srcset`, so when the detail width is also a card width (a source of at most 960 px), the one shared file carries the card budget.
+- Minimum fidelity floor for every file: luma SSIM >= 0.97 against an in-memory Lanczos3 resize of the same pipeline at the same width (never written), so that no file is destructively compressed. SSIM is mean luma (BT.601) SSIM with an 11x11 Gaussian window, sigma 1.5; RGB PSNR is recorded too. Both are implemented in `image-fidelity.mjs` on decoded pixels.
+- Detail target, a recorded preference only: SSIM >= 0.985 at quality >= 85 for a file that serves the detail view. `detail_target_met` records it for the visual comparison; it never blocks a file and no approval depends on it. No decision sets a numeric fidelity threshold.
+- When no ladder step meets budget and floor, the helper keeps the top step, marks it `over_budget` and/or `fidelity_floor_met: false` and sets `performance_review_required`. Such a file is approved only through a reviewed exception record.
+- Reviewed exception record. An independent reviewer, never the batch writer, writes a JSON file `{reviewer, reviewed_at, independent_of_batch_writer: true, basis, exceptions: [{asset_sha256, width, sha256, bytes, accepted, reason}]}`, where `accepted` lists `byte_budget` and/or `fidelity_floor`. `media-run.mjs bundle` reads it only when the input names it (`performance_exception_file`, an absolute path outside the output directory the tooling writes, compared with every symlink of both paths resolved). It refuses the record when:
+  - the input does not name the batch writer (`prepared_by`), or the reviewer is that writer (a self-granted record);
+  - `independent_of_batch_writer` is not literally `true`;
+  - any flagged derivative lacks an entry that matches its original, width, sha256, bytes and exactly its failed checks;
+  - an entry names a derivative that needs no exception, or one outside the bundle.
+
+  The name check and `independent_of_batch_writer` are what the code can see. Both come from the runner input, so they catch a record that names its own writer, but they cannot prove independence: the reviewer's independence is a procedural guarantee (who writes the file), not a technical one.
+
+  The tooling never writes such a record. With none named, no exception applies. The old `performance_review_accepted` input flag is refused. The accepted entries are copied into the approval bundle (`performance_exception`). The record approves the measured file as it is; it does not choose another ladder step.
+- Lossy WebP is used only after a visual comparison: every manifest says `visual_comparison_required: true`. The helper cannot do that comparison; an independent reviewer records it per derivative before any approval.
+- Every encoder option is pinned (`preset: photo`, `effort: 6`, `smartSubsample: true`, `smartDeblock: false`, `alphaQuality: 100`, no near-lossless), so the same input gives byte-identical output; a test proves it.
+- Lossy WebP stores colour as 4:2:0 YUV, as every lossy WebP does; no colour adjustment is made. Embedded ICC profiles are kept; EXIF/GPS are not copied.
+
+Files use immutable paths:
 
 ```text
 v1/<binding-sha256>/<original-sha256>/<actual-width>w-<output-sha256>.webp
@@ -37,14 +61,15 @@ Repeating identical work verifies/reuses identical files. An existing output wit
 
 The private manifest contains:
 
-- `schema_version: 1`, `purpose`, `publication_state: private-prepared`, `image_verification_state: pending`.
+- `schema_version: 3`, `purpose`, `publication_state: private-prepared`, `image_verification_state: pending`.
 - `binding`: exact source/candidate/revision, permission reference, source asset URL and checksum.
 - `original`: original local path, format, raw dimensions, original EXIF `orientation`, upright `visual_width`/`visual_height`, byte length and checksum.
-- `processing`: engine/version, kernel, `orientation_applied`, `orientation_normalized` and explicit transformation/metadata behavior.
-- `variants` and `detail`: private relative path, MIME type, actual width/height/bytes/checksum, `budget_limit_bytes` and `over_budget`.
-- `performance_review_required`: true if any derivative exceeds its provisional budget.
+- `processing`: engine/version, kernel, `webp_lossless: false`, the pinned `webp_encoder` options, `webp_quality_ladder`, `byte_budgets`, `fidelity_floor`, `detail_target`, the `selection` rule, the fidelity metric, `orientation_applied`, `orientation_normalized` and explicit transformation/metadata behavior.
+- `variants` and `detail`: private relative path, MIME type, actual width/height/bytes/checksum, `roles` (`card`, `detail` or both), `webp_quality`, `ssim_luma`, `psnr_rgb_db` (null means identical pixels), `budget_limit_bytes`, `over_budget`, `ssim_floor`, `fidelity_floor_met`, `detail_target_met` (null for a card-only file) and `ladder_measured` (bytes and fidelity of every step tried).
+- `performance_review_required`: true if any derivative exceeds its budget or misses the fidelity floor.
+- `visual_comparison_required`: always true for lossy output.
 
-Provisional budgets are 150 KiB per card derivative up to 960px and 600 KiB for detail. Lossless encoding can exceed these limits: the helper flags this for review rather than claiming performance acceptance or silently changing quality. These are preparation flags, not release approval.
+These are preparation measurements, not release approval: a file that needs a performance review cannot be approved without an exact entry in an independent reviewed exception record, and every derivative still needs its recorded visual comparison.
 
 ## Promotion and public integration boundary
 
@@ -60,8 +85,10 @@ Include the canonical detail derivative among the mapped `variants` as well. For
 
 ## Verification
 
-The focused tests create synthetic/editorial pixels labelled TEST ONLY in temporary local directories, verify actual outputs and original preservation, reject grant/identity/checksum mismatches, prove no upscaling and prove over-budget flags with noisy lossless test data. An orientation-6 JPEG test independently checks its upright dimensions and four known corner colors, and confirms the original checksum is unchanged. Temporary files are deleted. These tests prove preparation behavior; they are not a real product media review, promotion or live-page acceptance.
+The focused tests create synthetic/editorial pixels labelled TEST ONLY in temporary local directories, verify actual outputs and original preservation, reject grant/identity/checksum mismatches, prove no upscaling, prove byte-identical output for the same input, reproduce the recorded SSIM/PSNR by re-running the same resize and decode on the written files (this uses the same metric code), check the metric code itself against a fixed known-value vector computed by a separate numpy implementation, check that the shared 960px card/detail file carries the card budget, and prove with noisy test data that each file takes the highest step within budget and floor, or keeps the top step and is flagged. An orientation-6 JPEG test independently checks its upright dimensions and four known corner colors, and confirms the original checksum is unchanged. Temporary files are deleted. These tests prove preparation behavior; they are not a real product media review, promotion or live-page acceptance.
+
+`media-review-records.test.mjs` proves the exception record path: a flagged derivative is refused with no record, with the old flag, with a record inside the output directory, self-granted, without `independent_of_batch_writer: true`, with a wrong byte count, with a missing, extra or stray entry, and is accepted with the exact record.
 
 ```sh
-node --test scripts/catalog-intake/responsive-media.test.mjs
+node --test scripts/catalog-intake/responsive-media.test.mjs scripts/catalog-intake/media-review-records.test.mjs
 ```
