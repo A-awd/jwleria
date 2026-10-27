@@ -179,7 +179,11 @@ test('open-licence attribution is carried only as a validated credit on its own 
  assert.equal(publicProduct({...approved,image_variants:[image]}).imageVariants[0].attribution,undefined);
  const credit={creator:'A. Photographer',license:'CC BY 4.0',license_url:'https://creativecommons.org/licenses/by/4.0/',source_url:'https://commons.example.org/file/1',changes:'Resized and encoded as WebP'};
  assert.deepEqual(publicProduct({...approved,image_variants:[{...image,attribution:credit}]}).imageVariants[0].attribution,{creator:'A. Photographer',license:'CC BY 4.0',licenseUrl:credit.license_url,sourceUrl:credit.source_url,changes:'Resized and encoded as WebP'});
- for(const bad of [{...credit,creator:''},{...credit,license_url:'javascript:alert(1)'},{...credit,source_url:'http://insecure.example.org/'},{...credit,grant_reference:'private'},null])
+ // A supplied title is optional: the deployed five-field credit stays valid, and a null title is no title.
+ const titled=publicProduct({...approved,image_variants:[{...image,attribution:{...credit,title:' A supplied title '}}]}).imageVariants[0].attribution;
+ assert.equal(titled.title,'A supplied title');
+ assert.equal('title' in publicProduct({...approved,image_variants:[{...image,attribution:{...credit,title:null}}]}).imageVariants[0].attribution,false);
+ for(const bad of [{...credit,creator:''},{...credit,license_url:'javascript:alert(1)'},{...credit,source_url:'http://insecure.example.org/'},{...credit,grant_reference:'private'},{...credit,title:''},{...credit,title:'x'.repeat(301)},{...credit,title:'a\nb'},{...credit,title:7},null])
   assert.throws(()=>publicProduct({...approved,image_variants:[{...image,attribution:bad}]}),/attribution/);
  // A share preview cannot show the credit, so a credited first image is never the og:image.
  assert.equal(shareImage(publicProduct({...approved,image_variants:[image]})),src);

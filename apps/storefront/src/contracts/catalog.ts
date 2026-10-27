@@ -26,6 +26,8 @@ export interface ImageAttribution {
   license: string;
   licenseUrl: string;
   sourceUrl: string;
+  /** The work's title as its author supplied it, shown untranslated; absent when none was supplied. */
+  title?: string;
   changes?: string;
 }
 

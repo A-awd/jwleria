@@ -14,7 +14,7 @@ const sharp=installedImageEngine();
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
 const commons=name=>{const md5=createHash('md5').update(decodeURIComponent(name)).digest('hex');return [`https://commons.wikimedia.org/wiki/File:${name}`,`https://upload.wikimedia.org/wikipedia/commons/${md5[0]}/${md5.slice(0,2)}/${name}`];};
 const thumb=(name,width)=>{const [p,o]=commons(name);return [p,o.replace('/wikipedia/commons/','/wikipedia/commons/thumb/')+`/${width}px-${name}`];};
-const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width};};
+const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width,title:null};};
 const [page,original]=commons('Synthetic_test_watch_m126610ln-0001.jpg');
 const gallery='https://media.example.test/watches/m126610ln-0001_front.png';
 const record=(source_id,external_id)=>normalizeBatch([{source_id,external_id,source_url:'https://brand.example.test/watches/'+external_id,brand:'Synthetic',collection:'Submariner',product_name:'Synthetic Submariner Date',name_ar:'ساعة اختبار',translation_state:'provided',image_urls:[gallery],facts:[{key:'diameter',value:'41 mm'}]}])[0];
@@ -22,7 +22,7 @@ const record=(source_id,external_id)=>normalizeBatch([{source_id,external_id,sou
 const candidate=record('synthetic-official','m126234-0015');
 const open={grant_reference:'synthetic-open-01',kind:'open_license',source_id:'synthetic-official',candidate_id:candidate.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
   evidence_reference:'synthetic licence review record',license_code:'CC-BY-SA-4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',creator:'Synthetic Photographer',
-  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md'};
+  licensed_files:[{source_page_url:page,file_url:original,file_kind:'original',rendition_width:null,title:null}],attribution_text:'Synthetic Photographer, CC BY-SA 4.0, via Wikimedia Commons',owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md'};
 const source={id:'synthetic-official',origin:'https://brand.example.test',publication_allowed:true};
 const base='https://project.supabase.co/storage/v1/object/public/jwl-product-media';
 const now=Date.parse('2026-10-26T00:00:00Z');
@@ -176,6 +176,15 @@ test('derivatives stay uncropped resizes and the approval bundle carries the exa
     assert.equal(small.bundle().approval.approved_image_variants[0].attribution.changes,'converted to WebP','a file already at its own size is only converted');
     const cc0=await bundleFor(700,700,{...open,license_code:'CC0-1.0',license_url:'https://creativecommons.org/publicdomain/zero/1.0/'});
     assert.equal(cc0.bundle().approval.approved_image_variants[0].attribution.license,'CC0 1.0','CC0 images are credited too');
+    // A title its author supplied (CC 2.0/3.0 require it "if supplied") is carried into that file's credit.
+    const titledGrant={...open,licensed_files:[{...open.licensed_files[0],title:'Synthetic Watch 36 - Up High'}]};
+    const titled=await bundleFor(1200,1500,titledGrant);
+    assert.deepEqual(titled.bundle().approval.approved_image_variants[0].attribution,{creator:'Synthetic Photographer',license:'CC BY-SA 4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',source_url:page,changes:'resized and converted to WebP',title:'Synthetic Watch 36 - Up High'});
+    assert.equal('title' in bundle.approval.approved_image_variants[0].attribution,false,'a file without a supplied title keeps the five-field credit');
+    for(const title of [undefined,'',' ','x'.repeat(301),'a\u0007b',36]){
+      const files=[{...open.licensed_files[0],title}];if(title===undefined)delete files[0].title;
+      assert(decide({...open,licensed_files:files}).reasons.includes('licensed_file_not_an_allowlisted_commons_file'),String(title));
+    }
   }finally{await rm(root,{recursive:true,force:true});}
 });
 
@@ -220,7 +229,7 @@ test('a Wikimedia rendition qualifies only as the same file at its recorded widt
   assert.equal(commonsFile({...file,file_kind:'original'}),false);
   const {rendition_width,...missing}=file;
   assert.equal(commonsFile(missing),false,'rendition_width is required');
-  assert.equal(commonsFile({...file,rendition_width:null}),false);
+  assert.equal(commonsFile({...file,rendition_width:null,title:null}),false);
   const grant={...open,licensed_files:[file,open.licensed_files[0]]};
   assert.deepEqual(decide(grant,{asset_url:file.file_url}),{state:'permitted',reasons:[],grant_reference:open.grant_reference});
   assert.deepEqual(decide(grant,{asset_url:t.replace('960px-','640px-')}).reasons,['asset_not_a_granted_file'],'only the recorded width is granted');

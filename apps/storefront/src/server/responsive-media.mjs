@@ -12,11 +12,12 @@ function creditUrl(value){
  try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password;}catch{return false;}
 }
 
-/** An open-licence credit (decision 0011 keeps such grants inactive until the owner decides). Its bounds are
- * jwl_internal.valid_media_attribution's: every field but source_url up to 300 characters. */
+/** An open-licence credit (decision 0013; inactive until such a grant exists). Its bounds are
+ * jwl_internal.valid_media_attribution's: every field but source_url up to 300 characters, and an optional `title`
+ * (the work's title as its author supplied it) that may be absent or null, so a five-field credit stays valid. */
 export function imageAttribution(value){
- if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['creator','license','license_url','source_url','changes'].includes(k))||!text(value.creator,300)||!text(value.license,300)||!creditUrl(value.license_url)||!creditUrl(value.source_url)||(value.changes!==undefined&&value.changes!==null&&!text(value.changes,300)))throw new Error('Invalid image attribution');
- return {creator:value.creator.trim(),license:value.license.trim(),licenseUrl:value.license_url,sourceUrl:value.source_url,...(value.changes?{changes:value.changes.trim()}:{})};
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['creator','license','license_url','source_url','changes','title'].includes(k))||!text(value.creator,300)||!text(value.license,300)||!creditUrl(value.license_url)||!creditUrl(value.source_url)||(value.changes!==undefined&&value.changes!==null&&!text(value.changes,300))||(value.title!==undefined&&value.title!==null&&!text(value.title,300)))throw new Error('Invalid image attribution');
+ return {creator:value.creator.trim(),license:value.license.trim(),licenseUrl:value.license_url,sourceUrl:value.source_url,...(value.title?{title:value.title.trim()}:{}),...(value.changes?{changes:value.changes.trim()}:{})};
 }
 
 /** Only already approved public derivative metadata belongs in this projection. */

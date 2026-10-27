@@ -115,7 +115,7 @@ const ar = {
     changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
     // The only two changes the open-licence migration accepts, in reviewed Arabic.
-    credit: { photo: 'الصورة', source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP' } as Record<string, string> },
+    credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -215,7 +215,7 @@ const en: typeof ar = {
     count: englishCount,
     changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
     showing: (ref: string) => `Showing reference ${ref}`,
-    credit: { photo: 'Photo', source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP' } as Record<string, string> },
+    credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'WhatsApp inquiry',

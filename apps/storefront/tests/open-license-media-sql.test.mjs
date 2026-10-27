@@ -20,8 +20,8 @@ const file=(width,c)=>`https://media.example.test/v1/${sha('d')}/${sha('a')}/${w
 const commons=name=>{const md5=createHash('md5').update(decodeURIComponent(name)).digest('hex');return [`https://commons.wikimedia.org/wiki/File:${name}`,`https://upload.wikimedia.org/wikipedia/commons/${md5[0]}/${md5.slice(0,2)}/${name}`];};
 // A Wikimedia-served thumbnail: .../commons/thumb/<h>/<hh>/<File>/<N>px-<File>.
 const thumb=(name,width)=>{const [p,o]=commons(name);return [p,o.replace('/wikipedia/commons/','/wikipedia/commons/thumb/')+`/${width}px-${name}`];};
-const originalFile=(p,o)=>({source_page_url:p,file_url:o,file_kind:'original',rendition_width:null});
-const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width};};
+const originalFile=(p,o)=>({source_page_url:p,file_url:o,file_kind:'original',rendition_width:null,title:null});
+const renditionFile=(name,width)=>{const [p,t]=thumb(name,width);return {source_page_url:p,file_url:t,file_kind:'rendition',rendition_width:width,title:null};};
 const [page,original]=commons('Synthetic_test_watch_REF-9.jpg');
 const credit={creator:'Synthetic Photographer',license:'CC BY-SA 4.0',license_url:'https://creativecommons.org/licenses/by-sa/4.0/',source_url:page,changes:'resized and converted to WebP'};
 const entry=(c,attribution=credit)=>({src:file(1600,c),width:1600,height:2000,variants:[{src:file(640,c==='e'?'b':String.fromCharCode(c.charCodeAt(0)+1)),width:640,height:800,bytes:50000},{src:file(1600,c),width:1600,height:2000,bytes:300000}],...(attribution?{attribution}:{})});
@@ -184,7 +184,7 @@ test('hash directories are MediaWiki\'s md5 of the percent-decoded name, for ori
       assert.equal(await decode(name),decodeURIComponent(name));
       const h=md5(decodeURIComponent(name));assert.equal(`${h[0]}/${h.slice(0,2)}`,dirs,name);
       const t=`https://upload.wikimedia.org/wikipedia/commons/thumb/${dirs}/${name}/960px-${name}`;
-      const f={source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:t,file_kind:'rendition',rendition_width:960};
+      const f={source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:t,file_kind:'rendition',rendition_width:960,title:null};
       assert.equal(commonsFile(f),true,name);
       assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([f])])).rows[0].ok,true,name);
       // A directory pair that is internally consistent (<hh> starts with <h>) but is not the md5 of the name.
@@ -195,7 +195,7 @@ test('hash directories are MediaWiki\'s md5 of the percent-decoded name, for ori
       const swapped={...f,file_url:t.replace(`/thumb/${dirs}/`,`/thumb/${dirs[0]}/${dirs[0]}${dirs[3]==='0'?'1':'0'}/`)};
       assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([swapped])])).rows[0].ok,false,'wrong second directory: '+name);
     }
-    await insertGrant(db,openGrant(c,{grant_reference:'grant-batch-names',licensed_files:batch.map(([name,dirs])=>({source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/thumb/${dirs}/${name}/960px-${name}`,file_kind:'rendition',rendition_width:960}))}));
+    await insertGrant(db,openGrant(c,{grant_reference:'grant-batch-names',licensed_files:batch.map(([name,dirs])=>({source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/thumb/${dirs}/${name}/960px-${name}`,file_kind:'rendition',rendition_width:960,title:null}))}));
     const [, wrongOriginal]=commons('Rolex_Datejust_126234.jpg');
     await assert.rejects(insertGrant(db,openGrant(c,{grant_reference:'grant-wrong-dir',licensed_files:[originalFile('https://commons.wikimedia.org/wiki/File:Rolex_Datejust_126234.jpg',wrongOriginal.replace('/8/81/','/8/8a/'))]})),/check constraint/,'an original under a wrong md5 directory');
     // Non-ASCII names hash their UTF-8 bytes after decoding; malformed escapes fail closed in both.
@@ -204,7 +204,7 @@ test('hash directories are MediaWiki\'s md5 of the percent-decoded name, for ori
     for(const bad of ['Bad_%E9_byte.jpg','Bad_%2_escape.jpg','Bad_%zz_escape.jpg','Bad_trailing_%.jpg','Bad_%C3_truncated.jpg']){
       assert.equal(await decode(bad),null,bad);
       assert.throws(()=>decodeURIComponent(bad),URIError,'the pipeline refuses it too: '+bad);
-      const h='0',hh='00',f={source_page_url:`https://commons.wikimedia.org/wiki/File:${bad}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/${h}/${hh}/${bad}`,file_kind:'original',rendition_width:null};
+      const h='0',hh='00',f={source_page_url:`https://commons.wikimedia.org/wiki/File:${bad}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/${h}/${hh}/${bad}`,file_kind:'original',rendition_width:null,title:null};
       assert.equal((await service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([f])])).rows[0].ok,false,bad);
       assert.equal(commonsFile(f),false,bad);
     }
@@ -357,13 +357,51 @@ test('open-licence images need the granted original and their exact credit; othe
   }finally{await db.close();}
 });
 
+test('a title its author supplied is recorded per licensed file, bounded, and carried exactly into that file\'s credit',async()=>{
+  const db=await database();
+  try{
+    const c=row('test','REF-8');await ingest(db,[c]);
+    const title='Synthetic Watch 36 - Up High';
+    const titled={...originalFile(page,original),title};
+    const filesOk=f=>service(db,'select jwl_internal.valid_open_license_files($1::jsonb) ok',[JSON.stringify([f])]).then(r=>r.rows[0].ok);
+    assert.equal(await filesOk(titled),true);
+    assert.equal(await filesOk(originalFile(page,original)),true,'null states that no title was supplied');
+    assert.equal(commonsFile(titled),true);
+    const {title:_,...untitled}=originalFile(page,original);
+    for(const [f,label] of [[untitled,'the key is required'],[{...titled,title:''},'empty'],[{...titled,title:'   '},'blank'],[{...titled,title:'x'.repeat(301)},'over 300'],
+      [{...titled,title:'a\nb'},'control character'],[{...titled,title:7},'a number'],[{...titled,title:[title]},'an array']]){
+      assert.equal(await filesOk(f),false,label);
+      assert.equal(commonsFile(f),false,'the pipeline refuses it too: '+label);
+    }
+    assert.equal(await filesOk({...titled,title:'\u{1D49C}'.repeat(300)}),true,'300 code points is the bound');
+    assert.equal(commonsFile({...titled,title:'\u{1D49C}'.repeat(300)}),true);
+    await insertGrant(db,openGrant(c,{licensed_files:[titled]}));
+    const derived=openLicenseAttribution(openGrant(c,{licensed_files:[titled]}),'resized and converted to WebP');
+    assert.deepEqual(derived,{...credit,title},'the pipeline adds the file\'s title to its credit');
+    assert.equal('title' in openLicenseAttribution(openGrant(c),'resized and converted to WebP'),false,'an untitled file keeps the five-field credit');
+    const ok=entry('e',derived);for(const v of ok.variants)await asset(db,c,v);
+    for(const attribution of [credit,{...credit,title:'Another title'},{...credit,title:null},{...credit,title:title+' '}])
+      await assert.rejects(approve(db,c,'grant-open-01',[{...entry('e',null),attribution}]),/exact visible attribution/,JSON.stringify(attribution));
+    await approve(db,c,'grant-open-01',[ok]);
+    assert.equal(responsiveImages([ok],[ok.src],false)[0].attribution.title,title,'and the storefront renders it');
+    // An untitled file's credit may not invent a title.
+    const d=row('test','REF-9');await ingest(db,[d]);
+    await insertGrant(db,openGrant(d,{grant_reference:'grant-open-untitled'}));
+    const plain=entry('e');for(const v of plain.variants)await asset(db,d,v,{grant_reference:'grant-open-untitled'});
+    await assert.rejects(approve(db,d,'grant-open-untitled',[{...plain,attribution:{...credit,title}}]),/exact visible attribution/);
+    await approve(db,d,'grant-open-untitled',[plain]);
+  }finally{await db.close();}
+});
+
 test('the responsive shape accepts only a bounded credit for an allowlisted licence and stays compatible without one',async()=>{
   const db=await database();
   try{
     const valid=(e)=>db.query('select jwl_internal.valid_image_variants($1::jsonb,$2::jsonb) ok',[JSON.stringify([e.src]),JSON.stringify([e])]).then(r=>r.rows[0].ok);
     assert.equal(await valid(entry('e',null)),true);
     assert.equal(await valid(entry('e')),true);
-    for(const attribution of [{...credit,extra:'x'},{...credit,creator:''},{...credit,creator:'x'.repeat(301)},{...credit,creator:'a\nb'},{...credit,license:'CC BY-NC 4.0',license_url:'https://creativecommons.org/licenses/by-nc/4.0/'},
+    assert.equal(await valid(entry('e',{...credit,title:'A supplied title'})),true,'an optional title');
+    assert.equal(await valid(entry('e',{...credit,title:null})),true,'a null title');
+    for(const attribution of [{...credit,title:''},{...credit,title:'x'.repeat(301)},{...credit,title:'a\tb'},{...credit,title:3},{...credit,extra:'x'},{...credit,creator:''},{...credit,creator:'x'.repeat(301)},{...credit,creator:'a\nb'},{...credit,license:'CC BY-NC 4.0',license_url:'https://creativecommons.org/licenses/by-nc/4.0/'},
       {...credit,license_url:'https://creativecommons.org/licenses/by/4.0/'},{...credit,source_url:'https://example.test/photo'},{...credit,changes:7},'credit',[credit]])
       assert.equal(await valid({...entry('e',null),attribution}),false,JSON.stringify(attribution));
   }finally{await db.close();}
@@ -378,7 +416,7 @@ test('a grant may cite Wikimedia-served renditions honestly: same file name and 
     const [otherPage]=commons('Another_rendition.jpg');
     const refused=[
       [{...ok,rendition_width:undefined},'missing rendition_width'],
-      [{...ok,rendition_width:null},'null rendition_width'],
+      [{...ok,rendition_width:null,title:null},'null rendition_width'],
       [{...ok,rendition_width:'960'},'a text width'],
       [{...ok,rendition_width:960.5},'a fractional width'],
       [{...ok,rendition_width:640},'a width other than the URL names'],

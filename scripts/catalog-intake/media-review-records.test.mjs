@@ -87,7 +87,7 @@ test('the runner approves a flagged derivative only with an exact entry in a rev
   try{
     const sharp=installedImageEngine();
     const name='Synthetic_noise_(1).jpg',md5=createHash('md5').update(decodeURIComponent(name)).digest('hex');
-    const file={source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/thumb/${md5[0]}/${md5.slice(0,2)}/${name}/640px-${name}`,file_kind:'rendition',rendition_width:640};
+    const file={source_page_url:`https://commons.wikimedia.org/wiki/File:${name}`,file_url:`https://upload.wikimedia.org/wikipedia/commons/thumb/${md5[0]}/${md5.slice(0,2)}/${name}/640px-${name}`,file_kind:'rendition',rendition_width:640,title:null};
     const grant={grant_reference:'synthetic-open-perf',kind:'open_license',source_id:'synthetic-official',candidate_id:candidate.candidate_id,media_origins:[],website_publication:true,resize:true,webp_encode:true,
       evidence_reference:'synthetic licence review record',license_code:'CC-BY-2.0',license_url:'https://creativecommons.org/licenses/by/2.0/',creator:'Synthetic Photographer',licensed_files:[file],
       attribution_text:'Synthetic Photographer, CC BY 2.0, via Wikimedia Commons',owner_decision_reference:'decisions/0013-open-licence-exact-product-photos.md'};
