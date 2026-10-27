@@ -41,11 +41,11 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | Models migration `jwleria_product_models` | existing authorization for the change; platform interaction to execute | blocked | two attempts timed out at 60 s; no third attempt in that turn |
 | Creating the product-media bucket | genuine owner decision | open | |
 | Deploying the upload function | genuine owner decision | open | |
-| Worker release carrying credits, the title, the copy and the framing | platform interaction (operator upload of a prepared package) | prepared | must be live before any titled credit is recorded |
+| Worker release carrying credits, the title, the copy and the framing | platform interaction (operator upload of a prepared package) | prepared: `releases/storefront-fbf04b80a181/` | upload-only; must be live before any titled credit is published (step f) |
 | `confirm-renditions --network` for the front rendition | evidence obtainable | **done** | 2026-10-27 18:09Z: HTTP 200, served sha256 equals the held bytes; gate closed |
 | Licence title outcome | evidence obtainable | **done** | title supplied: "Rolex Datejust 36 - Up High" (embedded short title); recorded on the licensed file and shown in the credit |
 | Licence URI outcome | evidence obtainable | **done** | no licensor-specified URI found; the credit's source link is the Commons file page, which carries the licence notice and names the Flickr original; see below |
-| Fresh read that still matches the prepared bundle | evidence obtainable | to repeat before execution | the bundle must be re-rendered for the title and blank-credit SQL changes first |
+| Fresh read that still matches the prepared bundle | evidence obtainable | done 2026-10-27 19:07Z; repeat immediately before (a) | the bundle was re-rendered at 19:07Z from `fbf04b80a181` (title and blank-credit SQL changes); the read matched in every field except its timestamp |
 | Verified WhatsApp number | genuine owner decision (owner input) | open | blocks `PUBLIC_RELEASE=live` |
 | Lifting a closed source (Cartier, Van Cleef & Arpels, CELINE, RIMOWA, Piaget, Panerai) | genuine owner decision, plus a reviewed code change | closed | terms, robots or challenge recorded |
 | Activating the intake schedule; enabling the n8n database nodes | genuine owner decision | open | the recorded runner defects must be fixed first |

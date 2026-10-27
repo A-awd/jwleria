@@ -1,3 +1,24 @@
+## Integrated: foundation completion pass, 2026-10-27
+
+**Live (unchanged by this pass):** Worker release `2a1864b` (operator-deployed). Database: 7 migrations, last `20261026114541`. 0 grants, 0 approvals, no media bucket, 0 public products with images. 4,097 active public products across 12 brand sources, all facts-only. Models view absent. (Observed live, read-only, 2026-10-27 18:08Z and 19:07Z.)
+
+**Integrated on this branch (merge `fbf04b80a181` of the reviewed `wf/finish`):**
+- **Credit title:** the work's title from the author ("Rolex Datejust 36 - Up High") flows through grant, evidence, credit and storefront. Old five-field credits stay valid.
+- **Blank text:** credit strings made only of Unicode spaces are refused in SQL.
+- **Copy:** no implied brand stock or affiliation, one spelling of "inquiry", and the concierge id removed. The audit found no personal-shopping wording and no male-only Arabic imperatives in public strings.
+- **Photo framing:** approved product photos show whole on phones (`contain` in the 4:5 frame), with no hover crop.
+- **Records:** `CLAUDE.md`, plus the modules in `docs/spec/`.
+- **Tests on the merged tree:** storefront 155 tests, 152 pass, 0 fail, 3 opt-in skips; intake 117 of 117 pass. The build succeeds.
+- **Reviews:** licence, copy and mobile research; a gates/SQL review; a site/mobile review; a repair; and a re-review. All actionable findings are fixed.
+
+**Prepared release:** `releases/storefront-fbf04b80a181/` contains 74 files. The sha256 of SHA256SUMS is `e147b36bdcf79e1518bee3cba8df53dbc2de2d5b74880c892859f64c7fad4bb4`. It is upload-only; see its `DEPLOY.md`. It must be live before any titled credit is published, because the live release throws on a `title` key.
+
+**Private media bundle (m126234-0015, one photograph, three WebP sizes):** re-rendered at 19:07Z from `fbf04b80a181` after a matching fresh read, and the simulation passed. The rendition URL was re-confirmed live at 18:09Z: HTTP 200, identical bytes. The bundle is held in the owner's private Artifact and is not in Git.
+
+**Database confirmation fault, diagnosed:** this matches the documented MCP elicitation timeout in non-interactive mode. The Supabase server asked a question that a cloud session cannot show or answer, and its text was not recorded. The documented remedies are an interactive session where a person answers the dialog, an Elicitation hook (which changes approval enforcement, so it is an owner decision), an SDK callback, or a longer server timeout (not editable for a claude.ai connector from here). There was no third attempt and no alternate tool. See runbook DB-1.
+
+**Owner decisions still open (one batch):** the open-licence migration as three lines, (a) the grant kind, (b) the source-flag exemption and (c) the creator-stated identity route; the media bucket; the upload-function deploy; and the channel for answering the database confirmation. See `docs/spec/DECISION-APPROVAL-LEDGER.md`.
+
 ## Finishing pass on `wf/finish`: credit title, copy, photo framing and project records, 2026-10-27
 
 All prepared on this branch; nothing applied, uploaded or deployed. Live state is unchanged from the entry below.

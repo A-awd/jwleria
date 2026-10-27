@@ -1,3 +1,13 @@
+## Current handoff — after the integrated completion pass — 2026-10-27
+
+Done in this pass: the reviewed `wf/finish` is merged (`fbf04b80a181`); the release package `releases/storefront-fbf04b80a181/` is built; the private bundle is re-rendered and re-hashed after a matching fresh read; and `confirm-renditions` passed.
+
+Next, in order:
+1. **Operator:** upload `releases/storefront-fbf04b80a181/` with its `DEPLOY.md` (upload-only). Record the active version privately as the rollback target, and record MISS/HIT/STALE only as observed. This release is safe at the current database state.
+2. **Owner, one batch:** decide the open-licence migration's three lines, the media bucket and the upload-function deploy. Also choose how the database question gets answered. Option one: run the writes from an interactive Claude Code session, or the operator's interactive tool, where the dialog can be answered. Option two: approve a narrowly scoped Elicitation hook. See runbook DB-1 and the decision ledger.
+3. **Through the chosen channel:** apply the models migration and its mapping (one writer; never replay `20261026114541`). Then run the media bundle steps (a)–(e) and, after step 1 is live, step (f) and the 07 read-back. Then check visitors at phone width: the product page photo, the credit with the title, and the search.
+4. **Maintenance:** see `docs/spec/MAINTENANCE-BACKLOG.md`. Open items: metadata (404 soft-404, root canonical), brand-strip accessibility polish, the legacy root app's old copy (not deployed), and unmeasured desktop framing.
+
 ## Current handoff — after the finishing pass on `wf/finish` — 2026-10-27
 
 1. Integrate `wf/finish` into the foundation branch. Then build a new upload-only release package. It carries the credit title support, the copy and the photo framing; the operator uploads it before any titled credit is recorded.
