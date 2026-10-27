@@ -8,7 +8,7 @@
   const EM = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => EM[c]);
   const lat = (s, c) => `<bdi class="lat${c ? ' ' + c : ''}" lang="en" dir="ltr">${esc(s)}</bdi>`;
-  const refT = (r, id) => `<bdi class="ref"${id ? ` id="${id}"` : ''} dir="ltr">${esc(r).replace(/\./g, '.<wbr>')}</bdi>`;
+  const refT = (r, id) => `<bdi class="ref"${id ? ` id="${id}"` : ''} dir="ltr" style="--n:${String(r).length}">${esc(r)}</bdi>`;
   const fv = (s) => (/[؀-ۿ]/.test(s) ? esc(s) : lat(s, 'lv'));
   const cat = (slug) => D.categories.find((c) => c.slug === slug) || { slug, ar: slug, en: slug };
   const IMG = '../shared/img/';
@@ -46,7 +46,11 @@
     return `<div class="ph${dark(t) ? ' dk' : ''}" data-c="${m.category}" role="img" aria-label="${esc(phLabel(m, v, view))}" style="--tone:${t}">${ico(m)}</div><p class="tag">${tagH(v, view)}</p>`;
   }
   // Card panels omit the model line (the card text repeats it).
-  const factsOnly = (m, v, full) => `<div class="fo"><p class="fo-b">${lat(m.brand)}</p>${full ? `<p class="fo-m">${lat(m.name)}</p>` : ''}<p class="fo-r">${refT(v.ref)}</p><p class="fo-s">${FO}</p></div>`;
+  // The PDP panel shows only the reference, the selected option and the sentence (the h1 names the model).
+  const optLine = (m, v) => { const o = optOf(m, v); return o ? `<p class="fo-o"><span class="fo-sw${dia(o) ? ' dia' : ''}" aria-hidden="true" style="--tone:${o.tone}"></span>${esc(o.ar)}</p>` : ''; };
+  const factsOnly = (m, v, full) => full
+    ? `<div class="fo fo-p"><p class="fo-r">${refT(v.ref)}</p>${optLine(m, v)}<p class="fo-s">${FO}</p></div>`
+    : `<div class="fo"><p class="fo-b">${lat(m.brand)}</p><p class="fo-r">${refT(v.ref)}</p><p class="fo-s">${FO}</p></div>`;
   function paintStandin(box, m, v, view) {
     const ph = $('.ph', box), t = J.toneOf(m, v);
     if (!ph) { box.innerHTML = standin(m, v, view); return; }
@@ -57,8 +61,8 @@
   }
 
   /* one card per model */
-  function card(m, h) {
-    const p = J.primary(m), si = J.hasStandInImage(m), k = optKind(m);
+  function card(m, h, fv) {
+    const p = fv || J.primary(m), si = J.hasStandInImage(m), k = optKind(m);
     const all = k ? ((J.axesOf(m).find((a) => a.kind === k) || {}).values || []) : [];
     // Distinct tones first (plain vs diamond-set dials share one).
     const first = (o, i) => all.findIndex((x) => x.tone === o.tone) === i;
@@ -74,7 +78,7 @@
       dots = `<div class="dots">${dots}</div>`;
     }
     // Dots follow the title in the DOM; CSS puts them on the stage floor.
-    return `<article class="card${dots ? ' has-dots' : ''}" data-model="${m.id}"><div class="stage ${si ? 'is-si' : 'is-fo'}">${si ? standin(m, p) : factsOnly(m, p)}</div>` +
+    return `<article class="card${dots ? ' has-dots' : ''}" data-model="${m.id}" data-ref="${esc(p.ref)}"><div class="stage ${si ? 'is-si' : 'is-fo'}">${si ? standin(m, p) : factsOnly(m, p)}</div>` +
       `<div class="c-txt"><p class="c-brand">${lat(m.brand)}</p><h${h} class="c-name"><a class="c-link" href="${J.url(m, p)}">${lat(m.name)}</a></h${h}>` +
       `<p class="c-type">${esc(m.typeAr)}</p><p class="c-sum">${sumOf(m)}</p></div>${dots}</article>`;
   }
@@ -82,7 +86,7 @@
   function peek(dot, on) {
     const c = dot.closest('.card');
     if (!c) return;
-    const m = J.byId(c.dataset.model), v = on ? J.variantOf(m, dot.dataset.ref) : J.primary(m), st = $('.stage', c);
+    const m = J.byId(c.dataset.model), v = J.variantOf(m, on ? dot.dataset.ref : c.dataset.ref), st = $('.stage', c);
     if (J.hasStandInImage(m)) paintStandin(st, m, v); else $('.fo-r', st).innerHTML = refT(v.ref);
     const o = optOf(m, v);
     $('.c-sum', c).innerHTML = on && o ? `${esc(o.ar)} · ${lat(o.material || o.en)}` : sumOf(m);
@@ -132,7 +136,29 @@
       cb.innerHTML = `<nav class="wrap" aria-label="الفئات"><ul class="chips"><li><a class="chip" href="catalog.html">كل الفئات</a></li>${D.categories.map((c) => `<li><a class="chip${c.slug === here ? ' is-here" aria-current="true' : ''}" href="catalog.html?category=${c.slug}">${c.ar}</a></li>`).join('')}</ul></nav>`;
     }
     const mb = $('.mb'), nv = $('#nav'), sb = $('#sbtn'), sp = $('#sp');
-    const menu = (o) => { mb.setAttribute('aria-expanded', String(o)); nv.classList.toggle('open', o); };
+    // Phone menu: full-height sheet over a scrim, with a labelled close button and the category list.
+    nv.insertAdjacentHTML('afterbegin', `<div class="nav-h"><span class="nav-t">القائمة</span><button class="nav-x" type="button"><svg class="ui" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="m18 18 28 28M46 18 18 46"/></svg><span>إغلاق القائمة</span></button></div>`);
+    nv.insertAdjacentHTML('beforeend', `<div class="nav-c"><h2 class="nav-ch" id="nav-ch">الفئات</h2><ul aria-labelledby="nav-ch">${D.categories.map((c) => `<li><a href="catalog.html?category=${c.slug}">${c.ar}</a></li>`).join('')}</ul></div>`);
+    const scrim = d.createElement('div');
+    scrim.className = 'scrim';
+    nv.after(scrim);
+    const mq = matchMedia('(max-width: 899px)');
+    const menu = (o, back) => {
+      mb.setAttribute('aria-expanded', String(o));
+      nv.classList.toggle('open', o);
+      B.classList.toggle('menu-open', o);
+      if (o && mq.matches) $('.nav-x', nv).focus();
+      else if (back) mb.focus();
+    };
+    $('.nav-x', nv).addEventListener('click', () => menu(false, true));
+    scrim.addEventListener('click', () => menu(false, true));
+    mq.addEventListener('change', () => { if (!mq.matches) menu(false); });
+    nv.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || !nv.classList.contains('open')) return;
+      const f = $$('a, button', nv), a = f[0], z = f[f.length - 1];
+      if (e.shiftKey && d.activeElement === a) { e.preventDefault(); z.focus(); }
+      else if (!e.shiftKey && d.activeElement === z) { e.preventDefault(); a.focus(); }
+    });
     const search = (o) => { sp.hidden = !o; sb.setAttribute('aria-expanded', String(o)); if (o) $('#sq').focus(); };
     mb.addEventListener('click', () => menu(mb.getAttribute('aria-expanded') !== 'true'));
     nv.addEventListener('click', (e) => { if (e.target.closest('a')) menu(false); });
@@ -152,7 +178,9 @@
 
   /* home */
   function home() {
-    const pick = ['longchamp-le-pliage-one-handbag', 'rolex-datejust-41-126334', 'loewe-puzzle-large', 'audemars-piguet-royal-oak-15202or'].map(J.byId);
+    // A non-default real variant per model, each card linking to that reference.
+    const pick = [['longchamp-le-pliage-one-handbag', 'L1626979163'], ['rolex-datejust-41-126334', 'm126334-0027'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['longchamp-le-pliage-one-travel-bag', null]]
+      .map(([id, ref]) => { const m = J.byId(id); return [m, ref ? J.variantOf(m, ref) : m.variants.find((x) => x.color === 'P87') || J.primary(m)]; });
     const doors = D.brands.map((b) => {
       const n = D.brandCounts[b];
       return `<li><a class="door" href="catalog.html?brand=${encodeURIComponent(b)}"><span class="door-f"><span class="door-n">${lat(b)}</span>${n ? `<span class="door-c">${J.countAr(n, 'ref')}</span>` : ''}</span></a></li>`;
@@ -175,14 +203,14 @@
 </section>
 <section class="wrap sec" aria-labelledby="fh">
 <div class="sec-h"><div><h2 id="fh">مختارات من الكتالوج</h2><p>ساعات وحقائب بمراجعها الفعلية.</p></div><a class="more-l" href="catalog.html">عرض الكتالوج</a></div>
-<ul class="grid4">${pick.map((m) => `<li>${card(m, 3)}</li>`).join('')}</ul>
+<ul class="grid4">${pick.map(([m, v]) => `<li>${card(m, 3, v)}</li>`).join('')}</ul>
 </section>`);
     scroller($('#doors'), $('#brands .sc-prev'), $('#brands .sc-next'));
   }
 
   /* catalog */
   function catalog() {
-    const q = J.params(), per = 48, total = J.counts(D.models).label;
+    const q = J.params(), per = 48, tc = J.counts(D.models), total = `${J.countAr(tc.models, 'model')} و${J.countAr(tc.refs, 'ref')}`;
     const st = { category: D.categories.some((c) => c.slug === q.get('category')) ? q.get('category') : '', brand: q.get('brand') || '', q: q.get('q') || '' };
     const brands = D.brands.slice();
     if (st.brand && !brands.includes(st.brand)) brands.push(st.brand);
@@ -240,17 +268,17 @@
     let canon = $('link[rel="canonical"]');
     if (!canon) { canon = d.createElement('link'); canon.rel = 'canonical'; d.head.append(canon); }
     canon.setAttribute('href', J.url(m, J.primary(m)));
-    // Related: same brand, same category, then the rest; four cards.
-    const oth = D.models.filter((x) => x.id !== m.id);
-    const rel = oth.filter((x) => x.brand === m.brand).concat(oth.filter((x) => x.brand !== m.brand && x.category === m.category), oth.filter((x) => x.brand !== m.brand && x.category !== m.category)).slice(0, 4);
-    const relH = rel.every((x) => x.brand === m.brand) ? `قطع أخرى من ${lat(m.brand)}` : rel.every((x) => x.category === m.category) ? `قطع أخرى من ${C.ar}` : 'قطع أخرى من الكتالوج';
+    // Related: same category only (same brand first); up to four cards.
+    const oth = D.models.filter((x) => x.id !== m.id && x.category === m.category);
+    const rel = oth.filter((x) => x.brand === m.brand).concat(oth.filter((x) => x.brand !== m.brand)).slice(0, 4);
+    const relH = `قطع أخرى من ${C.ar}`;
     const sum = J.summaryAr(m);
     $('#main').innerHTML = `<div class="wrap">
 <nav class="crumbs" aria-label="مسار التنقل"><ol><li><a href="catalog.html">الكتالوج</a></li><li><a href="catalog.html?category=${C.slug}">${C.ar}</a></li></ol></nav>
 <div class="pdp">
 <div class="p-head">
 <p class="p-brand"><a href="catalog.html?brand=${encodeURIComponent(m.brand)}">${lat(m.brand)}</a></p>
-<h1 class="p-title"><span class="p-lat">${lat(m.name)}</span><span class="p-type">${esc(m.typeAr)}${m.nameAr ? ' · ' + esc(m.nameAr) : ''}</span></h1>
+<h1 class="p-title"><span class="p-lat">${lat(m.name)}</span><span class="p-type">${esc(m.typeAr)}${m.nameAr ? ' · ' + esc(AR(m.nameAr)) : ''}</span></h1>
           ${sum ? `<p class="p-sum">${sum}</p>` : ''}
 </div>
 <section class="gal${SI ? '' : ' no-rail'}" aria-label="صور المنتج">
@@ -266,7 +294,7 @@ ${SI ? `<div class="rail" role="group" aria-label="مناظر الصورة">${VI
 <p class="sr" id="live" aria-live="polite"></p>
 </div>
 </div>
-<section class="rel" aria-labelledby="rh"><div class="sec-h"><h2 id="rh">${relH}</h2><a class="more-l" href="catalog.html?category=${C.slug}">${C.ar} في الكتالوج</a></div><ul class="grid4">${rel.map((x) => `<li>${card(x, 3)}</li>`).join('')}</ul></section>
+${rel.length ? `<section class="rel" aria-labelledby="rh"><div class="sec-h"><h2 id="rh">${relH}</h2><a class="more-l" href="catalog.html?category=${C.slug}">${C.ar} في الكتالوج</a></div><ul class="grid4">${rel.map((x) => `<li>${card(x, 3)}</li>`).join('')}</ul></section>` : ''}
 </div>
 <div class="actbar off" id="actbar"><button class="btn btn-s" type="button" data-inert aria-describedby="inq">${INQ}</button></div>`;
 
@@ -328,8 +356,8 @@ ${SI ? `<div class="rail" role="group" aria-label="مناظر الصورة">${VI
     }
     function meta() {
       $('#ref').textContent = v.ref;
-      const o = optOf(m, v);
-      d.title = `${m.name}${o ? ' — ' + o.ar : ''} · ${v.ref} | Jwleria`;
+      const vals = J.axesOf(m).map((a) => J.valueOf(m, a.kind, v[a.kind])).filter(Boolean).map((x) => x.ar);
+      d.title = `${m.name}${vals.length ? ' — ' + vals.join(' · ') : ''} · ${v.ref} | Jwleria`;
     }
     function render(focusSel) { media(); opts(focusSel); facts(); meta(); }
 
@@ -343,8 +371,8 @@ ${SI ? `<div class="rail" role="group" aria-label="مناظر الصورة">${VI
       v = nv;
       render(a.classList.contains('rc') ? `.rc[data-ref="${ref}"]` : `.opt[data-k="${a.dataset.k}"][data-v="${a.dataset.v}"]`);
       history.replaceState(null, '', href);
-      const o = optOf(m, v);
-      $('#live').textContent = `${o ? o.ar + '، ' : ''}المرجع ${v.ref}`;
+      const vals = J.axesOf(m).map((x) => J.valueOf(m, x.kind, v[x.kind])).filter(Boolean).map((x) => x.ar);
+      $('#live').textContent = `${vals.length ? vals.join('، ') + '، ' : ''}المرجع ${v.ref}`;
     });
     const rail = $('.rail');
     if (rail) rail.addEventListener('click', (e) => { const b = e.target.closest('.th'); if (b) { view = +b.dataset.view; media(); } });

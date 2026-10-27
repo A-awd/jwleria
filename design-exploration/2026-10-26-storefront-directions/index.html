@@ -84,7 +84,7 @@ figcaption { color: var(--muted); font-size: 13px; }
 .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 .btn.ghost:hover { border-color: var(--fg); }
 .dir-meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px; align-items: start; }
-.facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0 28px; }
+.facts { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; max-width: 900px; }
 .facts li { display: grid; grid-template-columns: 7.5em minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
 .facts li span:first-child { color: var(--muted); }
 .swatches { display: flex; gap: 6px; }
@@ -133,12 +133,15 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
   .summary { grid-template-columns: 1fr; }
   .now { grid-template-columns: 1fr; }
   .dir-meta { grid-template-columns: 1fr; }
+  .facts { grid-template-columns: 1fr; }
   .gallery { grid-template-columns: minmax(0, 1fr) minmax(0, 0.55fr); }
 }
 @media (max-width: 560px) {
   .board { gap: 48px; }
   .gallery { grid-template-columns: 1fr; }
   .shot.phone { max-width: 220px; }
+  .refgrid { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 80%; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; padding-bottom: 8px; }
+  .ref { scroll-snap-align: start; }
 }
 @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
 </style>
@@ -202,9 +205,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <h2 id="dh-a"><span class="dchip big d-a">أ</span> الدار</h2>
     <p class="lede">اتجاه يشبه المجلة الفاخرة. الشعار في المنتصف والتنقل تحته، وصورة كبيرة تفتح الصفحة، ثم شريط علامات بطيء وقصص للفئات. في الكتالوج ثلاثة أعمدة بصور طولية ونص قليل، وفي صفحة المنتج صور كبيرة متتابعة وعمود معلومات ثابت.</p>
     <div class="open">
-      <a class="btn" href="a/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
-      <a class="btn ghost" href="a/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
-      <a class="btn ghost" href="a/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+      <a class="btn" href="a/home.html">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="a/catalog.html">الكتالوج</a>
+      <a class="btn ghost" href="a/product.html?model=rolex-datejust-41-126334&amp;ref=m126334-0027">ساعة بـ٢٦ مرجعًا</a>
+      <a class="btn ghost" href="a/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979105">صفحة منتج بألوان ومقاسات</a>
     </div>
   </div>
   <div class="dir-meta">
@@ -212,13 +216,15 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#faf7f2" title="#faf7f2"></span><span class="sw" style="--c:#ffffff" title="#ffffff"></span><span class="sw" style="--c:#1b1915" title="#1b1915"></span><span class="sw" style="--c:#6b645a" title="#6b645a"></span><span class="sw" style="--c:#7a5c33" title="#7a5c33"></span></div>
   </div>
   <div class="gallery">
-    <figure class="g-wide"><a class="shot " href="screens/a-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/a-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/a-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/a-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/a-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/a-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/a-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/a-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-home-desktop-full.webp"><img src="screens/a-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-home-mobile-full.webp"><img src="screens/a-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-catalog-desktop-full.webp"><img src="screens/a-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-catalog-mobile-full.webp"><img src="screens/a-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-product-desktop-full.webp"><img src="screens/a-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، بيج</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-product-mobile-full.webp"><img src="screens/a-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-product-variant-desktop-full.webp"><img src="screens/a-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي. يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/a-product-rolex-mobile-full.webp"><img src="screens/a-product-rolex-mobile-fold.webp" alt="ساعة رولكس بعشرة ألوان للميناء على الجوال" loading="lazy" decoding="async"></a><figcaption>٢٦ مرجعًا لطراز واحد · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/a-product-rolex-desktop-full.webp"><img src="screens/a-product-rolex-desktop-fold.webp" alt="ساعة رولكس ديت جست 41 بعشرة ألوان للميناء وحالة بلا صورة معتمدة" loading="lazy" decoding="async"></a><figcaption>طراز واحد بـ٢٦ مرجعًا: اختيار الميناء ثم المرجع، وحالة «لا تتوفر صورة أصلية معتمدة» بصدق</figcaption></figure>
   </div>
   <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-062e2f6c"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-652c3cb7"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-1a889d4d"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-fab9fd81"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-a87f2a50"><bdi>In Common With</bdi></a><a class="refchip" href="#ref-00bd84df"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-e4c6a5b3"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-2c42876f"><bdi>Face Formula</bdi></a><a class="refchip" href="#ref-0e3baeaa"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-6b30a565"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-5d9a3669"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-7b9b6878"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-b14e5f34"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-d5ccf5b1"><bdi>ZARA</bdi></a><a class="refchip" href="#ref-f5550a7b"><bdi>SKIMS</bdi></a></div>
 </section>
@@ -227,9 +233,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <h2 id="dh-b"><span class="dchip big d-b">ب</span> الفهرس</h2>
     <p class="lede">اتجاه متاجر العلامات المتعددة الحديثة. بلا صورة افتتاحية؛ العنوان والأرقام الحقيقية ثم فهرس العلامات من A إلى Z. الكتالوج أربعة أعمدة مع عمود تصفية جانبي، وصفحة المنتج شبكة صور ومعلومات مدمجة. الأنسب لكتالوج كبير.</p>
     <div class="open">
-      <a class="btn" href="b/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
-      <a class="btn ghost" href="b/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
-      <a class="btn ghost" href="b/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+      <a class="btn" href="b/home.html">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="b/catalog.html">الكتالوج</a>
+      <a class="btn ghost" href="b/product.html?model=rolex-datejust-41-126334&amp;ref=m126334-0027">ساعة بـ٢٦ مرجعًا</a>
+      <a class="btn ghost" href="b/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979105">صفحة منتج بألوان ومقاسات</a>
     </div>
   </div>
   <div class="dir-meta">
@@ -237,13 +244,15 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#ffffff" title="#ffffff"></span><span class="sw" style="--c:#f5f5f4" title="#f5f5f4"></span><span class="sw" style="--c:#111111" title="#111111"></span><span class="sw" style="--c:#6b6b6b" title="#6b6b6b"></span><span class="sw" style="--c:#e6e6e6" title="#e6e6e6"></span></div>
   </div>
   <div class="gallery">
-    <figure class="g-wide"><a class="shot " href="screens/b-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/b-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/b-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/b-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/b-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/b-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/b-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/b-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-home-desktop-full.webp"><img src="screens/b-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-home-mobile-full.webp"><img src="screens/b-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-catalog-desktop-full.webp"><img src="screens/b-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-catalog-mobile-full.webp"><img src="screens/b-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-product-desktop-full.webp"><img src="screens/b-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، بيج</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-product-mobile-full.webp"><img src="screens/b-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-product-variant-desktop-full.webp"><img src="screens/b-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي. يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/b-product-rolex-mobile-full.webp"><img src="screens/b-product-rolex-mobile-fold.webp" alt="ساعة رولكس بعشرة ألوان للميناء على الجوال" loading="lazy" decoding="async"></a><figcaption>٢٦ مرجعًا لطراز واحد · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/b-product-rolex-desktop-full.webp"><img src="screens/b-product-rolex-desktop-fold.webp" alt="ساعة رولكس ديت جست 41 بعشرة ألوان للميناء وحالة بلا صورة معتمدة" loading="lazy" decoding="async"></a><figcaption>طراز واحد بـ٢٦ مرجعًا: اختيار الميناء ثم المرجع، وحالة «لا تتوفر صورة أصلية معتمدة» بصدق</figcaption></figure>
   </div>
   <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-062e2f6c"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-4ff94654"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-1302fa95"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-0d802a54"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-ee94ebcb"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-c28f72c2"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-d82ea357"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-21f0e2b4"><bdi>Urban Outfitters</bdi></a><a class="refchip" href="#ref-0e3baeaa"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-ea81f0f4"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-7ce8c22d"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-2f7126af"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-a108ec8a"><bdi>adidas</bdi></a><a class="refchip" href="#ref-28079950"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-abc1a71d"><bdi>HBX</bdi></a><a class="refchip" href="#ref-e757c5e0"><bdi>SSENSE</bdi></a><a class="refchip" href="#ref-da7d759e"><bdi>ZARA</bdi></a></div>
 </section>
@@ -252,9 +261,10 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <h2 id="dh-c"><span class="dchip big d-c">ج</span> المعرض</h2>
     <p class="lede">تطوير للهوية الحالية مع تخطيط جديد كليًا. يبقي خط المسيري المعتمد، لكن الواجهة منقسمة إلى لوحة نص وصورة، والعلامات أبواب قابلة للتمرير، والمنتجات معروضة على منصّات حجرية فاتحة. الألوان في صفحة المنتج بطاقات صغيرة بلون التنويع.</p>
     <div class="open">
-      <a class="btn" href="c/home.html" target="_blank" rel="noopener">افتح الصفحة الرئيسية</a>
-      <a class="btn ghost" href="c/catalog.html" target="_blank" rel="noopener">الكتالوج</a>
-      <a class="btn ghost" href="c/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979001" target="_blank" rel="noopener">صفحة منتج بألوان ومقاسات</a>
+      <a class="btn" href="c/home.html">افتح الصفحة الرئيسية</a>
+      <a class="btn ghost" href="c/catalog.html">الكتالوج</a>
+      <a class="btn ghost" href="c/product.html?model=rolex-datejust-41-126334&amp;ref=m126334-0027">ساعة بـ٢٦ مرجعًا</a>
+      <a class="btn ghost" href="c/product.html?model=longchamp-le-pliage-one-handbag&amp;ref=L1621979105">صفحة منتج بألوان ومقاسات</a>
     </div>
   </div>
   <div class="dir-meta">
@@ -262,13 +272,15 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <div class="swatches" aria-label="الألوان المقترحة"><span class="sw" style="--c:#fbf8f3" title="#fbf8f3"></span><span class="sw" style="--c:#f0eae1" title="#f0eae1"></span><span class="sw" style="--c:#26211c" title="#26211c"></span><span class="sw" style="--c:#6f665b" title="#6f665b"></span><span class="sw" style="--c:#3b2f25" title="#3b2f25"></span></div>
   </div>
   <div class="gallery">
-    <figure class="g-wide"><a class="shot " href="screens/c-home-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/c-home-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/c-catalog-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/c-catalog-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/c-product-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، أسود</figcaption></figure>
-    <figure class="g-phone"><a class="shot phone" href="screens/c-product-mobile-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
-    <figure class="g-wide"><a class="shot " href="screens/c-product-variant-desktop-full.webp" target="_blank" rel="noopener"><img src="screens/c-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي — يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-home-desktop-full.webp"><img src="screens/c-home-desktop-fold.webp" alt="الصفحة الرئيسية على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الرئيسية · شاشة كبيرة</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-home-mobile-full.webp"><img src="screens/c-home-mobile-fold.webp" alt="الصفحة الرئيسية على الجوال" loading="lazy" decoding="async"></a><figcaption>الرئيسية · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-catalog-desktop-full.webp"><img src="screens/c-catalog-desktop-fold.webp" alt="الكتالوج على شاشة كبيرة" loading="lazy" decoding="async"></a><figcaption>الكتالوج · بطاقة واحدة لكل طراز</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-catalog-mobile-full.webp"><img src="screens/c-catalog-mobile-fold.webp" alt="الكتالوج على الجوال" loading="lazy" decoding="async"></a><figcaption>الكتالوج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-product-desktop-full.webp"><img src="screens/c-product-desktop-fold.webp" alt="صفحة المنتج" loading="lazy" decoding="async"></a><figcaption>صفحة المنتج · مقاس صغير، بيج</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-product-mobile-full.webp"><img src="screens/c-product-mobile-fold.webp" alt="صفحة المنتج على الجوال" loading="lazy" decoding="async"></a><figcaption>المنتج · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-product-variant-desktop-full.webp"><img src="screens/c-product-variant-desktop-fold.webp" alt="صفحة المنتج بعد اختيار مقاس آخر ولون آخر" loading="lazy" decoding="async"></a><figcaption>المنتج نفسه بعد اختيار: كبير، عنّابي. يتغير المرجع والصورة والرابط</figcaption></figure>
+    <figure class="g-phone"><a class="shot phone" href="screens/c-product-rolex-mobile-full.webp"><img src="screens/c-product-rolex-mobile-fold.webp" alt="ساعة رولكس بعشرة ألوان للميناء على الجوال" loading="lazy" decoding="async"></a><figcaption>٢٦ مرجعًا لطراز واحد · جوال</figcaption></figure>
+    <figure class="g-wide"><a class="shot " href="screens/c-product-rolex-desktop-full.webp"><img src="screens/c-product-rolex-desktop-fold.webp" alt="ساعة رولكس ديت جست 41 بعشرة ألوان للميناء وحالة بلا صورة معتمدة" loading="lazy" decoding="async"></a><figcaption>طراز واحد بـ٢٦ مرجعًا: اختيار الميناء ثم المرجع، وحالة «لا تتوفر صورة أصلية معتمدة» بصدق</figcaption></figure>
   </div>
   <div class="dir-refs"><span>المراجع من <bdi>Mobbin</bdi>:</span> <a class="refchip" href="#ref-495a0688"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-275e6bb0"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-1f68eb6b"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-747e1e51"><bdi>Assembly Coffee</bdi></a><a class="refchip" href="#ref-ee94ebcb"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-5ea27774"><bdi>SOTF</bdi></a><a class="refchip" href="#ref-85dbd6d2"><bdi>Selfridges</bdi></a><a class="refchip" href="#ref-2f7126af"><bdi>FARFETCH</bdi></a><a class="refchip" href="#ref-712baa47"><bdi>H&amp;M</bdi></a><a class="refchip" href="#ref-a108ec8a"><bdi>adidas</bdi></a><a class="refchip" href="#ref-3123b8e6"><bdi>adidas</bdi></a><a class="refchip" href="#ref-f5550a7b"><bdi>SKIMS</bdi></a><a class="refchip" href="#ref-b95a252d"><bdi>Vestiaire Collective</bdi></a><a class="refchip" href="#ref-b09e8732"><bdi>Vestiaire Collective</bdi></a><a class="refchip" href="#ref-a9b0e748"><bdi>Zalando</bdi></a></div>
 </section>
