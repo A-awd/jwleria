@@ -1,5 +1,19 @@
 # Prebuilt storefront release — source commit 2a1864b35fd8
 
+**Where the compiled files are:**
+- Branch `claude/admiring-dirac-nfavfx`, commit `a23c29f330f7ef5f4f9ca40fa72b272b30008a11` or any later commit, in the directory `releases/storefront-2a1864b35fd8/`.
+- The directory holds 74 compiled files under `dist-cloudflare/`.
+- `SHA256SUMS` is the per-file checksum manifest: one sha256 per compiled file.
+- The upload command below uploads these files as they are. It does **not** run a build.
+- A fresh clone of the remote branch verified all 74 entries OK.
+- Secret scan: the package contains no keys, project identifiers or service credentials. Runtime secrets stay on the Worker.
+
+**Safe with the database still at 7 migrations: yes.**
+- With the models migration unapplied, the release reads `jwl_catalog` and `jwl_brand_page` exactly as the current Worker does. Its fallback triggers only when PostgREST reports the specific missing relation or function.
+- A local node build of the same commit was tested against the live 7-migration catalogue on 2026-10-27, reading the live database only. These pages all returned 200 with the expected references: home, catalogue page 2, the Rolex brand page, two product pages and an exact-reference search.
+- Non-release behaviour is kept: `noindex, nofollow`, robots `Disallow: /`, and the contact state stays pending.
+
+
 This is an upload-only package. The cloud session that prepared it built it from commit `2a1864b35fd8` on `claude/admiring-dirac-nfavfx`. The working tree was clean, and both test suites passed at that commit: storefront 135 pass, 0 fail, 3 opt-in browser tests skipped; intake 103 pass. Do not rebuild. Deploy exactly these files.
 
 - Build: `pnpm build:cloudflare` (Astro 7.3.5, `@astrojs/cloudflare` 14.3.3, Wrangler 4.147.0, Node 22.22.0, pnpm 10.28.0). The public release variables were unset (`PUBLIC_RELEASE`, `PUBLIC_INQUIRY_MODE`, `PUBLIC_WHATSAPP_E164`, `PUBLIC_SITE_ORIGIN`), matching the current live non-release preview, which is `noindex` with robots `Disallow: /`.
