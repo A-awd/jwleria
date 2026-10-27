@@ -78,3 +78,10 @@ for review only. A chosen family must be self-hosted with its licence and
 provenance recorded (see `docs/ux/font-provenance.md`) before production use.
 El Messiri remains the accepted Arabic display face until the owner decides
 otherwise.
+
+## Phone preview snapshot (private artifact version 3)
+
+- Entries: `a|b|c/product.html?model=rolex-datejust-36-126234&ref=m126234-0015`, plus `phone.html` (390px inner frame).
+- Photos: the foundation's candidate open-licence batch (not official, not approved, not live), shown only on their exact references; other references show the facts-only state.
+- Checked once in Chromium 153 only (no WebKit, no physical phones): photo pixels load on product, catalog and home at 360/390/430 in all three directions, no horizontal overflow, no script errors; product → catalog → photographed card → product and home links work; C thumbnail/swipe, zoom (largest derivative, Esc) and dial switch to an unphotographed reference.
+- Pending, not part of this snapshot: the interrupted phone-first rework of A and B (stopped mid-pass and taken as they stood after passing the checks above), independent phone verification, search/filter and menu interaction pass at phone widths, refreshed board screenshots (current ones predate the photos).

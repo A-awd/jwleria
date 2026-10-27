@@ -48,6 +48,7 @@ p { margin: 0; max-width: 68ch; }
 bdi { unicode-bidi: isolate; }
 .eyebrow { color: var(--muted); font-size: 14px; }
 .intro { display: grid; gap: 14px; }
+.phone-entry { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
 .intro .lede { font-size: 18px; color: var(--fg); }
 .status { display: flex; flex-wrap: wrap; gap: 8px 18px; color: var(--muted); font-size: 14px; }
 .status span::before { content: "•"; margin-inline-end: 8px; color: var(--line); }
@@ -153,6 +154,17 @@ footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line)
     <p class="lede">كل اتجاه يغيّر التخطيط والخط والخلفية وطريقة عرض الصور والتنقل وسلوك الجوال، وليس الألوان فقط. ابدأ بالصفحة الرئيسية، ثم انظر كيف ترث بطاقة الكتالوج وصفحة المنتج الاتجاه نفسه.</p>
     <div class="status"><span>٤١ مرجعًا حقيقيًا من <bdi>Mobbin</bdi></span><span>بيانات منتجات حقيقية من الموقع</span><span>الصور أماكن مؤقتة إلى أن تُعتمد صور المنتجات الأصلية</span></div>
   </header>
+
+  <section class="phone-entry" aria-labelledby="pe-h">
+    <h2 id="pe-h">المعاينة على الجوال</h2>
+    <p>افتح الساعة المصوَّرة مباشرة في كل اتجاه. الصور حقيقية للمرجع نفسه بترخيص مفتوح من طرف ثالث، وليست صورًا رسمية، ومقترحة غير معتمدة للموقع.</p>
+    <div class="open">
+      <a class="btn" href="phone.html">إطار الجوال ٣٩٠ بكسل</a>
+      <a class="btn ghost" href="a/product.html?model=rolex-datejust-36-126234&amp;ref=m126234-0015">أ — الدار</a>
+      <a class="btn ghost" href="b/product.html?model=rolex-datejust-36-126234&amp;ref=m126234-0015">ب — الفهرس</a>
+      <a class="btn ghost" href="c/product.html?model=rolex-datejust-36-126234&amp;ref=m126234-0015">ج — المعرض</a>
+    </div>
+  </section>
 
   <nav class="toc" aria-label="أقسام الصفحة">
     <a href="#options">الاتجاهات</a>

@@ -60,9 +60,25 @@
     $('.tag', box).innerHTML = tagH(v, view);
   }
 
+  /* exact-reference photographs (window.JWL_PHOTOS via JWL.imagesOf) */
+  const SAMPLE = 'عيّنة بترخيص مفتوح لمراجعة التصميم';
+  const small = (img) => `${img.base}-${Math.min(...img.widths)}.webp`;
+  const big = (img) => `${img.base}-${Math.max(...img.widths)}.webp`;
+  const credit = (img) => {
+    const c = img.credit || {};
+    return `<p class="credit"><span class="credit-k">${SAMPLE}</span> ${lat(c.creator)} · <a href="${esc(c.license_url)}" rel="license noopener" target="_blank">${lat(c.license)}</a> · <a href="${esc(c.source_url)}" rel="noopener" target="_blank">المصدر</a> · صورة مصغّرة ومحوّلة${img.lowres ? '، دقة منخفضة' : ''}</p>`;
+  };
+  const pimg = (img, sizes, eager) => `<img src="${esc(small(img))}" srcset="${esc(J.srcset(img))}" sizes="${sizes}" width="${img.w}" height="${img.h}" alt="${esc(img.alt)}" ${eager ? 'fetchpriority="high"' : 'loading="lazy"'} decoding="async">`;
+  const stageK = (m, v) => (J.imagesOf(m, v).length ? 'is-ph' : J.hasStandInImage(m) ? 'is-si' : 'is-fo');
+  const stageH = (m, v) => {
+    const im = J.imagesOf(m, v);
+    if (im.length) return `<div class="phx">${pimg(im[0], '(max-width: 699px) 50vw, 25vw')}</div><p class="tag">صورة بترخيص مفتوح</p>`;
+    return J.hasStandInImage(m) ? standin(m, v) : factsOnly(m, v);
+  };
+
   /* one card per model */
   function card(m, h, fv) {
-    const p = fv || J.primary(m), si = J.hasStandInImage(m), k = optKind(m);
+    const p = fv || J.cardVariant(m), k = optKind(m);
     const all = k ? ((J.axesOf(m).find((a) => a.kind === k) || {}).values || []) : [];
     // Distinct tones first (plain vs diamond-set dials share one).
     const first = (o, i) => all.findIndex((x) => x.tone === o.tone) === i;
@@ -78,7 +94,7 @@
       dots = `<div class="dots">${dots}</div>`;
     }
     // Dots follow the title in the DOM; CSS puts them on the stage floor.
-    return `<article class="card${dots ? ' has-dots' : ''}" data-model="${m.id}" data-ref="${esc(p.ref)}"><div class="stage ${si ? 'is-si' : 'is-fo'}">${si ? standin(m, p) : factsOnly(m, p)}</div>` +
+    return `<article class="card${dots ? ' has-dots' : ''}" data-model="${m.id}" data-ref="${esc(p.ref)}"><div class="stage ${stageK(m, p)}">${stageH(m, p)}</div>` +
       `<div class="c-txt"><p class="c-brand">${lat(m.brand)}</p><h${h} class="c-name"><a class="c-link" href="${J.url(m, p)}">${lat(m.name)}</a></h${h}>` +
       `<p class="c-type">${esc(m.typeAr)}</p><p class="c-sum">${sumOf(m)}</p></div>${dots}</article>`;
   }
@@ -87,7 +103,11 @@
     const c = dot.closest('.card');
     if (!c) return;
     const m = J.byId(c.dataset.model), v = J.variantOf(m, on ? dot.dataset.ref : c.dataset.ref), st = $('.stage', c);
-    if (J.hasStandInImage(m)) paintStandin(st, m, v); else $('.fo-r', st).innerHTML = refT(v.ref);
+    const k = stageK(m, v);
+    if (k === 'is-si' && st.classList.contains(k)) paintStandin(st, m, v);
+    else if (k === 'is-fo' && st.classList.contains(k)) $('.fo-r', st).innerHTML = refT(v.ref);
+    else if (!(k === 'is-ph' && st.classList.contains(k) && st.dataset.ref === v.ref)) { st.className = 'stage ' + k; st.innerHTML = stageH(m, v); }
+    st.dataset.ref = v.ref;
     const o = optOf(m, v);
     $('.c-sum', c).innerHTML = on && o ? `${esc(o.ar)} · ${lat(o.material || o.en)}` : sumOf(m);
   }
@@ -179,7 +199,7 @@
   /* home */
   function home() {
     // A non-default real variant per model, each card linking to that reference.
-    const pick = [['longchamp-le-pliage-one-handbag', 'L1626979163'], ['rolex-datejust-41-126334', 'm126334-0027'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['longchamp-le-pliage-one-travel-bag', null]]
+    const pick = [['longchamp-le-pliage-one-handbag', 'L1626979163'], ['rolex-datejust-36-126234', 'm126234-0015'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['rolex-datejust-36-126200', 'm126200-0006']]
       .map(([id, ref]) => { const m = J.byId(id); return [m, ref ? J.variantOf(m, ref) : m.variants.find((x) => x.color === 'P87') || J.primary(m)]; });
     const doors = D.brands.map((b) => {
       const n = D.brandCounts[b];
@@ -263,7 +283,7 @@
 
   /* product */
   function product() {
-    const q = J.params(), m = J.byId(q.get('model')), C = cat(m.category), SI = J.hasStandInImage(m);
+    const q = J.params(), m = J.byId(q.get('model')), C = cat(m.category);
     let v = J.variantOf(m, q.get('ref')), view = 0;
     let canon = $('link[rel="canonical"]');
     if (!canon) { canon = d.createElement('link'); canon.rel = 'canonical'; d.head.append(canon); }
@@ -281,10 +301,7 @@
 <h1 class="p-title"><span class="p-lat">${lat(m.name)}</span><span class="p-type">${esc(m.typeAr)}${m.nameAr ? ' · ' + esc(AR(m.nameAr)) : ''}</span></h1>
           ${sum ? `<p class="p-sum">${sum}</p>` : ''}
 </div>
-<section class="gal${SI ? '' : ' no-rail'}" aria-label="صور المنتج">
-${SI ? `<div class="rail" role="group" aria-label="مناظر الصورة">${VIEWS.map((t, i) => `<button class="th" type="button" data-view="${i}" aria-pressed="${i === 0}"><span class="th-s"><i></i></span><span>${t}</span></button>`).join('')}</div>` : ''}
-<div class="pstage stage ${SI ? 'is-si' : 'is-fo'}" id="media" data-view="0"></div>
-</section>
+<section class="gal" id="gal" aria-label="صور المنتج"></section>
 <div class="p-body">
 <div class="axes" id="opts"></div>
 <button class="btn btn-s cta" id="cta" type="button" data-inert aria-describedby="inq">${INQ}</button>
@@ -298,11 +315,48 @@ ${rel.length ? `<section class="rel" aria-labelledby="rh"><div class="sec-h"><h2
 </div>
 <div class="actbar off" id="actbar"><button class="btn btn-s" type="button" data-inert aria-describedby="inq">${INQ}</button></div>`;
 
+    let im = [], at = 0;
+    const photoGal = () => `<div class="pstage stage is-ph" id="media"><div class="gx" id="gx" tabindex="0" aria-label="${esc(`صور المرجع ${v.ref}، ${AR(im.length)} صور، اسحب للتنقل`)}">` +
+      im.map((img, i) => `<figure class="gx-s"><button class="gx-z" type="button" data-z="${i}" aria-label="${esc(`تكبير الصورة ${AR(i + 1)} من ${AR(im.length)}: ${img.alt}`)}">${pimg(img, '(max-width: 699px) 100vw, 50vw', !i)}</button></figure>`).join('') +
+      `</div>${im.length > 1 ? `<p class="gx-n" aria-hidden="true"><span id="gxn">${AR(1)}</span> / ${AR(im.length)}</p>` : ''}</div>` +
+      (im.length > 1 ? `<div class="gx-th" role="group" aria-label="اختيار الصورة">${im.map((img, i) => `<button class="gx-t" type="button" data-go="${i}" aria-pressed="${!i}" aria-label="${esc(`الصورة ${AR(i + 1)}: ${img.view}`)}"><img src="${esc(small(img))}" width="${img.w}" height="${img.h}" alt="" loading="lazy" decoding="async"></button>`).join('')}</div>` : '') +
+      `<div class="gx-c" id="gxc">${credit(im[0])}</div>`;
+    const slideTo = (i) => {
+      const pg = $('#gx'), s = $$('.gx-s', pg)[i];
+      if (s) pg.scrollBy({ left: s.getBoundingClientRect().left - pg.getBoundingClientRect().left, behavior: smooth() });
+    };
+    const mark = (i) => {
+      if (i === at) return;
+      at = i;
+      const n = $('#gxn'); if (n) n.textContent = AR(i + 1);
+      $$('.gx-t').forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+      $('#gxc').innerHTML = credit(im[i]);
+    };
     function media() {
-      const box = $('#media');
-      box.dataset.view = view;
-      if (SI) paintStandin(box, m, v, VIEWS[view]); else box.innerHTML = factsOnly(m, v, true);
-      $$('.th').forEach((b, i) => { b.setAttribute('aria-pressed', String(i === view)); $('i', b).style.setProperty('--tone', J.toneOf(m, v)); });
+      const g = $('#gal'), mode = stageK(m, v);
+      im = J.imagesOf(m, v);
+      if (mode === 'is-ph') {
+        if (g.dataset.mode === mode && g.dataset.ref === v.ref) return;
+        at = 0;
+        g.className = 'gal is-ph';
+        g.innerHTML = photoGal();
+        const pg = $('#gx');
+        pg.addEventListener('scroll', () => mark(Math.min(im.length - 1, Math.round(Math.abs(pg.scrollLeft) / pg.clientWidth))), { passive: true });
+      } else if (mode === 'is-si') {
+        if (g.dataset.mode !== mode) {
+          g.className = 'gal';
+          g.innerHTML = `<div class="rail" role="group" aria-label="مناظر الصورة">${VIEWS.map((t, i) => `<button class="th" type="button" data-view="${i}" aria-pressed="${i === view}"><span class="th-s"><i></i></span><span>${t}</span></button>`).join('')}</div><div class="pstage stage is-si" id="media" data-view="0"></div>`;
+        }
+        const box = $('#media');
+        box.dataset.view = view;
+        paintStandin(box, m, v, VIEWS[view]);
+        $$('.th').forEach((b, i) => { b.setAttribute('aria-pressed', String(i === view)); $('i', b).style.setProperty('--tone', J.toneOf(m, v)); });
+      } else {
+        g.className = 'gal no-rail';
+        g.innerHTML = `<div class="pstage stage is-fo" id="media">${factsOnly(m, v, true)}</div>`;
+      }
+      g.dataset.mode = mode;
+      g.dataset.ref = v.ref;
     }
     function opt(k, o) {
       const t = J.nearest(m, v, k, o.id), on = v[k] === o.id, note = on ? '' : J.changeNoteAr(m, v, k, o.id);
@@ -374,8 +428,35 @@ ${rel.length ? `<section class="rel" aria-labelledby="rh"><div class="sec-h"><h2
       const vals = J.axesOf(m).map((x) => J.valueOf(m, x.kind, v[x.kind])).filter(Boolean).map((x) => x.ar);
       $('#live').textContent = `${vals.length ? vals.join('، ') + '، ' : ''}المرجع ${v.ref}`;
     });
-    const rail = $('.rail');
-    if (rail) rail.addEventListener('click', (e) => { const b = e.target.closest('.th'); if (b) { view = +b.dataset.view; media(); } });
+    // Zoom viewer: the largest derivative on demand; Esc, the close button and the arrows work by keyboard.
+    const zv = d.createElement('dialog');
+    zv.className = 'zv';
+    zv.setAttribute('aria-label', 'الصورة مكبّرة');
+    zv.innerHTML = `<div class="zv-b"><button type="button" data-zx>إغلاق</button><span class="zv-n" id="zvn"></span><span class="zv-nav"><button type="button" data-zs="-1" aria-label="الصورة السابقة">${ui('right')}</button><button type="button" data-zs="1" aria-label="الصورة التالية">${ui('left')}</button></span></div><div class="zv-i" id="zvb"><img id="zvi" alt=""></div><div class="zv-c" id="zvc"></div>`;
+    B.append(zv);
+    let zi = 0;
+    const zshow = (i) => {
+      zi = (i + im.length) % im.length;
+      const img = im[zi], el = $('#zvi');
+      el.src = big(img); el.alt = img.alt; el.width = img.w; el.height = img.h;
+      $('#zvb').classList.remove('z');
+      $('#zvn').textContent = `${AR(zi + 1)} / ${AR(im.length)}`;
+      $('#zvc').innerHTML = credit(img);
+      $$('[data-zs]', zv).forEach((b) => { b.hidden = im.length < 2; });
+    };
+    zv.addEventListener('click', (e) => {
+      if (e.target.closest('[data-zx]')) zv.close();
+      else if (e.target.closest('[data-zs]')) zshow(zi + +e.target.closest('[data-zs]').dataset.zs);
+      else if (e.target.id === 'zvi') $('#zvb').classList.toggle('z');
+    });
+    zv.addEventListener('keydown', (e) => { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') zshow(zi + (e.key === 'ArrowLeft' ? 1 : -1)); });
+    zv.addEventListener('close', () => { slideTo(zi); mark(zi); });
+    $('#gal').addEventListener('click', (e) => {
+      const th = e.target.closest('.th'), go = e.target.closest('.gx-t'), z = e.target.closest('.gx-z');
+      if (th) { view = +th.dataset.view; media(); }
+      else if (go) { slideTo(+go.dataset.go); mark(+go.dataset.go); }
+      else if (z) { zshow(+z.dataset.z); zv.showModal(); $('[data-zx]', zv).focus(); }
+    });
 
     render();
     // Action bar: after the title has scrolled away, while the CTA is out of view.
