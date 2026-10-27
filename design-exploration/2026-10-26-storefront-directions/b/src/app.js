@@ -6,16 +6,16 @@ const J = window.JWL, D = J.data, A = J.AR, enc = encodeURIComponent;
 const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const H = (s, h) => { const e = $(s); if (e) e.innerHTML = h; return e; };
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
-/* Latin run, always isolated; references also get break points after . and - */
+/* Latin run, always isolated */
 const L = (s, c) => `<bdi lang="en" dir="ltr"${c ? ` class="${c}"` : ''}>${esc(s)}</bdi>`;
-const RF = s => `<bdi lang="en" dir="ltr" class="ref">${esc(s).replace(/([.-])/g, '$1<wbr>')}</bdi>`;
-/* Preview-only Arabic glosses for facts the shared fixture lists in Latin only (not approved copy). */
-const GLO = {
-  '18-carat pink gold': 'ذهب وردي عيار ١٨', '18-carat sand gold': 'ذهب رملي عيار ١٨', 'Pink Gold': 'ذهب وردي',
-  'White Rolesor — Oystersteel and white gold': 'فولاذ وذهب أبيض', 'Perpetual, mechanical, self-winding': 'ميكانيكية، ذاتية التعبئة',
-  '100 m / 330 ft': '١٠٠ متر', 'Grained nubuck': 'نوبوك محبّب', 'Paper calf': 'جلد عجل رقيق', 'Supple grained calf': 'جلد عجل محبّب ليّن', Ostrich: 'جلد نعام'
-};
-const V = s => GLO[s] ? esc(GLO[s]) + L(s, 'sub') : /[A-Za-z]/.test(s) ? L(s) : esc(s);
+/* References never break: one unbroken run. `--w` is its width in em (Inter 500, tabular figures),
+   so CSS can fit the size to the slot instead of wrapping inside the code. */
+const RW = s => [...String(s)].reduce((w, c) => w + (c === '.' ? .29 : /[mw]/i.test(c) ? .91 : /[A-Z]/.test(c) ? .79 : .67), 0).toFixed(2);
+const RF = s => `<bdi lang="en" dir="ltr" class="ref" style="--w:${RW(s)}">${esc(s)}</bdi>`;
+/* A fact the shared fixture gives only in Latin is shown as that official value, isolated; no local gloss */
+const V = s => /[A-Za-z]/.test(s) ? L(s) : esc(s);
+/* Arabic-Indic digits with the Arabic thousands separator: ٤٬٠٩٧ */
+const AN = n => A(String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '٬'));
 const ISO = s => '⁨' + s + '⁩';
 const CAT = {}; D.categories.forEach(c => { CAT[c.slug] = c; });
 const page = document.body.dataset.page, P0 = J.params();
@@ -48,7 +48,8 @@ const ph = (m, v, w, i) => {
 const paint = (el, m, v, w) => {
   const t = tint(m, v);
   el.style.setProperty('--a', t.a); el.style.setProperty('--b', t.b); el.classList.toggle('dk', t.dk);
-  el.setAttribute('aria-label', phL(m, v, w)); $('.ref', el).textContent = v.ref;
+  el.setAttribute('aria-label', phL(m, v, w));
+  const r = $('.ref', el); r.textContent = v.ref; r.style.setProperty('--w', RW(v.ref));
 };
 /* facts-only: card face is reference-first (brand and model sit in the caption below) */
 const fo = (m, v) => `<div class="fo"><p class="fo-k">المرجع</p><p class="fo-r">${RF(v.ref)}</p><p class="fo-s">${NO}</p></div>`;
@@ -87,13 +88,15 @@ const azC = (p, t, cut) => {
   }).join('')}</div>`;
 };
 const TOPS = Object.keys(D.brandCounts).sort((a, b) => D.brandCounts[b] - D.brandCounts[a]);
+/* footer lists only brands that have a model in this preview, so no link opens an empty catalog */
+const PB = [...new Set(D.models.map(m => m.brand))].sort((a, b) => a.localeCompare(b, 'en', { sensitivity: 'base' }));
 const FEAT = [['longchamp-le-pliage-one-handbag', 'L1621979163'], ['rolex-datejust-41-126334'], ['loewe-puzzle-large', 'B510PNLX05-0018'], ['audemars-piguet-royal-oak-15202or'], ['longchamp-le-pliage-one-backpack', '10284979105']];
 const FILL = {
   'az-mb': () => azL('mb', 1) + azC('mb', 'span'),
   'az-dz': () => azC('dz', 'span'),
   'az-az': () => azL('az') + azC('az', 'h3', 10) + `<button type="button" class="az-more" aria-expanded="false" aria-controls="az-list">عرض كل العلامات (${A(D.brands.length)})</button>`,
   tops: () => TOPS.map(b => `<li><a href="${bU(b)}">${L(b)}<span class="n">${A(D.brandCounts[b])}</span></a></li>`).join(''),
-  ftb: () => TOPS.map(b => `<li><a href="${bU(b)}">${L(b)}</a></li>`).join('') + '<li><a href="home.html#az">كل العلامات</a></li>',
+  ftb: () => PB.map(b => `<li><a href="${bU(b)}">${L(b)}</a></li>`).join('') + '<li><a href="home.html#az">كل العلامات</a></li>',
   mcats: () => D.categories.map(c => `<li><a href="${cU(c.slug)}"><span>${c.ar}</span><span class="c-en" lang="en">${c.en}</span></a></li>`).join(''),
   cats: () => D.categories.map(c => `<li><a href="${cU(c.slug)}">${c.ar}</a></li>`).join(''),
   /* jewellery uses a crop of the still-life (its own photo), so no tile repeats the bracelet image */
@@ -103,7 +106,7 @@ const FILL = {
       `<figure class="cat-f${alt ? ' alt' : ''}"><img src="${src}-${w[0]}.webp" srcset="${src}-${w[0]}.webp ${w[0]}w, ${src}-${w[1]}.webp ${w[1]}w" sizes="${alt ? '240px' : '(max-width: 767px) 64px, 112px'}" width="${w[0]}" height="${alt ? 400 : 320}" alt="" loading="lazy" decoding="async"><figcaption>صورة توضيحية</figcaption></figure></a></li>`;
   }).join(''),
   feat: () => FEAT.map(([id, r]) => { const m = J.byId(id); return card(m, r && J.variantOf(m, r)); }).join(''),
-  nb: () => A(D.brands.length), nc: () => A(D.categories.length), nr: () => A(D.meta.catalogReferences),
+  nb: () => A(D.brands.length), nc: () => A(D.categories.length), nr: () => AN(D.meta.catalogReferences),
   date: () => A(+dt[2]) + ' أكتوبر ' + A(dt[0]), year: () => A(dt[0])
 };
 
@@ -181,7 +184,7 @@ function catalog() {
   const EMP = D.categories.filter(c => !ms.some(m => m.category === c.slug)).map(c => c.slug);
   const S = {
     brand: P0.getAll('brand'), category: P0.getAll('category').filter(s => CAT[s]), color: P0.getAll('color').filter(k => COLS.some(x => x.k === k)),
-    q: (P0.get('q') || '').trim(), sort: P0.get('sort') === 'name' ? 'name' : 'new', page: Math.max(1, parseInt(P0.get('page'), 10) || 1)
+    q: (P0.get('q') || '').trim(), sort: P0.get('sort') === 'name' ? 'name' : 'default', page: Math.max(1, parseInt(P0.get('page'), 10) || 1)
   };
   const hay = m => [m.brand, m.name, m.nameAr, m.typeAr, m.collection, CAT[m.category].ar, CAT[m.category].en, ...m.variants.map(x => x.ref), ...(m.colors || []).map(c => c.ar + ' ' + c.en)].join(' ').toLowerCase();
   const has = (m, f, v) => f === 'brand' ? m.brand === v : f === 'category' ? m.category === v : (m.colors || []).some(c => ck(c) === v);
@@ -237,10 +240,12 @@ function catalog() {
     H('#act', chips.map(x => `<li><button type="button" class="ac" data-f="${x[0]}" data-v="${esc(x[1])}"><span class="vh">إزالة عامل التصفية: </span>${x[2]}${IX}</button></li>`).join('') + (chips.length > 1 ? '<li><button type="button" class="ac-x" data-clear>مسح الكل</button></li>' : ''));
     const pb = (p, l, dis, cur, aria) => `<button type="button" data-p="${p}"${dis ? ' disabled' : ''}${cur ? ' aria-current="page"' : ''}${aria ? ` aria-label="${aria}"` : ''}>${l}</button>`;
     let nums = ''; for (let i = 1; i <= pages; i++) nums += '<li>' + pb(i, A(i), 0, i === S.page, 'الصفحة ' + A(i)) + '</li>';
-    H('#pg', pb(S.page - 1, 'السابق', S.page <= 1) + `<ol>${nums}</ol>` + pb(S.page + 1, 'التالي', S.page >= pages) + `<p class="pg-i">الصفحة ${A(S.page)} من ${A(pages)} · حتى ${A(per)} طرازًا في الصفحة</p>`);
+    /* no results, no pager */
+    $('#pg').hidden = !list.length;
+    H('#pg', !list.length ? '' : pb(S.page - 1, 'السابق', S.page <= 1) + `<ol>${nums}</ol>` + pb(S.page + 1, 'التالي', S.page >= pages) + `<p class="pg-i">الصفحة ${A(S.page)} من ${A(pages)} · حتى ${A(per)} طرازًا في الصفحة</p>`);
     const u = new URLSearchParams();
     ['brand', 'category', 'color'].forEach(f => S[f].forEach(x => u.append(f, x)));
-    if (S.q) u.set('q', S.q); if (S.sort !== 'new') u.set('sort', S.sort); if (S.page > 1) u.set('page', S.page);
+    if (S.q) u.set('q', S.q); if (S.sort !== 'default') u.set('sort', S.sort); if (S.page > 1) u.set('page', S.page);
     history.replaceState(null, '', u.toString() ? '?' + u : 'catalog.html');
     $$('#ff input').forEach(i => {
       const f = i.name, n = ms.filter(m => ok(m, f) && has(m, f, i.value)).length;
@@ -272,7 +277,10 @@ const pub = n => { const r = n % 100; return n === 1 ? 'مرجع واحد منش
 function product() {
   const m = J.byId(P0.get('model')), cat = CAT[m.category], st = J.hasStandInImage(m), VW = ['أمامي', 'جانبي', 'خلفي', 'تفاصيل'];
   let v = J.variantOf(m, P0.get('ref'));
-  $('link[rel="canonical"]').setAttribute('href', J.url(m, J.primary(m)));
+  /* canonical is set per model (primary variant), not hard-coded in the HTML */
+  let cn = $('link[rel="canonical"]');
+  if (!cn) { cn = document.createElement('link'); cn.rel = 'canonical'; document.head.appendChild(cn); }
+  cn.setAttribute('href', J.url(m, J.primary(m)));
   const mates = D.models.filter(x => x.brand === m.brand && x.id !== m.id);
   const rel = (mates.length ? mates : D.models.filter(x => x.category === m.category && x.id !== m.id)).slice(0, 4);
   const n = D.brandCounts[m.brand];

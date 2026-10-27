@@ -110,9 +110,6 @@ if (page === 'home') {
     e.currentTarget.setAttribute('aria-pressed', String(p));
     $('[data-marquee-label]').textContent = p ? 'تشغيل الحركة' : 'إيقاف الحركة';
   });
-  $$('[data-story-brands]').forEach((el) => {
-    el.innerHTML = [...new Set(D.models.filter((m) => m.category === el.dataset.storyBrands).map((m) => m.brand))].map((b) => `<li>${nw(b)}</li>`).join('');
-  });
   $('[data-cat-index]').innerHTML = D.categories.map((c, i) => `<li><a href="${catLink(c.slug)}"><span class="n">${ar(String(i + 1).padStart(2, '0'))}</span><span class="t">${esc(c.ar)}</span></a></li>`).join('');
   $('[data-featured]').innerHTML = [['longchamp-le-pliage-one-handbag', 'L1621979P87'], ['rolex-datejust-41-126334'], ['loewe-puzzle-large', 'B510PNLX05-0018']]
     .map(([id, r]) => { const m = J.byId(id); return card(m, J.variantOf(m, r)); }).join('');
@@ -217,7 +214,11 @@ if (page === 'product') {
   const cat = catOf(M.category), axes = J.axesOf(M), stand = J.hasStandInImage(M);
   const VIEWS = ['أمامي', 'جانبي', 'تفاصيل'], MODS = ['', 'side', 'detail'];
 
-  $('link[rel="canonical"]').setAttribute('href', J.url(M, J.primary(M)));
+  // Preview only: production renders this canonical on the server.
+  const canon = doc.createElement('link');
+  canon.setAttribute('rel', 'canonical');
+  canon.setAttribute('href', J.url(M, J.primary(M)));
+  doc.head.appendChild(canon);
   $('[data-crumbs]').innerHTML = `<li><a href="catalog.html">الكتالوج</a></li><li><a href="${catLink(cat.slug)}">${esc(cat.ar)}</a></li>`;
 
   const nameOf = (x) => (x ? esc(x.ar) + (x.en ? SEP + lat(x.en) : '') + (x.material ? SEP + lat(x.material) : '') : '');
@@ -226,14 +227,14 @@ if (page === 'product') {
     return `<div class="opt"><p class="opt-head"><span class="opt-k" id="k-${kind}">${esc(label.ar)}</span><span class="opt-v" data-sel="${kind}"></span></p>` +
       `<ul class="${sw ? 'swatches' + (values.length > 6 ? ' swatches--many' : '') : 'sizes'}" aria-labelledby="k-${kind}">${values.map((x) =>
         `<li><a class="${sw ? 'swatch' + (/diamond/i.test(x.en) ? ' is-gem' : '') : 'size'}" href="#" data-kind="${kind}" data-val="${esc(x.id)}"${sw ? ` style="--c:${x.tone}"` : ''}>` +
-        (sw ? '<i aria-hidden="true"></i>' : `<span class="size-l"><span>${esc(x.ar)}</span>${lat(x.en)}</span><small class="opt-change" data-note></small>`) + '</a></li>').join('')}</ul>` +
-      `${sw ? `<p class="opt-hint" data-hint aria-hidden="true"></p><p class="opt-notes" data-notes="${kind}" aria-hidden="true"></p>` : ''}</div>`;
+        (sw ? `<i aria-hidden="true"></i><span class="sw-l">${esc(x.ar)}</span>` : `<span class="size-l"><span>${esc(x.ar)}</span>${lat(x.en)}</span><small class="opt-change" data-note></small>`) + '</a></li>').join('')}</ul>` +
+      `${sw ? `<p class="opt-notes" data-notes="${kind}" aria-hidden="true"></p>` : ''}</div>`;
   }).join('');
   $('[data-media]').innerHTML = stand
     ? `<div class="gallery" data-gallery>${VIEWS.map((w, i) => `<figure class="slide">${ph(M, V, w, MODS[i])}</figure>`).join('')}</div><p class="gallery-count" aria-hidden="true"><span data-gi>١</span> / ${ar(VIEWS.length)}</p>`
     : fo(M, V, true);
   $('[data-head]').innerHTML = `<a class="pdp-brand" href="catalog.html?brand=${encodeURIComponent(M.brand)}">${lat(M.brand)}</a>` +
-    `<h1 class="pdp-title">${lat(M.name)}</h1><p class="pdp-type">${esc(M.typeAr)}${M.nameAr ? SEP + `<span class="pdp-ar">${esc(M.nameAr)}</span>` : ''}</p>` +
+    `<h1 class="pdp-title">${lat(M.name)}</h1><p class="pdp-type">${esc(M.typeAr)}${M.nameAr ? SEP + `<span class="pdp-ar">${esc(ar(M.nameAr))}</span>` : ''}</p>` +
     `${M.collection ? `<p class="pdp-coll"><span>المجموعة</span>${lat(M.collection)}</p>` : ''}` +
     `<div class="opts">${optsH}<div class="opt" data-chips hidden></div><div class="pdp-ref"><span>المرجع</span>${refH(V.ref, ' data-ref')}</div></div>`;
   const pdp = $('[data-pdp]'), info = $('.pdp-info', pdp);
@@ -248,7 +249,6 @@ if (page === 'product') {
       a.dataset.note = note;
       current(a, on);
       a.classList.toggle('has-change', !!note);
-      a.dataset.tip = x.ar + (note ? ' — ' + note : '');
       if (kind === 'size') $('[data-note]', a).textContent = note;
       else a.setAttribute('aria-label', x.ar + (x.material ? '، ' + x.material : '') + (note ? '، ' + note : ''));
     });
@@ -256,8 +256,6 @@ if (page === 'product') {
     $$('[data-notes]', pdp).forEach((el) => {
       el.textContent = $$(`a[data-kind="${el.dataset.notes}"]`, pdp).filter((a) => a.dataset.note).map((a) => '• ' + J.valueOf(M, a.dataset.kind, a.dataset.val).ar + ': ' + a.dataset.note).join('  ');
     });
-    const act = doc.activeElement;
-    $$('[data-hint]', pdp).forEach((h) => { h.textContent = act && act.matches('a.swatch') && h.parentNode.contains(act) ? act.dataset.tip : ''; });
     // References sharing every public option value: chips, never invented labels.
     const box = $('[data-chips]', pdp), sib = axes.length ? J.siblings(M, V) : [], key = sib.map((s) => s.ref).join();
     box.hidden = sib.length < 2;
@@ -302,11 +300,6 @@ if (page === 'product') {
     if (v !== V) { V = v; sync(true); }
     history.replaceState(null, '', href);
   });
-  const hint = (e) => {
-    const a = e.target.closest('a.swatch'), h = a && $('p[data-hint]', a.closest('.opt'));
-    if (h) h.textContent = /over|in$/.test(e.type) ? a.dataset.tip : '';
-  };
-  ['pointerover', 'pointerout', 'focusin', 'focusout'].forEach((t) => pdp.addEventListener(t, hint));
   sync(false);
   addEventListener('resize', stick);
   if (window.ResizeObserver) new ResizeObserver(stick).observe(info);
