@@ -114,6 +114,10 @@ html[lang="en"] :is(.hero, .page-head) h1 { line-height: 1.02; }
 .art--4 { --p: 70% 64%; scale: 1.25; } .art--5 { --p: 8% 40%; scale: 2.1; } .art--6 { --p: 60% 92%; scale: 1.7; }
 .art--7 { --p: 92% 78%; scale: 2.3; } .art--8 { --p: 45% 20%; scale: 1.5; }
 @media (hover: hover) { a:hover .art { transform: scale(1.035); } }
+/* Approved product photographs (the only images with a responsive srcset) are shown whole: no crop on phones and
+   no hover zoom, inside the unchanged 4:5 frame on the existing sand ground. Editorial and preview art keep cover. */
+:is(.pdp__gallery, .card) .media > img.art[srcset] { object-fit: contain; object-position: 50% 50%; }
+@media (hover: hover) { :is(.pdp__gallery, .card) a:hover .media > img.art[srcset] { transform: none; } }
 .badge { position: absolute; z-index: 1; inset-block-start: .75rem; inset-inline-start: .75rem; background: color-mix(in srgb, var(--paper) 92%, transparent); font-size: .72rem; line-height: 1.4; padding: .25rem .6rem; }
 
 .tiles, .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(1rem, 2.5vw, 2rem); }
