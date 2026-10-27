@@ -18,8 +18,18 @@ Execution remains subject to every existing gate:
 
 - owner approvals: applying the open-licence migration (which includes the source-flag exemption described below, stated as its own line in the approval request), creating the product-media bucket, deploying the upload function, and a Worker release that renders the credits;
 - the database confirmation path: fresh read, rendered statements and recorded receipts;
-- evidence gates: exact candidate revision, recorded licence review, an independent identity verification in which every check passes, and confirmation of any rendition URL that was constructed rather than logged;
-- technical delivery gates, owned by the implementation owner under decision 0010 and not owner approvals: every derivative within the card byte budget of the 21 October performance checkpoint (150,000 bytes) and at or above the minimum fidelity floor, and an independent visual comparison of every included derivative against its reference.
+- evidence gates: exact candidate revision, recorded licence review, the identity gate below, and confirmation of any rendition URL that was constructed rather than logged;
+- technical delivery gates, owned by the implementation owner under decision 0010 and not owner approvals: every derivative within its byte budget (150,000 B for card sizes) and at or above the minimum fidelity floor, unless an independent reviewed exception record covers that exact file (decision 0009 addendum), and an independent visual comparison of every derivative of every included file against its reference.
+
+Identity gate (implementation rule recorded by the implementation owner under decision 0010). A file passes only when the independent visual record names its exact held bytes (sha256) and one of these holds:
+
+1. every visual check is literally `true`, `exact_reference` included; or
+2. all of the following:
+   - `color_and_variant`, `authentic_product_photo`, `not_generated_or_altered` and `clear_product_view` are literally `true`;
+   - `exact_reference` is literally `"uncertain"`, never `false`;
+   - a separate independent identity determination names that exact file and sha256 with `identity_established` literally `true` and a non-null `creator_stated_reference` contained in the catalogue reference.
+
+In the second case `exact_reference` stays `"uncertain"` in every record; it is never rounded up to `true`. The verification record quotes both records' reasons and names both reviewers. It states that case size and bezel material come from the creator-stated reference, not from the pixels. The pipeline (`requireVerification`) re-checks all of this. Identity is never inherited from another file of the same photographer, session or model name.
 
 Grants cite this file as `decisions/0013-open-licence-exact-product-photos.md`.
 
@@ -34,4 +44,6 @@ Everything else stays as before:
 
 This exemption changes decision 0011's rule that a source's publication flag for media stays a separate owner decision (0011 carries a cross-reference). It takes effect only if the owner approves the migration with this exemption named as a separate line of the approval request; until that approval is recorded it is a proposal.
 
-Status on 2026-10-27: the independent visual verification of the five held m126234-0015 renditions marked `exact_reference` as uncertain for all five. Case size and bezel metal cannot be confirmed from pixels. It also marked colour/variant as uncertain for three files and the view as unclear for the box photograph. None of the five may be published under this decision until a new verification passes every check.
+Status on 2026-10-27: the independent visual verification of the five held m126234-0015 renditions marked `exact_reference` as uncertain for all five. Case size and bezel metal cannot be confirmed from pixels. It also marked colour/variant as uncertain for three files and the view as unclear for the box photograph.
+
+An independent identity determination then established the reference for the front photograph (`Rolex_Datejust_126234.jpg`) only. Its creator's Commons description states "ref. 126234, 36 mm case". The other four state no reference, so their identity is not established. Under the identity gate above, only the front photograph can be included. It still needs every other gate, and nothing is published.

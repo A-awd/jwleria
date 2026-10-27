@@ -300,32 +300,117 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
       website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode}});
 }
 
-/** A human or agent visual check of one exact original. Code never creates a passing record itself. */
-export function requireVerification(record,{candidate,asset}){
-  if(!record||record.asset_sha256!==asset.sha256||record.verified_reference!==candidate.external_id)throw Error('Verification must name this exact original and reference');
-  if(!text(record.reviewer)||!text(record.verification_reference))throw Error('Verification reviewer and private record required');
-  const failed=verificationChecks.filter(check=>record.checks?.[check]!==true);
+// A verification record quotes its reviewers' reasons unabridged, so it may be longer than a short text field.
+const record=value=>typeof value==='string'&&value.trim().length>0&&value.length<=8000;
+const reference=value=>String(value).toLowerCase().replace(/[^a-z0-9]/g,'');
+
+/**
+ * Why an independent identity determination cannot settle exact_reference for this file, or null when it can. It
+ * applies only where the visual record left exact_reference "uncertain" (never false): it must name the exact
+ * original by sha256, say identity_established literally true, carry the creator-stated reference (contained in the
+ * catalogue reference, so a sibling such as 126334 is refused) and be quoted, reviewer and reason, in the
+ * verification record. The determination is a separate reviewer's record; code never creates one.
+ */
+export function identityDeterminationProblem(verification,{candidate,asset}){
+  const d=verification?.identity_determination;
+  if(!d||typeof d!=='object')return 'no identity determination';
+  if(d.asset_sha256!==asset.sha256)return 'identity determination names other bytes';
+  if(d.identity_established!==true)return 'identity_established is not true';
+  if(!text(d.creator_stated_reference)||reference(d.creator_stated_reference).length<4)return 'no creator-stated reference';
+  if(!reference(candidate.external_id).includes(reference(d.creator_stated_reference)))return 'creator-stated reference is not this catalogue reference';
+  if(!text(d.reviewer)||!record(d.reason))return 'identity determination needs its reviewer and reason';
+  const quoted=verification.verification_reference??'';
+  if(!quoted.includes(d.reviewer)||!quoted.includes(d.reason)||!quoted.includes(d.creator_stated_reference))return 'verification record does not quote the identity determination';
+  return null;
+}
+
+/**
+ * A human or agent visual check of one exact original. Code never creates a passing record itself. Every check must
+ * be literally true, except that exact_reference may be "uncertain" (never false) when an independent identity
+ * determination establishes the reference from the creator's own statement (identityDeterminationProblem).
+ */
+export function requireVerification(verification,{candidate,asset}){
+  if(!verification||verification.asset_sha256!==asset.sha256||verification.verified_reference!==candidate.external_id)throw Error('Verification must name this exact original and reference');
+  if(!text(verification.reviewer)||!record(verification.verification_reference))throw Error('Verification reviewer and private record required');
+  const failed=verificationChecks.filter(check=>check!=='exact_reference'&&verification.checks?.[check]!==true);
+  const exact=verification.checks?.exact_reference;
+  if(exact!==true){
+    const problem=exact==='uncertain'?identityDeterminationProblem(verification,{candidate,asset}):'not true or uncertain';
+    if(problem)failed.unshift(`exact_reference (${problem})`);
+  }
   if(failed.length)throw Error('Visual verification incomplete: '+failed.join(','));
-  return record;
+  return verification;
+}
+
+const exceptionKinds=['byte_budget','fidelity_floor'];
+const sameName=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerCase();
+/**
+ * An independent reviewed performance exception (docs/STOREFRONT-PERFORMANCE-2026-10-21.md: "a reviewed exception
+ * rather than destructive compression where details suffer"). It is a file written by a reviewer who is not the batch
+ * writer; the tooling only reads it, there is no default, and nothing here creates one. Shape:
+ *   {reviewer, reviewed_at, independent_of_batch_writer: true, basis,
+ *    exceptions: [{asset_sha256, width, sha256, bytes, accepted: ["byte_budget"|"fidelity_floor"], reason}]}
+ * prepared_by names the batch writer; a record whose reviewer is that writer is refused as self-granted.
+ */
+export function performanceExceptionRecord(value,{prepared_by}={}){
+  if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Performance exception record must be an object');
+  if(!text(value.reviewer)||!text(value.reviewed_at)||!text(value.basis))throw Error('Performance exception needs its reviewer, reviewed_at and basis');
+  if(value.independent_of_batch_writer!==true)throw Error('Performance exception must be independent of the batch writer');
+  if(!text(prepared_by))throw Error('Performance exception needs the batch writer named (prepared_by) to refuse a self-granted record');
+  if(sameName(value.reviewer,prepared_by))throw Error('Performance exception refused: self-granted by the batch writer');
+  if(!Array.isArray(value.exceptions)||!value.exceptions.length||value.exceptions.length>160)throw Error('Performance exception needs one entry per excepted derivative');
+  const seen=new Set();
+  for(const e of value.exceptions){
+    if(!hashPattern.test(e?.asset_sha256??'')||!hashPattern.test(e.sha256??'')||!Number.isInteger(e.width)||!Number.isInteger(e.bytes)||!text(e.reason))throw Error('Performance exception entry needs asset_sha256, width, sha256, bytes and reason');
+    if(!Array.isArray(e.accepted)||!e.accepted.length||new Set(e.accepted).size!==e.accepted.length||e.accepted.some(k=>!exceptionKinds.includes(k)))throw Error('Performance exception entry must accept byte_budget and/or fidelity_floor');
+    if(seen.has(e.sha256))throw Error('Duplicate performance exception entry');
+    seen.add(e.sha256);
+  }
+  return value;
+}
+// The exception entries that cover exactly this manifest's flagged derivatives; any gap or extra entry is refused.
+function exceptedDerivatives(manifest,asset,exception){
+  const files=[...manifest.variants,manifest.detail].filter((file,i,all)=>all.findIndex(other=>other.width===file.width)===i);
+  const flagged=files.filter(f=>f.over_budget||!f.fidelity_floor_met);
+  const entries=(exception?.exceptions??[]).filter(e=>e.asset_sha256===asset.sha256);
+  if(!flagged.length){
+    if(entries.length)throw Error('Performance exception names a derivative that needs none');
+    return [];
+  }
+  if(!exception)throw Error('Derivative byte budget needs review before approval: no independent performance exception recorded');
+  for(const f of flagged){
+    const want=[...(f.over_budget?['byte_budget']:[]),...(!f.fidelity_floor_met?['fidelity_floor']:[])];
+    const e=entries.find(x=>x.sha256===f.sha256);
+    if(!e||e.width!==f.width||e.bytes!==f.bytes||[...e.accepted].sort().join()!==want.sort().join())
+      throw Error(`Derivative byte budget needs review before approval: no exact exception for ${f.width}w ${f.sha256}`);
+  }
+  if(entries.some(e=>!flagged.some(f=>f.sha256===e.sha256)))throw Error('Performance exception names a derivative that needs none');
+  return entries;
 }
 
 /**
  * Turns verified, prepared derivatives into exact public URLs, evidence rows and an approval that
  * mirror the database contract. Nothing is uploaded, recorded or published by this function.
  */
-export function approvalBundle({candidate,grant,items,public_base_url}){
+export function approvalBundle({candidate,grant,items,public_base_url,performance_exception=null,prepared_by}){
   const base=new URL(public_base_url);
   if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/storage/v1/object/public/jwl-product-media'))throw Error('Public product-media bucket URL required');
   if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Between one and twenty prepared images required');
-  const evidence=[],entries=[],uploads=[];
-  for(const {asset,manifest,verification,performance_review_accepted} of items){
+  const exception=performance_exception===null||performance_exception===undefined?null:performanceExceptionRecord(performance_exception,{prepared_by});
+  const evidence=[],entries=[],uploads=[],excepted=[];
+  for(const item of items){
+    const {asset,manifest,verification}=item;
+    if('performance_review_accepted' in item)throw Error('performance_review_accepted is not accepted: record an independent performance exception file');
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
     if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
     requireVerification(verification,{candidate,asset});
     const b=manifest?.binding;
     if(manifest?.publication_state!=='private-prepared'||b?.candidate_id!==candidate.candidate_id||b.revision_hash!==candidate.revision_hash||b.asset_sha256!==asset.sha256||b.asset_source_url!==asset.source_url||b.media_permission_reference!==grant.grant_reference)
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
-    if(manifest.performance_review_required&&performance_review_accepted!==true)throw Error('Derivative byte budget needs review before approval');
+    // A flagged derivative passes only with an exact entry in an independent reviewed exception record (never default).
+    const covered=exceptedDerivatives(manifest,asset,exception);
+    if(manifest.performance_review_required&&!covered.length)throw Error('Derivative byte budget needs review before approval');
+    excepted.push(...covered);
     const files=[...manifest.variants,manifest.detail].filter((file,i,all)=>all.findIndex(other=>other.width===file.width)===i).sort((a,b)=>a.width-b.width);
     const variants=files.map(file=>{
       if(!hashPattern.test(file.sha256)||!/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-[a-f0-9]{64}\.webp$/.test(file.path)||!file.path.includes(file.sha256))throw Error('Derivative path must be content-addressed');
@@ -353,7 +438,9 @@ export function approvalBundle({candidate,grant,items,public_base_url}){
     entries.push(entry);
   }
   if(new Set(entries.map(e=>e.src)).size!==entries.length)throw Error('Duplicate approved image');
+  if(exception&&exception.exceptions.length!==excepted.length)throw Error('Performance exception names a derivative that is not in this bundle');
   return {
+    ...(exception?{performance_exception:{reviewer:exception.reviewer,reviewed_at:exception.reviewed_at,basis:exception.basis,exceptions:excepted}}:{}),
     approval:{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_reference:grant.grant_reference,image_verified:true,approved_images:entries.map(e=>e.src),approved_image_variants:entries},
     evidence,uploads,publication_state:'verified-not-uploaded',
   };

@@ -9,7 +9,7 @@ import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {installedImageEngine} from '../../../scripts/catalog-intake/responsive-media.mjs';
 import {openLicenses,openLicenseDecisions,acquireOriginal,keepOpenLicenseFile,createMediaPacer,prepareGrantedMedia,approvalBundle,commonsOriginal,commonsFile,openLicenseAttribution} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 import {responsiveImages} from '../src/server/responsive-media.mjs';
-import {recordMediaApproval,publish,publicationProduct} from '../../../scripts/catalog-intake/supabase.mjs';
+import {recordMediaApproval,publish,publicationProduct,lanePublicationProduct,laneMediaPublicationSql} from '../../../scripts/catalog-intake/supabase.mjs';
 
 // Synthetic fixtures only; the proposed migration is exercised in memory and applied nowhere.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
@@ -278,7 +278,17 @@ test('the open-licence lane publishes an already-public candidate without the so
     for(const field of ['search_text','collection_ar','description_en'])
       await assert.rejects(publishLane(db,reviewOf(target,[e]),{[field]:undefined}),/Source publication not approved/,'missing '+field);
     const before=await catalog(db);
-    await publishLane(db,reviewOf(target,[e]));
+    // The repository's lane path takes the stored search_text from a fresh read of the public row, or refuses.
+    const freshRow=before.find(r=>r.id===target.candidate_id);
+    assert.throws(()=>lanePublicationProduct(reviewOf(target,[e])),/needs the public row from a fresh read/);
+    assert.throws(()=>lanePublicationProduct(reviewOf(target,[e]),{...freshRow,search_text:null}),/no stored search_text/);
+    assert.throws(()=>lanePublicationProduct(reviewOf(target,[e]),before.find(r=>r.id!==target.candidate_id)),/another product/);
+    assert.throws(()=>lanePublicationProduct({...reviewOf(target,[e]),slug:'test-renamed'},freshRow),/slug differs/);
+    const lane=lanePublicationProduct(reviewOf(target,[e]),freshRow);
+    assert.equal(lane.product.search_text,freshRow.search_text);
+    assert.notEqual(publicationProduct(reviewOf(target,[e])).product.search_text,freshRow.search_text,'the recomputed value differs, so only the stored value can pass');
+    assert.match(laneMediaPublicationSql(reviewOf(target,[e]),freshRow),/^select public\.jwl_publish_candidate\('/);
+    await rawPublish(db,lane.candidate,lane.revision,lane.product);
     const after=await catalog(db);
     assert.deepEqual(without(after,target.candidate_id),without(before,target.candidate_id),'no other row changed');
     const live=after.find(r=>r.id===target.candidate_id);assert.equal(live.active,true);assert.equal(live.media_state,'approved_media');assert.deepEqual(live.image_variants,[e]);
@@ -436,7 +446,7 @@ test('end to end: held Wikimedia renditions for one product record, publish thei
       assert.deepEqual([kept.file_kind,kept.rendition_width,kept.width],['rendition',960,960]);
       const assetFile={path:kept.path,source_url:kept.source_url,sha256:kept.sha256};
       const prepared=await prepareGrantedMedia({source:{id:'test',origin:'https://example.test',publication_allowed:true},candidate:c,asset:assetFile,grant,output_directory:join(root,'private')});
-      items.push({asset:assetFile,manifest:prepared.manifest,performance_review_accepted:true,verification:{asset_sha256:kept.sha256,verified_reference:c.external_id,reviewer:'synthetic reviewer',verification_reference:'synthetic visual check',
+      items.push({asset:assetFile,manifest:prepared.manifest,verification:{asset_sha256:kept.sha256,verified_reference:c.external_id,reviewer:'synthetic reviewer',verification_reference:'synthetic visual check',
         checks:{exact_reference:true,color_and_variant:true,authentic_product_photo:true,not_generated_or_altered:true,clear_product_view:true}}});
     }
     const bundle=approvalBundle({candidate:c,grant,items,public_base_url:'https://project.supabase.co/storage/v1/object/public/jwl-product-media'});

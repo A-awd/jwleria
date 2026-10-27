@@ -1,12 +1,27 @@
-import {readFile,writeFile,rename} from 'node:fs/promises';
-import {join} from 'node:path';
+import {readFile,writeFile,rename,realpath} from 'node:fs/promises';
+import {join,isAbsolute,relative,resolve,sep} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {privateRoot} from './source-queue.mjs';
-import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle} from './media-pipeline.mjs';
+import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle,performanceExceptionRecord} from './media-pipeline.mjs';
 import {uploadThroughFunction,verifyPublishedDerivatives} from './media.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
 
 const hash=/^[a-f0-9]{64}$/;
+const inside=(root,path)=>{const tail=relative(root,path);return !tail||(!tail.startsWith('..'+sep)&&tail!=='..'&&!isAbsolute(tail));};
+
+/**
+ * Reads the independent reviewed performance exception record, if one is named. There is no default: without
+ * performance_exception_file a flagged derivative cannot be approved. The file must sit outside the private output
+ * directory, which this tooling writes, and its reviewer must not be the batch writer named in prepared_by.
+ */
+export async function readPerformanceException(input,out){
+  if('performance_review_accepted' in input)throw Error('performance_review_accepted is not accepted: name an independent performance exception file (performance_exception_file)');
+  if(input.performance_exception_file===undefined||input.performance_exception_file===null)return null;
+  const path=input.performance_exception_file;
+  if(typeof path!=='string'||!isAbsolute(path))throw Error('performance_exception_file must be an absolute path');
+  if(inside(out,resolve(path))||inside(out,await realpath(path)))throw Error('performance_exception_file must not be inside the output directory this tooling writes');
+  return performanceExceptionRecord(JSON.parse(await readFile(path,'utf8')),{prepared_by:input.prepared_by});
+}
 const save=async(path,value)=>{await writeFile(path+'.tmp',JSON.stringify(value,null,2),{mode:0o600});await rename(path+'.tmp',path);};
 
 /** A fresh connector row ({candidate_id, source_id, external_id, revision_hash, content}) as the media helpers expect it. */
@@ -22,7 +37,9 @@ export function currentCandidate(row){
  *   or each Commons file of an open-licence grant: downloaded, or a held copy as Wikimedia served it via local_path;
  *   the database refuses that kind until its migration)
  * - bundle: requires a complete visual verification per original, prepares bounded responsive derivatives and
- *   writes the approval bundle plus the exact connector statement that records it (run only after approval)
+ *   writes the approval bundle plus the exact connector statement that records it (run only after approval). A
+ *   derivative over its byte budget or under the fidelity floor is approved only with an exact entry in an
+ *   independent reviewed exception record (performance_exception_file, read never written; no default)
  * - upload: after the database receipt, uploads through the approval-bound function and verifies every public file
  */
 export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
@@ -49,15 +66,16 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
   if(phase==='bundle'){
     const recorded=JSON.parse(await readFile(join(out,'originals.json'),'utf8'));
     if(recorded.candidate_id!==candidate.candidate_id||recorded.revision_hash!==candidate.revision_hash||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate revision or grant');
+    const exception=await readPerformanceException(input,out);
     const verifications=new Map((input.verifications??[]).map(v=>[v.asset_sha256,v]));
     const items=[];
     for(const original of recorded.originals){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
       const verification=requireVerification(verifications.get(original.sha256),{candidate,asset});
       const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out});
-      items.push({asset,manifest:prepared.manifest,verification,performance_review_accepted:input.performance_review_accepted===true});
+      items.push({asset,manifest:prepared.manifest,verification});
     }
-    const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url});
+    const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url,performance_exception:exception,prepared_by:input.prepared_by});
     await save(join(out,'approval-bundle.json'),bundle);
     await writeFile(join(out,'record-approval.sql'),mediaApprovalSql(bundle)+'\n',{mode:0o600});
     return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,

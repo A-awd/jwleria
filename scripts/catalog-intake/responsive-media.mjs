@@ -15,12 +15,14 @@ const widths=[320,640,960];
  * descending ladder whose bytes fit its byte budget and whose fidelity is at or above the minimum fidelity floor,
  * measured against an in-memory Lanczos3 resize of the same pipeline at the same width. A card size (320/640/960) is
  * in every card srcset of the deployed storefront, so it carries the card budget; a file that is both a card size and
- * the detail file (a source of at most 960 px) carries the card budget too. The byte budget is the release requirement
- * (about 80-150 KB per card derivative, docs/STOREFRONT-PERFORMANCE-2026-10-21.md) and is never waived. The minimum
+ * the detail file (a source of at most 960 px) carries the card budget too. Only the card budget is canonical (about
+ * 80-150 KB per card derivative, docs/STOREFRONT-PERFORMANCE-2026-10-21.md line 37); the 600,000-byte detail-only
+ * budget and the SSIM floor are implementation defaults. Nothing here waives either: a flagged file is approved only
+ * through an independent reviewed exception record (media-pipeline.mjs performanceExceptionRecord). The minimum
  * floor is the line below which compression counts as destructive. The detail target (SSIM 0.985 at quality 85 or
  * more) is an implementation preference, recorded per detail file for the visual comparison; it is not a gate. When
  * no step meets budget and floor, the top step is kept and the manifest requires a performance review (the file
- * cannot be approved): quality is never lowered below the floor and the budget is never exceeded silently.
+ * needs a reviewed exception record): quality is never lowered below the floor and the budget is never exceeded silently.
  */
 export const webpQualityLadder=Object.freeze([92,90,88,85,82,80,78,75]);
 export const byteBudgets=Object.freeze({card:150000,detail:600000});
@@ -158,7 +160,7 @@ export async function prepareResponsiveMedia(input){
       tried.push(step);
       if(step.floor_met&&bytes.length<=budget){chosen=step;break;}
     }
-    // Nothing fits: keep the top (highest quality) step and require a review; such a file cannot be approved.
+    // Nothing fits: keep the top (highest quality) step and require a review; only a reviewed exception record approves it.
     if(!chosen)chosen=tried[0];
     const bytes=chosen.bytes;
     const actual=await sharp(bytes,{failOn:'warning'}).metadata();

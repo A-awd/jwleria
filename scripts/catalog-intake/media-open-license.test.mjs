@@ -249,7 +249,7 @@ test('a held rendition is kept without any request, must decode to its recorded 
       const kept=await keepOpenLicenseFile({candidate,grant,file_url:file.file_url,local_path:local.path,expected_sha256:sha(local.bytes),output_directory:out});
       assert.deepEqual([kept.source_url,kept.sha256,kept.file_kind,kept.rendition_width,kept.width],[file.file_url,sha(local.bytes),'rendition',file.rendition_width,file.rendition_width]);
       const asset={path:kept.path,source_url:kept.source_url,sha256:kept.sha256};
-      return {asset,manifest:(await prepareGrantedMedia({source,candidate,asset,grant,output_directory:out})).manifest,verification:verification(asset),performance_review_accepted:true};
+      return {asset,manifest:(await prepareGrantedMedia({source,candidate,asset,grant,output_directory:out})).manifest,verification:verification(asset)};
     };
     const items=[await prepare(files[0],front),await prepare(files[1],box)];
     const bundle=approvalBundle({candidate,grant,items,public_base_url:base});
@@ -272,7 +272,7 @@ test('the phased runner keeps several held renditions of one grant without any r
     const originals=[];
     for(const [i,f] of files.entries()){const bytes=await sharp({create:{width:960,height:i?540:720,channels:3,background:'#504840'}}).jpeg().toBuffer();const local_path=join(root,`held-${i}.jpg`);await writeFile(local_path,bytes);originals.push({asset_url:f.file_url,local_path,sha256:sha(bytes)});}
     const row={candidate_id:candidate.candidate_id,source_id:candidate.source_id,external_id:candidate.external_id,revision_hash:candidate.revision_hash,content:{image_urls:candidate.image_urls,source_url:candidate.source_url}};
-    const input={output_directory:join(root,'private'),candidate:row,grant,source,originals,public_base_url:base,performance_review_accepted:true};
+    const input={output_directory:join(root,'private'),candidate:row,grant,source,originals,public_base_url:base};
     const refuse={fetcher:async()=>{throw Error('must not fetch');}};
     const kept=await mediaRun('originals',input,refuse);
     assert.deepEqual(kept.originals.map(o=>o.source_url),files.map(f=>f.file_url));

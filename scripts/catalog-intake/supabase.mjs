@@ -74,6 +74,30 @@ export async function publish(review, config, fetcher = fetch) {
   return catalogRpc('jwl_publish_candidate',publicationProduct(review),config,fetcher);
 }
 
+// Every field the open-licence lane keeps exactly as the public row holds it (the database compares them NULL-safe).
+const laneFields=['slug','reference','brand_slug','brand_name','brand_tier','category_slug','collection_slug','collection_ar','collection_en','name_ar','name_en','description_ar','description_en'];
+/**
+ * The open-licence lane payload (proposed migration jwleria_open_license_media.sql). Without the source's
+ * publication flag the lane may change only images and media state, so the call must carry the public row's STORED
+ * search_text, never a recomputed one: `publicRow` is that row from a fresh read (00-fresh-read.sql returns it as
+ * `catalog`). A missing fresh row, a row of another product, a missing search_text or any displayed fact that differs
+ * from the review is refused here, before the database would refuse it.
+ */
+export function lanePublicationProduct(review, publicRow) {
+  const {candidate,revision,product}=publicationProduct(review);
+  if (!publicRow || typeof publicRow!=='object') throw new Error('Open-licence lane publish needs the public row from a fresh read (its stored search_text is kept unchanged)');
+  if (publicRow.id!==candidate) throw new Error('Open-licence lane publish: the fresh public row belongs to another product');
+  if (publicRow.active!==true) throw new Error('Open-licence lane publish: the fresh public row is not active (the lane publishes only a product already public as facts)');
+  if (typeof publicRow.search_text!=='string' || !publicRow.search_text.length) throw new Error('Open-licence lane publish: the fresh public row has no stored search_text; re-read it, never recompute it');
+  for (const field of laneFields) if ((field==='reference'?product.reference:product[field])!==publicRow[field]) throw new Error(`Open-licence lane publish: ${field} differs from the fresh public row; the lane changes only images`);
+  if ((product.collection_kind??'collection')!==(publicRow.collection_kind??'collection')) throw new Error('Open-licence lane publish: collection_kind differs from the fresh public row');
+  return {candidate,revision,product:{...product,search_text:publicRow.search_text}};
+}
+/** The open-licence lane through the RPC client: the stored search_text of the fresh public row, or a refusal. */
+export async function publishLane(review, publicRow, config, fetcher = fetch) {
+  return catalogRpc('jwl_publish_candidate',lanePublicationProduct(review,publicRow),config,fetcher);
+}
+
 const hex64=/^[a-f0-9]{64}$/;
 /** Connector form of recordMediaApproval: the same exact evidence and approval, recorded atomically, no publication. */
 export function mediaApprovalSql(bundle) {
@@ -83,6 +107,12 @@ export function mediaApprovalSql(bundle) {
 /** Connector form of publish: the database re-checks approval, live grant, source flag and current revision. */
 export function mediaPublicationSql(review) {
   const {candidate,revision,product}=publicationProduct(review);
+  if (!hex64.test(candidate) || !hex64.test(revision)) throw new Error('Exact candidate revision required');
+  return `select public.jwl_publish_candidate('${candidate}','${revision}',${dollarQuote(JSON.stringify(product))}::jsonb) as published;`;
+}
+/** Connector form of publishLane: the stored search_text of the fresh public row, or a refusal. */
+export function laneMediaPublicationSql(review, publicRow) {
+  const {candidate,revision,product}=lanePublicationProduct(review,publicRow);
   if (!hex64.test(candidate) || !hex64.test(revision)) throw new Error('Exact candidate revision required');
   return `select public.jwl_publish_candidate('${candidate}','${revision}',${dollarQuote(JSON.stringify(product))}::jsonb) as published;`;
 }
@@ -99,10 +129,10 @@ end $$;
 select id,public,file_size_limit,allowed_mime_types from storage.buckets where id='jwl-product-media';`;
 
 if (process.argv[1] && import.meta.url===pathToFileURL(process.argv[1]).href) {
-  const [operation,input]=process.argv.slice(2);
-  if (!['ingest','publish'].includes(operation)||!input) throw new Error('Usage: node supabase.mjs ingest|publish PRIVATE_INPUT.json');
+  const [operation,input,freshRow]=process.argv.slice(2);
+  if (!['ingest','publish','publish-lane'].includes(operation)||!input||(operation==='publish-lane'&&!freshRow)) throw new Error('Usage: node supabase.mjs ingest|publish PRIVATE_INPUT.json | publish-lane PRIVATE_REVIEW.json FRESH_PUBLIC_ROW.json');
   const content=JSON.parse(await readFile(input,'utf8'));
   const config={url:process.env.SUPABASE_URL,key:process.env.SUPABASE_SECRET_KEY};
-  const result=operation==='ingest'?await ingest(content,config):await publish(content,config);
+  const result=operation==='ingest'?await ingest(content,config):operation==='publish'?await publish(content,config):await publishLane(content,JSON.parse(await readFile(freshRow,'utf8')),config);
   console.log(JSON.stringify({operation,result}));
 }
