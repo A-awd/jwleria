@@ -1,0 +1,171 @@
+{
+  "retrievedOn": "2026-10-03",
+  "cssUrl": "https://fonts.googleapis.com/css2?family=Amiri:wght@400&family=El+Messiri:wght@400&family=Aref+Ruqaa:wght@400&family=Noto+Sans+Arabic:wght@400&family=Cormorant+Garamond:wght@400&display=swap",
+  "cssUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "googleFontsCommit": "9710da1eacb3be272583c3224dcb70f9da6eadbb",
+  "fonts": [
+    {
+      "family": "Amiri",
+      "subset": "arabic",
+      "url": "https://fonts.gstatic.com/s/amiri/v30/J7aRnpd8CGxBHpUrtLMA7w.woff2",
+      "filename": "amiri-arabic-400.woff2",
+      "bytes": 108560,
+      "sha256": "9abf8a10b4a2f27b698740522c9beec9ded7728aeef0738ac0d6e175bf6249d7",
+      "parsedFont": {
+        "family": "Amiri",
+        "style": "Regular",
+        "version": "Version 1.002",
+        "postscript": "Amiri-Regular",
+        "file": "amiri-arabic-400.woff2",
+        "weightClass": 400,
+        "glyphs": 5429,
+        "arabicAlif": true,
+        "latinA": false,
+        "preferredFamily": "Amiri"
+      }
+    },
+    {
+      "family": "El Messiri",
+      "subset": "arabic",
+      "url": "https://fonts.gstatic.com/s/elmessiri/v25/K2FhfZBRmr9vQ1pHEey6GIGo8_pv3myYjuXwe55ijDz-oQ.woff2",
+      "filename": "el-messiri-arabic-400.woff2",
+      "bytes": 12016,
+      "sha256": "1132f86f15bd538d7072e4ae4db3a64fe036ad05d6780d9d78b588f127b23d5f",
+      "parsedFont": {
+        "family": "El Messiri",
+        "style": "Regular",
+        "version": "Version 2.020",
+        "postscript": "ElMessiri-Regular",
+        "file": "el-messiri-arabic-400.woff2",
+        "weightClass": 400,
+        "glyphs": 309,
+        "arabicAlif": true,
+        "latinA": true,
+        "preferredFamily": "El Messiri"
+      }
+    },
+    {
+      "family": "Aref Ruqaa",
+      "subset": "arabic",
+      "url": "https://fonts.gstatic.com/s/arefruqaa/v26/WwkbxPW1E165rajQKDulIIIoVeo5.woff2",
+      "filename": "aref-ruqaa-arabic-400.woff2",
+      "bytes": 38132,
+      "sha256": "98156c60a0838ddb66303b31b3a048d46692e5e5fcafb04c17d44dac122b65f6",
+      "parsedFont": {
+        "family": "Aref Ruqaa",
+        "style": "Regular",
+        "version": "Version 1.003",
+        "postscript": "ArefRuqaa-Regular",
+        "file": "aref-ruqaa-arabic-400.woff2",
+        "weightClass": 400,
+        "glyphs": 486,
+        "arabicAlif": true,
+        "latinA": false,
+        "preferredFamily": "Aref Ruqaa"
+      }
+    },
+    {
+      "family": "Noto Sans Arabic",
+      "subset": "arabic",
+      "url": "https://fonts.gstatic.com/s/notosansarabic/v33/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyfuXqAJQI.woff2",
+      "filename": "noto-sans-arabic-arabic-400.woff2",
+      "bytes": 48840,
+      "sha256": "4e2ca0745c908761dc5c5db951662873887c59366fa1a5693ad22c0864abf1bd",
+      "parsedFont": {
+        "family": "Noto Sans Arabic",
+        "style": "Regular",
+        "version": "Version 2.012",
+        "postscript": "NotoSansArabic-Regular",
+        "file": "noto-sans-arabic-arabic-400.woff2",
+        "weightClass": 400,
+        "glyphs": 1340,
+        "arabicAlif": true,
+        "latinA": false,
+        "preferredFamily": "Noto Sans Arabic"
+      }
+    },
+    {
+      "family": "Noto Sans Arabic",
+      "subset": "latin",
+      "url": "https://fonts.gstatic.com/s/notosansarabic/v33/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyfvHqA.woff2",
+      "filename": "noto-sans-arabic-latin-400.woff2",
+      "bytes": 10748,
+      "sha256": "290bdad021425e6ba6263c27d38652403f9b1a9ee74f5bbd2c62905b13f71b8c",
+      "parsedFont": {
+        "family": "Noto Sans Arabic",
+        "style": "Regular",
+        "version": "Version 2.012",
+        "postscript": "NotoSansArabic-Regular",
+        "file": "noto-sans-arabic-latin-400.woff2",
+        "weightClass": 400,
+        "glyphs": 211,
+        "arabicAlif": false,
+        "latinA": true,
+        "preferredFamily": "Noto Sans Arabic"
+      }
+    },
+    {
+      "family": "Cormorant Garamond",
+      "subset": "latin",
+      "url": "https://fonts.gstatic.com/s/cormorantgaramond/v21/co3umX5slCNuHLi8bLeY9MK7whWMhyjypVO7abI26QOD_v86KnTOig.woff2",
+      "filename": "cormorant-garamond-latin-400.woff2",
+      "bytes": 22876,
+      "sha256": "8048ac209bec741e1c29cd0cfac5aac1c0c2ba8c3ddbd4a58fa9bd92ef5c63c2",
+      "parsedFont": {
+        "family": "Cormorant Garamond Light",
+        "style": "Regular",
+        "version": "Version 4.001",
+        "postscript": "CormorantGaramondLight-Regular",
+        "file": "cormorant-garamond-latin-400.woff2",
+        "weightClass": 400,
+        "glyphs": 373,
+        "arabicAlif": false,
+        "latinA": true,
+        "preferredFamily": "Cormorant Garamond Light"
+      }
+    }
+  ],
+  "licenses": [
+    {
+      "family": "Amiri",
+      "dir": "amiri",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/amiri/OFL.txt",
+      "path": "apps/storefront/public/fonts/licenses/amiri/OFL.txt",
+      "bytes": 4389,
+      "sha256": "72de68e5954f4fdd24702292ef5a32f003ca960ec9330dc86e5eefb5dffb9b22"
+    },
+    {
+      "family": "El Messiri",
+      "dir": "elmessiri",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/elmessiri/OFL.txt",
+      "path": "apps/storefront/public/fonts/licenses/elmessiri/OFL.txt",
+      "bytes": 4390,
+      "sha256": "b69113722df50071b68ea377ad261919f08fd0dd6672f68b8868445586a30770"
+    },
+    {
+      "family": "Aref Ruqaa",
+      "dir": "arefruqaa",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/arefruqaa/OFL.txt",
+      "path": "apps/storefront/public/fonts/licenses/arefruqaa/OFL.txt",
+      "bytes": 4464,
+      "sha256": "41ac14451a624c69490e24b9aaaaa1f65dc9dc17c3f6f38172fc43d5ba654a1b"
+    },
+    {
+      "family": "Noto Sans Arabic",
+      "dir": "notosansarabic",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/notosansarabic/OFL.txt",
+      "path": "apps/storefront/public/fonts/licenses/notosansarabic/OFL.txt",
+      "bytes": 4382,
+      "sha256": "07fc70bfeb985cc1a87a8587d0a0c80bab11c86c9dc3fd95b6f0cb332f983e96"
+    },
+    {
+      "family": "Cormorant Garamond",
+      "dir": "cormorantgaramond",
+      "url": "https://raw.githubusercontent.com/google/fonts/9710da1eacb3be272583c3224dcb70f9da6eadbb/ofl/cormorantgaramond/OFL.txt",
+      "path": "apps/storefront/public/fonts/licenses/cormorantgaramond/OFL.txt",
+      "bytes": 4387,
+      "sha256": "60700d351cac4650c51f3f9db318d2a420f8b45052dba2715eb5fec41f0f6956"
+    }
+  ],
+  "validation": "All WOFF2 tables decoded; internal name, weight 400 and expected script cmap verified; font and license SHA256 matched."
+}
