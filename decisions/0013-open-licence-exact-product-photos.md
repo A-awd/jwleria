@@ -27,9 +27,11 @@ Identity gate (implementation rule recorded by the implementation owner under de
 2. all of the following:
    - `color_and_variant`, `authentic_product_photo`, `not_generated_or_altered` and `clear_product_view` are literally `true`;
    - `exact_reference` is literally `"uncertain"`, never `false`;
-   - a separate independent identity determination names that exact file and sha256 with `identity_established` literally `true` and a non-null `creator_stated_reference` contained in the catalogue reference.
+   - a separate independent identity determination names that exact file and sha256 with `identity_established` literally `true` and a `creator_stated_reference` equal to the full catalogue reference or its model segment (for m126234-0015: `m126234-0015`, `126234-0015`, `m126234` or `126234`; a fragment such as `1262` or a sibling such as `126334` is refused), from a reviewer other than the visual reviewer.
 
 In the second case `exact_reference` stays `"uncertain"` in every record; it is never rounded up to `true`. The verification record quotes both records' reasons and names both reviewers. It states that case size and bezel material come from the creator-stated reference, not from the pixels. The pipeline (`requireVerification`) re-checks all of this. Identity is never inherited from another file of the same photographer, session or model name.
+
+This gate relaxes what this file said before 27 October 2026 ("an independent identity verification in which every check passes", with no file publishable until a new verification passed every check) and decision 0011's "recorded visual verification of the exact reference" (0011 carries a cross-reference). In route 2 the reference rests on the creator's statement and the reviewer's knowledge of the numbering, not on the pixels. Because it is an implementation rule and not an owner approval, the owner's approval request for the migration states it as its own line: the front photograph's identity rests on the creator-stated reference 126234, not on what the pixels show, and its approval row carries `image_verified: true` because it passed this gate, while every record keeps `exact_reference` `"uncertain"`.
 
 Grants cite this file as `decisions/0013-open-licence-exact-product-photos.md`.
 

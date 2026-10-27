@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,rm,mkdir} from 'node:fs/promises';
+import {mkdtemp,writeFile,rm,mkdir,symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {normalizeBatch} from './normalize.mjs';
 import {installedImageEngine} from './responsive-media.mjs';
-import {requireVerification,identityDeterminationProblem,performanceExceptionRecord,prepareGrantedMedia} from './media-pipeline.mjs';
+import {requireVerification,identityDeterminationProblem,performanceExceptionRecord,prepareGrantedMedia,catalogueReferenceForms} from './media-pipeline.mjs';
+import {readPerformanceException,functionHeaders} from './media-run.mjs';
 import {mediaRun} from './media-run.mjs';
 import {publicationProduct,lanePublicationProduct,laneMediaPublicationSql} from './supabase.mjs';
 
@@ -31,9 +32,21 @@ test('exact_reference may stay "uncertain" only with an independent identity det
   for(const value of [false,'uncertain','true',null])refuse({identity_determination:{...determination,identity_established:value}},/identity_established is not true/,String(value));
   for(const value of [null,'',' ','12'])refuse({identity_determination:{...determination,creator_stated_reference:value}},/no creator-stated reference/,String(value));
   refuse({identity_determination:{...determination,creator_stated_reference:'126334'},verification_reference:quoted({...determination,creator_stated_reference:'126334'})},/not this catalogue reference/,'a sibling reference');
+  // Only the full catalogue reference or its model segment is accepted; a fragment is refused even though the catalogue
+  // reference contains it ("1262" is the shared stem of sibling references 126200, 126231, 126233, 126234 ...).
+  const stated=value=>({identity_determination:{...determination,creator_stated_reference:value},verification_reference:quoted({...determination,creator_stated_reference:value})});
+  for(const fragment of ['1262','2340','6234','34-00','0015','26234','m1262','126234-00','m126234-001','6234-0015'])refuse(stated(fragment),/not this catalogue reference/,'fragment '+fragment);
+  for(const form of ['126234','M126234','m126234-0015','M126234-0015','126234-0015','126234 0015'])assert.ok(requireVerification(verified(stated(form)),{candidate,asset}),'accepted form '+form);
+  const sibling={...candidate,external_id:'m126234-0016'};
+  for(const fragment of ['1262','2340','6234','34-00','0016'])assert.throws(()=>requireVerification(verified({...stated(fragment),verified_reference:sibling.external_id}),{candidate:sibling,asset}),/not this catalogue reference/,'m126234-0016 fragment '+fragment);
+  assert.throws(()=>requireVerification(verified({...stated('m126234-0015'),verified_reference:sibling.external_id}),{candidate:sibling,asset}),/not this catalogue reference/,'the full reference of a sibling variant');
+  assert.ok(requireVerification(verified({...stated('126234'),verified_reference:sibling.external_id}),{candidate:sibling,asset}),'the model segment names the model; the variant rests on color_and_variant literally true');
+  assert.deepEqual(catalogueReferenceForms('m126234-0015'),['m1262340015','1262340015','m126234','126234']);
+  assert.deepEqual(catalogueReferenceForms('m126610ln-0001'),['m126610ln0001','126610ln0001','m126610ln','126610ln']);
   refuse({identity_determination:{...determination,asset_sha256:'b'.repeat(64)}},/names other bytes/);
   refuse({verification_reference:'SYNTHETIC record that does not quote the determination'},/does not quote/);
   refuse({identity_determination:{...determination,reviewer:''}},/reviewer and reason/);
+  refuse({reviewer:' Synthetic Identity Reviewer '},/other than the visual reviewer/,'the visual reviewer cannot settle its own uncertain check');
   // Every other check must still be literally true; a determination settles only the reference.
   for(const check of ['color_and_variant','authentic_product_photo','not_generated_or_altered','clear_product_view'])
     for(const value of ['uncertain',false])refuse({checks:{...verified().checks,[check]:value}},new RegExp(check),check+'='+value);
@@ -53,6 +66,20 @@ test('a performance exception is an independent reviewer record, never self-gran
   for(const accepted of [[],['everything'],['byte_budget','byte_budget']])
     assert.throws(()=>performanceExceptionRecord({...record,exceptions:[{...entry,accepted}]},{prepared_by:'w'}),/byte_budget and\/or fidelity_floor/);
   assert.throws(()=>performanceExceptionRecord({...record,exceptions:[entry,entry]},{prepared_by:'w'}),/Duplicate/);
+});
+
+test('an exception file inside the output directory is refused when either path is reached through a symlinked parent',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-exception-realpath-'));
+  try{
+    const realOut=join(root,'real','out');await mkdir(realOut,{recursive:true});
+    await symlink(join(root,'real'),join(root,'link'));
+    const viaLink=join(root,'link','out');
+    await writeFile(join(realOut,'exception.json'),'{}');
+    for(const [out,file] of [[viaLink,join(realOut,'exception.json')],[realOut,join(viaLink,'exception.json')],[viaLink,join(viaLink,'exception.json')]])
+      await assert.rejects(readPerformanceException({performance_exception_file:file,prepared_by:'w'},out),/must not be inside the output directory/,out+' / '+file);
+    await writeFile(join(root,'outside.json'),'{}');
+    await assert.rejects(readPerformanceException({performance_exception_file:join(root,'outside.json'),prepared_by:'w'},viaLink),/reviewer, reviewed_at and basis/,'a file outside reaches the record check');
+  }finally{await rm(root,{recursive:true,force:true});}
 });
 
 test('the runner approves a flagged derivative only with an exact entry in a reviewed exception file it reads',async()=>{
@@ -120,4 +147,14 @@ test('the lane publish path uses the stored search_text of a fresh public row, o
   for(const field of ['slug','brand_tier','collection_ar','name_en','description_ar'])
     assert.throws(()=>lanePublicationProduct(review,{...fresh,[field]:fresh[field]==='luxury'?'accessible':fresh[field]+'-x'}),new RegExp(field+' differs'),field);
   assert.throws(()=>lanePublicationProduct(review,{...fresh,collection_kind:'source_group'}),/collection_kind differs/);
+});
+
+test('the upload caller token is read from the environment, never from the kept input file',()=>{
+  const kept={Authorization:'Bearer {{FUNCTION_CALLER_TOKEN}}'};
+  assert.deepEqual(functionHeaders(kept,{JWL_FUNCTION_CALLER_TOKEN:'SYNTHETIC-TOKEN'}),{Authorization:'Bearer SYNTHETIC-TOKEN'});
+  for(const env of [{},{JWL_FUNCTION_CALLER_TOKEN:''},{JWL_FUNCTION_CALLER_TOKEN:'  '}])assert.throws(()=>functionHeaders(kept,env),/JWL_FUNCTION_CALLER_TOKEN/);
+  assert.equal(kept.Authorization,'Bearer {{FUNCTION_CALLER_TOKEN}}','the input object is not rewritten');
+  assert.deepEqual(functionHeaders(undefined,{}),{});
+  assert.deepEqual(functionHeaders({'x-extra':'1'},{}),{'x-extra':'1'});
+  assert.throws(()=>functionHeaders(['Authorization'],{}),/must be an object/);
 });

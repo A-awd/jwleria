@@ -303,12 +303,26 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
 // A verification record quotes its reviewers' reasons unabridged, so it may be longer than a short text field.
 const record=value=>typeof value==='string'&&value.trim().length>0&&value.length<=8000;
 const reference=value=>String(value).toLowerCase().replace(/[^a-z0-9]/g,'');
+/**
+ * The only forms of a catalogue reference that a creator's statement may give, normalised (lower case, letters and
+ * digits only): the full reference (m126234-0015), the full reference without a brand prefix letter (126234-0015),
+ * the model segment before the first hyphen (m126234) and that segment without its prefix letter (126234). A
+ * fragment such as "1262" (the shared stem of sibling references 126200, 126231, 126233, 126234 ...), "6234",
+ * "34-00" or the variant suffix "0015" alone is none of these and is refused; so is a sibling such as 126334.
+ */
+export function catalogueReferenceForms(external_id){
+  const full=String(external_id??'').trim().toLowerCase();
+  const model=full.split('-')[0];
+  const unprefixed=value=>/^[a-z][0-9]/.test(value)?value.slice(1):value;
+  return [...new Set([full,unprefixed(full),model,unprefixed(model)].map(reference))].filter(form=>form.length>=4);
+}
+export const statedReferenceMatches=(stated,external_id)=>typeof stated==='string'&&catalogueReferenceForms(external_id).includes(reference(stated));
 
 /**
  * Why an independent identity determination cannot settle exact_reference for this file, or null when it can. It
  * applies only where the visual record left exact_reference "uncertain" (never false): it must name the exact
- * original by sha256, say identity_established literally true, carry the creator-stated reference (contained in the
- * catalogue reference, so a sibling such as 126334 is refused) and be quoted, reviewer and reason, in the
+ * original by sha256, say identity_established literally true, carry the creator-stated reference (equal to the full
+ * catalogue reference or to its model segment, catalogueReferenceForms; a fragment or a sibling such as 126334 is refused) and be quoted, reviewer and reason, in the
  * verification record. The determination is a separate reviewer's record; code never creates one.
  */
 export function identityDeterminationProblem(verification,{candidate,asset}){
@@ -317,8 +331,11 @@ export function identityDeterminationProblem(verification,{candidate,asset}){
   if(d.asset_sha256!==asset.sha256)return 'identity determination names other bytes';
   if(d.identity_established!==true)return 'identity_established is not true';
   if(!text(d.creator_stated_reference)||reference(d.creator_stated_reference).length<4)return 'no creator-stated reference';
-  if(!reference(candidate.external_id).includes(reference(d.creator_stated_reference)))return 'creator-stated reference is not this catalogue reference';
+  if(!statedReferenceMatches(d.creator_stated_reference,candidate.external_id))return 'creator-stated reference is not this catalogue reference';
   if(!text(d.reviewer)||!record(d.reason))return 'identity determination needs its reviewer and reason';
+  // A name comparison only (both names come from the same input): the visual reviewer cannot settle its own uncertain
+  // check. Independence of the identity reviewer is otherwise procedural.
+  if(String(d.reviewer).trim().toLowerCase()===String(verification.reviewer).trim().toLowerCase())return 'identity determination must name a reviewer other than the visual reviewer';
   const quoted=verification.verification_reference??'';
   if(!quoted.includes(d.reviewer)||!quoted.includes(d.reason)||!quoted.includes(d.creator_stated_reference))return 'verification record does not quote the identity determination';
   return null;
@@ -350,7 +367,9 @@ const sameName=(a,b)=>String(a).trim().toLowerCase()===String(b).trim().toLowerC
  * writer; the tooling only reads it, there is no default, and nothing here creates one. Shape:
  *   {reviewer, reviewed_at, independent_of_batch_writer: true, basis,
  *    exceptions: [{asset_sha256, width, sha256, bytes, accepted: ["byte_budget"|"fidelity_floor"], reason}]}
- * prepared_by names the batch writer; a record whose reviewer is that writer is refused as self-granted.
+ * prepared_by names the batch writer; a record whose reviewer is that writer is refused as self-granted. This is a name
+ * comparison on values the runner input supplies, and independent_of_batch_writer is declared by the record itself:
+ * independence is guaranteed by procedure (who writes the file), not technically enforced here.
  */
 export function performanceExceptionRecord(value,{prepared_by}={}){
   if(!value||typeof value!=='object'||Array.isArray(value))throw Error('Performance exception record must be an object');
