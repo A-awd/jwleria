@@ -1,19 +1,19 @@
 # Coverage and source registry
 
-All counts are from the coordinator's read-only baseline at 2026-10-27 18:08:50Z (labelled observed live, as reported to this branch). Refresh this file from a new read; never edit counts by hand.
+The Totals table comes from the read-only reads of 2026-10-28 after publication (observed live, interactive session). The brand and category breakdowns come from the 2026-10-27 18:08:50Z baseline; publishing one image changed none of their facts counts. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand.
 
 ## Totals
 
 | Measure | Value |
 |---|---|
-| Registered migrations | 7 (last `20261026114541`) |
-| Active public products (facts) | 4,097 |
-| Candidates | 4,150 |
-| Public products with images | 1 (m126234-0015, one CC BY 2.0 photograph, 2026-10-28) |
-| Media bucket objects | 0 |
-| Media grants / approvals | 0 / 0 |
-| Model grouping | not applied (`jwl_catalog_models` absent); one card per reference |
-| m126234-0015 | active, `facts_only` |
+| Registered migrations | 9 (last `20261028111829`) |
+| Active public catalog fact records | 4,097, of which exactly 1 carries a photograph |
+| Candidates | 4,150 (2026-10-27 baseline) |
+| Public products with a photograph | 1: m126234-0015, one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read |
+| Media bucket objects | 3 (320, 640 and 960 px encodings of that one photograph) |
+| Media grants / approvals | 1 / 1 |
+| Model grouping | applied: 4,097 variant rows, 2,886 displayed models (283 grouped holding 1,494 variants; 2,603 singles) |
+| m126234-0015 | active, `approved_media` |
 
 ## Public facts by brand
 
@@ -33,7 +33,7 @@ All counts are from the coordinator's read-only baseline at 2026-10-27 18:08:50Z
 | Piaget | 3 |
 | **Total** | **4,097** |
 
-Media public: 0 for every brand.
+Media public: Rolex 1 (m126234-0015); every other brand 0. Broader product photography is not delivered.
 
 ## Public facts by category
 

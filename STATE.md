@@ -30,7 +30,7 @@
 - Intake: 117 of 117 pass.
 - No storefront source changed, so the live Worker (`fbf04b80a181`) stays as it is.
 
-**Database question channel:** in this interactive session every write returned success. No server question was answered on the owner's behalf, and no hook, `skip_elicitations` setting or alternate tool was used. DB-1 is closed for these operations.
+**Database question channel:** the ordinary native question channel worked in this interactive session. Codex, the authorized coordinator, observed and accepted **two** native Supabase server questions under the owner's existing explicit approval. The first was for the read-only dollar-quoted md5 check of the models body. The second was for the exact models `apply_migration`, whose query sha256 Codex independently confirmed as `0b6f1b93e3ca8486f93f0e20da3ce03a63927e1e80130b28fc1a630836627cdc` before accepting. These are the only two questions Codex observed; this record does not claim that any other statement showed one. The producer session never saw the host dialog, which does not mean no dialog occurred. No hook, `skip_elicitations` setting, alternate tool routing or permission bypass was used. Every write was read back afterwards. DB-1 is closed for these operations.
 
 ## Transfer to the interactive continuation, 2026-10-28
 
