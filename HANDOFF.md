@@ -1,3 +1,15 @@
+## Current handoff: interactive continuation, 2026-10-28
+
+Owner of every write from now on: the interactive local Claude Code session (real PTY, no `-p`). The cloud session is quiescent.
+
+1. Retrieve the private execution tree from the owner's private Artifact with the Artifact tool's read action (`paths`), or extract the archive attached in the owner's cloud conversation. Then run `sha256sum -c SHA256SUMS`. Read its `TRANSFER.md`; it is the runbook.
+2. Wait for the operator's read-back receipt that the `fbf04b80a181` Worker is active. Until then, run no step that publishes a titled credit (step f).
+3. Run the baseline query from `TRANSFER.md` section 3. Every value must match.
+4. Apply the models migration `jwleria_product_models`: apply body sha256 `0b6f1b93…`, then `jwl_internal.apply_product_variants()`. Expected result: 4,097 variants, 2,886 models, 283 grouped models holding 1,494 variants, 0 collisions, and the catalog hash unchanged. When the server's form appears, read it and record its text privately; answer it only if it matches this exact operation. After a timeout or error, read back before any retry. Never replay `20261026114541`.
+5. Ask the owner once, as one batch, for the open decision lines: (1) the open-licence grant kind, (2) the source-flag exemption, (3) the creator-stated identity route, (4) the media bucket, and (5) the upload function. See `docs/spec/DECISION-APPROVAL-LEDGER.md`. If line (3) is declined, the photo stays unpublished.
+6. With those approvals: run the media steps in order, (0) and (a)–(d), the function deploy, (e), and then (f) once the new Worker is confirmed active. Follow with the (07) read-back. Then check visitors in Arabic and English at 360, 390 and 430 px: the whole photo is visible, the credit carries the title, and search returns the reference. Count the result as 1 product photo on 1 product.
+7. Record each result in `STATE.md` with its evidence label, then push.
+
 ## Current handoff — after the integrated completion pass — 2026-10-27
 
 Done in this pass: the reviewed `wf/finish` is merged (`fbf04b80a181`); the release package `releases/storefront-fbf04b80a181/` is built; the private bundle is re-rendered and re-hashed after a matching fresh read; and `confirm-renditions` passed.

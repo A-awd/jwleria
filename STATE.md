@@ -1,3 +1,38 @@
+## Transfer to the interactive continuation, 2026-10-28
+
+**Live:**
+- **Worker:** the operator reports that the prebuilt release `releases/storefront-fbf04b80a181/` was uploaded with no rebuild; all 74 checksums and the SHA256SUMS hash `e147b36b…` were verified. Provider and visitor read-back is still pending. Until that receipt arrives, treat the release as uploaded, not visitor-verified. (producer-reported)
+- **Database (observed live, read-only, 2026-10-28 08:11Z; the operator's Dashboard read at 08:05Z agrees):**
+  - Migrations: 7, last `20261026114541`.
+  - Catalog: 4,097 active public rows, 0 with images.
+  - Media: 0 grants, 0 storage buckets.
+  - Models table: absent.
+  - Catalog hash: `b2182069be5de7756e9252a71be3dee7`, the baseline the models mapping expects.
+  - Dashboard: shows an "Unhealthy" project badge, but SQL reads succeed. This is not treated as a database failure.
+
+**Prepared (unchanged since `fbf04b80a181`):**
+- The models migration and its mapping.
+- The open-licence migration.
+- The one-photo media bundle.
+- Producer tests, cited and not re-run: storefront 155 tests, 152 pass, 0 fail, 3 opt-in skips; intake 117/117.
+
+**Transfer:**
+- The full private execution tree, 56 files with `SHA256SUMS`, is held in the owner's private Artifact. It contains the runbook (`TRANSFER.md`), the models migration with its apply body and rollback, the rendered media steps, the evidence, the held source files and the scripts.
+- Retrieval: an account Claude session uses the Artifact tool's read action with `paths`. This was verified: all 55 checksummed files matched.
+- The same tree was also attached as one archive in the owner's cloud conversation.
+- Nothing private is in Git.
+
+**Ownership:**
+- From this commit, the cloud session writes nothing to this branch, the database, functions, storage or the artifact.
+- The interactive local Claude Code session (real PTY, no `-p`) owns every database, function, storage and media write, and the branch.
+- Codex owns Worker uploads.
+- No cloud workflow or background task is running.
+
+**Database fault, unchanged:**
+- The earlier `apply_migration` calls timed out on an unanswered server question (MCP elicitation). The question's text was never captured.
+- Nothing was answered or repaired, and the database did not change.
+- The supported next step is the interactive session, where the form can be read and assessed. See runbook DB-1.
+
 ## Integrated: foundation completion pass, 2026-10-27
 
 **Live (unchanged by this pass):** Worker release `2a1864b` (operator-deployed). Database: 7 migrations, last `20261026114541`. 0 grants, 0 approvals, no media bucket, 0 public products with images. 4,097 active public products across 12 brand sources, all facts-only. Models view absent. (Observed live, read-only, 2026-10-27 18:08Z and 19:07Z.)
