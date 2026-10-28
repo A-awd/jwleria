@@ -42,7 +42,7 @@ test('option labels come from the reviewed i18n strings, falling back to the cat
 });
 
 test('the two credit changes the open-licence migration accepts read in Arabic on Arabic pages',async()=>{
- const sql=await (await import('node:fs/promises')).readFile(new URL('../supabase/proposed/jwleria_open_license_media.sql',import.meta.url),'utf8');
+ const sql=await (await import('node:fs/promises')).readFile(new URL('../supabase/migrations/20261028111829_jwleria_open_license_media.sql',import.meta.url),'utf8');
  const allowed=[...sql.match(/'changes' not in \(([^)]*)\)/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
  assert.deepEqual(Object.keys(t('ar').variants.credit.changed).sort(),[...allowed].sort());
  assert.deepEqual(Object.keys(t('en').variants.credit.changed).sort(),[...allowed].sort());

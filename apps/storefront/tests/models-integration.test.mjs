@@ -12,7 +12,7 @@ import {closestVariant,optionAxes,optionKey,optionSignature,selectorAxes} from '
 import {optionCounts} from '../src/i18n/ui.ts';
 
 // End to end before any migration is applied: PGlite runs every migration plus the PROPOSED
-// supabase/proposed/jwleria_product_models.sql, publishes synthetic facts-only fixtures, runs
+// supabase/migrations/*_jwleria_product_models.sql, publishes synthetic facts-only fixtures, runs
 // jwl_internal.apply_product_variants() as service_role, and a PostgREST stand-in answers the storefront
 // adapter's own requests as anon. The adapter and the selection helper then parse exactly those bodies.
 //

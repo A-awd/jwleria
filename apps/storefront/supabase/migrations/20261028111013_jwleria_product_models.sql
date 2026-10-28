@@ -1,9 +1,3 @@
--- PROPOSED, NOT APPLIED. Applying it is a separate owner-approved production change; on approval it is
--- registered as a migration and moved to ../migrations with its registered version.
--- Additive models/variants layer (docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md). Every existing catalog row
--- stays one variant with its own URL; nothing existing is renamed, rewritten or deleted. Creating these
--- objects maps nothing: the mapping is written only by jwl_internal.apply_product_variants().
-begin;
 
 -- One row per public catalog row once mapped. A row without a mapping is shown as its own model.
 -- model_key is '<source>:<model code>' for a grouped model and '<source>:ref:<reference>' for a single.
@@ -503,4 +497,3 @@ $$;
 revoke all on function public.jwl_brand_models_page(text,integer,integer) from public;
 grant execute on function public.jwl_brand_models_page(text,integer,integer) to anon,authenticated,service_role;
 
-commit;

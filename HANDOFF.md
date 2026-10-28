@@ -1,3 +1,16 @@
+## Current handoff: after the first live photograph, 2026-10-28
+
+Done and verified: the models migration and its mapping; the open-licence migration; the bucket, grant, approval and upload function (JWT on); 3 uploads; and publication of 1 photo on 1 product. The photo is visitor-verified in Arabic and English. See the top entry of `STATE.md`.
+
+Writer ownership: the local interactive session finished its writes; nothing is running. Before another session writes the branch, the database, functions, storage or media, record the transfer here first.
+
+Next, in order:
+1. **Operator, optional:** observe `X-JWL-Cache` HIT and STALE on the live product page (runbook CA-1). Only MISS has been observed.
+2. **Coverage:** find further eligible photographs through the same evidence path: identity, rights, budgets and an independent comparison. Any reference beyond m126234-0015 needs decision 0013 amended, or another grant basis (owner original or written permission), plus a reviewed migration. Do not reuse the excluded series photographs.
+3. **Maintenance:** see `docs/spec/MAINTENANCE-BACKLOG.md`.
+
+Rollback, if ever needed (private bundle, `rendered/rollback/`): 90 revokes the grant and withdraws the product at once (HTML up to 600 s); 91 lists the 3 files to delete (CDN up to one day); 01 restores the pre-open-licence definitions and refuses while an open-licence grant exists. The models rollback is `apps/storefront/supabase/proposed/jwleria_product_models.rollback.sql`. Do not roll the Worker back to a release older than `fbf04b80a181` while a titled credit is public; revoke first.
+
 ## Current handoff: interactive continuation, 2026-10-28
 
 Owner of every write from now on: the interactive local Claude Code session (real PTY, no `-p`). The cloud session is quiescent.

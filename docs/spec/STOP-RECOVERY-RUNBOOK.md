@@ -24,6 +24,8 @@ These playbooks condense the project's failure cases into classes that can be ac
   2. A longer per-server timeout in the server's configuration entry, where that configuration is editable. It is not editable for claude.ai connectors from a cloud session.
   3. An `Elicitation` hook or an Agent SDK `onElicitation` callback. A hook that only captures the question would still need another `apply_migration` call. A hook that answers it changes how approvals are enforced, and that is an owner decision.
 - Recovery: after a confirmed answer in an interactive session, apply once, then read back the migration history and the expected counts.
+- Outcome, 2026-10-28: from the local interactive session, both `apply_migration` calls and every later write returned success at the first attempt. Each was read back. No hook, `skip_elicitations` setting or alternate tool was used.
+- Byte integrity through the tool channel: the tool-call layer decodes a literal `\uXXXX` in a parameter into the Unicode character. Before submitting a reviewed body, compute `md5` of it as a dollar-quoted literal with a read-only `select`. If a `\u` sequence is present, write each backslash as `\u005c`. After applying, compare the stored statement's md5 (`supabase_migrations.schema_migrations.statements`) with the file.
 
 **DB-2. A fresh read does not match the prepared package** (catalogue hash, candidate revision or migration count). Stop. Do not execute any rendered statement. Re-render the package from the current read, review the difference and re-hash.
 

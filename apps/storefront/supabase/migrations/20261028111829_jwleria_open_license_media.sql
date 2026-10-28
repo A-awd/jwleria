@@ -1,22 +1,3 @@
--- PROPOSED, NOT APPLIED. Applying this file is a separate owner-approved production change. It implements decision
--- 0013 (open-licence exact-product photographs), which narrows decision 0011's open-licence rejection for that
--- scope only, once the storefront shows the visible attribution; on approval it is registered and moved to ../migrations.
--- Adds one grant kind, open_license: up to twenty Wikimedia Commons files by one creator under one allowlisted
--- free licence (CC0 1.0, CC BY 4.0/3.0/2.0, CC BY-SA 4.0/3.0/2.0; never NC or ND) for one exact candidate, citing
--- exactly decisions/0013-open-licence-exact-product-photos.md, which covers only m126234-0015 (any other decision or
--- reference needs that decision amended and a reviewed migration). Each file is either its untouched Commons
--- original or a Wikimedia-served thumbnail rendition of it, recorded as such with the rendition's width, under
--- MediaWiki's md5 hash directories of the decoded file name; derivatives never exceed a rendition's width. Its images
--- must carry the exact visible attribution derived from the grant and the credited file.
--- Source flag (decision 0011 keeps a source's publication_allowed with the owner): an open-licence photograph is not
--- the source's own media, so a live open-licence approval of a product that is ALREADY public as facts at the same
--- revision may publish its images without the source's publication_allowed, and that flag alone does not withdraw
--- it; such a call changes only images and media state, never a displayed fact or the search text. Nothing else
--- changes: other grant kinds still need the flag and are still withdrawn by it, a disabled source still withdraws
--- every media publication, facts are untouched, and revoking the grant or approval or a new revision still withdraws
--- the product. This exemption changes decision 0011's source-flag rule, so the owner's approval of this migration
--- must name it as its own line. Creates no grant, asset, approval or publication.
-begin;
 
 -- The only accepted licences: SPDX id -> visible label and canonical deed. Ported versions need review.
 create function jwl_internal.open_licenses() returns jsonb
@@ -383,4 +364,3 @@ begin
   return new;
 end $$;
 
-commit;

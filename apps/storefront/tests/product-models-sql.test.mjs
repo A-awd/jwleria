@@ -5,7 +5,7 @@ import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const proposed=new URL('../supabase/proposed/jwleria_product_models.sql',import.meta.url);
+const proposed=new URL('../supabase/migrations/20261028111013_jwleria_product_models.sql',import.meta.url);
 const rollback=new URL('../supabase/proposed/jwleria_product_models.rollback.sql',import.meta.url);
 const slugify=v=>String(v).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 const sources={
@@ -76,7 +76,7 @@ const slugOf=ref=>{const f=[...fixtures,...large].find(x=>x.ref===ref);return sl
 async function database(rows=fixtures){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111013_jwleria_product_models.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.exec(await readFile(proposed,'utf8'));
   for(const [id,s] of Object.entries(sources))await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values($1,$2,'permitted-page','synthetic review',true,false,true)",[id,s.origin]);
   for(let i=0;i<rows.length;i+=50){

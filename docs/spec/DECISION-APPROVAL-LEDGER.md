@@ -35,13 +35,13 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | Lossy WebP ladder, byte budgets and SSIM floor | implementation choice | recorded | decision 0009 addendum |
 | Identity gate mechanics (`requireVerification`) | implementation choice | recorded | decision 0013; the owner still accepts line (c) |
 | Showing the work's title in the credit | implementation choice | done on this branch | CC BY 2.0 4(b) "title of the Work if supplied"; see below |
-| Whole-photo framing on phones (`contain` for approved photos) | implementation choice | prepared | narrowest CSS; editorial imagery unchanged |
-| Open-licence migration lines (a), (b), (c) | genuine owner decision | open | three lines, above |
-| Action-time confirmation of each database write | platform interaction | blocked | MCP elicitation timeout (runbook, playbook DB-1) |
-| Models migration `jwleria_product_models` | existing authorization for the change; platform interaction to execute | blocked | two attempts timed out at 60 s; no third attempt in that turn |
-| Creating the product-media bucket | genuine owner decision | open | |
-| Deploying the upload function | genuine owner decision | open | |
-| Worker release carrying credits, the title, the copy and the framing | platform interaction (operator upload of a prepared package) | prepared: `releases/storefront-fbf04b80a181/` | upload-only; must be live before any titled credit is published (step f) |
+| Whole-photo framing on phones (`contain` for approved photos) | implementation choice | visitor-verified 2026-10-28 | narrowest CSS; editorial imagery unchanged |
+| Open-licence migration lines (a), (b), (c) | genuine owner decision | **approved and applied** 2026-10-28 | all three lines approved for m126234-0015 only; registered `20261028111829`; `exact_reference` stays `"uncertain"` |
+| Action-time confirmation of each database write | platform interaction | resolved 2026-10-28 | interactive session; every write returned success; no hook or alternate tool (runbook DB-1) |
+| Models migration `jwleria_product_models` | existing authorization for the change; platform interaction to execute | **applied** 2026-10-28 | registered `20261028111013`; mapping 4,097 variants / 2,886 models |
+| Creating the product-media bucket | genuine owner decision | **approved and created** 2026-10-28 | public, WebP only, 15 MiB |
+| Deploying the upload function | genuine owner decision | **approved and deployed** 2026-10-28 | `jwl-media-upload`, JWT verification on (existing legacy anon JWT) |
+| Worker release carrying credits, the title, the copy and the framing | platform interaction (operator upload of a prepared package) | deployed: `releases/storefront-fbf04b80a181/` (operator read-back, 2026-10-28) | upload-only; must be live before any titled credit is published (step f) |
 | `confirm-renditions --network` for the front rendition | evidence obtainable | **done** | 2026-10-27 18:09Z: HTTP 200, served sha256 equals the held bytes; gate closed |
 | Licence title outcome | evidence obtainable | **done** | title supplied: "Rolex Datejust 36 - Up High" (embedded short title); recorded on the licensed file and shown in the credit |
 | Licence URI outcome | evidence obtainable | **done** | no licensor-specified URI found; the credit's source link is the Commons file page, which carries the licence notice and names the Flickr original; see below |

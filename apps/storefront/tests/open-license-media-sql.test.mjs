@@ -13,7 +13,7 @@ import {recordMediaApproval,publish,publicationProduct,lanePublicationProduct,la
 
 // Synthetic fixtures only; the proposed migration is exercised in memory and applied nowhere.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const proposed=new URL('../supabase/proposed/jwleria_open_license_media.sql',import.meta.url);
+const proposed=new URL('../supabase/migrations/20261028111829_jwleria_open_license_media.sql',import.meta.url);
 const rollback=new URL('../supabase/proposed/jwleria_open_license_media.rollback.sql',import.meta.url);
 const sha=c=>c.repeat(64);
 const file=(width,c)=>`https://media.example.test/v1/${sha('d')}/${sha('a')}/${width}w-${sha(c)}.webp`;
@@ -39,7 +39,7 @@ async function widenScope(db){
 async function database({open=true,scope='widened'}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111829_jwleria_open_license_media.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   if(open){await db.exec(await readFile(proposed,'utf8'));if(scope==='widened')await widenScope(db);}
   // Closed sources are registered as open for acquisition here on purpose: the grant must still be refused.
   await db.exec(`insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values

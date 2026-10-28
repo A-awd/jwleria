@@ -9,7 +9,7 @@ All counts are from the coordinator's read-only baseline at 2026-10-27 18:08:50Z
 | Registered migrations | 7 (last `20261026114541`) |
 | Active public products (facts) | 4,097 |
 | Candidates | 4,150 |
-| Public products with images | 0 |
+| Public products with images | 1 (m126234-0015, one CC BY 2.0 photograph, 2026-10-28) |
 | Media bucket objects | 0 |
 | Media grants / approvals | 0 / 0 |
 | Model grouping | not applied (`jwl_catalog_models` absent); one card per reference |

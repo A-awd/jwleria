@@ -1,3 +1,37 @@
+## Models applied and the first product photograph live, 2026-10-28
+
+**Visitors can now see (visitor-verified):** one genuine product photograph on one product. `/ar/products/rolex-m126234-0015-e45f1880/` and `/en/products/rolex-m126234-0015-e45f1880/` show the whole photo with the credit «Rolex Datejust 36 - Up High» — Ajay Suresh · CC BY 2.0 · source · resized and converted to WebP. The search card for `q=m126234-0015` shows the same photo. Codex checked both locales in its in-app browser at 390×844 CSS px: the photo decoded, the 640w file was chosen, it is shown whole (`contain`), there is no horizontal overflow and the full credit is visible. This is third-party photography under CC BY 2.0, not official brand photography. Three files (320, 640 and 960 px) are encodings of that one photo.
+
+**Models (applied, then observed live):**
+- Migration `20261028111013_jwleria_product_models`. The stored statement equals the reviewed apply body byte for byte (md5 checked before and after).
+- Mapping `jwl_internal.apply_product_variants()`: 4,097 variant rows; 2,886 displayed models; 283 grouped models holding 1,494 variants; 2,603 single models. No primary-key or position collisions. The public catalog was unchanged by both steps (hash `b2182069…` before and after).
+- Live site: brand pages show model cards with option counts, for example "13 dials · 2 bracelets". Exact `q=m126234-0015` search returns 1 model and opens that reference. Its page selects dial "Bright black" and the Jubilee bracelet, and the old variant URLs still resolve. No size axis was invented.
+
+**One-photo media lane (applied, deployed, published), in the runbook order:**
+- Fresh read before (a): matched the prepared bundle in every field.
+- (a) Migration `20261028111829_jwleria_open_license_media`. The stored statement equals the reviewed body (repository file lines 20–385, without its outer `begin`/`commit`).
+- (b) The public `jwl-product-media` bucket: WebP only, 15 MiB limit.
+- (c) One open-licence grant for m126234-0015 only.
+- (d) 3 evidence rows and the verified approval.
+- The upload function `jwl-media-upload` was deployed from the reviewed source with **JWT verification on**. Its caller is the project's existing legacy anon JWT; the non-JWT publishable key was not used. An unauthenticated call gets 401.
+- (e) 3 files uploaded through the function, each read back publicly with the expected sha256, `image/webp` and a one-day cache.
+- (f) Published through the open-licence lane, with an in-transaction guard that no other catalog row changed.
+- 07 read-back: 1 image on the row, carrying the titled credit. The other 1,464 Rolex rows are all still active and facts-only. 4,097 active public rows. The Rolex source flag `publication_allowed` stays `false` and was never written. The search text is identical. A sibling variant (m126234-0013) shows no photo.
+- `X-JWL-Cache`: MISS observed; HIT and STALE were not observed.
+
+**Owner approvals used (recorded once):** the models migration and its mapping; decision 0013 lines (1) grant kind, (2) source-flag exemption and (3) creator-stated identity route, with `exact_reference` kept `"uncertain"`; the bucket; and the upload function with JWT on. Scope: m126234-0015 and this one photograph only. The four other series photographs stay excluded.
+
+**Coverage, honestly:** 1 of 4,097 public products has a photograph. Every other product is facts-only. Wider photo coverage needs new eligible sources or grants through the same evidence path (`docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md`). Decision 0013 covers only m126234-0015.
+
+**Repository:**
+- Both applied files are now in `apps/storefront/supabase/migrations/`, and the two applied proposals were removed from `proposed/`; their rollbacks stay there.
+- The PGlite tests were repointed to the registered files.
+- Storefront: 155 tests, 150 pass, 0 fail, 5 opt-in skips. Two of the skips are Playwright checks, because Playwright is not installed in this checkout.
+- Intake: 117 of 117 pass.
+- No storefront source changed, so the live Worker (`fbf04b80a181`) stays as it is.
+
+**Database question channel:** in this interactive session every write returned success. No server question was answered on the owner's behalf, and no hook, `skip_elicitations` setting or alternate tool was used. DB-1 is closed for these operations.
+
 ## Transfer to the interactive continuation, 2026-10-28
 
 **Live:**
