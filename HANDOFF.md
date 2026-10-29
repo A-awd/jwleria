@@ -1,3 +1,50 @@
+## Current handoff — card cleanup live and visitor-verified — 2026-10-29
+
+The bounded card/details change is delivered under
+[decision 0014](https://github.com/A-awd/jwleria/blob/be98fa875eded9cf2d387f06bd8a4211d6bf7547/decisions/0014-minimal-cards-and-readable-product-facts.md).
+The exact 73-file package `releases/storefront-bf6812e3c5d4/`, from source
+`bf6812e3c5d4076e330c2a20468526b5b53fc9e8`, was manifest-verified and uploaded
+without a rebuild; the new version is active for 100 percent of traffic.
+Runtime/assets/binding metadata, existing domain configuration and the
+compatible rollback boundary are preserved. No database/media write, cache
+purge, new access grant or subscription purchase occurred. Upload and visitor
+acceptance are complete; do not restart them from older pending entries.
+
+Codex's in-app browser readback covered normal Arabic/English watch listings
+and product pages at 1229x960 desktop and measured 390x844 mobile CSS pixels,
+without horizontal overflow. Checked cards show brand/name only, with no
+technical extras or action blocks. Native category navigation reaches JLC
+Q3926480, where identity/manual-winding/calibre 847 facts are paragraphs and no
+definition list remains; the native English link works with the same facts.
+Rolex `m126234-0015` keeps the complete original approved 640px photograph, contain framing
+and full credit. Keyboard selection of Silver switches to reference `m126234-0013` and
+shows Silver with zero product photos, preserving exact sibling identity.
+Noindex/nofollow, apex/www production domains and existing provider display
+settings are preserved; no Jwleria-origin console warnings/errors were observed.
+Private screenshots and operation/visitor receipts hold the evidence.
+
+Claude's validation is 153 passes of 158 tests, zero fail and five opt-in skips,
+with successful Node/Cloudflare builds and a bilingual rendered-HTML check. Seven
+pre-existing Deno edge-function type errors remain, with no new storefront
+errors. Claude owns implementation/tests/review; Codex completed the stated
+operator/visitor acceptance without repeating the technical suite.
+Final producer documentation is pushed and remote-verified at
+`be98fa875eded9cf2d387f06bd8a4211d6bf7547`; the session ended normally and no
+implementation writer remains active.
+
+The Photoroom cream-background result remains a private experiment, excluded
+from the live release: one approved independent Ajay Suresh CC BY 2.0 source,
+wood removed, solid `#FBF8F3`, actual 960x720 JPEG saved with its receipt and the
+original preserved. Title/creator/licence/source/change credit was shown;
+creator-stated identity and uncertain full suffix still apply. No global
+background or media policy is adopted, and no objective best-quality claim or
+completed Photoshop comparison is supported. Broader photo coverage remains
+unfinished and A/B/C remains unselected. Continue future photo work through the
+existing exact-identity/rights/evidence path; retain the current display rule.
+Keep private assets, prompts, credentials, provider identifiers, screenshots
+and receipts outside GitHub. Preserve earlier history and migration gates;
+Easy Life remains stopped.
+
 ## Current handoff — one genuine product photo live; final source and visitor receipts saved — 2026-10-28
 
 The bounded first-photo outcome is actually delivered: one independent Ajay Suresh CC BY 2.0 photograph on product `m126234-0015`. Codex opened its normal Arabic and English production pages at `/products/rolex-m126234-0015-e45f1880/`, measured 390x844 CSS pixels and verified complete decoding, nonzero image dimensions, approved 640px current source, contain framing and no horizontal overflow. Title, creator, licence, Commons source and WebP/resizing change credit are visible. Private screenshots and visitor receipt preserve the evidence. This is not broad catalog coverage or physical-phone acceptance.

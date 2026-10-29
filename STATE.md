@@ -1,3 +1,52 @@
+## Minimal cards and readable product details verified live — 2026-10-29
+
+The owner's bounded display direction is implemented and delivered under
+[decision 0014](https://github.com/A-awd/jwleria/blob/be98fa875eded9cf2d387f06bd8a4211d6bf7547/decisions/0014-minimal-cards-and-readable-product-facts.md).
+Listing cards show the product photograph when approved, its required credit,
+brand and product name. Details now appear as readable labelled paragraphs
+inside the product page, retaining verified facts previously found only in the
+summary. Source `bf6812e3c5d4076e330c2a20468526b5b53fc9e8` produced the frozen
+73-file release `releases/storefront-bf6812e3c5d4/`. The operator verified its
+manifest, uploaded the exact bytes and confirmed the new version active for
+100 percent of traffic. Existing runtime, asset headers, bindings and domain
+configuration match the prior compatible release; no rebuild, database/media
+write, cache purge or access expansion accompanied this release.
+
+Codex verified normal Arabic and English visitor pages in the in-app browser
+at desktop 1229x960 and measured mobile 390x844 CSS pixels, with no horizontal
+overflow. The first three checked watch cards contain only brand/name text,
+with no technical extras or card action blocks. Native category navigation
+opens the Jaeger-LeCoultre Q3926480 page; identity and manual-winding/calibre 847
+facts appear in paragraphs, with no definition list. The native English link
+preserves those facts. The Rolex `m126234-0015` page still decodes its original approved
+640px photograph with contain framing and full credit. Keyboard selection of
+the Silver option updates the URL/reference to `m126234-0013` and the dial to Silver,
+with no photo substituted onto that sibling. Noindex/nofollow and existing
+production domains remain; no Jwleria-origin console warning/error was observed
+in these checks. Private captures preserve the actual visitor evidence.
+
+Claude's reported validation is 158 storefront tests: 153 pass, zero fail and
+five opt-in skips; Node/Cloudflare builds and the bilingual rendered-HTML check pass.
+Astro retains seven pre-existing Deno edge-function type errors and reports no
+new storefront errors. Codex performed the stated release/visitor checks,
+without duplicating Claude's application implementation or technical suite.
+The producer's final docs-only head is `be98fa875eded9cf2d387f06bd8a4211d6bf7547`,
+pushed and remote-verified; its session ended normally with no active writers.
+
+The private Photoroom experiment is complete: the already approved independent
+Ajay Suresh CC BY 2.0 photograph had its wooden background removed and replaced
+with solid `#FBF8F3`, yielding a privately saved 960x720 JPEG and receipt while
+preserving the original. The sample was shown with title, creator, licence,
+source and modification credit, retaining creator-stated identity/full-suffix
+uncertainty. It is excluded from this release and does not adopt a global
+background or media policy; no subscription or new API/MCP grant was made.
+Photoroom's batch/connector fit motivated the trial, not an objectively proven
+best-quality claim; Photoshop comparison remains untried. Broader catalog
+photography remains unfinished, A/B/C remains unselected and no global
+background has been adopted. Private samples, prompts, credentials, provider
+identifiers, screenshots and receipts remain outside GitHub. Easy Life stays
+stopped; existing repository migration gates are unchanged.
+
 ## One approved independent product photograph verified live in Arabic and English — 2026-10-28
 
 Actual visitor delivery is verified: one approved independent Ajay Suresh photograph is live on exactly one product, `m126234-0015`. Codex opened the normal Arabic and English production product pages at `/products/rolex-m126234-0015-e45f1880/` in the in-app browser with an actual measured 390x844 CSS-pixel viewport. The image decoded completely with nonzero intrinsic dimensions, selected the approved 640px responsive asset, used contain framing and showed no horizontal overflow in those states. Visible credits include the photograph title, Ajay Suresh, CC BY 2.0, Commons source and resized/WebP change notice. Actual mobile captures and the acceptance receipt are saved privately. This proves the bounded one-photo visitor outcome, not broad catalog-photo coverage or physical-phone acceptance.
