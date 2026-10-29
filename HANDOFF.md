@@ -1,3 +1,7 @@
+## Writer transfer: minimal cards and readable product details, 2026-10-29
+
+Writer of the foundation branch from now on: a new local interactive Claude Code session, which owns this frontend-only change in `apps/storefront`. The previous local writer has finished and is quiescent, and no other app writer is active. Codex owns the provider upload. This change makes no database, media grant, bucket, function, image-file or provider writes.
+
 ## Current handoff: after the first live photograph, 2026-10-28
 
 Done and verified: the models migration and its mapping; the open-licence migration; the bucket, grant, approval and upload function (JWT on); 3 uploads; and publication of 1 photo on 1 product. The photo is visitor-verified in Arabic and English. See the top entry of `STATE.md`.
