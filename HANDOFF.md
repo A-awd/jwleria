@@ -1,6 +1,12 @@
-## Writer transfer: minimal cards and readable product details, 2026-10-29
+## Current handoff: minimal cards and readable product details, 2026-10-29
 
-Writer of the foundation branch from now on: a new local interactive Claude Code session, which owns this frontend-only change in `apps/storefront`. The previous local writer has finished and is quiescent, and no other app writer is active. Codex owns the provider upload. This change makes no database, media grant, bucket, function, image-file or provider writes.
+Writer of the foundation branch: the local interactive Claude Code session that made this frontend-only change (decision 0014). It is finished, and no other app writer is active. Codex owns the provider upload. No database, media, function, bucket or provider write was made.
+
+Next, in order:
+1. **Operator (Codex):** upload `releases/storefront-bf6812e3c5d4/` exactly as built, following its `DEPLOY.md`. Verify `SHA256SUMS` first; its sha256 is `584e470e…7491`. Record the active `fbf04b80a181` version privately as the rollback target. Do not rebuild.
+2. **Operator, visitor read-back:** run the `DEPLOY.md` smoke checks in Arabic and English at 360/390/430 px: cards, the Jaeger-LeCoultre Q3926480 page, the m126234-0015 photo and credit, a Prada buckle, and search.
+3. **Claude, on that receipt:** update the top `STATE.md` entry from prepared to deployed and, if seen, visitor-verified. No rebuild or app test is needed for unchanged bytes.
+4. Coverage and maintenance as in the previous handoff below.
 
 ## Current handoff: after the first live photograph, 2026-10-28
 

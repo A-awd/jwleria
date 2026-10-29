@@ -1,3 +1,29 @@
+## Minimal cards and readable product facts: prepared, awaiting the operator upload, 2026-10-29
+
+**Owner display rule:** decision 0014, a narrow display refinement, not A/B/C adoption.
+- Cards show only the photograph (when a real one exists), its required credit, the brand and the name.
+- Product pages show every available fact as labelled paragraphs in groups.
+- The Photoroom cream sample stays a private experiment. It is not in this release and sets no background, style or media policy.
+
+**Prepared (not deployed):**
+- Source commit `bf6812e3c5d4` on this branch. Changed surfaces:
+  - `ProductCard.astro`, the shared card: it renders photo, credit, brand and name only. The collection, summary, reference, option counts, preview badge and card inquiry action are no longer rendered.
+  - The product page: the generated summary sentence and the definition list became grouped paragraphs. The groups are identification; design and materials; technical; other.
+  - New helper `src/components/product-facts.mjs`. It keeps the facts that only a generated summary states: 10 Prada buckles carry finish, logo material or "belt included" only there.
+  - Group headings in `i18n/ui.ts`; the unused card count helper is removed.
+  - CSS: the `.facts` styles replace `.specs`, and the rules for removed card parts are gone. The facts-only card's `min-height: 20rem` is dropped because the card now holds two lines; its final look belongs to the designer stream.
+- Data, search, model grouping, variants, credits, the product-page inquiry action, routes, cache and indexing settings are unchanged. No database, media, function, bucket or provider write was made.
+- Package `releases/storefront-bf6812e3c5d4/`: 73 compiled files. `SHA256SUMS` sha256 is `584e470e72de3e69a48d1974b0cbd8fcebf1771b9d167987d765b7d20dce7491`. Its `DEPLOY.md` is upload-only and keeps the configuration.
+- Rollback target: `fbf04b80a181`. Never roll back below it while the titled credit is public.
+- Checks:
+  - Storefront: 158 tests, 153 pass, 0 fail, 5 opt-in skips (browser and preview; Playwright is not installed).
+  - `astro check`: 0 storefront errors. The 7 errors are the existing Deno upload-function types, unchanged.
+  - Every one of the 2,886 public model summaries (read over public HTTP) parses as a generated summary in both locales, so no page falls back to the old sentence.
+  - Local rendered-HTML check, built node server against the synthetic catalogue, Arabic and English: every card holds brand and name only; a synthetic credited photo keeps its full credit; search finds the model; every product page has grouped paragraphs, no definition list, the selected variant, its credit and the inquiry action.
+- Live visual acceptance at phone width belongs to the root operator's browser.
+
+**Live (unchanged by this entry):** Worker source `fbf04b80a181`; 1 licensed photo on m126234-0015.
+
 ## Models applied and the first product photograph live, 2026-10-28
 
 **Visitors can now see (visitor-verified):** one genuine product photograph on one product. `/ar/products/rolex-m126234-0015-e45f1880/` and `/en/products/rolex-m126234-0015-e45f1880/` show the whole photo with the credit «Rolex Datejust 36 - Up High» — Ajay Suresh · CC BY 2.0 · source · resized and converted to WebP. The search card for `q=m126234-0015` shows the same photo. Codex checked both locales in its in-app browser at 390×844 CSS px: the photo decoded, the 640w file was chosen, it is shown whole (`contain`), there is no horizontal overflow and the full credit is visible. This is third-party photography under CC BY 2.0, not official brand photography. Three files (320, 640 and 960 px) are encodings of that one photo.

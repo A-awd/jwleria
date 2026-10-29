@@ -4,6 +4,10 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0014 — Minimal listing cards and readable product facts](decisions/0014-minimal-cards-and-readable-product-facts.md)
+
+- [0013 — Open-licence exact-product photographs](decisions/0013-open-licence-exact-product-photos.md)
+
 - [0012 — n8n sandbox-safe bundles and disabled database paths](decisions/0012-n8n-sandbox-bundles-and-disabled-database-paths.md)
 
 - [0011 — Per-origin queues, missing-only intake and exact media evidence](decisions/0011-per-origin-queues-and-exact-media-evidence.md)
