@@ -18,6 +18,8 @@ This file is the entry point for Claude sessions in this repository. It holds th
 
 A fast, phone-first, bilingual (Arabic and English) showcase of products and brands, with genuine photographs of the exact product. Visitors enquire about a piece on WhatsApp.
 
+Photographs are 2D. An exact-product cutout over the current product frame colour is preferred, and background-only removal is the only alteration allowed (decision 0015). Interactive 3D is deferred.
+
 Out of scope, always: prices, login or accounts, cart, checkout, currency or country selectors, CRM, an owner admin or dashboard, and any new service. Copy stays neutral and inquiry-only (decision 0005): no personal-shopping or concierge positioning, no implied stock or brand affiliation.
 
 ## Current milestone

@@ -49,6 +49,7 @@ Encoding is lossy WebP with a measured, deterministic quality search (decision 0
   The tooling never writes such a record. With none named, no exception applies. The old `performance_review_accepted` input flag is refused. The accepted entries are copied into the approval bundle (`performance_exception`). The record approves the measured file as it is; it does not choose another ladder step.
 - Lossy WebP is used only after a visual comparison: every manifest says `visual_comparison_required: true`. The helper cannot do that comparison; an independent reviewer records it per derivative before any approval.
 - Every encoder option is pinned (`preset: photo`, `effort: 6`, `smartSubsample: true`, `smartDeblock: false`, `alphaQuality: 100`, no near-lossless), so the same input gives byte-identical output; a test proves it.
+- Transparent inputs (an original with alpha, or a checked cutout master under decision 0015) keep their alpha. `alphaQuality: 100` encodes it losslessly; each file records `alpha_max_delta` against its reference, and anything above 0 needs review. Fidelity is measured with transparent pixels flattened on the storefront's product frame colour (`--sand`, `#f1ede6`), where visitors see them. Flattening changes nothing in an opaque image, so opaque inputs give the same bytes and numbers as before.
 - Lossy WebP stores colour as 4:2:0 YUV, as every lossy WebP does; no colour adjustment is made. Embedded ICC profiles are kept; EXIF/GPS are not copied.
 
 Files use immutable paths:

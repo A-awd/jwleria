@@ -61,6 +61,30 @@ Public derivatives are cached for one day (`max-age=86400`). `uploadDerivatives`
 
 Revocation is final: revoking a grant revokes its approvals and withdraws the products at once; then delete the public files listed by `jwl_revoked_media_files()` with `deleteRevokedDerivatives`. A deleted file can still be served from a CDN or browser copy until its one-day lifetime ends. Where a faster takedown is needed, purge those exact paths from the CDN after deleting them; this repository configures no purge and does not assume one. A grant with an expiry date is refused until a scheduled expiry sweep is added in a reviewed change (`pg_cron` is available on the project but not installed). Written permission cannot be recorded for Cartier, Van Cleef & Arpels, CELINE or RIMOWA. `acquireOriginal` paces each media origin through a shared pacer, caches robots and stops an origin after a refusal or rate limit; its requests identify the client and its site (`JwleriaCatalog/1.0 (+https://jwleria.com)`), as Wikimedia's user-agent policy asks.
 
+### Background-only cutouts (decision 0015; prepared, cannot be recorded yet)
+
+`cutout.mjs` checks a cutout master that someone else supplied against its untouched original. It never makes, masks or edits an image. `node scripts/catalog-intake/cutout.mjs validate PRIVATE_INPUT.json` reads `{original:{path,sha256}, cutout:{path,sha256,producer}}` and prints a record. Both files must match their recorded sha256, and the master must be a separate file.
+
+The check refuses a master for any of these reasons:
+- it is not an 8-bit RGBA PNG;
+- it is not upright;
+- it changes the upright geometry (crop, resize or padding);
+- it changes the colour profile (dropping an sRGB profile is allowed but flagged);
+- it changes an opaque pixel by more than 2 per channel;
+- it has under 2% transparent pixels, or under 2% opaque pixels;
+- a visible pixel touches the canvas edge.
+
+Partly transparent edge pixels and separate visible pieces are measured and flagged for the visual comparison, not judged. Stored values are compared with colour profiles ignored. The record states whether the opaque pixels are identical to the original or only within rounding, and it never calls the cutout identical to the original: its alpha differs by design. A passing record is not an approval. The visual comparison must confirm `background_only_removed`, `whole_product_retained`, `edges_clean_on_frame_background` and `no_redrawn_or_generated_detail`.
+
+`prepareGrantedMedia({..., cutout})` makes the derivatives from a checked master:
+- the binding carries `treatment: {kind: 'background_removal', version: 1, cutout_sha256}`, so the files are content-addressed apart from the original's;
+- the manifest (schema 4) records the original's sha256 and the master's, plus the check;
+- alpha is kept losslessly, and fidelity is measured on the frame colour.
+
+The grant must cover the treatment (`cutoutBasisProblem`). An owner original is covered. Written permission must state `background_removal: true`. An open licence must be CC0 or CC BY: CC BY-SA needs a ShareAlike licence review first, and NC or ND are never allowlisted.
+
+The credit text for a cutout is `background removed, resized and converted to WebP`, or `background removed and converted to WebP` (`creditChanges`). The applied database accepts neither, and its evidence has no field for the master or the treatment, so `approvalBundle` refuses cutout manifests. Recording one needs a reviewed migration and a storefront release with the reviewed Arabic for the credit text. An original that is already transparent and eligible takes the ordinary path with no treatment.
+
 ### Open-licence photos (prepared, not active)
 
 Decision 0013 accepts open-licence exact-product photographs of m126234-0015 only (narrowing 0011 for that reference and scope only), but the applied database still accepts only `owner_original` and `written_permission` grants, so no open-licence image can be recorded or published today. The path goes live only after, in order: the storefront showing the visible credit of every `attribution` entry wherever that image appears (see `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`); and the approved application of `apps/storefront/supabase/proposed/jwleria_open_license_media.sql`, whose approval request must name, as its own line, that its open-licence lane publishes such images without the source's `publication_allowed` flag (decisions 0011 and 0013). Its rollback (`.rollback.sql`) restores the applied definitions exactly and refuses while any open-licence grant or credit exists.

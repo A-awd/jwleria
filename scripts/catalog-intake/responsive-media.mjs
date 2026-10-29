@@ -5,6 +5,7 @@ import {isAbsolute,join,resolve,relative,dirname,basename,sep} from 'node:path';
 import {homedir} from 'node:os';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
+import {validateCutoutMaster,frameBackground,cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const hashPattern=/^[a-f0-9]{64}$/;
@@ -98,7 +99,16 @@ function bindingOf(input){
   }
   if(grant.media_permission_reference!==source.media_permission_reference||grant.source_id!==source.id||grant.candidate_id!==candidate.candidate_id||grant.revision_hash!==candidate.revision_hash||grant.asset_source_url!==asset.source_url||grant.asset_sha256!==asset.sha256||grant.website_publication!==true||grant.resize!==true||grant.webp_encode!==true)throw new Error('Exact asset derivative grant mismatch');
   if(!isAbsolute(asset.path??'')||!isAbsolute(input.output_directory??''))throw new Error('Absolute local input and output paths required');
-  return {source_id:source.id,candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_permission_reference:source.media_permission_reference,asset_source_url:asset.source_url,asset_sha256:asset.sha256};
+  const binding={source_id:source.id,candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_permission_reference:source.media_permission_reference,asset_source_url:asset.source_url,asset_sha256:asset.sha256};
+  // A background-only cutout (decision 0015) is bound to its own master file as well, so its derivatives never share a
+  // directory or a name with the original's.
+  if(input.treatment!==undefined){
+    const {kind,cutout}=input.treatment??{};
+    if(kind!==cutoutTreatment.kind||!isAbsolute(cutout?.path??'')||!hashPattern.test(cutout?.sha256??''))throw new Error('A background-removal treatment needs its cutout master path and sha256');
+    if(grant.background_removal!==true)throw new Error('Background removal is not covered by the grant');
+    binding.treatment={kind,version:cutoutTreatment.version,cutout_sha256:cutout.sha256};
+  }
+  return binding;
 }
 async function immutableFile(path,bytes){
   try{
@@ -128,6 +138,17 @@ export async function prepareResponsiveMedia(input){
   if(!Number.isInteger(orientation)||orientation<1||orientation>8)throw new Error('Unsupported original EXIF orientation');
   const visualWidth=orientation>=5?metadata.height:metadata.width;
   const visualHeight=orientation>=5?metadata.width:metadata.height;
+  // A cutout's derivatives are made from its checked master (same upright geometry and stored pixel values where opaque),
+  // never from the original directly; the untouched original stays identified by its own sha256.
+  let pixelSource=original,cutout=null;
+  if(input.treatment!==undefined){
+    const check=await validateCutoutMaster({original:{path:originalPath,sha256:binding.asset_sha256},cutout:input.treatment.cutout},sharp);
+    if(!check.passed)throw new Error('Cutout master failed its check: '+check.failures.join(','));
+    pixelSource=await readFile(input.treatment.cutout.path);
+    if(digest(pixelSource)!==binding.treatment.cutout_sha256)throw new Error('Cutout master changed after its check');
+    cutout={sha256:binding.treatment.cutout_sha256,bytes:pixelSource.length,check};
+  }
+  const hasAlpha=cutout!==null||metadata.hasAlpha===true;
   const targetWidths=[...widths.filter(width=>width<=visualWidth),Math.min(visualWidth,1600)];
   if(targetWidths.some(width=>width>4096||Math.round(visualHeight*width/visualWidth)>8192))throw new Error('Derivative geometry exceeds public manifest limits');
   const relativeRoot=`v1/${digest(JSON.stringify(binding))}/${binding.asset_sha256}`;
@@ -137,19 +158,27 @@ export async function prepareResponsiveMedia(input){
   const roles=new Map();
   for(const width of widths)if(width<=visualWidth)roles.set(width,['card']);
   roles.set(detailWidth,[...(roles.get(detailWidth)??[]),'detail']);
-  const pipeline=width=>sharp(original,{failOn:'warning',limitInputPixels:60000000})
+  const pipeline=width=>sharp(pixelSource,{failOn:'warning',limitInputPixels:60000000})
     .autoOrient()
     .resize({width,withoutEnlargement:true,fit:'inside',kernel:'lanczos3'})
     .keepIccProfile();
-  // Metric pixels: both images are decoded the same way (flattened on white, 8-bit RGB) so only the encoding differs.
-  const pixels=async bytes=>sharp(bytes,{failOn:'warning'}).flatten({background:'#ffffff'}).raw().toBuffer({resolveWithObject:true});
+  // Metric pixels: both images are decoded the same way (8-bit RGB, a transparent pixel flattened on the storefront's product
+  // frame colour, where a visitor sees it) so only the encoding differs. Flattening changes nothing in an opaque image.
+  const pixels=async bytes=>sharp(bytes,{failOn:'warning'}).flatten({background:frameBackground}).raw().toBuffer({resolveWithObject:true});
+  // Alpha is encoded losslessly (alphaQuality 100); the largest alpha difference from the reference is recorded and must be 0.
+  const alphaDelta=async(reference,bytes)=>{
+    const [a,b]=await Promise.all([reference,bytes].map(image=>sharp(image,{failOn:'warning'}).ensureAlpha().extractChannel(3).raw().toBuffer()));
+    let max=0;for(let i=0;i<a.length;i++){const d=Math.abs(a[i]-b[i]);if(d>max)max=d;}
+    return max;
+  };
   const generated=new Map();
   async function encode(width){
     if(generated.has(width))return generated.get(width);
     const applied=roles.get(width);
     const budget=Math.min(...applied.map(role=>byteBudgets[role]));
     // The reference is held in memory only; it is never written or published.
-    const reference=await pixels(await pipeline(width).webp({lossless:true,effort:0}).toBuffer());
+    const lossless=await pipeline(width).webp({lossless:true,effort:0}).toBuffer();
+    const reference=await pixels(lossless);
     const tried=[];let chosen;
     for(const quality of webpQualityLadder){
       const bytes=await pipeline(width).webp({...webpEncoder,quality}).toBuffer();
@@ -170,7 +199,8 @@ export async function prepareResponsiveMedia(input){
     const path=`${relativeRoot}/${actual.width}w-${sha256}.webp`;
     await immutableFile(join(outputRoot,path),bytes);
     const detailRole=applied.includes('detail');
-    const record={path,sha256,bytes:bytes.length,width:actual.width,height:actual.height,mime_type:'image/webp',roles:applied,
+    const alpha=hasAlpha?{alpha_max_delta:await alphaDelta(lossless,bytes)}:{};
+    const record={path,sha256,bytes:bytes.length,width:actual.width,height:actual.height,mime_type:'image/webp',roles:applied,...alpha,
       webp_quality:chosen.quality,ssim_luma:round(chosen.ssim,5),psnr_rgb_db:round(chosen.psnr,2),
       budget_limit_bytes:budget,over_budget:bytes.length>budget,ssim_floor:fidelityFloor.ssim,fidelity_floor_met:chosen.floor_met,
       // Recorded for the visual comparison only; it never blocks or waives anything.
@@ -181,14 +211,20 @@ export async function prepareResponsiveMedia(input){
   const variants=[];
   for(const width of widths)if(width<=visualWidth)variants.push(await encode(width));
   const detail=await encode(detailWidth);
-  const review=record=>record.over_budget||!record.fidelity_floor_met;
-  const manifest={schema_version:3,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
+  const review=record=>record.over_budget||!record.fidelity_floor_met||record.alpha_max_delta>0;
+  const manifest={schema_version:cutout?4:3,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
     original:{local_path:originalPath,sha256:binding.asset_sha256,bytes:original.length,width:metadata.width,height:metadata.height,orientation,visual_width:visualWidth,visual_height:visualHeight,format:metadata.format},
+    ...(cutout?{treatment:{...cutoutTreatment,cutout_sha256:cutout.sha256,producer:cutout.check.cutout.producer},pixel_source:'cutout_master',
+      cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},
+      cutout_review_required:[...cutoutReviewChecks]}:{}),
     processing:{engine:'sharp',version:sharp.versions.sharp,libvips_version:sharp.versions.vips,kernel:'lanczos3',webp_lossless:false,webp_encoder:webpEncoder,webp_quality_ladder:webpQualityLadder,
       byte_budgets:byteBudgets,fidelity_floor:fidelityFloor,detail_target:detailTarget,
       selection:'highest ladder step within the byte budget and at or above the fidelity floor; a card size, and a detail file that is also a card size, carries the card budget',
       fidelity_metric:'luma (BT.601) SSIM, 11x11 Gaussian window sigma 1.5, and RGB PSNR, against an in-memory Lanczos3 resize of the same pipeline at the same width',
-      crop:false,upscale:false,color_adjustments:false,orientation_applied:orientation,orientation_normalized:orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied'},
+      crop:false,upscale:false,color_adjustments:false,
+      // A cutout master is already upright (its check requires it), so the pipeline applies no orientation of its own to it.
+      orientation_applied:cutout?1:orientation,orientation_normalized:!cutout&&orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied',
+      ...(hasAlpha?{alpha:'kept, encoded losslessly',metric_background:frameBackground}:{}),...(cutout?{background_removed:true}:{})},
     performance_review_required:review(detail)||variants.some(review),
     // Lossy WebP is used only after a visual comparison (docs/STOREFRONT-PERFORMANCE-2026-10-21.md); this helper cannot do it.
     visual_comparison_required:true,variants,detail};

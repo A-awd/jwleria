@@ -1,3 +1,19 @@
+## Current handoff: the photo milestone after the cutout direction, 2026-10-29
+
+Writer: the local interactive Claude Code session wrote this branch and nothing else. Nothing is running. No database, function, storage, media or provider write was made. Codex owns operator actions. Before another session writes, record the transfer here first.
+
+The foundation (catalogue, models and variants, minimal cards, product paragraphs, credits, phone layout) is live. What is left is real photographs: 1 of 4,097 products has one.
+
+Next, in order:
+1. **Rights basis for exact images (owner, with rights holders).** Start with one open source whose galleries name the exact reference: Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371 or Bottega Veneta 8 public products. The basis is written permission covering website publication, resizing, WebP encoding and background removal, plus the owner's decision on that source's `publication_allowed`; or the owner's own photographs of exact pieces. This is the single next step: everything after it is built.
+2. **Claude, on that basis:** run the `originals` phase on the held bytes. The manifest then shows whether an official file is already transparent; an eligible transparent original needs no removal pass. Then the identity check and the bundle; Codex uploads; then publish and read back.
+3. **Cutouts, when an accepted exact cutout input exists:** run `node scripts/catalog-intake/cutout.mjs validate` and the independent visual comparison. Then prepare the reviewed enabling change: database evidence for the master and treatment, the credit text `background removed, …`, and its Arabic in the storefront. That change is applied with the usual confirmation and shipped in a Worker release.
+4. **Coverage, performance, read-back:** primary variants of the 2,886 models first; then photo-filled mobile measurements and the cache labels (CA-1); then a final bilingual visitor read-back.
+
+Optional and not gates: design direction A, B or C; `docs/spec/MAINTENANCE-BACKLOG.md`.
+
+Rollback floor unchanged: never roll the Worker back below `fbf04b80a181` while the titled credit is public.
+
 ## Current handoff: minimal cards and readable product details live, 2026-10-29
 
 Done: decision 0014 is live.

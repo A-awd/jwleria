@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0015 — Authentic 2D cutouts; interactive 3D deferred](decisions/0015-authentic-2d-cutouts-and-3d-deferral.md)
+
 - [0014 — Minimal listing cards and readable product facts](decisions/0014-minimal-cards-and-readable-product-facts.md)
 
 - [0013 — Open-licence exact-product photographs](decisions/0013-open-licence-exact-product-photos.md)

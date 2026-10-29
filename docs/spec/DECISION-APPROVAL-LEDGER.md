@@ -30,7 +30,14 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | Inquiry-only scope: no prices, login, cart, checkout, currency or country selectors, CRM or admin | existing authorization | in force | decisions 0003, 0004, 0008 |
 | Neutral copy and the moving brand strip | existing authorization | in force | decision 0005; copy audit replacements applied on this branch |
 | El Messiri for Arabic display; lighter palette | existing authorization | in force | decisions 0006, 0007 |
-| Selecting design direction A, B or C | genuine owner decision | open | the designer stream presents; nothing selected |
+| Selecting design direction A, B or C | genuine owner decision | open | the designer stream presents; nothing selected; optional, not a photo-milestone gate |
+| Cards show photo, credit, brand and name; product facts as grouped paragraphs | existing authorization | in force; deployed and visitor-verified 2026-10-29 (`releases/storefront-bf6812e3c5d4/`) | decision 0014 |
+| Interactive 3D | genuine owner decision | deferred 2026-10-29 | decision 0015; not an implementation requirement |
+| Background-only cutout treatment (2D, over the current frame colour) | existing authorization | in force 2026-10-29 | decision 0015; authorises the treatment only, not sources or images; no tool, service or account adopted |
+| Cutout check thresholds and derivative rules (`cutout.mjs`) | implementation choice | recorded 2026-10-29 | rounding of up to 2 per channel, at least 2% transparent and 2% opaque pixels, nothing on the canvas edge, lossless alpha |
+| Recording and showing a cutout: database evidence for the master and treatment, the credit text, the storefront's Arabic for it | implementation choice to prepare (decision 0010); platform interaction to apply and deploy | not started | needs an accepted exact cutout input first; the applied database accepts only the two resize/convert credit texts |
+| Written permission for official media, per source | genuine owner decision (with the rights holder) | none recorded | the main input for real photographs; see the source-to-photo inventory |
+| A source's `publication_allowed` flag for media | genuine owner decision | all 12 false | needed for written-permission and owner-original photographs; the open-licence lane does not need it |
 | Facts-only publication and bounded cache | existing authorization | in force | decision 0009 |
 | Lossy WebP ladder, byte budgets and SSIM floor | implementation choice | recorded | decision 0009 addendum |
 | Identity gate mechanics (`requireVerification`) | implementation choice | recorded | decision 0013; the owner still accepts line (c) |

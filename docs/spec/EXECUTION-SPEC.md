@@ -9,6 +9,7 @@ This spec turns the owner's brief into requirements that can be checked. It is s
 - **What it is not:** a shop. There are no prices, accounts or login, cart, checkout, currency or country selectors, CRM, owner admin or dashboard (decisions 0003, 0004, 0008). No new service is added.
 - **Voice:** neutral and inquiry-only (decision 0005). The site does not present itself as a personal shopper or concierge. It does not imply that it holds stock or is affiliated with a brand. Arabic interface copy uses verbal nouns rather than gendered imperatives.
 - **Identity:** the current visual identity stays until the owner selects a design direction: El Messiri for Arabic display (decision 0006) and the lighter palette (decision 0007).
+- **Presentation:** listing cards show only the photograph (when a real one exists), its required credit, the brand and the name; product pages show every fact as grouped paragraphs (decision 0014). Real interactive 3D is deferred; product imagery is 2D (decision 0015).
 
 ## 2. Catalogue
 
@@ -27,13 +28,14 @@ This spec turns the owner's brief into requirements that can be checked. It is s
 
 ## 4. Media
 
-- P1. Only genuine photographs of the exact reference are used. No sibling reference is substituted, nothing is generated, altered or upscaled, and no image is cropped.
+- P1. Only genuine photographs of the exact reference are used. No sibling reference is substituted, nothing is generated, altered or upscaled, and no image is cropped. The one exception is background-only removal under P8 (decision 0015).
 - P2. Every image needs a recorded rights basis: an owner original, written permission for its exact origin, or an open licence under decision 0013. An official image URL is never permission (decision 0011).
 - P3. Open-licence images show a visible credit wherever they appear: the creator, the work's title when its author supplied one, the licence linked to its deed, the source page and the changes made. They are never described as official brand photography.
 - P4. Identity is recorded per file, against its exact sha256, by an independent visual review, or by the creator-stated-reference route of decision 0013 with `exact_reference` kept `"uncertain"`.
 - P5. Delivery uses responsive lossy WebP at 320, 640 and 960 px, plus a detail size of at most 1600 px. Each file has a byte budget (150,000 B for card sizes, 600,000 B for a detail-only file) and must reach luma SSIM 0.97 or more. Any exception needs an independent reviewed record (decision 0009 addendum).
 - P6. On phones, product photographs are shown whole inside the 4:5 frame (`object-fit: contain` for approved responsive images only). Editorial imagery keeps its art direction.
 - P7. On a takedown request, revoking the grant withdraws the product at once, and its public files are deleted.
+- P8. Cutouts (decision 0015). An exact-product cutout is preferred, shown over the current product frame colour with no new background. An original that is already transparent and eligible needs no removal pass. Otherwise a cutout master must pass `scripts/catalog-intake/cutout.mjs`: an 8-bit RGBA PNG with the original's upright geometry and colour profile, opaque pixels equal to the original's stored values within 2 per channel, at least 2% transparent and 2% opaque pixels, and no visible pixel on the canvas edge. It also needs an independent visual comparison (background only, whole product, clean edges, nothing redrawn) and a rights basis that covers the adaptation. Derivatives record the untouched original's sha256 and the master's, keep alpha losslessly, and measure fidelity flattened on the frame colour. Their credit states the removal. Recording a cutout needs a reviewed change to the database evidence and credit text, plus the storefront's Arabic for that text; until then the pipeline refuses it.
 
 ## 5. Delivery and runtime
 

@@ -5,6 +5,7 @@ import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
 import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
+import {cutoutTreatment} from './cutout.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
@@ -109,6 +110,31 @@ function openLicenseGaps(grant){
 export function openLicenseAttribution(grant,changes,file=grant.licensed_files?.[0]){
   return {creator:grant.creator,license:openLicenses[grant.license_code].label,license_url:grant.license_url,source_url:file.source_page_url,changes,
     ...(typeof file.title==='string'?{title:file.title}:{})};
+}
+
+/**
+ * The visible "changes" of an open-licence credit. The applied database accepts only the first two; the background-removed
+ * forms (decision 0015) are what a cutout's credit must say once a reviewed change lets the database record them.
+ */
+export function creditChanges({resized,background_removed=false}){
+  if(background_removed)return resized?'background removed, resized and converted to WebP':'background removed and converted to WebP';
+  return resized?'resized and converted to WebP':'converted to WebP';
+}
+/**
+ * Why a grant does not cover background removal (decision 0015), or null when it does. The owner's own photograph is
+ * covered by the owner's direction. Written permission must say so itself (background_removal: true). An open licence
+ * must allow an adaptation whose conditions this pipeline meets: CC0 and CC BY do (the credit states the change); CC BY-SA
+ * also binds the adaptation to its ShareAlike terms, which needs a licence review first; NC and ND are never allowlisted.
+ * This covers the treatment only: the grant must still permit the exact product (evaluateMediaGrant).
+ */
+export function cutoutBasisProblem(grant){
+  if(grant?.kind==='owner_original')return null;
+  if(grant?.kind==='written_permission')return grant.background_removal===true?null:'written_permission_does_not_cover_background_removal';
+  if(grant?.kind==='open_license'){
+    if(grant.license_code==='CC0-1.0'||/^CC-BY-[234]\.0$/.test(grant.license_code??''))return null;
+    return /^CC-BY-SA-/.test(grant.license_code??'')?'share_alike_adaptation_needs_licence_review':'license_not_allowed';
+  }
+  return 'unsupported_grant_kind';
 }
 
 /**
@@ -296,18 +322,25 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
   return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
 }
 
-/** Builds the exact per-asset derivative binding the responsive helper requires, then prepares files. */
-export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory}){
+/**
+ * Builds the exact per-asset derivative binding the responsive helper requires, then prepares files. With `cutout`
+ * ({path, sha256, producer}), the derivatives are made from that background-only cutout master after it passes its
+ * check against this original (decision 0015); they stay private, since approvalBundle refuses to record them.
+ */
+export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
+  const basis=cutout===undefined?null:cutoutBasisProblem(grant);
+  if(basis)throw Error('Background removal is not covered: '+basis);
   // The source's own publication flag stays a separate owner decision; it is passed through, never set here.
   // An open-licence file is outside the brand gallery: the binding sees only the one granted file being prepared.
   const open=grant.kind==='open_license';
   const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(asset.source_url).origin]:grant.media_origins??[]};
   return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,
+    ...(cutout===undefined?{}:{treatment:{kind:cutoutTreatment.kind,cutout}}),
     grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
       revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
-      website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode}});
+      website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode,...(cutout===undefined?{}:{background_removal:true})}});
 }
 
 // A verification record quotes its reviewers' reasons unabridged, so it may be longer than a short text field.
@@ -425,6 +458,9 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
   const base=new URL(public_base_url);
   if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/storage/v1/object/public/jwl-product-media'))throw Error('Public product-media bucket URL required');
   if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Between one and twenty prepared images required');
+  // The applied database records neither a cutout's master and treatment in its evidence nor its credit text, and the
+  // storefront has no reviewed Arabic for that text. Until a reviewed change adds them, a cutout stays private.
+  if(items.some(item=>item?.manifest?.treatment!==undefined))throw Error('Background-removed derivatives cannot be recorded yet: the database evidence, the credit text and the storefront translation need a reviewed change first (decision 0015)');
   const exception=performance_exception===null||performance_exception===undefined?null:performanceExceptionRecord(performance_exception,{prepared_by});
   const evidence=[],entries=[],uploads=[],excepted=[];
   for(const item of items){
@@ -462,7 +498,7 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
         if(files.some(f=>f.width>file.rendition_width))throw Error('Open-licence derivatives cannot be wider than their source rendition');
       }
       // A rendition is already a resize of the licensed original.
-      entry.attribution=openLicenseAttribution(grant,file.file_kind==='rendition'||files.some(f=>f.width<visual)?'resized and converted to WebP':'converted to WebP',file);
+      entry.attribution=openLicenseAttribution(grant,creditChanges({resized:file.file_kind==='rendition'||files.some(f=>f.width<visual)}),file);
     }
     entries.push(entry);
   }

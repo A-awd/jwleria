@@ -1,3 +1,44 @@
+## Cutout direction, fresh photo audit and the local cutout contract, 2026-10-29
+
+**Owner direction (decision 0015):**
+- Interactive 3D is deferred.
+- Product imagery is authentic exact-product 2D. A cutout over the current product frame colour is preferred, and an eligible original that is already transparent comes first.
+- Background-only removal is authorised as a treatment. It grants no new source or image rights, and no tool, service or account is adopted.
+
+**Observed live (read-only aggregate read, 2026-10-29 10:07:44Z, through the project's Supabase connector; no write of any kind):**
+- 9 migrations, unchanged.
+- 4,097 active public rows: 1 with a photograph, 4,096 facts-only.
+- 2,886 displayed models; 4,097 mapped variant rows; 4,150 candidates.
+- 1 live media grant, 1 live verified approval, 3 media evidence rows; 1 bucket holding 3 objects.
+- All 12 sources are enabled with `publication_allowed=false`. `acquisition_allowed=false` for Cartier and Van Cleef & Arpels only.
+
+**Source-to-photo inventory (details in `docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md`):**
+- 15,016 official image URLs are stored. None was ever fetched as bytes, and no HTTP status or content type is recorded for any of them.
+- Galleries naming the exact reference: Rolex 1,465, Prada 851, LOEWE 407, Longchamp 372 (371 public), Bottega Veneta 8. The other brands have 0.
+- No official asset is known to be transparent; that is unknown, not "no". URL hints only: Audemars Piguet requests `fmt=avif-alpha`, Rolex uses the `upright-c` packshot view, Longchamp is all `.png`, and Cartier, Van Cleef & Arpels and Prada are partly `.png`.
+- Held original bytes: 0 official files.
+- No written permission exists for any source.
+
+**Private trial (producer-reported by Codex):** a built-in image editor cutout of the licensed m126234-0015 photograph was rejected for product fidelity: dial lettering, markers, reflections and proportions were redrawn. The new automated check also refuses it on four counts: geometry changed (960×720 became 1448×1086), colour profile changed, only 0.02% of pixels fully opaque, and the product touches the canvas edge. Nothing from it is used, and it stays private.
+
+**Prepared on this branch (not deployed; nothing recorded or uploaded):**
+- `scripts/catalog-intake/cutout.mjs` checks a supplied cutout master against its untouched original. It never makes or edits an image.
+- `responsive-media.mjs` and `media-pipeline.mjs` make cutout derivatives from a checked master:
+  - the binding carries the treatment and the master's sha256, and schema-4 manifests record both checksums;
+  - alpha is kept losslessly, and fidelity is measured on the frame colour;
+  - the grant must cover the treatment;
+  - `approvalBundle` refuses cutouts until a reviewed database, credit and translation change.
+- Opaque inputs give the same bytes as before.
+- No storefront source changed, so no rebuild or release is needed.
+- Records updated: decision 0015, a dated cross-reference in 0013, execution spec P1 and P8, the approval ledger, the coverage registry, the requirements ledger with an ordered remaining-delivery list, the intake README and the responsive-media note.
+
+**Tests:**
+- Intake: 125 of 125 pass, including 8 new cutout tests on synthetic fixtures.
+- The 4 storefront tests that import the changed pipeline: 36 of 36 pass.
+- The rest of the storefront suite was not rerun: no storefront file changed.
+
+**Live, unchanged by this entry:** Worker `bf6812e3c5d4` (deployed and visitor-verified earlier on 2026-10-29); 1 public photograph. A fresh visitor check was not possible on this pass: Codex reported its in-app browser unavailable and a direct HTTP audit refused with 403, which was not retried (unknown).
+
 ## Minimal cards and readable product facts: deployed and visitor-verified, 2026-10-29
 
 **Deployed (producer-reported by Codex, the operator):**
