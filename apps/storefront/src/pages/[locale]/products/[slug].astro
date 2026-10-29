@@ -8,6 +8,7 @@ import { getBrand, getCategory, getProductModel, getRelatedProducts } from '../.
 import { href, isLocale, optionLabel, t } from '../../../i18n/ui';
 import { productInquiry } from '../../../components/view';
 import { shareImage } from '../../../components/product-media.mjs';
+import { productFacts } from '../../../components/product-facts.mjs';
 
 const { locale, slug } = Astro.params;
 if (!isLocale(locale)) return Astro.redirect('/404/');
@@ -20,6 +21,8 @@ const s = t(locale);
 const [brand, related] = await Promise.all([getBrand(product.brandSlug), getRelatedProducts(product, 4, model.key)]);
 const category = getCategory(product.categorySlug);
 const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
+// Every available fact, grouped into short paragraphs; a generated summary is not repeated above them.
+const facts = productFacts(locale, product, (kind, fallback) => optionLabel(locale, kind, fallback));
 ---
 <BaseLayout locale={locale} title={grouped ? `${model.name[locale]} — ${product.reference}` : model.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} canonicalPath={`/products/${model.primary.slug}/`} image={shareImage(product)}>
   <div class="wrap">
@@ -36,16 +39,24 @@ const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
           ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
           : <p class="pdp__brand">{s.brands.ownTitle}</p>}
         <h1>{model.name[locale]}</h1>
-        <p>{product.summary[locale]}</p>
+        {facts.intro && <p>{facts.intro}</p>}
         {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
         {grouped && !product.image && <p class="note">{s.product.noPhoto}</p>}
         <VariantSelector variants={model.variants} selected={product} locale={locale} />
-        <dl class="specs" data-variant-specs>
-          <dt>{s.reference}</dt><dd><bdi data-variant-reference>{product.reference}</bdi></dd>
-          {brand && product.collectionKind !== 'source-group' && <><dt>{s.product.collection}</dt><dd lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</dd></>}
-          {category && <><dt>{s.product.category}</dt><dd>{category.name[locale]}</dd></>}
-          {product.specs.map((spec) => <><dt>{optionLabel(locale, spec.kind, spec.label)}</dt><dd><VariantText text={spec.value[locale]} lang={spec.valueLang} /></dd></>)}
-        </dl>
+        <div class="facts" data-variant-specs>
+          <section class="facts__group" aria-labelledby="facts-identity">
+            <h2 class="facts__title" id="facts-identity">{s.product.groups.identity}</h2>
+            <p class="fact"><strong>{s.reference}:</strong> <bdi data-variant-reference>{product.reference}</bdi></p>
+            {brand && product.collectionKind !== 'source-group' && <p class="fact"><strong>{s.product.collection}:</strong> <bdi lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</bdi></p>}
+            {category && <p class="fact"><strong>{s.product.category}:</strong> {category.name[locale]}</p>}
+          </section>
+          {facts.groups.map((group) => (
+            <section class="facts__group" aria-labelledby={`facts-${group.key}`}>
+              <h2 class="facts__title" id={`facts-${group.key}`}>{s.product.groups[group.key]}</h2>
+              {group.facts.map((fact) => <p class="fact"><strong>{fact.label}:</strong> <VariantText text={fact.value} lang={fact.lang} /></p>)}
+            </section>
+          ))}
+        </div>
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
           <h2 id="h-how">{s.product.how}</h2>
           <p>{product.isPreview ? s.dialog.explain : s.product.confirm}</p>

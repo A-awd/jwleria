@@ -9,7 +9,6 @@ import {fileURLToPath} from 'node:url';
 import {fixtures,jubilee,modelsDatabase,oyster,postgrest,postgrestFetch,postgrestServer,slugOf,slugify,WITHDRAWN_AFTER,WITHDRAWN_BEFORE} from './models-postgrest.mjs';
 import {listCollections,listPublishedBrands,productModel,publicModelRow,queryModels,readBrandModelsPage,readProductModel} from '../src/server/supabase-catalog.mjs';
 import {closestVariant,optionAxes,optionKey,optionSignature,selectorAxes} from '../src/components/variant-selection.mjs';
-import {optionCounts} from '../src/i18n/ui.ts';
 
 // End to end before any migration is applied: PGlite runs every migration plus the PROPOSED
 // supabase/migrations/*_jwleria_product_models.sql, publishes synthetic facts-only fixtures, runs
@@ -76,10 +75,6 @@ test('the listing reads one card per model from jwl_catalog_models and the adapt
   }
   assert.equal(card('m126200-0005').model.name.en,'Rolex Datejust 36 watch: Oystersteel - m126200-0005');
   for(const item of result.items)assert.deepEqual([item.mediaKind,item.image,item.images],['facts-only',null,[]],'no image is invented');
-  // The card's neutral option count, exactly as ProductCard renders it.
-  assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('m126200-0001').model)),['3 خيارات ميناء · سواران','3 dials · 2 bracelets']);
-  assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('L1899089001').model)),['3 ألوان','3 colours']);
-  assert.deepEqual(['ar','en'].map(l=>optionCounts(l,card('B4084600').model)),['','']);
 });
 
 test('listing filters, search and pagination give the same model cards as SQL',async()=>{
@@ -318,16 +313,14 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       const canonical=`${SITE}${locale}/products/${slugOf('m126200-0001')}/`;
       const at=(ref,dial,bracelet)=>({path:`/${locale}/products/${slugOf(ref)}/`,reference:ref,current:[`dial=${dial}`,`bracelet=${bracelet}`],canonical});
 
-      // The listing: one card per model, with the neutral count of real option values.
+      // The listing: one card per model, showing only its brand and name (no counts, references or actions).
       await page.goto(`${base}/${locale}/catalog/`);
       const hrefs=await page.locator('article.card .card__name a').evaluateAll(as=>as.map(a=>a.getAttribute('href')));
       assert.deepEqual(hrefs.map(h=>h.split('/')[3]).sort(),['B4084600','m126200-0001','m126200-0005','m126200-0029','m126610ln-0001','328.24.W10-1100','L1899089001'].map(slugOf).sort());
       const card=ref=>page.locator('article.card',{has:page.locator(`.card__name a[href="/${locale}/products/${slugOf(ref)}/"]`)});
       assert.equal(await card('m126200-0001').locator('.card__name').textContent(),MODEL[locale]);
-      assert.equal(await card('m126200-0001').locator('.variant-count').textContent(),locale==='ar'?'3 خيارات ميناء · سواران':'3 dials · 2 bracelets');
       assert.equal(await card('L1899089001').locator('.card__name').textContent(),TOTE[locale]);
-      assert.equal(await card('L1899089001').locator('.variant-count').textContent(),locale==='ar'?'3 ألوان':'3 colours');
-      assert.equal(await card('B4084600').locator('.variant-count').count(),0,'a single shows no option count');
+      for(const ref of ['m126200-0001','L1899089001','B4084600'])assert.equal(await card(ref).locator('.card__body > *').count(),2,ref+': brand and name only');
       assert.ok((await state()).overflow<=0,`${locale}: the listing has no horizontal overflow`);
       await shot('0a-catalog');
 

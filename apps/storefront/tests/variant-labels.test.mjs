@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const {arabicCount,englishCount,optionCounts,optionLabel,pageLinks,resultCount,t}=await import('../src/i18n/ui.ts');
+const {arabicCount,englishCount,optionLabel,pageLinks,resultCount,t}=await import('../src/i18n/ui.ts');
 const plain=parts=>parts.map(p=>typeof p==='string'?p:p.value).join('');
 
 test('Arabic option counts use the grammatical form for each number',()=>{
@@ -16,16 +16,6 @@ test('English counts are neutral and pluralised',()=>{
  assert.deepEqual([1,26].map(n=>englishCount('dial',n)),['1 dial','26 dials']);
  assert.equal(englishCount('bracelet_material',2),'2 bracelet materials');
  assert.equal(englishCount('colour',3),'3 colours');assert.equal(englishCount('color',3),'3 colours');assert.equal(englishCount('case_size',2),'2 case diameters');assert.equal(englishCount('strap_width',2),'2 options');
-});
-
-test('cards mention only kinds that offer a real choice, with no price, stock or availability wording',()=>{
- const model={variantCount:52,options:[{kind:'dial',count:26},{kind:'bracelet',count:2},{kind:'colour',count:1}]};
- assert.equal(optionCounts('ar',model),'26 خيار ميناء · سواران');assert.equal(optionCounts('en',model),'26 dials · 2 bracelets');
- assert.equal(optionCounts('en',{variantCount:1,options:[]}),'');assert.equal(optionCounts('ar',undefined),'');
- for(const l of ['ar','en'])assert.doesNotMatch(optionCounts(l,model),/price|stock|availab|سعر|متوفر|توفر|مخزون/i);
- // A product page reads at most 60 variants, so a larger model would count values its page cannot offer.
- assert.equal(optionCounts('en',{variantCount:60,options:[{kind:'colour',count:60}]}),'60 colours');
- assert.equal(optionCounts('en',{variantCount:62,options:[{kind:'colour',count:62}]}),'');
 });
 
 test('option labels come from the reviewed i18n strings, falling back to the catalog label',()=>{

@@ -52,7 +52,7 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       await page.goto(new URL(`/${locale}/catalog/`, base).href);
       const card = page.locator('article.card', {has: page.locator('a[href$="/products/preview-watch-ivory-three-link/"]')});
       assert.equal(await card.locator('.card__name').textContent(), model.name[locale]);
-      assert.equal(await card.locator('.variant-count').textContent(), locale === 'ar' ? '3 خيارات ميناء · 3 أساور' : '3 dials · 3 bracelets');
+      assert.equal(await card.locator('.card__body > *').count(), 2, 'a card shows its brand and name only');
       assert.ok((await state()).overflow <= 0, 'catalog has no horizontal overflow at 390px');
       await shot('0-catalog');
 

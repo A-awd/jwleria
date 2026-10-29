@@ -1,6 +1,5 @@
-import type { Locale, ModelSummary } from '../contracts/catalog';
+import type { Locale } from '../contracts/catalog';
 import { withBrand } from '../components/inquiry-message.mjs';
-import { MODEL_PAGE_VARIANTS } from '../components/variant-selection.mjs';
 
 export const locales = ['ar', 'en'] as const satisfies readonly Locale[];
 export const isLocale = (v: unknown): v is Locale => v === 'ar' || v === 'en';
@@ -107,6 +106,7 @@ const ar = {
     views: ['المشهد الكامل', 'تفصيل', 'تفصيل قريب'],
     how: 'طريقة الاستفسار',
     noPhoto: 'لا توجد صورة معتمدة لهذا المرجع بعد.',
+    groups: { identity: 'التعريف بالقطعة', design: 'التصميم والمواد', technical: 'التفاصيل التقنية', other: 'تفاصيل أخرى' } as Record<string, string>,
   },
   variants: {
     group: 'خيارات هذا الطراز',
@@ -208,6 +208,7 @@ const en: typeof ar = {
     views: ['Full view', 'Detail', 'Close detail'],
     how: 'How to inquire',
     noPhoto: 'No approved photograph of this reference yet.',
+    groups: { identity: 'Identification', design: 'Design and materials', technical: 'Technical details', other: 'Other details' } as Record<string, string>,
   },
   variants: {
     group: 'Options for this model',
@@ -256,10 +257,6 @@ export const optionLabel = (l: Locale, kind: string, fallback: Record<Locale, st
 /** A listing total names what it counts: model cards from the model projection, otherwise catalog rows. */
 export const resultCount = (l: Locale, page: { total: number; unit?: 'models' | 'products' }) =>
   page.unit === 'models' ? ui[l].catalog.models(page.total) : ui[l].catalog.results(page.total);
-/** Neutral counts of the real option values a model card can mention (only kinds with a choice). A model with
- * more variants than its page can offer gets no count, since the page could not show every value counted. */
-export const optionCounts = (l: Locale, model?: Pick<ModelSummary, 'variantCount' | 'options'>) =>
-  !model || model.variantCount > MODEL_PAGE_VARIANTS ? '' : model.options.filter((o) => o.count > 1).map((o) => ui[l].variants.count(o.kind, o.count)).join(' · ');
 /** A page's canonical URL and its language alternates all name its canonical twin (a model's primary variant). */
 export function pageLinks(l: Locale, canonicalPath: string, site?: URL) {
   const absolute = (path: string) => (site ? new URL(path, site).href : path);
