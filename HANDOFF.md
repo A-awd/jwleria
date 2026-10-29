@@ -1,3 +1,59 @@
+## Current handoff — cutout support prepared; eligible original photos needed — 2026-10-29
+
+The owner deferred interactive 3D and chose genuine product photographs with
+backgrounds removed. Preserve exact product pixels and the original image;
+colours and sizes remain variants under one real model. Transparent cutouts may
+sit on the current storefront background. No new global background colour,
+A/B/C adoption, paid service or broad media-publication permission is implied.
+
+Claude finished and pushed local cutout validation, provenance and
+alpha-preserving responsive derivative support at
+`fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8` on
+`claude/admiring-dirac-nfavfx`. Codex independently verified that remote head and
+the clean producer checkout. Claude reports 125/125 intake and 36/36 related
+storefront tests passing; the separate actual read-only CLI check rejected the
+editor trial as intended. Codex did not repeat the programming or technical
+suite. The cutout support is prepared only: publication still refuses it until
+accepted input and a reviewed database/credit/Arabic enabling change exist.
+Nothing was applied, uploaded, published or deployed in this producer pass.
+
+The producer's fresh scoped Supabase reads report the unchanged 4,097
+references, 2,886 models and one photographed row. Its inventory records 15,016
+retained official asset URLs, zero held official files and no held HTTP asset
+metadata; actual transparency is unknown. All 12 source publication flags remain
+false and no written source permissions are held. Source URLs establish neither
+exact image identity nor image rights or ready catalogue coverage.
+
+The private built-in image-editor trial was rejected because it redrew product
+details. Preserve the original, exclude that output from publication and do not
+mistake it for an accepted cutout. The earlier private Photoroom sample remains
+a separate unadopted experiment. This pass made no public/media/provider write.
+Existing minimal cards and paragraph details remain the delivered release.
+
+Continue from the accepted
+[decision 0015](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/decisions/0015-authentic-2d-cutouts-and-3d-deferral.md),
+the
+[source-to-photo inventory](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md)
+and
+[ordered delivery ledger](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/docs/spec/REQUIREMENTS-EVIDENCE-LEDGER.md).
+
+The single next step is to secure eligible exact original photographs,
+preferably official transparent files, then process and publish the first real
+photo batch through the reviewed enabling and evidence path. Preserve originals
+and exact product/variant identity. Missing rights or source evidence stays a
+named dependency; an accessible URL clears neither. Do not repeat historical
+owner approvals already granted, replay migrations or call the catalogue ready.
+Keep a private pilot, prepared package, applied/uploaded media and actual
+visitor-visible photographs as distinct outcomes; broader coverage is unfinished.
+
+Browser verification is currently unavailable: Codex in-app control returned
+`browser.user is unavailable`; the direct site HTTP request returned 403 and
+was stopped. Do not bypass that refusal, switch to an external browser, repeat
+the request through another route or claim fresh visitor acceptance. Preserve
+the earlier successful checks as dated evidence. No new deployment follows
+from this preparation checkpoint. Contact, social and 3D remain deferred;
+Easy Life and all existing migration/private-data safeguards remain unchanged.
+
 ## Current handoff — card cleanup live and visitor-verified — 2026-10-29
 
 The bounded card/details change is delivered under

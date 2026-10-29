@@ -1,3 +1,61 @@
+## Authentic 2D cutouts selected; local support prepared, photos still incomplete — 2026-10-29
+
+The owner explicitly deferred interactive 3D and selected genuine product
+photographs with their backgrounds removed. Preserve the original product
+pixels, proportions, materials, markings and model/variant identity; do not
+redraw products or infer hidden details. A transparent cutout may use the
+existing storefront background. No new global background colour, A/B/C design
+direction, paid service or general publication grant is implied.
+
+The local Claude producer's fresh, project-scoped Supabase reads report 4,097
+public references, 2,886 displayed models and exactly one photographed public
+row. The source-to-photo inventory records 15,016 retained official asset URLs,
+zero held official asset files and no held HTTP asset metadata; actual
+transparency is unknown. All 12 source publication flags remain false, and no
+written source permissions are held. These URLs do not establish exact image
+identity, image rights or a ready transparent-image collection. The existing
+one-photo exception stays bounded to the approved independent photograph and
+its recorded identity uncertainty. Prefer official transparent originals when
+access, exact matching and permitted reuse are established; never bypass a
+source refusal or infer publication permission from an accessible URL.
+
+A separate built-in image-editor trial was private and rejected because product
+details were redrawn. It is not an approved cutout and was not published. Keep
+the original and the rejected sample private. Earlier Photoroom sample history
+below remains a separate private experiment, not a production adoption.
+
+The existing minimal-card and paragraph-details release remains the last
+delivered storefront state recorded below. No public asset, database, bucket,
+function, Worker, source flag or provider setting was changed in this pass.
+Codex in-app browser control returned `browser.user is unavailable`; a direct
+site HTTP read returned 403 and was stopped without a workaround. There is no
+new visitor verification in this pass. Do not rewrite the earlier successful
+visitor checks as fresh checks or infer a site outage from this access failure.
+
+Claude completed local cutout input validation, provenance and alpha-preserving
+responsive derivative support on `claude/admiring-dirac-nfavfx`, pushed at
+`fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8`. Codex independently verified the
+remote revision and clean producer checkout. This is prepared code, not applied
+or deployed photo delivery. Publishing still refuses cutouts until accepted
+input and the reviewed database/credit/Arabic enabling change are in place.
+No production, provider or media write and no deployment accompanied this work.
+Claude reports 125/125 intake and 36/36 related storefront tests passing; the
+separate actual read-only CLI check rejected the editor trial as intended.
+Codex did not repeat the programming or technical suite.
+
+The accepted current direction is
+[decision 0015](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/decisions/0015-authentic-2d-cutouts-and-3d-deferral.md).
+The updated
+[source-to-photo inventory](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md)
+and
+[ordered remaining delivery](https://github.com/A-awd/jwleria/blob/fc7cc5f9db7cf4738bed4c33ba8adc06bab08ff8/docs/spec/REQUIREMENTS-EVIDENCE-LEDGER.md)
+keep the media gap explicit. The single next step is to secure eligible exact
+originals, preferably official transparent files, then process and publish the
+first real-photo batch through the reviewed enabling and evidence path. Do not
+ask again for historical approvals already granted or call the catalogue ready.
+Contact, social and 3D remain deferred; Easy Life stays stopped. Existing
+private-data, source, media and repository migration gates remain in force.
+
 ## Minimal cards and readable product details verified live — 2026-10-29
 
 The owner's bounded display direction is implemented and delivered under
