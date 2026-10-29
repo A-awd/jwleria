@@ -1,4 +1,26 @@
-## Minimal cards and readable product facts: prepared, awaiting the operator upload, 2026-10-29
+## Minimal cards and readable product facts: deployed and visitor-verified, 2026-10-29
+
+**Deployed (producer-reported by Codex, the operator):**
+- Codex verified all 73 compiled-file hashes, then uploaded the frozen package `releases/storefront-bf6812e3c5d4/` with no rebuild, using `--no-bundle --keep-vars --no-autoconfig`.
+- Codex read the new version back as active at 100%: source `bf6812e3c5d4`, `SHA256SUMS` sha256 `584e470e…7491`.
+- Runtime and binding metadata match the prior baseline. The workers.dev and preview-URL states are preserved, and the apex and www custom domains stay in Production. `noindex, nofollow` and the robots restrictions are preserved.
+- Version IDs, configuration and screenshots stay private with the operator.
+
+**Visitor-verified (Codex, in-app browser, Arabic and English):**
+- Measured at 390×844 CSS px on mobile and 1229×960 on desktop, with no horizontal overflow. This is a CSS-viewport check, not a physical-device test.
+- Watches category cards show only brand and name (plus the approved photo and its full credit where one applies). There is no summary, reference, collection, count or card action.
+- A pointer click on the Arabic Jaeger-LeCoultre card opened `/ar/products/jaeger-lecoultre-q3926480/`:
+  - the identification paragraphs show Q3926480, Reverso Tribute and the category;
+  - the technical paragraphs show manual winding and calibre 847;
+  - the page has 0 `dl` elements and no repeated summary.
+- The English header link opened the counterpart page, with the same facts and structure.
+- The Rolex m126234-0015 photo decoded from its unchanged approved 640w file, shown whole (`contain`), with the full CC BY credit and links visible.
+- Choosing the Silver option by keyboard opened the m126234-0013 URL. The reference and the dial in the paragraphs changed, and that sibling showed no photo, so the approved photo did not carry over.
+- No Jwleria-origin browser warnings or errors were observed.
+
+No database, media, function or bucket state changed. The Photoroom cream sample stays a private preview with no adoption. Wider photo coverage and the A/B/C selection remain open. Rollback floor: `fbf04b80a181`; never roll back below it while the titled credit is public.
+
+**Prepared record from earlier on 2026-10-29 (kept for history):**
 
 **Owner display rule:** decision 0014, a narrow display refinement, not A/B/C adoption.
 - Cards show only the photograph (when a real one exists), its required credit, the brand and the name.
@@ -22,7 +44,7 @@
   - Local rendered-HTML check, built node server against the synthetic catalogue, Arabic and English: every card holds brand and name only; a synthetic credited photo keeps its full credit; search finds the model; every product page has grouped paragraphs, no definition list, the selected variant, its credit and the inquiry action.
 - Live visual acceptance at phone width belongs to the root operator's browser.
 
-**Live (unchanged by this entry):** Worker source `fbf04b80a181`; 1 licensed photo on m126234-0015.
+**Live before this release:** Worker source `fbf04b80a181`; 1 licensed photo on m126234-0015.
 
 ## Models applied and the first product photograph live, 2026-10-28
 

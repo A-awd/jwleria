@@ -1,12 +1,19 @@
-## Current handoff: minimal cards and readable product details, 2026-10-29
+## Current handoff: minimal cards and readable product details live, 2026-10-29
 
-Writer of the foundation branch: the local interactive Claude Code session that made this frontend-only change (decision 0014). It is finished, and no other app writer is active. Codex owns the provider upload. No database, media, function, bucket or provider write was made.
+Done: decision 0014 is live.
+- The operator deployed release `releases/storefront-bf6812e3c5d4/` (source `bf6812e3c5d4`) with no rebuild (producer-reported).
+- The operator's in-app browser verified it in Arabic and English (visitor-verified).
+- Evidence is in the top entry of `STATE.md`.
+- No app task remains for this display change. Upload and browser acceptance are no longer pending.
+
+Writer ownership: the local interactive session finished its writes; nothing is running. Before another session writes the branch, the database, functions, storage or media, record the transfer here first.
 
 Next, in order:
-1. **Operator (Codex):** upload `releases/storefront-bf6812e3c5d4/` exactly as built, following its `DEPLOY.md`. Verify `SHA256SUMS` first; its sha256 is `584e470e…7491`. Record the active `fbf04b80a181` version privately as the rollback target. Do not rebuild.
-2. **Operator, visitor read-back:** run the `DEPLOY.md` smoke checks in Arabic and English at 360/390/430 px: cards, the Jaeger-LeCoultre Q3926480 page, the m126234-0015 photo and credit, a Prada buckle, and search.
-3. **Claude, on that receipt:** update the top `STATE.md` entry from prepared to deployed and, if seen, visitor-verified. No rebuild or app test is needed for unchanged bytes.
-4. Coverage and maintenance as in the previous handoff below.
+1. **Coverage:** find further eligible photographs through the existing evidence path (see the previous handoff below). The Photoroom cream sample is a private preview and is not adopted.
+2. **Design:** directions A, B and C remain unselected (designer stream and owner).
+3. **Maintenance:** see `docs/spec/MAINTENANCE-BACKLOG.md`. The operator may still observe `X-JWL-Cache` HIT and STALE (runbook CA-1).
+
+Rollback: the previous Worker version (`fbf04b80a181`) is the compatible floor. Never roll back below it while the titled credit is public; revoke the grant first.
 
 ## Current handoff: after the first live photograph, 2026-10-28
 
