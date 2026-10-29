@@ -28,8 +28,13 @@ From a checkout of a commit that contains this directory:
 cd releases/storefront-bf6812e3c5d4
 shasum -a 256 -c SHA256SUMS                  # or sha256sum -c; every line must read OK
 npx wrangler@4.147.0 versions list --name jwleria-storefront   # record the ACTIVE version privately = rollback target
-npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json
+npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-bundle --keep-vars --no-autoconfig
 ```
+
+The three flags are the operator's verified safeguards, checked against `wrangler deploy --help` for 4.147.0:
+- `--no-bundle` uploads the compiled files as they are, with no Wrangler build step.
+- `--keep-vars` keeps the Worker's existing vars. Without it, Wrangler deletes every var not in the generated config, and that config declares none.
+- `--no-autoconfig` turns off framework detection and automatic configuration, which is on by default.
 
 ## Smoke check after upload
 
