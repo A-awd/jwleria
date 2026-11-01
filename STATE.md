@@ -1,3 +1,37 @@
+## Coherent mobile product page (decision 0018): deployed and visitor-verified, 2026-11-01
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-13acacfb79d6/` (source `13acacfb79d6`) | Codex | Verified against its 73-file manifest (`c3f4caef…49ae9`) and uploaded. The new version is active at 100%, and the runtime and all three bindings, both secrets included, are byte-equal before and after. | producer-reported |
+| Public phone-width acceptance | Codex | Passed for the scope below. | visitor-verified |
+
+No database, mapping, grant or asset change was made. Version identifiers and raw logs are held privately by Codex.
+
+**Visitor-verified** (Codex, on the public site in its in-app browser at 390×844):
+- **Arabic, `/ar/products/rolex-m126334-0018-3861b734/` (41 mm):**
+  - uniform size segments, the dial and bracelet lists collapsed, the details folded, and no sticky product element;
+  - the dial list opened on the 7 dials made at 41 mm, with the links to other sizes apart;
+  - Mint green opened `m126334-0028`: the URL, reference and title changed, the size stayed 41 mm, the list closed and focus returned;
+  - scroll width 390 at a 390 viewport.
+- **English, the same reference:** the new controls and the folded sections load.
+- **Screenshot:** one live screenshot is held privately by Codex.
+
+**Reviewed on the local preview only** (Codex at 390×844, on the prepared source reading live data; not the public site):
+- Arabic: moving Mint green from 41 mm to 36 mm keeps Mint green.
+- The sizes disclosure opens on a three-row table.
+- English: the bracelet list reads cleanly.
+- LOEWE Amazona from Mini to Large keeps Black and shows 34.5X27X14 cm, with no overflow.
+
+**Not yet visitor-checked:**
+- the jewellery model-size pages (Cartier, Van Cleef & Arpels);
+- a facts-only family page.
+
+Claude checked their rendered HTML on the local preview (prepared).
+
+**Still open: photo coverage.** 4,095 of 4,097 active products have no photograph, unchanged (see the batch-1 handoff in `HANDOFF.md`). No photo work was done in this step.
+
+The local preview server was stopped after these checks.
+
 ## Coherent mobile product page (decision 0018): prepared and preview-reviewed; Worker not yet deployed, 2026-11-01
 
 **Owner finding (a failed phone acceptance).** The live Datejust 41 mm page showed:

@@ -1,4 +1,16 @@
-## Current handoff: coherent mobile product page (decision 0018), 2026-11-01
+## Current handoff: coherent mobile product page live (decision 0018), 2026-11-01
+
+Nothing is running: the local preview server is stopped. The details are in the top entry of `STATE.md`.
+- **Deploy.** Codex deployed `releases/storefront-13acacfb79d6/` (source `13acacfb79d6`). The new version is active at 100%, with the runtime and bindings unchanged.
+- **Acceptance.** Codex passed the public phone-width check of the 41 mm Datejust page in Arabic and English. The further checks ran on the local preview and are labelled as such.
+
+Next:
+1. **Photo coverage remains the barrier**, still open and unchanged from the batch-1 handoff below: 4,095 of 4,097 active products have no photograph.
+2. **Optional:** public visitor checks of a jewellery model-size page and a facts-only family page.
+
+Rollback: `releases/storefront-13acacfb79d6/DEPLOY.md`. Roll the Worker back to the version Codex recorded; `88e2e3cc0de9` works with the current database.
+
+## Previous handoff: coherent mobile product page prepared (decision 0018), 2026-11-01
 
 Prepared and pushed:
 - source `13acacfb79d6`;

@@ -9,6 +9,8 @@ This is a Worker-only release. It makes no database, mapping, grant or asset cha
 
 ## 1. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): verified against `SHA256SUMS` and uploaded. The new version is active at 100%, and the runtime and all three bindings, both secrets included, are byte-equal before and after. The version identifiers are held privately.
+
 **Files:**
 - 73 compiled files under `dist-cloudflare/`. The file set is the same as `storefront-88e2e3cc0de9`, except for hashed chunk names.
 - `SHA256SUMS` has one line per file. Its own sha256 is `c3f4caef9c85fe84f17be9a1773e6f77b2bbfa943e9accddb9d887802fe49ae9`.
@@ -33,6 +35,8 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - `noindex, nofollow` and robots `Disallow: /` are kept.
 
 ## 2. Public acceptance (Codex)
+
+**Done on 2026-11-01** (visitor-verified by Codex on the public site at 390×844): the Arabic 41 mm Datejust page, including the dial choice, and the English page of the same reference. The other items below were checked on the local preview before the upload, or not yet; `STATE.md` labels each.
 
 At 390 px, in Arabic and English:
 - **The Datejust 41 mm page:**
