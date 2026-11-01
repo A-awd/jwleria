@@ -28,7 +28,7 @@ This spec turns the owner's brief into requirements that can be checked. It is s
 
 ## 4. Media
 
-- P1. Only genuine photographs of the exact reference are used. No sibling reference is substituted, nothing is generated, altered or upscaled, and no image is cropped. The one exception is background-only removal under P8 (decision 0015).
+- P1. Only genuine photographs of the exact reference are used. No sibling reference is substituted, nothing is generated, altered or upscaled, and no image is cropped. The one exception is background-only removal under P8 (decision 0015). Since decision 0022, a product image is also placed, whole and unaltered, on one square white canvas; that padding and compositing is not an alteration of the product.
 - P2. Every image needs a recorded rights basis: an owner original, written permission for its exact origin, or an open licence under decision 0013. An official image URL is never permission (decision 0011).
 - P3. Open-licence images show a visible credit wherever they appear: the creator, the work's title when its author supplied one, the licence linked to its deed, the source page and the changes made. They are never described as official brand photography.
 - P4. Identity is recorded per file, against its exact sha256, by an independent visual review, or by the creator-stated-reference route of decision 0013 with `exact_reference` kept `"uncertain"`.

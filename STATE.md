@@ -1,3 +1,14 @@
+## Checkpoint: owner brief saved and decision 0022 accepted (one square white presentation); implementation in progress, 2026-11-01
+
+- **The owner's agreed requirements** are saved in Arabic in [docs/OWNER-BRIEF-AR.md](docs/OWNER-BRIEF-AR.md). They are a semantic summary, not a transcript.
+- **Decision 0022** (accepted): every product photograph sits on one square, pure-white canvas, whole and centred. The true foreground's longest extent is about 80% of the side. There is no stretch, crop, upscaling or invented part. It supersedes the sand-frame and "no new background" rules for product images only.
+- **In progress:**
+  - a private real-product before/after sample for visual review before publication;
+  - then the pipeline, evidence, publication and storefront wiring.
+- **Open, as recorded in decision 0021:**
+  - the `m126200-0006` cutout's dark edge band, not certified;
+  - its recorded original was not held locally at the last check.
+
 ## Free performance and image quality gate (decision 0021): deployed and visitor-verified for the checked scope; the cutout limitation and the missing original stay open, 2026-11-01
 
 | Step | Who | Result | Label |

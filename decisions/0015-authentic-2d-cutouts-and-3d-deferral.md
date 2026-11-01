@@ -7,7 +7,7 @@ Date: 2026-10-29
 **3D.** The owner has deferred real interactive 3D. Earlier 3D discussion sets no implementation requirement.
 
 **Product imagery.** The owner wants authentic, exact-product 2D photographs, preferably as cutouts.
-- A cutout is an alpha-transparent rendition of a genuine photograph of the exact reference, colour and material. It is shown over the site's current light product frame (`.media`, `--sand`), with no new background colour. The private cream sample is not a standard.
+- A cutout is an alpha-transparent rendition of a genuine photograph of the exact reference, colour and material. It is shown over the site's current light product frame (`.media`, `--sand`), with no new background colour. The private cream sample is not a standard. *Superseded for product images by decision 0022 (2026-11-01): the cutout is normalized onto one square white canvas. Background-only removal still governs the product's own pixels.*
 - Prefer an original that is already transparent, genuinely shows the exact variant and has an eligible use path. It needs no removal pass.
 - Otherwise, background-only removal is an owner-requested treatment. It may make the background transparent, with a soft (partly transparent) boundary. It may not redraw, regenerate, retouch or enhance the product. It may not change a logo, dial, engraving, colour, material or proportion, substitute a sibling or synthetic image, upscale, or crop.
 - The original stays unchanged and is identified by its sha256. The cutout master is a separate file with its own sha256, bound to that original, candidate revision and grant, and every derivative records both.
@@ -19,7 +19,7 @@ Date: 2026-10-29
 
 **Before a cutout is public:**
 1. The automated check (`scripts/catalog-intake/cutout.mjs`) passes: an 8-bit RGBA PNG with the original's upright geometry and colour profile; opaque pixels equal to the original's stored values (rounding only); real transparency; no visible pixel on the canvas edge.
-2. An independent visual comparison confirms that only the background was removed, the whole product is kept, the edges are clean on the frame colour and no detail was redrawn.
+2. An independent visual comparison confirms that only the background was removed, the whole product is kept, the edges are clean on the frame colour and no detail was redrawn. *Under decision 0022 the edges are reviewed on white, and also on dark to reveal fringes.*
 3. The credit states "background removed, resized and converted to WebP" (or "background removed and converted to WebP").
 4. A reviewed change lets the database record the master, the treatment and that credit text, and the storefront shows the reviewed Arabic for it. Until that change is applied, the database refuses to record a cutout, so cutouts stay private.
 

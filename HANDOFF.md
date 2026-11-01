@@ -1,4 +1,12 @@
-## Current handoff: free performance and image quality gate live (decision 0021), 2026-11-01
+## Current handoff: decision 0022 implementation in progress, 2026-11-01
+
+- **Saved:** the owner brief ([docs/OWNER-BRIEF-AR.md](docs/OWNER-BRIEF-AR.md)) and decision 0022.
+- **Next:**
+  1. Claude prepares a private before/after sample of the two photographed products (`m126234-0015`, `m126200-0006`) on the white square standard, for Codex's visual review before any publication.
+  2. Then the evidence, upload, publication and storefront presentation.
+- **The live release is unchanged:** `storefront-cbbc1e4d5dfc`. Rollback: its `DEPLOY.md`.
+
+## Previous handoff: free performance and image quality gate live (decision 0021), 2026-11-01
 
 Nothing is running. The details are in the top entry of `STATE.md`.
 - **Deploy.** Codex deployed `releases/storefront-cbbc1e4d5dfc/` (source `cbbc1e4d5dfc`). All 77 hashes matched before the upload, and the runtime and bindings are identical before and after.

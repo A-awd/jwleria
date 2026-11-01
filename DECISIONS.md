@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0022 — One square white presentation for every product photograph](decisions/0022-uniform-white-square-product-presentation.md)
+
 - [0021 — Free performance: size hints that match the compact frame, and an image quality gate](decisions/0021-free-performance-and-image-quality-gate.md)
 
 - [0020 — A compact phone product page; colour photo switching only where every colour has its own photograph](decisions/0020-compact-phone-product-page.md)

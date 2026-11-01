@@ -28,6 +28,10 @@ See [docs/PROJECT-OVERVIEW.md](docs/PROJECT-OVERVIEW.md) and [migration/MIGRATIO
 
 The private duplicate repository `jwleria-s-gembox` requires a forensic, history-preserving comparison before any unique useful content can be consolidated. Because this repository is public, no private business or operational memory may be added. These two conditions block merging the One Brain migration branch until resolved.
 
+## Owner brief
+
+The owner's agreed requirements, in Arabic: [docs/OWNER-BRIEF-AR.md](docs/OWNER-BRIEF-AR.md). The numbered decisions in `decisions/` are the detailed record.
+
 ## Storefront implementation
 
 The current inquiry-only Arabic/English storefront is in `apps/storefront`. It connects to the owner-created dedicated Supabase catalog, with no public prices, visitor accounts or owner product dashboard. The Node development path and Cloudflare Workers deployment path are supported. See [storefront setup](apps/storefront/README.md). The live domain is connected to the storefront. Genuine product media, WhatsApp delivery and remaining launch dependencies are still incomplete; project reconciliation still gates merging the foundation branch.
