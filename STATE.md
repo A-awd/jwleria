@@ -18,7 +18,11 @@
 - **Le Roseau L Tote bag, Vegetal, `10327HJD514`:** not obtained here. The Saudi host returned 403 to every request, robots included. It was not retried or worked around, and no substitute image is shown.
 - **Status:** these are private evaluation assets only, not publication rights.
 
-**Note:** Astro 7 detaches `astro dev` when it detects an agent. Codex runs the preview in a bounded foreground with `--ignore-lock`. A stray background dev server from Claude's check was stopped.
+**Note:** two Astro 7.3.5 CLI behaviours, diagnosed by Codex:
+- `astro dev` detaches when it detects an agent; `--ignore-lock` keeps it in the foreground.
+- `--config` is joined to the project root, so an absolute config path fails; a relative path works.
+
+Codex runs the preview in a bounded foreground on port 4331, with no source change. A stray background dev server from Claude's check was stopped.
 
 ## Rejected `m126200-0006` photograph withdrawn (owner action-time approval); official packshot preview confirmed, 2026-11-01
 
