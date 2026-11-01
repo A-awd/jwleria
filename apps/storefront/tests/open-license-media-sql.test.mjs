@@ -39,7 +39,8 @@ async function widenScope(db){
 async function database({open=true,scope='widened'}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111829_jwleria_open_license_media.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  // The open-licence migration as it was applied, without the later cutout migration (covered in cutout-media-sql.test.mjs).
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111829_jwleria_open_license_media.sql'&&f!=='20261101104017_jwleria_cutout_media.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   if(open){await db.exec(await readFile(proposed,'utf8'));if(scope==='widened')await widenScope(db);}
   // Closed sources are registered as open for acquisition here on purpose: the grant must still be refused.
   await db.exec(`insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values

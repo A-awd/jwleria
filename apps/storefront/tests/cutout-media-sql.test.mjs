@@ -13,10 +13,11 @@ import {recordMediaApproval,mediaApprovalSql,lanePublicationProduct} from '../..
 import {handleUpload,approvalQuery} from '../supabase/functions/jwl-media-upload/handler.js';
 import {responsiveImages} from '../src/server/responsive-media.mjs';
 
-// Synthetic fixtures only: drawn shapes, invented references and example.test hosts. The proposed migration is
-// exercised in memory and applied nowhere; nothing here reaches a real database, bucket or product.
+// Synthetic fixtures only: drawn shapes, invented references and example.test hosts. The cutout migration (applied in
+// production as 20261101104017) is exercised in memory here; nothing reaches a real database, bucket or product.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const proposed=new URL('../supabase/proposed/jwleria_cutout_media.sql',import.meta.url);
+const CUTOUT='20261101104017_jwleria_cutout_media.sql';
+const proposed=new URL(CUTOUT,migrations);
 const rollback=new URL('../supabase/proposed/jwleria_cutout_media.rollback.sql',import.meta.url);
 const DECISION='decisions/0013-open-licence-exact-product-photos.md';
 const REFERENCE='m126234-0015';
@@ -36,7 +37,8 @@ const row=(source_id,external_id)=>normalizeBatch([{source_id,external_id,source
 async function database({cutout=true}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  // Every applied migration before the cutout one, then (optionally) the cutout migration itself.
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==CUTOUT).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   if(cutout)await db.exec(await readFile(proposed,'utf8'));
   await db.exec(`insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values
     ('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true),

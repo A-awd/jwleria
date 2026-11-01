@@ -50,9 +50,11 @@ These are the operator's verified safeguards (`wrangler deploy --help`, 4.147.0)
 
 ## 2. Database migration `jwleria_cutout_media` (only after step 1 is live)
 
+**Done on 2026-11-01:** step 1 was uploaded and HTTP-checked by the operator. The migration was applied once by Claude as version `20261101104017`; the stored statement's sha256 equals the apply body. Its file now lives at `apps/storefront/supabase/migrations/20261101104017_jwleria_cutout_media.sql`, and the proposal was removed; the rollback stays in `proposed/`.
+
 **Files:**
 - `apps/storefront/supabase/proposed/jwleria_cutout_media.sql`: sha256 `1db49f2df635d752679c0ae5a6230bd64af0607d202933604e1f634ca1b11c2e`.
-- Apply body: lines 19–182 of that file, without its outer `begin;`/`commit;`. 15,927 bytes, sha256 `5da1e0d2e945b4025be63884d93363c802cf8d2dfdf599a2b06d0c6be8af8f58`.
+- Apply body: lines 20–181 of that file, between its outer `begin;`/`commit;` and without the blank lines next to them. 15,927 bytes, sha256 `5da1e0d2e945b4025be63884d93363c802cf8d2dfdf599a2b06d0c6be8af8f58`.
 - Rollback: `apps/storefront/supabase/proposed/jwleria_cutout_media.rollback.sql`, sha256 `ff92aa5a93469950f023729c3be5648eac49bc637e98e50e61bef3999ddd571a`.
 
 **What it does.** It is additive, and changes no existing row or image:

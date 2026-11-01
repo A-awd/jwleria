@@ -1,22 +1,3 @@
--- PROPOSED, not applied: background-only cutouts (decision 0015). Additive. Every existing grant, evidence row,
--- approval and public image stays valid and unchanged; nothing here creates a grant, an image or an approval.
--- 1. A written permission states whether it also covers background removal (default false, so no existing or future
---    grant is widened silently). Owner originals are covered by decision 0015 and open licences by their licence, so
---    the flag is refused on those kinds.
--- 2. The evidence row of a cutout derivative names its treatment, the checked cutout master's sha256 and the private
---    record of its automated check and independent visual comparison. original_sha256 still names the untouched original.
--- 3. The pipeline records cutout evidence only through public.jwl_record_cutout_approval, which exists only after this
---    migration, so a cutout bundle sent earlier fails closed instead of being stored without its treatment. That
---    function also requires every cutout row to be cited by its approval, so each one passes the trigger's checks. The
---    regular jwl_record_media_approval refuses treatment fields. A direct service-role insert remains possible, as for
---    all evidence; the check constraint and the evidence trigger apply to it in the same way.
--- 4. The evidence trigger keeps every rule of 20261028111829 and adds: one image is a cutout of one master and one
---    original, or no cutout at all; a written permission must cover the removal; an open licence must be CC0 or CC BY
---    (CC BY-SA needs a ShareAlike licence review first); an open-licence credit says "background removed" exactly when
---    the image is a cutout.
--- Rollback: jwleria_cutout_media.rollback.sql (refuses while any cutout grant, evidence or credit exists).
-begin;
-
 alter table jwl_internal.media_grants
   add column background_removal boolean not null default false,
   add constraint jwl_media_grant_background_removal_check check (not background_removal or kind='written_permission');
@@ -179,5 +160,3 @@ begin
   end loop;
   return new;
 end $$;
-
-commit;

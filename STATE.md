@@ -1,3 +1,31 @@
+## Cutout recording live in the database and the Worker; no cutout image yet, 2026-11-01
+
+**Deployed (producer-reported by Codex):**
+- Worker `releases/storefront-0bff02360d83/` was uploaded with pinned Wrangler 4.147.0 and `--no-bundle --keep-vars --no-autoconfig`, with no rebuild. All 73 files match `SHA256SUMS` (sha256 `edb16e5e…2688`).
+- It is active at 100%, with the runtime, all bindings and secrets unchanged.
+- HTTPS returned 200 for the Arabic home, watches, JLC Q3926480, m126234-0015, the exact search, the English Rolex page and robots. The Rolex credit, the JLC paragraphs, `noindex` and `Disallow` are kept.
+- This is an HTTP and HTML check only, not a phone or browser check. A Python urllib client was refused with 403 and was not retried.
+
+**Applied (observed live, 2026-11-01):**
+- Fresh read at 10:37:57Z matched the baseline: 9 migrations, last `20261028111829`; 1 grant, 3 evidence rows, 1 approval; 4,097 active rows, 1 with a photo; 3 bucket objects; no cutout objects.
+- A read-only literal check showed that the client sent exactly the reviewed apply body: 15,927 bytes, sha256 `5da1e0d2…8f58`.
+- `apply_migration jwleria_cutout_media` ran once and succeeded, as version **`20261101104017`**.
+
+**Read-back at 10:40:37Z:**
+- 10 migrations; the stored statement's sha256 equals the apply body.
+- `jwl_record_cutout_approval` exists as security invoker, executable only by `service_role` and `postgres`.
+- All 5 new columns exist; 0 cutout evidence rows; 0 background-removal grants.
+- Unchanged: 1 grant, 3 evidence rows, 1 live approval, 4,097 active rows with 1 photo, 3 objects, the m126234-0015 credit, and the catalog hash (`de507b1b…758e` before and after).
+- Security advisors: INFO only (RLS enabled with no policy on the 11 private `jwl_internal` tables, the existing deny-by-default design); nothing from this change.
+
+**Repository:**
+- The applied file is `apps/storefront/supabase/migrations/20261101104017_jwleria_cutout_media.sql`, byte-equal to the stored statement. The proposal was removed; its rollback stays in `proposed/`.
+- Test paths were repointed. The 8 migration-loading and label test files pass: 54 of 54.
+
+**Arabic credit texts:** «إزالة الخلفية وتغيير الحجم والتحويل إلى WebP» and «إزالة الخلفية والتحويل إلى WebP» passed a technical language review by Claude, and independently by Codex. Both state background removal plus the resizing and conversion, in verbal nouns, with WebP kept in Latin. They describe only the image treatment and make no brand, authenticity or availability claim. This is a technical review, not owner approval.
+
+**Still missing:** a real accepted exact cutout input. No cutout or new photo was recorded or published. The original photograph and the rejected editor trial are preserved and unchanged.
+
 ## Cutout recording prepared; an exact cutout input is still missing, 2026-11-01
 
 **Observed live (read-only, 2026-11-01 09:58Z):**

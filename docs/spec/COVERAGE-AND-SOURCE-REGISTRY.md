@@ -6,7 +6,7 @@ The Totals table, the brand counts, the source flags and the source-to-photo inv
 
 | Measure | Value |
 |---|---|
-| Registered migrations | 9 (last `20261028111829`) |
+| Registered migrations | 10 (last `20261101104017`; read 2026-11-01 10:40Z, when grants, evidence, approvals, rows and bucket objects were also unchanged) |
 | Active public catalog fact records | 4,097 (of 4,097 rows), of which exactly 1 carries a photograph and 4,096 are facts-only |
 | Candidates | 4,150 |
 | Public products with a photograph | 1: m126234-0015, one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read |

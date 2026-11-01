@@ -1,3 +1,24 @@
+## Current handoff: cutout path live; waiting for a real cutout input, 2026-11-01
+
+Writer: this local interactive Claude Code session (transfer recorded below). It finished its writes, and nothing is running. Database: the one assigned apply only (`20261101104017_jwleria_cutout_media`). No grant, source flag, image, function or storage write.
+
+Live:
+- Worker `0bff02360d83`: deployed and HTTP-checked by Codex; not yet phone-checked.
+- Migration `20261101104017`: applied and read back.
+- The existing photo and its credit are unchanged.
+
+Next, in order:
+1. **Input (owner or Codex):** one accepted exact cutout input. Either:
+   - an eligible original that is already transparent, under written permission covering background removal, with the source's `publication_allowed`; or
+   - a background-only master of the one file already granted (the m126234-0015 rendition), from a tool that does not redraw the product.
+
+   The rejected editor trial stays rejected.
+2. **Claude, on that input:** run `cutout.mjs validate`, then the independent visual comparison, then `media-run.mjs bundle` with `cutouts`. Recording goes through `jwl_record_cutout_approval`. Then Codex uploads, and publish and read back.
+3. **Optional operator check:** observe the deployed Worker at phone width in Arabic and English.
+4. **Rights for the rest of the catalogue, and coverage, performance and the final read-back:** as in the 2026-10-29 handoff.
+
+Rollback: Worker back to `bf6812e3c5d4` at any time, and never below `fbf04b80a181` while the titled credit is public. Migration: `proposed/jwleria_cutout_media.rollback.sql` (refuses while cutout data exists).
+
 ## Writer transfer: the database apply of jwleria_cutout_media, 2026-11-01
 
 This local interactive Claude Code session is the sole writer of this branch. It is also the database execution actor for this one reviewed additive apply, as Codex assigned (Codex coordinates and operates the Worker). No other writer is active. No other production action is authorised.

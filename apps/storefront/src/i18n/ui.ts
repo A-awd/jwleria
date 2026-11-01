@@ -114,8 +114,8 @@ const ar = {
     count: arabicCount,
     changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
-    // Every change text the media migrations accept. The first two are reviewed Arabic; the two background-removal texts
-    // (decision 0015) add «إزالة الخلفية» to that wording and await an Arabic reader's check before a cutout is published.
+    // Every change text the media migrations accept. The two background-removal texts (decision 0015) add «إزالة الخلفية»
+    // to the reviewed wording of the first two; they passed a technical language review on 2026-11-01.
     credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP', 'background removed, resized and converted to WebP': 'إزالة الخلفية وتغيير الحجم والتحويل إلى WebP', 'background removed and converted to WebP': 'إزالة الخلفية والتحويل إلى WebP' } as Record<string, string> },
   },
   dialog: {
