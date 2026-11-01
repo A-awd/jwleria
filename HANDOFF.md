@@ -1,4 +1,16 @@
-## Current handoff: deploy `storefront-1dd1618a5ef1` (decision 0023), 2026-11-01
+## Current handoff: deploy `storefront-1dd1618a5ef1` when ready; the preview is closed, 2026-11-01
+
+- **Codex:**
+  - deploy `releases/storefront-1dd1618a5ef1/` per its `DEPLOY.md` (`SHA256SUMS` sha256 `9e98d60f…467d`);
+  - then the public listing check;
+  - then send the receipt.
+- **Nothing is running:** both preview servers are stopped, and the private route is not public.
+- **Open:**
+  - official image publication, which needs written brand permission;
+  - the owner's final aesthetic sign-off;
+  - photo coverage.
+
+## Previous handoff: deploy `storefront-1dd1618a5ef1` (decision 0023), 2026-11-01
 
 1. **Codex:** deploy `releases/storefront-1dd1618a5ef1/` per its `DEPLOY.md`. It is a CSS and markup Worker with no data step.
 2. **Codex:** the public listing check on phone and desktop.

@@ -1,3 +1,21 @@
+## Private preview closed; package `storefront-1dd1618a5ef1` prepared for Codex's deploy, 2026-11-01
+
+**Cleanup:**
+- **Operator receipt (Codex):**
+  - Codex stopped its foreground preview server on port 4331 after the screenshots, reset the viewport override, and left the public Arabic catalogue open.
+  - The release `.wrangler/` folder is outside the checkout.
+  - Codex keeps the two selected official PNGs and the owner's reference screenshot privately, with hashes, not in Git.
+- **Claude:** stopped the local image server on port 4329; nothing listens on the port now.
+- No local preview process of this work is running.
+
+**Route proof** (observed by Codex in its in-app browser on the public site): `/ar/__private-preview/` returns the real "Page not found", so the private route is not published. An earlier refused Python request is not used as that proof.
+
+**Status:**
+- `storefront-1dd1618a5ef1` is prepared and approved by Codex for deployment of the scoped CSS and component change. No deploy receipt has been recorded yet.
+- No database write, grant or image publication.
+- The rejected `m126200-0006` photograph stays withdrawn.
+- Official image publication still needs the brand's written permission. The project is not complete.
+
 ## Decision 0023 final package `storefront-1dd1618a5ef1` ready to deploy (Codex visual review passed for packaging), 2026-11-01
 
 **Prepared:** source `1dd1618a5ef1`, package `releases/storefront-1dd1618a5ef1/`.
