@@ -194,6 +194,16 @@ test('a dropped refresh that settles late never frees the page from the refresh 
  assert.equal(h.entry().headers.get('X-JWL-Stored-At'),'191000');
  assert.deepEqual(warnings.splice(0),['Background page refresh failed for /en/categories/rings/: status 503']);
 });
+test('a variant block is shared like its product page under the same rules, and nothing else under a product is',async()=>{
+ const h=harness(),r=new Request('https://jwleria.com/ar/products/test-piece/variant/');
+ const first=await publicPageResponse(r,h.render,h.options);assert.equal(first.headers.get('X-JWL-Cache'),'MISS');await h.flush();
+ h.at(130000);
+ const second=await publicPageResponse(r,h.render,h.options);assert.equal(second.headers.get('X-JWL-Cache'),'HIT');assert.equal(h.renders(),1);
+ const other=harness();
+ for(const path of ['/ar/products/test-piece/variant/extra/','/ar/products/test-piece/variants/','/ar/products/test-piece/variant/?q=1','/ar/products/test-piece/variant'])
+  {await publicPageResponse(new Request('https://jwleria.com'+path),other.render,other.options);await other.flush();}
+ assert.equal(other.entries.size,0);
+});
 test('authenticated requests, search, APIs, writes and unexpected query variants always stay uncached',async()=>{
  const h=harness();
  const requests=[new Request('https://jwleria.com/ar/catalog/',{headers:{Cookie:'session=private'}}),new Request('https://jwleria.com/ar/catalog/',{headers:{Authorization:'Bearer private'}}),new Request('https://jwleria.com/ar/catalog/?q=private-search'),new Request('https://jwleria.com/api/catalog.json'),new Request('https://jwleria.com/ar/catalog/',{method:'POST'}),new Request('https://jwleria.com/ar/?font=amiri'),new Request('https://jwleria.com/ar/catalog/?page=1&page=2'),new Request('https://jwleria.com/ar/catalog/?brand=Bad_Slug'),new Request('https://jwleria.com/ar/font-preview/')];

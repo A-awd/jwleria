@@ -53,14 +53,22 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
   - Every existing variant URL stays valid and renders the model page with that variant selected (no orphaned links).
   - `rel=canonical` points to the primary variant's URL.
   - Options are links to each real variant URL, so the page works without JavaScript and by keyboard.
-  - JavaScript only swaps to the chosen real variant without a reload (reference, specs, gallery, inquiry reference) and updates the URL with `history.replaceState`.
+  - JavaScript swaps to the chosen real variant without a reload (reference, specs, gallery, inquiry reference) and updates the URL with `history.replaceState` (decision 0019):
+    - A choice shows at once.
+    - Only the variant's block is fetched, from `/{locale}/products/{slug}/variant/`, which the public page cache shares under the same rules.
+    - Blocks are cached and prefetched on intent; the latest choice wins.
+    - Back and Forward show the variant of the restored address.
   - Options follow decision 0018:
     - The size comes first, as equal segments.
     - Every other option offers only the values made at the selected size, as segments when few and short, otherwise as its current value opening a list.
     - Values made only in other sizes are listed apart, under one heading, with their sizes as explicit links. A choice never changes the size unless it names it.
   - Selecting a value moves to the existing variant that keeps as many of the other selected values as possible. When another option has to change, one notice names it after the change. No value carries a note of its own.
   - Each option has a visible label (Arabic/English), `aria-current` on the selected value and a clear focus ring, and works with RTL. Touch targets are at least 44 px.
-- Gallery per variant: that variant's approved images. A variant without one shows its model's representative photograph only with a caption naming that photograph's own reference and size, stating that it is not the selected reference, and with its own credit (decision 0017). Without one, it shows the honest facts-only state. A model card shows its photographed variant, so a card image is the exact photograph of the variant it links to. A bounded number of images (first image eager with `fetchpriority=high` only when it is the LCP, the rest lazy). Use the responsive srcset/sizes already in `product-media.mjs`, with explicit width/height.
+- Gallery per variant: that variant's approved images. A variant without one first says that no approved photograph of it exists yet. Its model's representative photograph may follow:
+  - small and apart, with a caption naming that photograph's own reference, size and dial or colour;
+  - stating that it is not the selected reference, and with its own credit (decisions 0017 and 0019).
+
+  One photograph is never a scroll container, and several scroll only horizontally. Without one, it shows the honest facts-only state. A model card shows its photographed variant, so a card image is the exact photograph of the variant it links to. A bounded number of images (first image eager with `fetchpriority=high` only when it is the LCP, the rest lazy). Use the responsive srcset/sizes already in `product-media.mjs`, with explicit width/height.
 - Attribution: when an approved image manifest entry carries `attribution` (`creator`, `license`, `license_url`, `source_url`, `changes`, and an optional `title` when the work's author supplied one), render a small visible credit under that image. A five-field credit stays valid; a title is shown untranslated in locale quotation marks before the creator (`«Title» — Creator`). This is prepared for a possible future open-license decision and is inactive otherwise.
 - Counts: report displayed models (view count) separately from variants (catalog count).
 

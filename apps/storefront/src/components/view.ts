@@ -1,10 +1,12 @@
 import { env as runtime } from 'node:process';
-import type { Brand, Locale, PublicProduct, BrandTier as Tier } from '../contracts/catalog';
+import type { Brand, Locale, ProductModel, PublicProduct, BrandTier as Tier } from '../contracts/catalog';
 import { href, t } from '../i18n/ui';
 import { contactChannel, whatsappHref } from './contact.mjs';
 import { productInquiryMessage } from './inquiry-message.mjs';
 
 export const OWN_COLLECTION = 'jwleria-edit';
+/** A product page's title: the model name, with the selected reference when the model has several variants. */
+export const productTitle = (model: ProductModel, l: Locale) => (model.variants.length > 1 ? `${model.name[l]} — ${model.selected.reference}` : model.name[l]);
 export const TIERS: Tier[] = ['luxury', 'accessible', 'contemporary'];
 
 /** Art direction for the single shared synthetic still life only; real photography is never cropped or zoomed. */

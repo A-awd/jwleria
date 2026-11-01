@@ -24,7 +24,7 @@ const table = sizeTable(model);
             <th scope="row"><VariantText text={row.option.value[locale]} lang={row.option.valueLang} /></th>
             <td>{row.current
               ? <bdi dir="ltr">{row.reference}</bdi>
-              : <a href={href(locale, `/products/${row.slug}/`)} data-variant-link data-option-kind={table.kind} data-option-key={row.key}><bdi dir="ltr">{row.reference}</bdi></a>}</td>
+              : <a href={href(locale, `/products/${row.slug}/`)} data-variant-link data-option-kind={table.kind} data-option-key={row.key} data-ref={row.reference} data-photo={row.photo ? '1' : '0'}><bdi dir="ltr">{row.reference}</bdi></a>}</td>
             <td>
               {row.facts.map((fact) => <span class="size-table__fact">{optionLabel(locale, fact.kind, fact.label)}: <VariantText text={fact.value[locale]} lang={fact.valueLang} /></span>)}
               {row.options.length > 0 && <span class="size-table__fact">{row.options.map((o) => s.variants.count(o.kind, o.count)).join(s.sizes.separator)}</span>}

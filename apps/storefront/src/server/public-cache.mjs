@@ -10,7 +10,7 @@ const refreshing = new Map();
 // Astro renders its error page for a failed request by running the middleware again with the same Request and
 // locals. That pass must not serve, refresh or store the page's copy, so each request scope is handled once.
 const handled = new WeakSet();
-const route = /^\/(?:ar|en)\/(?:$|(?:brands|categories)\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?|catalog\/|about\/|products\/[a-z0-9]+(?:-[a-z0-9]+)*\/)$/;
+const route = /^\/(?:ar|en)\/(?:$|(?:brands|categories)\/(?:[a-z0-9]+(?:-[a-z0-9]+)*\/)?|catalog\/|about\/|products\/[a-z0-9]+(?:-[a-z0-9]+)*\/(?:variant\/)?)$/;
 function shareableRequest(request) {
   const url = new URL(request.url);
   if (request.method !== 'GET' || !route.test(url.pathname) || request.headers.has('Authorization') || request.headers.has('Cookie')) return false;

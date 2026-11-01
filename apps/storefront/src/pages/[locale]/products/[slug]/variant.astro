@@ -1,0 +1,16 @@
+---
+import ProductArticle from '../../../../components/ProductArticle.astro';
+import { getBrand, getProductModel } from '../../../../server/catalog';
+import { isLocale } from '../../../../i18n/ui';
+
+// One variant's product block alone, for in-place choices on its product page (decision 0019). It is the same server
+// render as the page's article, without the layout and the related pieces: about half the bytes, and one catalogue
+// read fewer when not cached. It is shared by the public page cache like the page itself, and never indexed.
+export const partial = true;
+const { locale, slug } = Astro.params;
+const model = isLocale(locale) ? await getProductModel(slug ?? '') : undefined;
+if (!isLocale(locale) || !model) return new Response(null, { status: 404 });
+const brand = await getBrand(model.selected.brandSlug);
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+---
+<ProductArticle model={model} locale={locale} brand={brand} origin={Astro.url.origin} />

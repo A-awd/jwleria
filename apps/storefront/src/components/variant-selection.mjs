@@ -44,6 +44,9 @@ export function optionAxes(variants) {
 
 const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
 
+/** Whether a variant has an approved photograph of its own: a link says so; the full selected variant has images. */
+const hasPhoto = variant => Boolean(variant.hasImage ?? variant.images?.length);
+
 /** The other options that differ between `target` and `selected`, as they read on `target`. */
 const changedOptions = (axes, target, selected, kind) => axes.filter(a => a.kind !== kind && optionKey(target, a.kind) !== optionKey(selected, a.kind))
   .flatMap(a => { const option = target.options.find(o => o.kind === a.kind); return option ? [{kind: a.kind, label: a.label, ...valueOf(option)}] : []; });
@@ -82,7 +85,7 @@ export function selectorAxes(variants, selected) {
       current: axis.values.find(v => v.key === currentKey),
       values: axis.values.map(value => {
         const target = value.key === currentKey ? selected : closestVariant(variants, selected, axis.kind, value.key, axes);
-        return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
+        return {...value, slug: target.slug, reference: target.reference, photo: hasPhoto(target), current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
       }),
     };
   });
@@ -107,7 +110,7 @@ export function configurator(variants, selected) {
     const currentKey = optionKey(selected, axis.kind);
     const choice = (scope, value) => {
       const target = value.key === currentKey ? selected : closestVariant(scope, selected, axis.kind, value.key, axes);
-      return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
+      return {...value, slug: target.slug, reference: target.reference, photo: hasPhoto(target), current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
     };
     const base = {kind: axis.kind, label: axis.label, size: axis === size, current: axis.values.find(v => v.key === currentKey)};
     if (axis === size) return {...base, values: axis.values.map(value => choice(variants, value)), elsewhere: []};
@@ -117,7 +120,7 @@ export function configurator(variants, selected) {
       ...value,
       sizes: size.values.flatMap(s => {
         const target = closestVariant(at(s.key), selected, axis.kind, value.key, axes);
-        return target ? [{...s, slug: target.slug, reference: target.reference}] : [];
+        return target ? [{...s, slug: target.slug, reference: target.reference, photo: hasPhoto(target)}] : [];
       }),
     })).filter(v => v.sizes.length);
     return {...base, values, elsewhere};
@@ -199,7 +202,7 @@ export function sizeTable(model) {
     if (!value) return undefined;
     // The size's own value is in its first column; only the other facts that differ by size are repeated.
     const facts = size.facts.filter(f => f.value.en !== size.option.value.en);
-    rows.push({...size, facts, slug: value.slug, reference: value.reference, current: value.current, changes: value.changes});
+    rows.push({...size, facts, slug: value.slug, reference: value.reference, photo: value.photo, current: value.current, changes: value.changes});
   }
   return {kind: axis.kind, label: axis.label, rows};
 }

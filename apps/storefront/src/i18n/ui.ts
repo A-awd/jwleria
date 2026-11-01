@@ -106,6 +106,9 @@ const ar = {
     groups: { identity: 'التعريف بالقطعة', design: 'التصميم والمواد', technical: 'التفاصيل التقنية', other: 'تفاصيل أخرى' } as Record<string, string>,
     specs: 'المواصفات',
     message: 'تذكر الرسالة المرجع المحدد:',
+    // Shown on the gallery the moment a variant is chosen, until its own block arrives (decision 0019).
+    photoLoading: 'جارٍ تحميل صورة المرجع {ref}',
+    photoMissing: 'لا توجد صورة معتمدة للمرجع {ref} بعد.',
   },
   sizes: { title: 'مقاسات هذا الطراز', details: 'ما يختلف بين المقاسات', separator: '، ' },
   variants: {
@@ -217,6 +220,8 @@ const en: typeof ar = {
     groups: { identity: 'Identification', design: 'Design and materials', technical: 'Technical details', other: 'Other details' } as Record<string, string>,
     specs: 'Specifications',
     message: 'The message names the selected reference:',
+    photoLoading: 'Loading the photograph of {ref}',
+    photoMissing: 'No approved photograph of {ref} yet.',
   },
   sizes: { title: 'Sizes of this model', details: 'What differs', separator: ' · ' },
   variants: {

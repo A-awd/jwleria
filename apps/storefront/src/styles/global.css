@@ -101,7 +101,7 @@ html[lang="en"] :is(.hero, .page-head) h1 { line-height: 1.02; }
 .brand-motion { display: none; }
 .brand-motion__play, .brand-motion[aria-pressed="true"] .brand-motion__pause { display: none; }
 .brand-motion[aria-pressed="true"] .brand-motion__play { display: block; }
-.brand-strip { --brand-gap: clamp(1.75rem, 4vw, 3.5rem); overflow-x: auto; padding-block: 1.6rem; scroll-padding-inline: var(--gutter); border-block: 1px solid var(--line); scrollbar-width: none; mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); direction: ltr; }
+.brand-strip { --brand-gap: clamp(1.75rem, 4vw, 3.5rem); overflow-x: auto; overflow-y: hidden; padding-block: 1.6rem; scroll-padding-inline: var(--gutter); border-block: 1px solid var(--line); scrollbar-width: none; mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); direction: ltr; }
 .brand-strip__track { display: flex; width: max-content; }
 .brand-strip__group { display: flex; flex: none; align-items: center; gap: var(--brand-gap); padding-inline-end: var(--brand-gap); }
 .brand-strip__group[aria-hidden="true"] { display: none; }
@@ -179,11 +179,28 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
    in one calm block, then one inquiry action, then the details as labelled disclosures. One geometry throughout:
    targets of 44px or more, hairline borders, the existing tokens and type, logical properties for Arabic. */
 .pdp { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.25rem, 4vw, 4rem); padding-top: clamp(.5rem, 2vw, 2rem); }
-.pdp__gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 86%; gap: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
-.pdp__gallery:has(> figure:only-child) { grid-auto-columns: 100%; }
-.pdp__gallery figure { margin: 0; scroll-snap-align: center; }
+/* The gallery (decision 0019):
+   - One photograph is a plain figure. It is no scroll container, so a vertical swipe on it scrolls the page.
+   - Several photographs are a carousel that scrolls only horizontally. overflow-x alone makes overflow-y compute to
+     auto, which turned even one photograph into a nested vertical scroller that took the page's scroll. */
+.pdp__gallery { position: relative; display: grid; gap: .75rem; min-width: 0; }
+.pdp__gallery--many { grid-auto-flow: column; grid-auto-columns: 86%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
+.pdp__gallery--many figure { scroll-snap-align: center; }
+.pdp__gallery figure { margin: 0; }
 .pdp__gallery figcaption { font-size: .75rem; line-height: 1.55; color: var(--muted); padding-top: .6rem; }
 .representative-note { display: block; color: var(--ink-soft); }
+/* No photograph of the selected variant: the state comes first; another reference's photograph follows small, apart
+   and labelled, never as the selected variant. */
+.pdp__gallery--missing { gap: .9rem; }
+.photo-missing { display: grid; place-content: center; gap: .3rem; min-height: 9rem; padding: 1.5rem 1rem; background: var(--sand); text-align: center; }
+.photo-missing__title { margin: 0; max-width: none; font-family: var(--display); font-size: var(--s1); color: var(--ink); }
+.photo-missing__ref { margin: 0; font-size: var(--s-1); color: var(--muted); }
+.pdp__gallery .pdp__other { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: .9rem; align-items: start; }
+.pdp__gallery .pdp__other figcaption { padding-top: 0; }
+/* While a chosen variant's block loads, the gallery says what is coming instead of passing another photograph off. */
+.pdp__gallery[data-pending] img { opacity: .25; transition: opacity .15s var(--ease); }
+.pdp__gallery-status { position: absolute; inset-inline: 0; top: 0; margin: 0; max-width: none; padding: .9rem 1rem; background: color-mix(in srgb, var(--paper) 94%, transparent); color: var(--ink); font-size: var(--s-1); text-align: center; }
+[data-variant-root][aria-busy="true"] .facts { opacity: .55; }
 .pdp__info { display: grid; align-content: start; gap: 1.5rem; min-width: 0; }
 .pdp__head { display: grid; justify-items: start; gap: .15rem; }
 .pdp__brand { display: inline-flex; align-items: center; min-height: 2.75rem; margin: 0; font-family: var(--serif-latin); font-size: var(--s-1); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
@@ -215,7 +232,7 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 .picker__summary .chevron { grid-column: 2; grid-row: 1 / span 2; }
 .chevron { width: 1rem; height: 1rem; flex: none; color: var(--muted); transition: transform .25s var(--ease); }
 details[open] > summary .chevron { transform: rotate(180deg); }
-.picker__panel { border-top: 1px solid var(--line); max-height: min(26rem, 62svh); overflow-y: auto; }
+.picker__panel { border-top: 1px solid var(--line); }
 .picker__list { list-style: none; margin: 0; padding: 0; }
 .picker__list > li + li { border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
 .picker__option { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3rem; padding: .6rem 1rem; color: var(--ink-soft); text-decoration: none; }
@@ -264,9 +281,10 @@ details[open] > summary .chevron { transform: rotate(180deg); }
 .inquiry-note blockquote { margin: 0; padding-inline-start: 1rem; border-inline-start: 2px solid var(--line); }
 @media (min-width: 60rem) {
   .pdp { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; }
-  .pdp__gallery { grid-auto-flow: row; grid-template-columns: 1fr 1fr; margin: 0; padding: 0; overflow: visible; }
-  .pdp__gallery figure:first-child { grid-column: 1 / -1; }
-  .pdp__gallery figure + figure .media { aspect-ratio: 1; }
+  .pdp__gallery--many { grid-auto-flow: row; grid-template-columns: 1fr 1fr; margin: 0; padding: 0; overflow: visible; }
+  .pdp__gallery--many figure:first-child { grid-column: 1 / -1; }
+  .pdp__gallery--many figure + figure .media { aspect-ratio: 1; }
+  .photo-missing { min-height: 14rem; }
 }
 
 .inquiry { border: 0; padding: 0; background: none; width: 100%; max-width: min(32rem, calc(100% - 2rem)); color: var(--ink); }
