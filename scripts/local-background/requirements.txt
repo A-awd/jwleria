@@ -1,0 +1,10 @@
+# Pinned set from the 2026-11-01 trial (Python 3.14, Apple M2, macOS). Install into an isolated venv outside the repository.
+torch==2.15.0
+diffusers==0.42.1
+transformers==5.22.1
+accelerate==1.15.0
+safetensors==0.8.0
+huggingface_hub==2.4.0
+tokenizers==0.23.3
+numpy==2.5.4
+pillow==13.0.0

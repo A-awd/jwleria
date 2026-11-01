@@ -1,4 +1,17 @@
-## Current handoff: free local background trial in progress (decision 0024), 2026-11-01
+## Current handoff: free local background trial closed, 2026-11-01
+
+- **Outcome:**
+  - generated backgrounds failed visual acceptance;
+  - the deliverable is the deterministic `#f0f0f0` two-bag preview, private;
+  - the catalogue stays on the approved grey card.
+- **Reuse:**
+  - `scripts/local-background/` (pinned setup and CLI);
+  - `scripts/catalog-intake/background-composite.mjs`, which handles a flat or any background, with product pixels verified.
+- **Open:**
+  - official image publication, which needs written brand permission;
+  - photo coverage.
+
+## Previous handoff: free local background trial in progress (decision 0024), 2026-11-01
 
 1. **Claude:**
    - after the install, generate one seeded background;

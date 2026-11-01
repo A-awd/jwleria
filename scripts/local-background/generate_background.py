@@ -9,7 +9,7 @@ import argparse, hashlib, json, os, resource, subprocess, time
 ap = argparse.ArgumentParser()
 ap.add_argument("--out-dir", required=True); ap.add_argument("--cache-dir", required=True)
 ap.add_argument("--seed", type=int, default=20261101); ap.add_argument("--steps", type=int, default=25)
-ap.add_argument("--guidance", type=float, default=6.5); ap.add_argument("--prompt")
+ap.add_argument("--guidance", type=float, default=6.5); ap.add_argument("--prompt"); ap.add_argument("--negative")
 args = ap.parse_args()
 os.environ["HF_HOME"] = os.path.abspath(args.cache_dir)
 os.environ.setdefault("HF_HUB_DISABLE_TELEMETRY", "1")
@@ -24,7 +24,7 @@ PROMPT = args.prompt or (
     "empty minimalist luxury photography studio backdrop, seamless warm light grey and soft cream paper sweep, "
     "smooth pale stone surface, soft diffused daylight, gentle gradient, large empty centre, clean high-end product "
     "photography background, nothing on it")
-NEGATIVE = ("product, bag, handbag, watch, jewellery, object, vase, furniture, person, people, hand, text, letters, "
+NEGATIVE = args.negative or ("product, bag, handbag, watch, jewellery, object, vase, furniture, person, people, hand, text, letters, "
             "logo, watermark, signature, frame, clutter, dark, harsh shadow, saturated colours")
 OUT = os.path.abspath(args.out_dir)
 os.makedirs(OUT, exist_ok=True)

@@ -1,3 +1,23 @@
+## Free local background trial: technically successful, aesthetically rejected; deterministic #f0f0f0 fallback is the preview (decision 0024), 2026-11-01
+
+- **Setup** (prepared): pinned and reproducible, in `scripts/local-background/` (README, `requirements.txt`, CLI generator).
+  - Model `stable-diffusion-v1-5` at revision `451f4fe1…`, fp16 only.
+  - torch 2.15.0 (MPS), diffusers 0.42.1, transformers 5.22.1, on Python 3.14.
+- **Observed:**
+  - weights 2.0 GB, downloaded in 43.7 s;
+  - generation 24–31 s per 512 × 512 image;
+  - process peak RSS 549 MiB; swap grew from 6.8 GB to 9.4 GB;
+  - free disk stayed at 14 GiB or more.
+- **Technical result:** every composite kept every fully opaque product pixel unchanged, at native scale and about 0.68 fill.
+- **Aesthetic result:** all four candidates rejected (Codex and Claude), and none is called approved:
+  - seed 20261101: a concrete wall with holes and a wood floor;
+  - seed 20261102: umbrella lights and stands;
+  - seed 20261103: a dark grey with coloured specks;
+  - seed 20261104: non-uniform.
+  - The local model is unsuitable for a clean blank background. The rejected outputs stay private.
+- **Deliverable preview** (private, not published): the two exact bags, Le Smart Mocha `10352HIU002` and Le Roseau Vegetal `10327HJD514`, on a deterministic flat `#f0f0f0` background with no AI. Both have 0 changed opaque pixels.
+- **Not done:** no Supabase write, no image publication, no paid API, and no n8n automation (operator-run local job only).
+
 ## Free local background-only path (decision 0024): engine install in progress; no background generated yet, 2026-11-01
 
 - **Authorization:** the owner authorized starting the free local path («ابدأ اذا»), for backgrounds only. There is no paid API, no product generation and no public licensing (decision 0024).
