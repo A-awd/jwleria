@@ -172,3 +172,20 @@ test('the secondary photograph loads a small rendition, and a single photograph 
   assert.equal(productMedia(shown,0,'single').sizes,'(min-width: 100rem) 840px, (min-width: 60rem) 54vw, calc(100vw - 2.5rem)');
   assert.match(productMedia(shown,0,'detail').sizes,/86vw$/,'a carousel keeps its 86% columns');
 });
+
+test('the product page is compact on a phone: the name, a screen-sized photograph and the options together (decision 0020)',async()=>{
+  const article=await readFile(new URL('../src/components/ProductArticle.astro',import.meta.url),'utf8');
+  const selector=await readFile(new URL('../src/components/VariantSelector.astro',import.meta.url),'utf8');
+  const order=['<header class="pdp__head">','<ProductGallery','<VariantSelector','<div class="pdp__cta">','<div class="folds">'].map(m=>article.indexOf(m));
+  assert.ok(order.every((at,i)=>at>0&&(i===0||at>order[i-1])),'name, photograph, options, inquiry, then the details, in reading order');
+  assert.match(of('.pdp'),/grid-template-areas:\s*"head" "gallery" "info"/);
+  const frame=of('.pdp__gallery .media');
+  assert.match(frame,/aspect-ratio:\s*auto;\s*height:\s*clamp\(13rem,\s*40svh,\s*26rem\)/,'the photograph frame follows the screen height, bounded, instead of a tall 4:5 column');
+  assert.match(frame,/aspect-ratio:\s*4 \/ 5;\s*height:\s*auto/,'the two-column desktop gallery keeps its 4:5 frame');
+  assert.match(css,/:is\(\.pdp__gallery, \.card\) \.media > img\.art\[srcset\] \{ object-fit: contain;/,'the whole product, never cropped');
+  assert.match(of('.pdp__head h1'),/font-size:\s*var\(--s2\)/,'a smaller title on a phone');
+  assert.match(selector,/<details class="picker__elsewhere">/,'values made only in other sizes stay one row until opened');
+  for(const target of ['.segment','.picker__option','.picker__heading','.picker__size'])assert.match(of(target),/min-height:\s*2\.75rem/,`${target} stays at least 44px`);
+  assert.match(of('.picker__summary'),/min-height:\s*3rem/);
+  assert.match(page,/fresh\.querySelector\('\.pdp__gallery'\)\?\.getBoundingClientRect\(\)/,'after a choice the photograph is brought back on screen with the control when both fit');
+});

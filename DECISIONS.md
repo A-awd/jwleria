@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0020 — A compact phone product page; colour photo switching only where every colour has its own photograph](decisions/0020-compact-phone-product-page.md)
+
 - [0019 — A touch-safe gallery, honest photograph states and fast in-place variant choices](decisions/0019-touch-safe-gallery-honest-photos-fast-choices.md)
 
 - [0018 — A coherent mobile product page: the size first, other options as current-value lists](decisions/0018-coherent-mobile-product-page.md)

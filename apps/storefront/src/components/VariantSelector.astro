@@ -44,9 +44,10 @@ const page = (slug: string) => href(locale, `/products/${slug}/`);
               </a></li>
             ))}
           </ul>}
-          {c.elsewhere.length > 0 && <div class="picker__elsewhere">
-            <p class="picker__heading" id={`${c.id}-elsewhere`}>{s.variants.otherSizes}</p>
-            <ul class="picker__list" role="list" aria-labelledby={`${c.id}-elsewhere`}>
+          {/* Values made only in other sizes stay one row until asked for, so the list stays short (decision 0020). */}
+          {c.elsewhere.length > 0 && <details class="picker__elsewhere">
+            <summary class="picker__heading"><span>{s.variants.otherSizes} ({c.elsewhere.length})</span><Chevron /></summary>
+            <ul class="picker__list" role="list" aria-label={s.variants.otherSizes}>
               {c.elsewhere.map((v) => (
                 <li class="picker__row">
                   <span class="picker__name"><VariantText text={v.value[locale]} lang={v.valueLang} /></span>
@@ -58,7 +59,7 @@ const page = (slug: string) => href(locale, `/products/${slug}/`);
                 </li>
               ))}
             </ul>
-          </div>}
+          </details>}
         </div>
       </details>}
       {c.layout === 'static' && c.current && <p class="config__static"><span class="config__label">{c.name}</span> <span class="config__value"><VariantText text={c.current.value[locale]} lang={c.current.valueLang} /></span></p>}

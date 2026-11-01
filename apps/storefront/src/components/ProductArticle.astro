@@ -12,9 +12,9 @@ import { productFacts } from './product-facts.mjs';
 import { galleryView } from './gallery-view.mjs';
 
 // One variant's product block: the page renders it inside its layout, and the variant fragment renders it alone
-// for in-place choices (decision 0019), so both are the same server render. The product leads (image, then brand,
-// name and reference), its options follow, then one inquiry action, then the details as labelled disclosures
-// (decision 0018).
+// for in-place choices (decision 0019), so both are the same server render. Compact on a phone (decision 0020): the
+// brand, name and reference, then a screen-sized photograph, then the options right below it, so the product, its
+// photograph and its size and colour choices are on one screen; one inquiry action and the details follow.
 interface Props { model: ProductModel; locale: Locale; brand?: Brand; origin: string }
 const { model, locale, brand, origin } = Astro.props;
 const product = model.selected;
@@ -29,16 +29,16 @@ const pictured = galleryView(product, model.representative, model.variants).mode
 ---
 <article class:list={['pdp', { 'pdp--facts': !pictured }]} data-variant-root data-reference={product.reference} data-slug={product.slug} data-title={`${productTitle(model, locale)} · Jwleria`}
   data-photo-loading={s.product.photoLoading} data-photo-missing={s.product.photoMissing}>
+  <header class="pdp__head">
+    {brand
+      ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
+      : <p class="pdp__brand">{s.brands.ownTitle}</p>}
+    <h1>{model.name[locale]}</h1>
+    <p class="pdp__ref">{s.reference} <bdi dir="ltr" data-variant-reference>{product.reference}</bdi></p>
+  </header>
   <ProductGallery product={product} locale={locale} representative={model.representative} variants={model.variants} />
 
   <div class="pdp__info">
-    <header class="pdp__head">
-      {brand
-        ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
-        : <p class="pdp__brand">{s.brands.ownTitle}</p>}
-      <h1>{model.name[locale]}</h1>
-      <p class="pdp__ref">{s.reference} <bdi dir="ltr" data-variant-reference>{product.reference}</bdi></p>
-    </header>
     {facts.intro && <p class="pdp__intro">{facts.intro}</p>}
     {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
     {grouped && !pictured && <p class="note">{s.product.noPhoto}</p>}

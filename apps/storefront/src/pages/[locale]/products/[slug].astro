@@ -20,7 +20,7 @@ const category = getCategory(product.categorySlug);
 ---
 <BaseLayout locale={locale} title={productTitle(model, locale)} description={product.summary[locale]} path={`/products/${product.slug}/`} canonicalPath={`/products/${model.primary.slug}/`} image={shareImage(product)}>
   <div class="wrap">
-    <nav class="crumb" style="padding-top:1.5rem">
+    <nav class="crumb crumb--product">
       <a href={href(locale, '/catalog/')}>{s.nav.catalog}</a>
       {category && <> / <a href={href(locale, `/categories/${category.slug}/`)}>{category.name[locale]}</a></>}
     </nav>
@@ -143,6 +143,14 @@ const category = getCategory(product.categorySlug);
     if (choice.link) focus?.focus({ preventScroll: true });
     const box = choice.keyboard ? focus?.getBoundingClientRect() : undefined;
     if (focus && box && (box.top < 0 || box.bottom > innerHeight)) focus.scrollIntoView({ block: 'nearest' });
+    // The chosen variant's photograph and the control that was used belong on one screen (decision 0020): when the
+    // photograph is above the screen and both fit, one short scroll brings it back instead of leaving it out of view.
+    const header = document.querySelector('.site-header')?.getBoundingClientRect().bottom ?? 0;
+    const picture = fresh.querySelector('.pdp__gallery')?.getBoundingClientRect();
+    const used = (focus ?? fresh.querySelector(anchorAt))?.getBoundingClientRect();
+    if (choice.link && picture && used && picture.top < header && used.bottom - picture.top + 16 <= innerHeight - header) {
+      window.scrollBy({ top: picture.top - header - 8, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
     // One notice, only when the chosen variant also changed an option that was not chosen.
     const named = new Set([choice.kind, ...(choice.also ?? '').split(' ')].filter(Boolean));
     const changed = choice.link ? [...states(fresh)].filter(([k, c]) => !named.has(k) && before.has(k) && before.get(k)?.key !== c.key).map(([, c]) => c) : [];
