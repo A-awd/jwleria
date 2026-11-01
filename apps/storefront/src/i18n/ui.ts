@@ -18,12 +18,13 @@ const AR_COUNTS: Record<string, ArabicForms> = {
   colour: ['لون واحد', 'لونان', 'ألوان', 'لونًا', 'لون'],
   size: ['مقاس واحد', 'مقاسان', 'مقاسات', 'مقاسًا', 'مقاس'],
   case_size: ['قطر واحد', 'قطران', 'أقطار', 'قطرًا', 'قطر'],
+  model_size: ['حجم موديل واحد', 'حجما موديل', 'أحجام موديل', 'حجم موديل', 'حجم موديل'],
   option: ['خيار واحد', 'خياران', 'خيارات', 'خيارًا', 'خيار'],
 };
 const EN_COUNTS: Record<string, readonly [one: string, other: string]> = {
   dial: ['dial', 'dials'], bracelet: ['bracelet', 'bracelets'], bracelet_material: ['bracelet material', 'bracelet materials'], colour: ['colour', 'colours'], size: ['size', 'sizes'],
   ring_size: ['ring size', 'ring sizes'], bracelet_size: ['bracelet size', 'bracelet sizes'], bag_size: ['bag size', 'bag sizes'],
-  case_size: ['case diameter', 'case diameters'], option: ['option', 'options'],
+  case_size: ['case diameter', 'case diameters'], model_size: ['model size', 'model sizes'], option: ['option', 'options'],
 };
 const countKind = (kind: string, table: Record<string, unknown>) => {
   const k = kind === 'color' ? 'colour' : kind;
@@ -106,14 +107,18 @@ const ar = {
     views: ['المشهد الكامل', 'تفصيل', 'تفصيل قريب'],
     how: 'طريقة الاستفسار',
     noPhoto: 'لا توجد صورة معتمدة لهذا المرجع بعد.',
+    // Another variant's photograph is named with its own reference and size, and never presented as this one.
+    representative: { before: 'صورة المرجع ', middle: '، معروضة لهذا الطراز، وليست صورة للمرجع المحدد ', end: '.' },
     groups: { identity: 'التعريف بالقطعة', design: 'التصميم والمواد', technical: 'التفاصيل التقنية', other: 'تفاصيل أخرى' } as Record<string, string>,
   },
+  sizes: { title: 'مقاسات هذا الطراز', details: 'ما يختلف بين المقاسات', separator: '، ' },
   variants: {
     group: 'خيارات هذا الطراز',
-    kinds: { dial: 'الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة' } as Record<string, string>,
+    kinds: { dial: 'الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة', model_size: 'حجم الموديل' } as Record<string, string>,
     count: arabicCount,
     changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
+    partial: (shown: number, total: number) => `يُعرض ${shown} من أصل ${total} من خيارات هذا الطراز.`,
     // Every change text the media migrations accept. The two background-removal texts (decision 0015) add «إزالة الخلفية»
     // to the reviewed wording of the first two; they passed a technical language review on 2026-11-01.
     credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP', 'background removed, resized and converted to WebP': 'إزالة الخلفية وتغيير الحجم والتحويل إلى WebP', 'background removed and converted to WebP': 'إزالة الخلفية والتحويل إلى WebP' } as Record<string, string> },
@@ -209,14 +214,17 @@ const en: typeof ar = {
     views: ['Full view', 'Detail', 'Close detail'],
     how: 'How to inquire',
     noPhoto: 'No approved photograph of this reference yet.',
+    representative: { before: 'Photograph of reference ', middle: ', shown for this model. It is not a photograph of the selected reference ', end: '.' },
     groups: { identity: 'Identification', design: 'Design and materials', technical: 'Technical details', other: 'Other details' } as Record<string, string>,
   },
+  sizes: { title: 'Sizes of this model', details: 'What differs', separator: ' · ' },
   variants: {
     group: 'Options for this model',
-    kinds: { dial: 'Dial', bracelet: 'Bracelet', bracelet_material: 'Bracelet material', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter' },
+    kinds: { dial: 'Dial', bracelet: 'Bracelet', bracelet_material: 'Bracelet material', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter', model_size: 'Model size' },
     count: englishCount,
     changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
     showing: (ref: string) => `Showing reference ${ref}`,
+    partial: (shown: number, total: number) => `Showing ${shown} of ${total} options of this model.`,
     credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP', 'background removed, resized and converted to WebP': 'background removed, resized and converted to WebP', 'background removed and converted to WebP': 'background removed and converted to WebP' } as Record<string, string> },
   },
   dialog: {

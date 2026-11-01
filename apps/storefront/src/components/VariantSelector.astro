@@ -1,12 +1,12 @@
 ---
-import type { Locale, ProductVariant } from '../contracts/catalog';
+import type { Locale, VariantLink } from '../contracts/catalog';
 import { href, optionLabel, t } from '../i18n/ui';
 import { selectorAxes } from './variant-selection.mjs';
 import VariantText from './VariantText.astro';
 
 // Every value is a link to an existing variant page, so selection works without JavaScript.
 // Values reuse the existing chip (44px target, aria-current state); layout lives in the .variant-* block.
-interface Props { variants: ProductVariant[]; selected: ProductVariant; locale: Locale }
+interface Props { variants: VariantLink[]; selected: VariantLink; locale: Locale }
 const { variants, selected, locale } = Astro.props;
 const s = t(locale);
 const axes = selectorAxes(variants, selected);

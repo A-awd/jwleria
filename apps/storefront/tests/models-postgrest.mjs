@@ -83,7 +83,9 @@ const fail=(status,code,message)=>json(status,{code,message,details:null,hint:nu
  * count in Content-Range, RPC results as their JSON value, and PostgREST's schema-cache 404s.
  * Every statement runs as anon, so row-level security decides what is visible.
  */
-export function postgrest(db,{key}={}){
+export function postgrest(db,{key,functions={}}={}){
+  // Further RPCs, only for a database that has them (another migration under test); unknown ones stay schema-cache 404s.
+  const rpcs={...RPCS,...functions};
   let queue=Promise.resolve();
   const exclusive=fn=>{const run=queue.then(fn,fn);queue=run.catch(()=>{});return run;};
   const anon=(sql,params)=>exclusive(()=>as(db,'anon',()=>db.query(sql,params)));
@@ -94,7 +96,7 @@ export function postgrest(db,{key}={}){
     try{
       const rowFn=path.startsWith('rpc/')&&ROW_RPCS[path.slice(4)]?path.slice(4):null;
       if(path.startsWith('rpc/')&&!rowFn){
-        const fn=path.slice(4),args=RPCS[fn];
+        const fn=path.slice(4),args=rpcs[fn];
         if(!args)return fail(404,'PGRST202',`Could not find the function public.${fn} without parameters in the schema cache`);
         const names=[...url.searchParams.keys()];
         if(names.some(n=>!(n in args)))return fail(404,'PGRST202',`Could not find the function public.${fn}(${names.join(', ')}) in the schema cache`);

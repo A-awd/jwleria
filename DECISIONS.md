@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0017 — Sizes of one genuine design are variants of one model](decisions/0017-sizes-as-variants-of-one-model.md)
+
 - [0016 — Verified open-licence photographs, found and published in batches](decisions/0016-verified-open-licence-photo-batches.md)
 
 - [0015 — Authentic 2D cutouts; interactive 3D deferred](decisions/0015-authentic-2d-cutouts-and-3d-deferral.md)

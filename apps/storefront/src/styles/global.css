@@ -189,6 +189,18 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 .facts__title { margin: 0 0 .15rem; font-family: var(--text); font-size: var(--s-1); font-weight: 600; color: var(--muted); }
 .fact { margin: 0; line-height: 1.75; overflow-wrap: anywhere; }
 .fact strong { font-weight: 600; }
+/* Sizes of one model (decision 0017): one compact row per real size, readable at phone width; each reference links
+   to the existing variant at that size, with a 44px target. */
+.size-table { margin-top: 1.5rem; font-size: var(--s-1); }
+.size-table table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.size-table th, .size-table td { padding: .55rem .5rem .55rem 0; border-top: 1px solid var(--line); text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+.size-table thead th { border-top: 0; font-weight: 600; color: var(--muted); }
+.size-table thead th:first-child, .size-table tbody th { width: 28%; }
+.size-table tbody th { font-weight: 600; }
+.size-table tr[aria-current="true"] :is(th, td) { color: var(--ink); background: var(--paper); }
+.size-table td a { display: inline-flex; align-items: center; min-height: 2.75rem; }
+.size-table__fact { display: block; line-height: 1.6; }
+.representative-note { display: block; color: var(--ink-soft); }
 .inquiry-note { background: var(--paper); border: 1px solid var(--line); padding: 1.5rem; margin-top: 1.5rem; font-size: var(--s-1); }
 .inquiry-note h2 { font-family: var(--text); font-size: var(--s0); font-weight: 600; }
 .inquiry-note blockquote { margin: .75rem 0 0; padding-inline-start: 1rem; border-inline-start: 2px solid var(--line); }

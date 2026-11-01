@@ -1,5 +1,5 @@
 import {responsiveImages} from './responsive-media.mjs';
-import {MODEL_PAGE_VARIANTS, assembleModel, orderOptionKinds, singleModel} from '../components/variant-selection.mjs';
+import {MODEL_INDEX_VARIANTS, MODEL_PAGE_VARIANTS, SIZE_KINDS, assembleIndexedModel, assembleModel, orderOptionKinds, singleModel} from '../components/variant-selection.mjs';
 
 const FIELDS = 'id,slug,reference,brand_slug,category_slug,collection_slug,collection_kind,collection_ar,collection_en,name_ar,name_en,description_ar,description_en,images,image_variants,media_state,published_at';
 const MODEL_FIELDS = `${FIELDS},model_key,model_name,variant_count,options_summary`;
@@ -224,9 +224,75 @@ export function productModel(data, slug) {
   return assembleModel(data.model_key, name, variants, slug);
 }
 
+/** @returns {import('../contracts/catalog').VariantLink} */
+function variantLink(row) {
+  if (!row || typeof row !== 'object' || !identifier(row.id) || !slugPattern.test(row.slug ?? '') || !present(row.reference)) throw new Error('Invalid model variant link');
+  if (!Number.isSafeInteger(row.position) || row.position < 0 || typeof row.is_primary !== 'boolean' || typeof row.has_image !== 'boolean') throw new Error('Invalid model variant link');
+  return {id: row.id, slug: row.slug, reference: row.reference, options: variantOptions(row.options), position: row.position, isPrimary: row.is_primary, hasImage: row.has_image};
+}
+
+/** @returns {import('../contracts/catalog').ModelSize[]} */
+function modelSizes(value) {
+  if (!Array.isArray(value) || value.length > 60) throw new Error('Invalid model sizes');
+  const keys = new Set();
+  return value.map(size => {
+    if (!size || typeof size !== 'object' || !identifier(size.key) || keys.has(size.key) || !Number.isSafeInteger(size.variant_count) || size.variant_count < 1) throw new Error('Invalid model sizes');
+    keys.add(size.key);
+    const [option] = variantOptions([size.option]);
+    const counts = size.options ?? {};
+    if (!SIZE_KINDS.includes(option.kind) || option.key !== size.key || !counts || typeof counts !== 'object' || Array.isArray(counts)
+      || Object.entries(counts).some(([kind, n]) => !kindPattern.test(kind) || !Number.isSafeInteger(n) || n < 1 || n > size.variant_count)) throw new Error('Invalid model sizes');
+    return {key: size.key, option, variantCount: size.variant_count, facts: variantSpecs(size.facts), options: orderOptionKinds(Object.entries(counts).map(([kind, count]) => ({kind, count})))};
+  });
+}
+
+/** Another variant's approved photograph, validated like a product row's own images. @returns {import('../contracts/catalog').RepresentativeImage | undefined} */
+function representativeImage(value) {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value !== 'object' || !slugPattern.test(value.slug ?? '') || !present(value.reference) || typeof value.same_size !== 'boolean') throw new Error('Invalid representative image');
+  const {images, imageVariants} = publicProduct({...SHAPE, images: value.images, image_variants: value.image_variants, media_state: 'approved_media'});
+  if (!images.length) throw new Error('Invalid representative image');
+  const sizeOption = value.size_option === null || value.size_option === undefined ? undefined : variantOptions([value.size_option])[0];
+  return {slug: value.slug, reference: value.reference, images, imageVariants, sizeOption, sameSize: value.same_size};
+}
+// The fixed identity a representative image is validated against; only its images and their variants are taken from it.
+const SHAPE = {id: 'representative', slug: 'representative', reference: 'representative', brand_slug: 'representative', category_slug: 'representative', collection_slug: 'representative',
+  collection_ar: '-', collection_en: '-', name_ar: '-', name_en: '-', published_at: '-'};
+
+/**
+ * Validates the v2 model envelope: the addressed variant in full, every variant of its model as a link, its real
+ * sizes and, when it has no photograph of its own, the model's representative one.
+ * @returns {import('../contracts/catalog').ProductModel | undefined}
+ */
+export function productModelIndex(data, slug) {
+  if (data === null) return undefined;
+  if (!data || typeof data !== 'object' || Array.isArray(data) || !Array.isArray(data.variants) || data.variants.length > MODEL_INDEX_VARIANTS
+    || !Number.isSafeInteger(data.variant_count) || data.variant_count < data.variants.length) throw new Error('Invalid product model response');
+  const selected = publicVariant(data.product);
+  if (selected.slug !== slug) throw new Error('Invalid product model identity');
+  if (data.model_key === null || data.model_key === undefined || !data.variants.length) return singleModel(selected);
+  if (!identifier(data.model_key)) throw new Error('Invalid product model identity');
+  const name = localized(data.model_name, 'Invalid model name');
+  const links = data.variants.map(variantLink);
+  if (new Set(links.map(v => v.slug)).size !== links.length || new Set(links.map(v => v.id)).size !== links.length) throw new Error('Invalid product model variants');
+  if (!links.some(v => v.slug === slug)) links.push({id: selected.id, slug, reference: selected.reference, options: selected.options, position: Number.MAX_SAFE_INTEGER, isPrimary: false});
+  const model = assembleIndexedModel(data.model_key, name, links, selected);
+  if (model.key === null) return model;
+  return {...model, variantCount: data.variant_count, sizes: modelSizes(data.sizes ?? []), representative: representativeImage(data.representative)};
+}
+
 /** @returns {Promise<import('../contracts/catalog').ProductModel | undefined>} */
 export async function readProductModel(config, slug, fetcher = fetch) {
   if (!slugPattern.test(slug)) return undefined;
+  // The complete read first; the bounded older read only while the v2 function does not exist yet.
+  return withFallback(config, 'jwl_product_model_v2', async () => {
+    const response = await get(config, '/rest/v1/rpc/jwl_product_model_v2', new URLSearchParams({p_slug: slug}), fetcher, {feature: 'jwl_product_model_v2'});
+    if (!response.ok) throw new Error(`Product model read failed (${response.status})`);
+    return productModelIndex(await response.json(), slug);
+  }, () => readBoundedProductModel(config, slug, fetcher));
+}
+
+function readBoundedProductModel(config, slug, fetcher) {
   return withFallback(config, 'jwl_product_model', async () => {
     const response = await get(config, '/rest/v1/rpc/jwl_product_model', new URLSearchParams({p_slug: slug}), fetcher, {feature: 'jwl_product_model'});
     if (!response.ok) throw new Error(`Product model read failed (${response.status})`);

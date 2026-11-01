@@ -1,11 +1,16 @@
 // Option selection only ever moves between existing variants; no combination is constructed.
 /** @typedef {import('../contracts/catalog').ProductVariant} Variant */
+/** @typedef {import('../contracts/catalog').VariantLink} Link */
 /** @typedef {import('../contracts/catalog').LocalizedText} Text */
 
-/** A product page reads at most this many variants of its model (the prepared jwl_product_model bound). */
+/** The older jwl_product_model read returns at most this many variants of a model. */
 export const MODEL_PAGE_VARIANTS = 60;
+/** jwl_product_model_v2 lists every variant of a model as a link, up to this hard bound. */
+export const MODEL_INDEX_VARIANTS = 2000;
+/** Option kinds that are a size: a watch case diameter, a named bag or item size, or the maker's model size. */
+export const SIZE_KINDS = ['case_size', 'bag_size', 'size', 'model_size'];
 
-const ORDER = ['dial', 'bracelet', 'bracelet_material', 'colour', 'color', 'size', 'ring_size', 'bracelet_size', 'bag_size', 'case_size'];
+const ORDER = ['dial', 'bracelet', 'bracelet_material', 'colour', 'color', 'size', 'ring_size', 'bracelet_size', 'bag_size', 'case_size', 'model_size'];
 const rank = kind => (ORDER.indexOf(kind) + ORDER.length + 1) % (ORDER.length + 1);
 
 /** Known option kinds first, in a stable display order; others alphabetically after them. */
@@ -13,9 +18,9 @@ export function orderOptionKinds(items, kindOf = item => item.kind) {
   return [...items].sort((a, b) => rank(kindOf(a)) - rank(kindOf(b)) || kindOf(a).localeCompare(kindOf(b)));
 }
 
-/** @param {Variant} variant @param {string} kind */
+/** @param {Link} variant @param {string} kind */
 export const optionKey = (variant, kind) => variant.options.find(o => o.kind === kind)?.key;
-/** @param {Variant} variant */
+/** @param {Link} variant */
 export const optionSignature = variant => variant.options.map(o => `${o.kind}=${o.key}`).sort().join('|');
 
 /** @typedef {{key: string, value: Text, valueLang?: 'en'}} Value valueLang 'en' marks a value kept in its English source text */
@@ -24,7 +29,7 @@ const valueOf = ({key, value, valueLang}) => ({key, value, ...(valueLang ? {valu
 
 /**
  * Option kinds with at least two distinct real values, in the order the variants carry them.
- * @param {Variant[]} variants ordered by position
+ * @param {Link[]} variants ordered by position
  * @returns {{kind: string, label: Text, values: Value[]}[]}
  */
 export function optionAxes(variants) {
@@ -42,8 +47,8 @@ const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i])
 /**
  * The existing variant with this value that keeps most of the current selection; ties prefer the
  * earlier option kinds, then the lower position.
- * @param {Variant[]} variants ordered by position
- * @param {Variant} current
+ * @param {Link[]} variants ordered by position
+ * @param {Link} current
  * @param {string} kind
  * @param {string} key
  * @returns {Variant | undefined}
@@ -61,8 +66,8 @@ export function closestVariant(variants, current, kind, key, axes = optionAxes(v
 
 /**
  * Selector state: each value links to one real variant and names every other option that changes with it.
- * @param {Variant[]} variants ordered by position
- * @param {Variant} selected
+ * @param {Link[]} variants ordered by position
+ * @param {Link} selected
  */
 export function selectorAxes(variants, selected) {
   const axes = optionAxes(variants);
@@ -102,4 +107,40 @@ export function assembleModel(key, name, variants, slug) {
   const primaries = ordered.filter(v => v.isPrimary);
   if (primaries.length > 1) throw new Error('Invalid product model primary');
   return {key, name, variants: ordered, selected, primary: primaries[0] ?? ordered[0]};
+}
+
+/**
+ * The model from every variant's link plus the addressed variant in full. The full variant replaces its own link,
+ * so the selector compares one object. Indistinguishable options make the grouping uncertain, as above.
+ * @param {string} key @param {Text} name @param {import('../contracts/catalog').VariantLink[]} links
+ * @param {Variant} selected @returns {import('../contracts/catalog').ProductModel}
+ */
+export function assembleIndexedModel(key, name, links, selected) {
+  const ordered = [...links].sort((a, b) => a.position - b.position || a.reference.localeCompare(b.reference));
+  if (ordered.length > 1 && new Set(ordered.map(optionSignature)).size !== ordered.length) return singleModel(selected);
+  const primaries = ordered.filter(v => v.isPrimary);
+  if (primaries.length > 1) throw new Error('Invalid product model primary');
+  const variants = ordered.map(v => (v.slug === selected.slug ? selected : v));
+  return {key, name, variants, selected, primary: primaries[0] ?? variants[0]};
+}
+
+/**
+ * The size table: one row per real size, each linked to the existing variant at that size that keeps most of the
+ * current selection, naming any other option that changes with it. No combination is constructed.
+ * @param {import('../contracts/catalog').ProductModel} model
+ */
+export function sizeTable(model) {
+  const sizes = model.sizes ?? [];
+  if (sizes.length < 2) return undefined;
+  const axis = selectorAxes(model.variants, model.selected).find(a => SIZE_KINDS.includes(a.kind));
+  if (!axis) return undefined;
+  const rows = [];
+  for (const size of sizes) {
+    const value = axis.values.find(v => v.key === size.key);
+    if (!value) return undefined;
+    // The size's own value is in its first column; only the other facts that differ by size are repeated.
+    const facts = size.facts.filter(f => f.value.en !== size.option.value.en);
+    rows.push({...size, facts, slug: value.slug, reference: value.reference, current: value.current, changes: value.changes});
+  }
+  return {kind: axis.kind, label: axis.label, rows};
 }

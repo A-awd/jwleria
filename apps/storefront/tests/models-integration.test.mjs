@@ -120,7 +120,8 @@ test('jwl_product_model gives the adapter one model for any variant slug and not
   const rpc=slug=>s.body('/rest/v1/rpc/jwl_product_model?'+new URLSearchParams({p_slug:slug}));
   const load=async slug=>{
     const {result,log}=await read(f=>readProductModel(config(),slug,f));
-    assert.deepEqual(log.map(u=>[u.pathname,Object.fromEntries(u.searchParams)]),[['/rest/v1/rpc/jwl_product_model',{p_slug:slug}]]);
+    // Without the size migration the complete v2 read is missing, so the bounded read answers.
+    assert.deepEqual(log.map(u=>[u.pathname,Object.fromEntries(u.searchParams)]),[['/rest/v1/rpc/jwl_product_model_v2',{p_slug:slug}],['/rest/v1/rpc/jwl_product_model',{p_slug:slug}]]);
     const raw=await rpc(slug);
     assert.deepEqual(result,productModel(raw,slug),'readProductModel parses the RPC body unchanged');
     return {model:result,raw};

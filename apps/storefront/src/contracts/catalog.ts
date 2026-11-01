@@ -87,21 +87,55 @@ export interface VariantSpec {
   valueLang?: 'en';
 }
 
-/** An existing catalog row inside its model. */
-export interface ProductVariant extends PublicProduct {
+/** One existing catalog row of a model as a link: enough to offer its options without loading it. */
+export interface VariantLink {
+  id: string;
+  slug: string;
+  reference: string;
   options: VariantOption[];
-  specs: VariantSpec[];
   position: number;
   isPrimary: boolean;
+  /** Whether this variant has an approved photograph of its own. */
+  hasImage?: boolean;
 }
 
-/** A model with every real variant (bounded) and the variant addressed by the URL. */
+/** An existing catalog row inside its model. */
+export interface ProductVariant extends PublicProduct, VariantLink {
+  specs: VariantSpec[];
+}
+
+/** One real size of a model: its option, how many variants exist at it, and the facts that differ by size. */
+export interface ModelSize {
+  key: string;
+  option: VariantOption;
+  variantCount: number;
+  facts: VariantSpec[];
+  /** Distinct real values of the model's other options at this size. */
+  options: {kind: string; count: number}[];
+}
+
+/** Another variant's approved photograph, shown only with its own reference and size named. */
+export interface RepresentativeImage {
+  slug: string;
+  reference: string;
+  images: string[];
+  imageVariants?: ResponsiveProductImage[];
+  sizeOption?: VariantOption;
+  /** Whether it was photographed at the selected variant's size. */
+  sameSize: boolean;
+}
+
+/** A model with every real variant and the variant addressed by the URL. */
 export interface ProductModel {
   key: string | null;
   name: LocalizedText;
-  variants: ProductVariant[];
+  variants: VariantLink[];
   selected: ProductVariant;
-  primary: ProductVariant;
+  primary: VariantLink;
+  /** All variants the model has; more than the listed variants only when a read was bounded. */
+  variantCount?: number;
+  sizes?: ModelSize[];
+  representative?: RepresentativeImage;
 }
 
 export interface ProductQuery {

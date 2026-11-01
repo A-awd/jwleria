@@ -119,13 +119,15 @@ test('only the specific missing relation falls back; every other failure stays a
  await assert.rejects(queryModels(config(),{},async()=>{throw new DOMException('The operation timed out.','TimeoutError');}),/timed out/);
 });
 
+// Without the size migration the complete v2 read reports itself missing; the bounded read then answers.
+const boundedOnly=body=>async(url,opts)=>url.pathname.endsWith('/jwl_product_model_v2')?missing('PGRST202','jwl_product_model_v2'):body(url,opts);
 test('a product page reads its whole model in one round trip and selects the addressed variant',async()=>{
  const calls=[];
- const model=await readProductModel(config(),'m126334-0002',async(url,opts)=>{calls.push(url);assert.equal(opts.redirect,'manual');return Response.json(envelope());});
+ const model=await readProductModel(config(),'m126334-0002',boundedOnly(async(url,opts)=>{calls.push(url);assert.equal(opts.redirect,'manual');return Response.json(envelope());}));
  assert.equal(calls.length,1);assert.equal(calls[0].pathname,'/rest/v1/rpc/jwl_product_model');assert.deepEqual(params(calls[0]),{p_slug:'m126334-0002'});
  assert.equal(model.selected.reference,'m126334-0002');assert.equal(model.primary.slug,'m126334-0001');assert.equal(model.variants.length,3);assert.equal(model.name.ar,'ديت جست 41');
  assert.deepEqual(model.selected.specs[1],{kind:'movement',label:{ar:'الحركة',en:'Movement'},value:{ar:'Calibre 3235',en:'Calibre 3235'},valueLang:'en'});
- assert.equal(await readProductModel(config(),'unknown-slug',async()=>Response.json(null)),undefined);
+ assert.equal(await readProductModel(config(),'unknown-slug',boundedOnly(async()=>Response.json(null))),undefined);
  assert.equal(await readProductModel(config(),'not/a/slug',()=>{throw new Error('must not fetch');}),undefined);
  await assert.rejects(readProductModel(config(),'m126334-0002',async()=>new Response('unavailable',{status:503})),/503/);
  await assert.rejects(readProductModel(config(),'m126334-0002',async()=>{throw new DOMException('The operation timed out.','TimeoutError');}),/timed out/);
@@ -152,11 +154,11 @@ test('the model envelope is validated, bounded and never trusted to invent or mi
 
 test('a missing product-model function falls back to today\'s single-row read',async()=>{
  const c=config();const calls=[];
- const fetcher=async url=>{calls.push(url.pathname);return url.pathname.endsWith('jwl_product_model')?missing('PGRST202','jwl_product_model'):page([row],1);};
+ const fetcher=async url=>{calls.push(url.pathname);const fn=url.pathname.split('/').at(-1);return fn.startsWith('jwl_product_model')?missing('PGRST202',fn):page([row],1);};
  const model=await readProductModel(c,row.slug,fetcher);
- assert.deepEqual(calls,['/rest/v1/rpc/jwl_product_model','/rest/v1/jwl_catalog']);
+ assert.deepEqual(calls,['/rest/v1/rpc/jwl_product_model_v2','/rest/v1/rpc/jwl_product_model','/rest/v1/jwl_catalog']);
  assert.equal(model.key,null);assert.equal(model.variants.length,1);assert.equal(model.selected.slug,row.slug);assert.equal(model.primary,model.selected);assert.deepEqual(model.selected.options,[]);
- await readProductModel(c,row.slug,fetcher);assert.deepEqual(calls.slice(2),['/rest/v1/jwl_catalog']);
+ await readProductModel(c,row.slug,fetcher);assert.deepEqual(calls.slice(3),['/rest/v1/jwl_catalog']);
 });
 
 test('brand pages read the collapsed RPC, falling back to today\'s brand page only when it is missing',async()=>{
@@ -197,7 +199,7 @@ const migration=sqlFile();
 test('the adapter calls the prepared models migration with its exact names and arguments',{skip:!migration&&'the models migration is not in this tree yet'},async()=>{
  const sql=String(readFileSync(/** @type {URL} */(migration),'utf8'));
  const calls=[];
- await readProductModel(config(),'m126334-0002',async url=>{calls.push(url);return Response.json(envelope());});
+ await readProductModel(config(),'m126334-0002',boundedOnly(async url=>{calls.push(url);return Response.json(envelope());}));
  await readBrandModelsPage(config(),'rolex',{page:2,pageSize:12},async url=>{calls.push(url);return Response.json({items:[],total:13,page:2,pageSize:12,pages:2,collections:[],brands:[],brand:null});});
  await queryModels(config(),{},async url=>{calls.push(url);return page([modelRow],1);});
  for(const call of calls.slice(0,2)){

@@ -20,6 +20,7 @@ This file is the shared engineering contract for the parallel streams. It is pre
 | Cartier, Van Cleef & Arpels, AP, IWC, JLC, Panerai, Piaget | ≤ 515 each | No captured evidence links references (sizes are not recorded). One model per row. | — | — |
 
 - Sizes (ring, bracelet, bag, case) become options only when the source records them as such for references of the same model. Case diameter and bracelet/strap fit are different attributes. Units come from the source fact (mm, cm, in) and are never converted silently.
+- Since decision 0017 (2026-11-01), whole models that are sizes of one genuine design form one size family. This happens only when the source states each size and the design identity matches exactly (the source rules are in that decision). The size is the model's first option (`case_size`, `bag_size`, `size` or `model_size`). The model name carries no size, and anything uncertain stays as it was, with the reason recorded privately.
 - Never build a Cartesian product. The options shown are exactly the existing variants.
 - The primary variant is deterministic: the lowest position, ordered by reference.
 
@@ -55,7 +56,7 @@ File: `apps/storefront/supabase/proposed/jwleria_product_models.sql`.
   - JavaScript only swaps to the chosen real variant without a reload (reference, specs, gallery, inquiry reference) and updates the URL with `history.replaceState`.
   - Selecting a value moves to the existing variant that keeps as many of the other selected values as possible. A value that would need another attribute to change shows that change.
   - Each option has a visible label (Arabic/English), `aria-current` on the selected value and a clear focus ring, and works with RTL. Touch targets are at least 44 px.
-- Gallery per variant: only that variant's approved images. A variant without an approved image shows the honest facts-only state, never another variant's photo. A bounded number of images (first image eager with `fetchpriority=high` only when it is the LCP, the rest lazy). Use the responsive srcset/sizes already in `product-media.mjs`, with explicit width/height.
+- Gallery per variant: that variant's approved images. A variant without one shows its model's representative photograph only with a caption naming that photograph's own reference and size, stating that it is not the selected reference, and with its own credit (decision 0017). Without one, it shows the honest facts-only state. A model card shows its photographed variant, so a card image is the exact photograph of the variant it links to. A bounded number of images (first image eager with `fetchpriority=high` only when it is the LCP, the rest lazy). Use the responsive srcset/sizes already in `product-media.mjs`, with explicit width/height.
 - Attribution: when an approved image manifest entry carries `attribution` (`creator`, `license`, `license_url`, `source_url`, `changes`, and an optional `title` when the work's author supplied one), render a small visible credit under that image. A five-field credit stays valid; a title is shown untranslated in locale quotation marks before the creator (`«Title» — Creator`). This is prepared for a possible future open-license decision and is inactive otherwise.
 - Counts: report displayed models (view count) separately from variants (catalog count).
 

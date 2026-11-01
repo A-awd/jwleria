@@ -3,6 +3,7 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import ProductGallery from '../../../components/ProductGallery.astro';
 import VariantSelector from '../../../components/VariantSelector.astro';
+import SizeTable from '../../../components/SizeTable.astro';
 import VariantText from '../../../components/VariantText.astro';
 import { getBrand, getCategory, getProductModel, getRelatedProducts } from '../../../server/catalog';
 import { href, isLocale, optionLabel, t } from '../../../i18n/ui';
@@ -31,8 +32,8 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
       {category && <> / <a href={href(locale, `/categories/${category.slug}/`)}>{category.name[locale]}</a></>}
     </nav>
 
-    <article class:list={['pdp', { 'pdp--facts': !product.image }]} data-variant-root data-reference={product.reference}>
-      <ProductGallery product={product} locale={locale} />
+    <article class:list={['pdp', { 'pdp--facts': !product.image && !model.representative }]} data-variant-root data-reference={product.reference}>
+      <ProductGallery product={product} locale={locale} representative={model.representative} />
 
       <div class="pdp__info">
         {brand
@@ -43,6 +44,7 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
         {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
         {grouped && !product.image && <p class="note">{s.product.noPhoto}</p>}
         <VariantSelector variants={model.variants} selected={product} locale={locale} />
+        {model.variantCount !== undefined && model.variantCount > model.variants.length && <p class="note">{s.variants.partial(model.variants.length, model.variantCount)}</p>}
         <div class="facts" data-variant-specs>
           <section class="facts__group" aria-labelledby="facts-identity">
             <h2 class="facts__title" id="facts-identity">{s.product.groups.identity}</h2>
@@ -57,6 +59,7 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
             </section>
           ))}
         </div>
+        <SizeTable model={model} locale={locale} />
         <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
           <h2 id="h-how">{s.product.how}</h2>
           <p>{product.isPreview ? s.dialog.explain : s.product.confirm}</p>
