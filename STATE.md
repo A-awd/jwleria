@@ -19,6 +19,13 @@
 - the two-card development route;
 - the private page's truthful footer notice «معاينة خاصة غير منشورة», which replaces the generic generated-image line in that route only.
 
+**Final visual receipt** (Codex, private preview):
+- Arabic and English at 390×844 pass the selected reference: two complete official packshots on 174 × 174 pale grey tiles, gap 18, margins 12, about two-thirds framing, a white product section and good heading whitespace.
+- The locale switch works, and the truthful private footer is in place.
+- No overflow at 1280×900 on desktop.
+- This approves deploying the scoped CSS and component package. It does not approve official image publication, and the project is not complete.
+- Actual product-page behaviour is unchanged. The private page's product links were not validated.
+
 **Superseded:** `storefront-662fdf4307b7`, never deployed.
 
 **Unchanged:** no database write, grant or image publication; the rejected `m126200-0006` photograph stays withdrawn.
