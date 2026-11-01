@@ -9,6 +9,8 @@ This is a Worker-only release. It makes no database, mapping, grant or asset cha
 
 ## 1. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): verified against `SHA256SUMS` and uploaded. The new version is active at 100%, and the runtime and all three bindings, secrets included, are unchanged. The provider identifiers are held privately.
+
 **Files:**
 - 77 compiled files under `dist-cloudflare/`. The file set is the same as `storefront-7f837315b4ec`, except for hashed chunk names.
 - `SHA256SUMS` has one line per file. Its own sha256 is `fd45c603f76f4ab68d50e30d6c4badb14f50cce5814bc5241c73e79dbd9c38ce`.
@@ -32,7 +34,12 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 
 ## 2. Public acceptance (Codex)
 
-**At 390×844, in Arabic and English, on `rolex-m126334-0018-3861b734`, from the top of the page:**
+**Done on 2026-11-01** (visitor-verified by Codex on the public site; layout and interaction only, never a multi-colour photograph demonstration):
+- **Arabic, 390×844, `m126234-0015`:** a 253.19 px frame, with the controls ending at 642.23, 705.83 and 769.42.
+- **English, 390×844:** the controls end at 680.52, 744.11 and 807.70.
+- **English, 390×667:** green → black restored the variant's own photograph (77.11–277.20) together with the dial (464.02–514.02).
+
+**At 390×844, in Arabic and English, on the photographed `rolex-m126234-0015-e45f1880`, from the top of the page.** Do not use `m126334-0018` for this check: it has no photograph of its own, so it is not a gallery example.
 - the brand, name and reference, the photograph, and the size, dial and bracelet controls are all on screen together (the bracelet's bottom at or above 844);
 - the photograph is whole and uncropped, with its credit or caption kept.
 

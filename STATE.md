@@ -1,3 +1,31 @@
+## Compact phone product page (decision 0020): deployed and visitor-verified for layout and interaction; the multi-colour photograph example is unmet, 2026-11-01
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-061cff21583e/` (source `061cff21583e`) | Codex | Verified against its 77-file manifest (`fd45c603…38ce`) and uploaded. The new version is active at 100%, and the runtime and all three bindings, secrets included, are unchanged. | producer-reported |
+| Public check at phone width | Codex | Passed for the scope below: layout and interaction only. | visitor-verified |
+
+No photograph, grant, mapping or catalogue change was made. Provider identifiers and logs stay outside the repository.
+
+**Visitor-verified** (Codex, on the public site in its in-app browser; layout and interaction only):
+- **Arabic, 390×844, the photographed `m126234-0015`:** the frame is 253.19 px. The size, dial and bracelet controls end at 642.23, 705.83 and 769.42, all on screen with the photograph.
+- **English, 390×844, the same page:** the same frame, with the controls ending at 680.52, 744.11 and 807.70, all on screen.
+- **English, 390×667, green → black, which restores the variant's own photograph:**
+  - the photograph spans 77.11–277.20 (200.09 px), together with the dial at 464.02–514.02;
+  - the list closed and the 36 mm size is correct;
+  - no overflow (375 ≤ 390).
+- **Screenshot:** one public Arabic layout screenshot is held privately by Codex.
+
+**Unmet: a valid example with a photograph for every colour.** This release is not a multi-colour photograph demonstration.
+- Live coverage is 2 photographed variants of 4,097 active products.
+- No model has two photographed colourways.
+- The bounded research found no eligible same-design colour pair (decision 0020).
+- The dependency stays an eligible pair, from decision 0016's open-licence path, written permission, or the owner's photographs.
+
+**Observed on the local preview only:** one catalogue read hit the adapter's existing 8 s timeout. The page fell back to normal navigation, as designed. No latency is promised.
+
+**Untested:** a physical iPhone finger swipe.
+
 ## Compact phone product page (decision 0020): prepared and preview-reviewed; no valid multi-colour photo example exists; Worker not yet deployed, 2026-11-01
 
 **Owner finding:**

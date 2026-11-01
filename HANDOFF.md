@@ -1,4 +1,17 @@
-## Current handoff: compact phone product page (decision 0020), 2026-11-01
+## Current handoff: compact phone product page live (decision 0020), 2026-11-01
+
+Nothing is running. The details are in the top entry of `STATE.md`.
+- **Deploy.** Codex deployed `releases/storefront-061cff21583e/` (source `061cff21583e`). The new version is active at 100%, with the runtime and bindings unchanged.
+- **Public check.** It passed for layout and interaction at 390×844 (Arabic and English) and 390×667 (English), on the photographed `m126234-0015`.
+
+Next:
+1. **Unmet: the multi-colour photograph example.** It needs an eligible same-design colour pair, from decision 0016's open-licence path, written permission or the owner's own photographs. A pair, once found, goes through decision 0016 to publication. Today no model has two photographed colourways.
+2. **Owner:** a physical iPhone swipe in Safari. It is untested.
+3. **Photo coverage** stays the barrier, as the batch-1 handoff below describes: 2 of 4,097 active products have a photograph.
+
+Rollback: `releases/storefront-061cff21583e/DEPLOY.md`. Roll the Worker back to the version Codex recorded; `7f837315b4ec` works with the current database.
+
+## Previous handoff: compact phone product page prepared (decision 0020), 2026-11-01
 
 Prepared and pushed:
 - source `061cff21583e`;
