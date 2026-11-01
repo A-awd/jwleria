@@ -1,3 +1,25 @@
+## Owner-selected grid reference implemented (decision 0023); Worker package `storefront-662fdf4307b7` ready; private local preview running, 2026-11-01
+
+**Implemented** (prepared, not deployed):
+- **The card:** photograph cards in the product grid become square `#f0f0f0` tiles (measured from the owner's reference), with the product whole and centred at most 70% of the tile.
+- **Layout:** no outline, shadow or rounding; two cards per row on phones.
+- **Size hints:** they name the in-tile width.
+- **Scope:** it supersedes the white frame for the grid only, and the product page and rights gate are unchanged.
+- **Source:** `662fdf4307b7`.
+- **Tests:** storefront 209 tests, 204 pass, 0 fail, 5 opt-in browser skips.
+- **Package:** `releases/storefront-662fdf4307b7/`, 77 files, the same file set as live; `SHA256SUMS` sha256 `19a004c2…431e`. Its leak scan found no preview code, local host, private reference, key or path.
+
+**Private local preview** (outside the repository and the build): the real components and CSS, through a development-only config wrapper kept in private storage.
+- **Le Smart L Shoulder bag, Mocha, `10352HIU002`:**
+  - the official file comes from a link on the official collection page, with no URL construction;
+  - it is an 800 × 800 RGBA PNG;
+  - on the grey tile only 4 pixels outside the bag differ, by at most 1 level, so it is clean;
+  - Codex inspected it.
+- **Le Roseau L Tote bag, Vegetal, `10327HJD514`:** not obtained here. The Saudi host returned 403 to every request, robots included. It was not retried or worked around, and no substitute image is shown.
+- **Status:** these are private evaluation assets only, not publication rights.
+
+**Note:** Astro 7 detaches `astro dev` when it detects an agent. Codex runs the preview in a bounded foreground with `--ignore-lock`. A stray background dev server from Claude's check was stopped.
+
 ## Rejected `m126200-0006` photograph withdrawn (owner action-time approval); official packshot preview confirmed, 2026-11-01
 
 **Applied (observed live), on the owner's explicit approval** «أعتمد إخفاء الصورة المرفوضة», for this product only. The prepared one-row factual-lane action ran once:

@@ -1,4 +1,13 @@
-## Current handoff: official packshot path, 2026-11-01
+## Current handoff: decision 0023 grid tile ready to deploy, 2026-11-01
+
+1. **Codex:** inspect the private local preview (actual components). Then deploy `releases/storefront-662fdf4307b7/` per its `DEPLOY.md`. It is a CSS and markup Worker with no data step.
+2. **Codex:** the public phone and desktop listing check.
+3. **Open:**
+   - official image publication, which needs written brand permission;
+   - the Le Roseau `10327HJD514` file, which the Saudi host refused with 403;
+   - the rejected `m126200-0006` photograph stays withdrawn.
+
+## Previous handoff: official packshot path, 2026-11-01
 
 1. **Done:** the owner-rejected `m126200-0006` photograph is withdrawn, with the owner's approval and a readback (`STATE.md`). It is reversible with the matching rollback file.
 2. **Codex:** inspect the private Longchamp `10166HSR001` before/after and its WebP previews. Their paths are given in the session, not in Git.
