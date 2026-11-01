@@ -16,6 +16,8 @@ It also adds the Arabic and English credit text for "background removed, placed 
 
 ## 1. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): all 77 files matched the manifest; the runtime and all three bindings, secrets included, are identical before and after; the six prepublish checks returned 200.
+
 **Files:**
 - 77 compiled files under `dist-cloudflare/`, the same file set as `storefront-cbbc1e4d5dfc` apart from hashed chunk names.
 - `SHA256SUMS` has one line per file. Its own sha256 is `06cd1de5fe879f0c4dc8bc1d1022db5b192b6882b62b5dbf92025b08ef60ab19`.
@@ -39,6 +41,8 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - `noindex, nofollow` and robots `Disallow: /` are kept.
 
 ## 2. Metadata publish (Claude, after the step 1 receipt)
+
+**Done on 2026-11-01** (applied, observed live): a fresh read matched the staged approvals; each candidate was published once; both public rows equal their approvals, and the live pages show the white square and the partial-view notice.
 
 Recorded and uploaded on 2026-11-01 (applied, observed live). Not yet published.
 

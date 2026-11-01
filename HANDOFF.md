@@ -1,4 +1,18 @@
-## Current handoff: Worker `storefront-3a5c0edef3b9` ready to deploy; then Claude publishes the staged images, 2026-11-01
+## Current handoff: decision 0022 live; Codex visitor check next, 2026-11-01
+
+- **Live:**
+  - Worker `storefront-3a5c0edef3b9`, deployed;
+  - the `m126200-0006` white square and the `m126234-0015` partial-view notice, both published.
+- **Codex:** the phone check in `releases/storefront-3a5c0edef3b9/DEPLOY.md` step 3, in Arabic and English.
+- **Rollback:** data first, then the Worker.
+- **Open:**
+  - the `m126234-0015` white square, which is not accepted;
+  - the multi-colour example;
+  - photo coverage;
+  - a physical iPhone;
+  - the n8n delivery check workflow, which needs one credential in the Jwleria project holding the project's existing public anon key.
+
+## Previous handoff: Worker `storefront-3a5c0edef3b9` ready to deploy; then Claude publishes the staged images, 2026-11-01
 
 1. **Codex:** deploy `releases/storefront-3a5c0edef3b9/` exactly as its `DEPLOY.md` step 1 says.
    - Check `SHA256SUMS`, record the active version privately, then run the pinned `wrangler deploy` with `--no-bundle --keep-vars --no-autoconfig`.

@@ -1,3 +1,19 @@
+## Decision 0022 published: `m126200-0006` on the white square and the `m126234-0015` partial-view notice are live; visitor check pending, 2026-11-01
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-3a5c0edef3b9/` (source `3a5c0edef3b9`) | Codex | All 77 files matched `SHA256SUMS` (`06cd1de5…ab19`). The runtime and all 3 binding entries match before and after, and `--keep-vars` kept the secrets. The 6 prepublish HTTP checks returned 200, with the old images still shown. The rollback version is recorded privately. | deployed |
+| Fresh read before the publish | Claude | Both staged approvals matched what was recorded: the `m126200-0006` manifest is `622ac0ad…`, and `m126234-0015` is the same photo with `source_clipped`. Both on the current revision, with a live grant, an enabled source and the lane open. | observed live |
+| Publish | Claude | `jwl_publish_candidate`, once per candidate, in one atomic statement, with the stored public facts and search text unchanged. Both public rows now equal their approvals. Totals are unchanged: 4,097 active rows, 2 with photos. | applied |
+| HTTPS read | Claude | **Arabic and English `m126200-0006`:** the white square frame and the 1414 square, `sizes` ending `calc(30vh)`, the white-square credit text and no old 1588 file. **Arabic `m126234-0015`:** the partial-view notice. This is an HTML check, not a phone check. | observed live |
+
+**Data rollback:**
+- the previous manifests are `7d7d0add…` for `m126200-0006` (the cutout and the photograph) and `31441209…` for `m126234-0015`;
+- their files are still in storage, and their evidence is unchanged;
+- restore the data before the Worker (`DEPLOY.md`).
+
+**Next:** Codex's visitor check at 390×844 (`DEPLOY.md` step 3).
+
 ## Decision 0022: the white square recorded and uploaded; Worker package `storefront-3a5c0edef3b9` ready for Codex; publication waits for it, 2026-11-01
 
 **Applied (observed live):** migration `20261101181522` `jwleria_white_square_media`.
