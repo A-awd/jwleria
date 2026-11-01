@@ -1,4 +1,24 @@
-## Current handoff: coherent mobile product page live (decision 0018), 2026-11-01
+## Current handoff: touch-safe gallery and fast choices (decision 0019), 2026-11-01
+
+Prepared and pushed:
+- source `7f837315b4ec`;
+- package `releases/storefront-7f837315b4ec/`, with a `SHA256SUMS` sha256 of `604520ecb031e6baea60cf17f9ff7eeb0c5329e668018c9ca1a976cc7fee0fd1`.
+
+There is no database step.
+
+Next, in order:
+1. **Codex:** deploy as the package's `DEPLOY.md` says, recording the active version first. Then smoke-check, run the public acceptance and send the receipt for the final records.
+2. **Owner:** a physical iPhone swipe in Safari, starting on the photograph. Nothing here proves it.
+3. **Then:** photo coverage, unchanged from the batch-1 handoff below.
+
+In flight:
+- A local preview runs on `127.0.0.1:4391` in this Claude session, for Codex.
+- It is a Node build of `7f837315b4ec`, reading the live catalogue read-only.
+- It stops with the session and changes nothing.
+
+Rollback: the package's `DEPLOY.md`. Roll the Worker back to the recorded version; `13acacfb79d6` works with the current database.
+
+## Previous handoff: coherent mobile product page live (decision 0018), 2026-11-01
 
 Nothing is running: the local preview server is stopped. The details are in the top entry of `STATE.md`.
 - **Deploy.** Codex deployed `releases/storefront-13acacfb79d6/` (source `13acacfb79d6`). The new version is active at 100%, with the runtime and bindings unchanged.

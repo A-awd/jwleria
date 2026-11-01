@@ -1,3 +1,71 @@
+## Touch-safe gallery, honest photo states and fast choices (decision 0019): prepared and preview-reviewed; Worker not yet deployed, 2026-11-01
+
+**Owner finding (a failed usability acceptance):**
+- sizes and colours were heavy to navigate;
+- the owner asked how the image follows the colour;
+- the image "hangs the site", because vertical scrolling worked only from the page edges.
+
+The earlier visual pass was not a touch or latency check.
+
+**Root cause** (from the code; reproduced live by Codex at 390×844 with native scrolling):
+- `.pdp__gallery { overflow-x: auto }` makes `overflow-y` compute to `auto`. Even one photograph (350 × 437.5 px) therefore sat in a nested two-axis scroller with `scroll-snap-type: x mandatory`.
+- From the image centre, a half-page scroll left the document at 0 and `gallery.scrollTop` at 0. From the page edge, the document moved (496 → 0).
+- The open option list was a second nested scroller, capped at `min(26rem, 62svh)`.
+
+**Prepared** (source `7f837315b4ec`, pushed; package `releases/storefront-7f837315b4ec/`, 77 files, `SHA256SUMS` sha256 `604520ec…0fd1`):
+- **Scrolling:**
+  - One photograph is a plain figure; several scroll horizontally only (`overflow-y: hidden`, `overscroll-behavior-x: contain`).
+  - The brand strip gets `overflow-y: hidden`, and option lists flow with the page.
+  - No touch, wheel or scroll listener is added.
+- **Photographs:**
+  - A variant shows a photograph as itself only when it is its own approved photograph.
+  - Without one, the gallery says so first and names the selected reference. The representative photograph follows as a small thumbnail, captioned with its own reference, size and dial or colour, with its credit.
+  - On a choice, the gallery says at once what is coming.
+- **Choices:**
+  - A choice shows at once.
+  - Only the variant's block is fetched, from `/{locale}/products/{slug}/variant/`. That route is an Astro partial, shared by the public cache under the same rules, with `noindex`.
+  - Blocks are cached (up to 24) and prefetched on `pointerdown` or focus. When the page is idle, at most four values of the first control are prefetched, and none in Save-Data mode.
+  - The latest choice wins.
+  - An unchanged decoded photograph is kept, and the used control keeps its place.
+  - Each shown choice is one history entry, and Back and Forward show the variant of the restored address.
+- No database, mapping, grant or asset change.
+
+**Measured (lab, labelled):**
+
+| Path of one choice | Before (live `13acacfb79d6`) | After |
+|---|---|---|
+| Fetched | the whole page: 31,378 B, or 7,469 B on the wire | the product block: 19,641 B, or 3,691 B gzip |
+| Local server, uncached, same database (3 requests) | full page 0.60–1.02 s | fragment 0.29–0.39 s |
+| Revisit, Back or Forward | another request | none |
+| Unchanged representative photograph | a new element, decoded again | moved over |
+| Representative at 390 px, 3× | 960w, 145,594 B | 640w, 78,538 B (320w at 2×, 27,378 B) |
+| Feedback during the request | none; the previous photograph stays | immediate |
+
+**Tests at `7f837315b4ec`** (prepared):
+- Storefront: 199 tests, 194 pass, 0 fail, 5 opt-in skips. Playwright is not installed, so those were not run.
+- Type check: only the 7 existing Deno-function errors. Intake is unchanged.
+- New, `tests/product-interaction.test.mjs` (12 tests):
+  - the gallery and list scroll rules, and the listeners;
+  - the latest choice, shared requests, the failure fallback, the bounded cache and the decode race;
+  - Back and Forward over a simulated history;
+  - the photo states and the image renditions.
+- New: a fragment case in `tests/public-cache.test.mjs`.
+
+**Preview review** (reviewed: Codex, in-app browser at 390×844, on the local preview against live data; native scrolling, not iPhone touch):
+- **Single gallery, `m126234-0015`:** `overflow` visible, no snap. A scroll from the image centre moved the document 0 → 422, where the live page stayed at 0.
+- **Two-photograph `m126200-0006`:** from the image centre, the document moved 0 → 422 and the gallery stayed at 0.
+- **A choice.** Mint green from `m126234-0015` opened `m126234-0051` at 36 mm:
+  - the list closed;
+  - the gallery said that no approved photograph exists;
+  - it showed a 104×130 thumbnail captioned 36 mm, black.
+- **History:** Back restored `m126234-0015` with its own photograph, and Forward restored `m126234-0051`. URL, title and reference were correct.
+
+**Not yet:** the Worker upload and the public acceptance (Codex).
+
+**Owner-observed only:** a physical iPhone swipe in Safari.
+
+**Still open:** photo coverage. 2 of 4,097 active products have a photograph.
+
 ## Coherent mobile product page (decision 0018): deployed and visitor-verified, 2026-11-01
 
 | Step | Who | Result | Label |
