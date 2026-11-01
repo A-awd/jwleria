@@ -57,7 +57,7 @@ export const as=async(db,role,fn)=>{await db.exec('set role '+role);try{return a
 export async function modelsDatabase(){
   const db=new PGlite();
   await db.exec("create role anon; create role authenticated; create role service_role bypassrls; set timezone='UTC';");
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111013_jwleria_product_models.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!=='20261028111013_jwleria_product_models.sql'&&f!=='20261101133722_jwleria_size_families.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.exec(await readFile(proposed,'utf8'));
   for(const [id,s] of Object.entries(sources))await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values($1,$2,'permitted-page','synthetic review',true,false,true)",[id,s.origin]);
   const records=fixtures.map(record);

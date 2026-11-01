@@ -1,3 +1,13 @@
+## Current handoff: size grouping, step 2 of 4, 2026-11-01
+
+In flight:
+1. **Done:** migration `20261101133722`, applied and read back by Claude.
+2. **Codex:** deploy `releases/storefront-88e2e3cc0de9/` as its `DEPLOY.md` says, then send the receipt.
+3. **Claude, only after that receipt:** run `select jwl_internal.apply_product_variants();` once, then read back models and variants by brand before and after, the formed families, the ungrouped reasons, unchanged catalogue and media hashes, and example URLs.
+4. **Codex:** public phone-width acceptance in Arabic and English.
+
+Nothing is running now. Rollback: `DEPLOY.md`.
+
 ## Writer scope: size grouping at the model layer, 2026-11-01
 
 This local interactive Claude Code session stays the sole writer of this branch, starting from `413cc10264dd`. The owner directed that sizes of the same genuine design become variants of one model, across all brands.

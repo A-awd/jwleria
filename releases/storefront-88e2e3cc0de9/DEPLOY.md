@@ -11,6 +11,11 @@ Four steps, two actors, in this order. Each step can be read back before the nex
 
 ## 1. Migration `jwleria_size_families` (Claude, before the Worker)
 
+**Done on 2026-11-01:**
+- Applied once by Claude as version `20261101133722`, after a fresh baseline and a literal byte-fidelity check. The stored statement's sha256 equals the apply body.
+- Read back at 13:37:34Z: the mapping hash, catalogue hash, approvals and media are unchanged, and nothing was regrouped.
+- The file now lives at `apps/storefront/supabase/migrations/20261101133722_jwleria_size_families.sql`, and the proposal was removed. The rollback stays in `proposed/`.
+
 **Files:**
 - `apps/storefront/supabase/proposed/jwleria_size_families.sql`, sha256 `f33273e917d0b76211b255fbe406677b5339675ab0e499ecfac312427138c91a`.
 - Apply body: lines 12–259 of that file, between its outer `begin;`/`commit;` and without the blank lines next to them. 22,538 bytes, sha256 `8cb5d81dab8234a319881ff451c6be20ba3905b80940ee15dffce6a1aef568dd`.

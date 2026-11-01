@@ -7,9 +7,10 @@ import {postgrest,postgrestFetch} from './models-postgrest.mjs';
 import {readProductModel} from '../src/server/supabase-catalog.mjs';
 import {sizeTable} from '../src/components/variant-selection.mjs';
 
-// Synthetic rows only, shaped like the captured data; the proposed size layer runs in memory and is applied nowhere.
+// Synthetic rows only, shaped like the captured data; the size layer (applied as 20261101133722) runs in memory here.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const proposed=new URL('../supabase/proposed/jwleria_size_families.sql',import.meta.url);
+const SIZE='20261101133722_jwleria_size_families.sql';
+const proposed=new URL(SIZE,migrations);
 const rollback=new URL('../supabase/proposed/jwleria_size_families.rollback.sql',import.meta.url);
 const slugify=v=>String(v).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 const sources={
@@ -86,7 +87,7 @@ const slugOf=ref=>{const f=[...fixtures,...many].find(x=>x.ref===ref);return slu
 async function database(rows=fixtures,{sized=true}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==SIZE).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   for(const [id,s] of Object.entries(sources))await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values($1,$2,'permitted-page','synthetic review',true,false,true)",[id,s.origin]);
   for(let i=0;i<rows.length;i+=50){
     const batch=rows.slice(i,i+50),records=batch.map(record);

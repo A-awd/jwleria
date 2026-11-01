@@ -1,3 +1,37 @@
+## Sizes as variants of one model (decision 0017): migration applied, Worker prepared, mapping not yet rebuilt, 2026-11-01
+
+**Applied (observed live, 13:37:34Z):**
+- Migration **`20261101133722`** `jwleria_size_families`, applied once after a fresh baseline and a literal fidelity check. Its stored statement equals the reviewed body: 22,538 bytes, sha256 `8cb5d81d…68dd`.
+- Read-back:
+  - the base derivation is kept, renamed `derive_base_variants`; the size layer and `jwl_product_model_v2` exist;
+  - nothing was regrouped: 4,097 mapped rows in 2,886 models, and the mapping and catalogue hashes are unchanged;
+  - 2 grants, 11 evidence rows and 2 approvals, 2 photographed products and 11 objects, all unchanged;
+  - security advisors show only the existing INFO findings.
+- **One visible change:** a model card is now its photographed variant. The `126234` card shows `m126234-0015`. `m126200-0006` is a single (`single:ambiguous-options`) and stays its own card.
+- The v2 read answers for the live slugs checked.
+
+**Prepared (not deployed):** Worker package `releases/storefront-88e2e3cc0de9/`. It has 73 files, and its `SHA256SUMS` sha256 is `fe302580…2705`. Its `DEPLOY.md` gives the order and rollback. Codex deploys it.
+
+**Read-only dry run on live data**, before any write, with the same rules:
+
+| Source | Families | Variants grouped | Base models merged | Held back as ambiguous |
+|---|---|---|---|---|
+| Rolex | 29 | 521 | 65 | 1 |
+| Van Cleef & Arpels | 48 | 150 | 150 | 0 |
+| Cartier | 30 | 75 | 75 | 0 |
+| LOEWE | 14 | 85 | 34 | 9 |
+| Longchamp | 9 | 63 | 18 | 6 |
+| Prada | 66 | 161 | 161 | 3 |
+
+No family was lost to a name mismatch, and the largest family has 56 variants. The real counts come from the rebuild.
+
+**Tests at `88e2e3cc0de9`:**
+- Storefront: 176 tests, 171 pass, 0 fail, 5 opt-in skips.
+- Intake: 126 of 126.
+- Type check: only the 7 existing Deno-function errors.
+- After moving the migration file, the 10 SQL test files that load migrations: 67 tests, 66 pass, 1 opt-in skip.
+- The local rendered-HTML check passed in Arabic and English.
+
 ## Real photograph batch 1 live: m126200-0006 as a cutout and as the photograph, 2026-11-01
 
 **Public now:** 2 of 4,097 active products have a photograph.

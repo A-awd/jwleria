@@ -1,14 +1,3 @@
--- PROPOSED, not applied: size families (decision 0017). Additive and reversible:
--- 1. The reviewed base derivation is kept unchanged as jwl_internal.derive_base_variants(). A new
---    derive_product_variants() merges whole base models into one model only where the source itself states each size
---    and the design identity matches exactly; everything else keeps its base mapping, with the reason recorded.
--- 2. A listing card shows the model's photographed variant when one exists, so a card image is always the exact
---    photograph of the variant it links to.
--- 3. public.jwl_product_model_v2(slug): the addressed variant in full, every visible variant of its model as a light
---    link (never cut to 60), a compact per-size table and the model's representative photograph.
--- Nothing is regrouped until jwl_internal.apply_product_variants() runs. Rollback: jwleria_size_families.rollback.sql.
-begin;
-
 alter function jwl_internal.derive_product_variants() rename to derive_base_variants;
 
 insert into jwl_internal.term_translations(kind,term_en,term_ar) values
@@ -257,5 +246,3 @@ language sql stable security invoker set search_path='' as $$
 $$;
 revoke all on function public.jwl_product_model_v2(text) from public;
 grant execute on function public.jwl_product_model_v2(text) to anon,authenticated,service_role;
-
-commit;
