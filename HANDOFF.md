@@ -1,4 +1,18 @@
-## Current handoff: deploy `storefront-1dd1618a5ef1` when ready; the preview is closed, 2026-11-01
+## Current handoff: decision 0023 live (`storefront-1dd1618a5ef1`), 2026-11-01
+
+Nothing is running and nothing is pending for this change.
+
+**Live:** the product grid's pale grey tiles, white listing surface and phone spacing, deployed and visitor-verified (`STATE.md`).
+
+**Rollback:** the Worker version that Codex recorded privately, or `releases/storefront-3a5c0edef3b9/`; there is no data step.
+
+**Open:**
+- official image publication, which needs the brands' written permission;
+- photo coverage;
+- the owner's final aesthetic sign-off;
+- a physical iPhone and a 3× pixel ratio.
+
+## Previous handoff: deploy `storefront-1dd1618a5ef1` when ready; the preview is closed, 2026-11-01
 
 - **Codex:**
   - deploy `releases/storefront-1dd1618a5ef1/` per its `DEPLOY.md` (`SHA256SUMS` sha256 `9e98d60f…467d`);

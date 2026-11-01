@@ -1,3 +1,31 @@
+## Decision 0023 deployed and visitor-verified: `storefront-1dd1618a5ef1` is live, 2026-11-01
+
+**Correction:** the entry below said "no deploy receipt has been recorded yet". Claude missed Codex's receipt while handling queued messages. The package is deployed, as follows.
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-1dd1618a5ef1/` (source `1dd1618a5ef1`) | Codex | All 77 compiled files individually matched `SHA256SUMS` (`9e98d60f…467d`). Pinned Wrangler 4.147.0 deployed it with `--no-bundle --keep-vars --no-autoconfig`, exit 0. Before and after, the provider runtime and all 3 binding metadata entries are identical; `--keep-vars` kept the secrets, whose values were not read. The new active version and the rollback version are recorded privately. | deployed |
+| Public check, Arabic, 390×844, `/ar/catalog/?q=m126234-0015` | Codex | White body (`#fff`); the grey card frame (`#f0f0f0`) is 174 × 174 with the image complete; no horizontal overflow. A search for `m126200-0006` succeeded: facts only with 0 photos, and the rejected photograph is not restored. | visitor-verified |
+| Public check, English, 1280×900, `/en/catalog/?q=m126234-0015` | Codex | White body; a 267.1875 px square grey card with the image complete; no overflow. The existing opaque photograph shows honestly as an opaque rectangle inside the grey frame: not remasked, not blended. | visitor-verified |
+| Public `/ar/__private-preview/` | Codex | The site's real "Page not found": the private route is not published. | visitor-verified |
+
+**Private local preview** (Codex, reviewed earlier):
+- **Checked:**
+  - the two exact official bag packshots, Arabic and English, at 390×844;
+  - 174 px tiles, 18 px gap, 12 px margins, complete images at about two thirds of the frame;
+  - a white product region, the locale switch and the truthful private notice;
+  - no overflow at 1280 px on desktop, and no relevant console errors.
+- **Not verified:** private product-page navigation; a physical iPhone and a 3× pixel ratio were not tested.
+- **Private:** the private images are not public.
+
+**Rollback:** `npx wrangler@4.147.0 rollback <the version Codex recorded privately>`, or redeploy `releases/storefront-3a5c0edef3b9/`. There is no data step.
+
+**Unchanged:**
+- no database write, grant or image publication;
+- no permission to publish official images;
+- the licensing and photo-coverage barrier;
+- this is not a claim that the project is complete.
+
 ## Private preview closed; package `storefront-1dd1618a5ef1` prepared for Codex's deploy, 2026-11-01
 
 **Cleanup:**
@@ -11,7 +39,7 @@
 **Route proof** (observed by Codex in its in-app browser on the public site): `/ar/__private-preview/` returns the real "Page not found", so the private route is not published. An earlier refused Python request is not used as that proof.
 
 **Status:**
-- `storefront-1dd1618a5ef1` is prepared and approved by Codex for deployment of the scoped CSS and component change. No deploy receipt has been recorded yet.
+- `storefront-1dd1618a5ef1` is prepared and approved by Codex for deployment of the scoped CSS and component change. *(Corrected above: it is deployed and visitor-verified.)*
 - No database write, grant or image publication.
 - The rejected `m126200-0006` photograph stays withdrawn.
 - Official image publication still needs the brand's written permission. The project is not complete.

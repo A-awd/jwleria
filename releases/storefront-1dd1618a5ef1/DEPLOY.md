@@ -38,3 +38,17 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - after this CSS change, the focused layout tests: 5 pass, 0 fail, 2 opt-in browser skips.
 
 This package supersedes `storefront-662fdf4307b7`, which was never deployed.
+
+## Receipts (2026-11-01)
+
+- **Step 1, done** (deployed, producer-reported by Codex):
+  - all 77 files matched `SHA256SUMS`;
+  - pinned Wrangler 4.147.0 deployed with `--no-bundle --keep-vars --no-autoconfig`, exit 0;
+  - the runtime and all 3 binding metadata entries are identical before and after, and the secrets were kept;
+  - the active and rollback version IDs are recorded privately.
+- **Step 2, done** (visitor-verified by Codex):
+  - **Arabic, 390×844:** white body; a 174 × 174 grey `#f0f0f0` frame with the image complete; no overflow.
+  - **`m126200-0006`:** facts only, and the rejected photograph is not restored.
+  - **English, 1280×900:** white body; a 267.1875 px grey square with the image complete; the opaque photograph is not blended.
+  - **`/ar/__private-preview/`:** "Page not found".
+- **Not tested:** a physical iPhone and a 3× pixel ratio.
