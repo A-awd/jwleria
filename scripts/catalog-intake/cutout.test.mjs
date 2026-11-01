@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {installedImageEngine,prepareResponsiveMedia} from './responsive-media.mjs';
-import {validateCutoutMaster,iccDescription,frameBackground,cutoutReviewChecks,cutoutLimits} from './cutout.mjs';
+import {validateCutoutMaster,iccDescription,frameBackground,cutoutReviewChecks,cutoutLimits,composeCutoutMaster} from './cutout.mjs';
 import {cutoutBasisProblem,creditChanges,requireCutoutReview} from './media-pipeline.mjs';
 
 // Synthetic fixtures only: a drawn ellipse on a drawn backdrop, made in memory. No product photograph is read, masked or
@@ -171,6 +171,8 @@ test('grant basis and credit text',()=>{
   assert.equal(cutoutBasisProblem({kind:'owner_original'}),null);
   for(const code of ['CC0-1.0','CC-BY-2.0','CC-BY-3.0','CC-BY-4.0'])assert.equal(cutoutBasisProblem({kind:'open_license',license_code:code}),null,code);
   for(const code of ['CC-BY-SA-2.0','CC-BY-SA-4.0'])assert.equal(cutoutBasisProblem({kind:'open_license',license_code:code}),'share_alike_adaptation_needs_licence_review',code);
+  assert.equal(cutoutBasisProblem({kind:'open_license',license_code:'CC-BY-SA-4.0',share_alike_review:'TEST-ONLY recorded ShareAlike review'}),null,'with its recorded review');
+  assert.equal(cutoutBasisProblem({kind:'open_license',license_code:'CC-BY-SA-4.0',share_alike_review:' '}),'share_alike_adaptation_needs_licence_review','a blank review is none');
   for(const code of ['CC-BY-NC-4.0','CC-BY-ND-4.0',undefined])assert.equal(cutoutBasisProblem({kind:'open_license',license_code:code}),'license_not_allowed',String(code));
   assert.equal(cutoutBasisProblem({kind:'written_permission',resize:true,webp_encode:true}),'written_permission_does_not_cover_background_removal');
   assert.equal(cutoutBasisProblem({kind:'written_permission',background_removal:true}),null);
@@ -183,4 +185,28 @@ test('the metric background is the storefront\'s product frame colour',async()=>
   const css=await readFile(new URL('../../apps/storefront/src/styles/global.css',import.meta.url),'utf8');
   assert.match(css,/\.media \{[^}]*background: var\(--sand\)/);
   assert.equal(css.match(/--sand: (#[0-9a-f]{6})/)[1],frameBackground);
+});
+
+test('a composed master keeps the original\'s stored pixels and its exact ICC profile, and passes the check',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-cutout-compose-TEST-ONLY-'));
+  try{
+    // A synthetic original with an embedded profile, and a synthetic mask (an ellipse) as the segmentation would give.
+    const original=await sharp(sceneRaw(),{raw:{width:W,height:H,channels:3}}).withIccProfile('srgb').jpeg({quality:92}).toBuffer();
+    const mask=Buffer.alloc(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)mask[y*W+x]=ellipseAlpha(x,y);
+    const png=await composeCutoutMaster({original,mask,width:W,height:H},sharp);
+    const [om,cm]=await Promise.all([sharp(original).metadata(),sharp(png).metadata()]);
+    assert.deepEqual([cm.format,cm.channels,cm.width,cm.height],['png',4,W,H]);
+    assert.ok(om.icc&&cm.icc&&Buffer.compare(om.icc,cm.icc)===0,'the profile bytes are carried unchanged');
+    const {data:px}=await sharp(png).raw().toBuffer({resolveWithObject:true});
+    let hidden=0;for(let p=0;p<W*H;p++)if(px[p*4+3]===0&&(px[p*4]||px[p*4+1]||px[p*4+2]))hidden++;
+    assert.equal(hidden,0,'a fully transparent pixel keeps no colour of the removed background');
+    const originalPath=join(root,'TEST-ONLY-original.jpg'),masterPath=join(root,'TEST-ONLY-master.png');
+    await writeFile(originalPath,original);await writeFile(masterPath,png);
+    const r=await validateCutoutMaster({original:{path:originalPath,sha256:sha(original)},cutout:{path:masterPath,sha256:sha(png),producer:'TEST-ONLY synthetic mask'}},sharp);
+    assert.equal(r.passed,true,r.failures.join());assert.deepEqual(r.review_flags,[]);
+    assert.deepEqual([r.product_pixels.opaque_identical_to_original,r.product_pixels.opaque_max_channel_delta,r.original.icc_sha256],[true,0,r.cutout.icc_sha256]);
+    await assert.rejects(composeCutoutMaster({original,mask:mask.subarray(1),width:W,height:H},sharp),/differ in geometry/);
+    const rotated=await sharp(sceneRaw(),{raw:{width:W,height:H,channels:3}}).jpeg().withMetadata({orientation:6}).toBuffer();
+    await assert.rejects(composeCutoutMaster({original:rotated,mask,width:W,height:H},sharp),/EXIF orientation/);
+  }finally{await rm(root,{recursive:true,force:true});}
 });

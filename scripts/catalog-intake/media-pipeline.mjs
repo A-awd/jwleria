@@ -89,6 +89,7 @@ export function licensedFile(grant,file_url){
 // amended first and a reviewed migration: the proposed SQL holds the same list in jwl_internal.open_license_decisions().
 export const openLicenseDecisions=Object.freeze({
   'decisions/0013-open-licence-exact-product-photos.md':Object.freeze({references:Object.freeze(['m126234-0015'])}),
+  'decisions/0016-verified-open-licence-photo-batches.md':Object.freeze({references:Object.freeze(['m126200-0006'])}),
 });
 const ownerDecision=value=>typeof value==='string'&&Object.hasOwn(openLicenseDecisions,value);
 function openLicenseGaps(grant){
@@ -132,7 +133,9 @@ export function cutoutBasisProblem(grant){
   if(grant?.kind==='written_permission')return grant.background_removal===true?null:'written_permission_does_not_cover_background_removal';
   if(grant?.kind==='open_license'){
     if(grant.license_code==='CC0-1.0'||/^CC-BY-[234]\.0$/.test(grant.license_code??''))return null;
-    return /^CC-BY-SA-/.test(grant.license_code??'')?'share_alike_adaptation_needs_licence_review':'license_not_allowed';
+    // A CC BY-SA cutout is an adaptation, offered under the same licence: it needs the grant's recorded ShareAlike review.
+    if(/^CC-BY-SA-[234]\.0$/.test(grant.license_code??''))return record(grant.share_alike_review)?null:'share_alike_adaptation_needs_licence_review';
+    return 'license_not_allowed';
   }
   return 'unsupported_grant_kind';
 }

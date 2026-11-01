@@ -80,10 +80,11 @@ test('the database allowlist and visible labels are exactly the pipeline allowli
   }finally{await db.close();}
 });
 
-test('the only citable decision is 0013, for m126234-0015 alone, exactly as the pipeline pins it',async()=>{
+test('as the open-licence migration applied it, the only citable decision is 0013, for m126234-0015 alone, as the pipeline pins it',async()=>{
   const db=await database({scope:'real'});
   try{
-    assert.deepEqual((await service(db,'select jwl_internal.open_license_decisions() d')).rows[0].d,JSON.parse(JSON.stringify(openLicenseDecisions)),'the SQL and JS lists are the same');
+    // Later decisions (0016) are pinned by a later migration; see verified-photo-batch-sql.test.mjs.
+    assert.deepEqual((await service(db,'select jwl_internal.open_license_decisions() d')).rows[0].d,{[DECISION]:JSON.parse(JSON.stringify(openLicenseDecisions[DECISION]))},'the SQL and JS lists are the same');
     for(const role of ['anon','authenticated'])await assert.rejects(as(db,role,()=>db.query('select jwl_internal.open_license_decisions()')),/permission denied/);
     const exact=row('test','m126234-0015'),sibling=row('test','m126234-0016'),other=row('test','REF-1');await ingest(db,[exact,sibling,other]);
     await assert.rejects(insertGrant(db,openGrant(exact,{grant_reference:'grant-0011',owner_decision_reference:'decisions/0011-per-origin-queues-and-exact-media-evidence.md'})),/check constraint/,'0011 rejects open licences');

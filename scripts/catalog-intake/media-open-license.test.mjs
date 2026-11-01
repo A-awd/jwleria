@@ -88,10 +88,11 @@ test('an open-licence grant is permitted only with the owner decision, an allowl
   }
 });
 
-test('a grant may cite only the pinned decision 0013, and only for the reference it covers',async()=>{
-  assert.deepEqual(Object.keys(openLicenseDecisions),['decisions/0013-open-licence-exact-product-photos.md']);
+test('a grant may cite only the pinned decisions, and only for the references they cover',async()=>{
+  assert.deepEqual(Object.keys(openLicenseDecisions),['decisions/0013-open-licence-exact-product-photos.md','decisions/0016-verified-open-licence-photo-batches.md']);
   assert.deepEqual(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references,['m126234-0015']);
-  assert(Object.isFrozen(openLicenseDecisions)&&Object.isFrozen(openLicenseDecisions['decisions/0013-open-licence-exact-product-photos.md'].references));
+  assert.deepEqual(openLicenseDecisions['decisions/0016-verified-open-licence-photo-batches.md'].references,['m126200-0006']);
+  assert(Object.isFrozen(openLicenseDecisions)&&Object.values(openLicenseDecisions).every(d=>Object.isFrozen(d)&&Object.isFrozen(d.references)));
   // Each pinned decision is a file of this repository that names every reference it covers.
   for(const [path,{references}] of Object.entries(openLicenseDecisions)){
     const body=await readFile(new URL('../../'+path,import.meta.url),'utf8');

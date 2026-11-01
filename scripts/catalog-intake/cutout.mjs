@@ -1,5 +1,6 @@
 import {createHash} from 'node:crypto';
-import {readFile,lstat} from 'node:fs/promises';
+import {readFile,lstat,writeFile} from 'node:fs/promises';
+import {deflateSync,crc32} from 'node:zlib';
 import {createRequire} from 'node:module';
 import {isAbsolute} from 'node:path';
 import {pathToFileURL} from 'node:url';
@@ -21,8 +22,12 @@ export const cutoutTreatment=Object.freeze({kind:'background_removal',version:1}
  * counts when it covers at least 0.05% of the canvas.
  */
 export const cutoutLimits=Object.freeze({rgb_tolerance:2,min_transparent_fraction:0.02,min_opaque_fraction:0.02,visible_alpha:128,component_min_fraction:0.0005});
-/** What the independent visual comparison of a cutout must confirm; code never records these as passed. */
-export const cutoutReviewChecks=Object.freeze(['background_only_removed','whole_product_retained','edges_clean_on_frame_background','no_redrawn_or_generated_detail']);
+/**
+ * What the independent visual comparison of a cutout must confirm, judged on the master itself flattened on the frame
+ * colour and on magenta (`preview`), never on the original alone; code never records these as passed. A segmentation can
+ * keep a stand, a box or another object that touches the product: that is a retained object, not a product.
+ */
+export const cutoutReviewChecks=Object.freeze(['background_only_removed','no_background_or_other_object_retained','whole_product_retained','edges_clean_on_frame_background','no_redrawn_or_generated_detail']);
 
 /** The description of an ICC profile ('desc' tag, ICC v2 text or v4 multi-localised), or null. */
 export function iccDescription(icc){
@@ -148,10 +153,58 @@ export async function validateCutoutMaster({original,cutout},sharp){
   return record;
 }
 
+const pngChunk=(type,data)=>{
+  const name=Buffer.from(type,'latin1'),size=Buffer.alloc(4),crc=Buffer.alloc(4);
+  size.writeUInt32BE(data.length);crc.writeUInt32BE(crc32(Buffer.concat([name,data]))>>>0);
+  return Buffer.concat([size,name,data,crc]);
+};
+/** Adds the given ICC profile bytes, unchanged, as the PNG's iCCP chunk; refuses a PNG that already states a colour space. */
+export function withIccProfileChunk(png,icc){
+  const types=[];
+  for(let offset=8;offset<png.length;){const size=png.readUInt32BE(offset);types.push(png.toString('latin1',offset+4,offset+8));offset+=12+size;}
+  if(types[0]!=='IHDR'||types.some(type=>['iCCP','sRGB','gAMA','cHRM'].includes(type)))throw Error('Unexpected PNG colour chunks: '+types.join(','));
+  return Buffer.concat([png.subarray(0,33),pngChunk('iCCP',Buffer.concat([Buffer.from('ICC profile','latin1'),Buffer.from([0,0]),deflateSync(icc)])),png.subarray(33)]);
+}
+
+/**
+ * A cutout master made locally and without generation (decision 0016): the original's stored RGB values, unconverted, with
+ * a foreground mask (one byte of alpha per pixel, from foreground-mask.swift) as alpha, and the original's own ICC
+ * profile bytes. Nothing is retouched, cropped, resized or reconstructed; the master still has to pass
+ * validateCutoutMaster and the independent visual comparison.
+ */
+export async function composeCutoutMaster({original,mask,width,height},sharp){
+  const meta=await sharp(original,{failOn:'warning'}).metadata();
+  if((meta.orientation??1)!==1)throw Error('An original with an EXIF orientation needs its mask computed upright; refused');
+  const {data,info}=await sharp(original,{failOn:'warning',ignoreIcc:true}).removeAlpha().raw().toBuffer({resolveWithObject:true});
+  if(info.width!==width||info.height!==height||info.channels!==3||mask.length!==width*height)throw Error('The mask and the original differ in geometry');
+  // A fully transparent pixel keeps no colour, so a viewer that ignores alpha cannot show the removed background.
+  const rgba=Buffer.alloc(width*height*4);
+  for(let p=0;p<width*height;p++)if(mask[p]){rgba[p*4]=data[p*3];rgba[p*4+1]=data[p*3+1];rgba[p*4+2]=data[p*3+2];rgba[p*4+3]=mask[p];}
+  const png=await sharp(rgba,{raw:{width,height,channels:4}}).png({compressionLevel:9}).toBuffer();
+  return meta.icc?withIccProfileChunk(png,meta.icc):png;
+}
+
+/** Review images of a master: flattened on the storefront frame colour, and on magenta to expose anything retained. */
+export async function cutoutPreviews(master,prefix,sharp){
+  const out={sand:prefix+'.preview-sand.jpg',magenta:prefix+'.preview-magenta.jpg'};
+  await sharp(master).flatten({background:frameBackground}).jpeg({quality:90}).toFile(out.sand);
+  await sharp(master).flatten({background:'#ff00ff'}).jpeg({quality:90}).toFile(out.magenta);
+  return out;
+}
+
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
-  const [command,inputPath]=process.argv.slice(2);
-  if(command!=='validate'||!inputPath)throw Error('Usage: node cutout.mjs validate PRIVATE_CUTOUT_INPUT.json  ({original:{path,sha256},cutout:{path,sha256,producer}})');
+  const [command,...args]=process.argv.slice(2);
   // The same locked engine as responsive-media.mjs (which imports this module, so it is not imported back here).
   const sharp=createRequire(createRequire(new URL('../../apps/storefront/package.json',import.meta.url)).resolve('astro'))('sharp');
-  console.log(JSON.stringify(await validateCutoutMaster(JSON.parse(await readFile(inputPath,'utf8')),sharp),null,2));
+  if(command==='validate'&&args.length===1){
+    console.log(JSON.stringify(await validateCutoutMaster(JSON.parse(await readFile(args[0],'utf8')),sharp),null,2));
+  }else if(command==='compose'&&args.length===3){
+    // compose ORIGINAL MASK_PREFIX OUTPUT_PNG, where MASK_PREFIX.mask.raw and MASK_PREFIX.mask.json come from foreground-mask
+    const {width,height}=JSON.parse(await readFile(args[1]+'.mask.json','utf8'));
+    const png=await composeCutoutMaster({original:await readFile(args[0]),mask:await readFile(args[1]+'.mask.raw'),width,height},sharp);
+    await writeFile(args[2],png,{flag:'wx',mode:0o600});
+    console.log(JSON.stringify({path:args[2],sha256:createHash('sha256').update(png).digest('hex'),bytes:png.length}));
+  }else if(command==='preview'&&args.length===2){
+    console.log(JSON.stringify(await cutoutPreviews(await readFile(args[0]),args[1],sharp)));
+  }else throw Error('Usage: node cutout.mjs validate PRIVATE_CUTOUT_INPUT.json | compose ORIGINAL MASK_PREFIX OUTPUT_PNG | preview MASTER_PNG OUTPUT_PREFIX');
 }
