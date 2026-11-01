@@ -1,4 +1,4 @@
-## Compact phone product page (decision 0020): prepared; no valid multi-colour photo example exists; Worker not yet deployed, 2026-11-01
+## Compact phone product page (decision 0020): prepared and preview-reviewed; no valid multi-colour photo example exists; Worker not yet deployed, 2026-11-01
 
 **Owner finding:**
 - choosing a colour needed scrolling, and then the photograph was off the screen;
@@ -32,10 +32,20 @@ No eligible same-design colour pair was identified. That is the blocker, not the
 - **After a choice,** the photograph and the used control are brought on screen together when they fit.
 - **Unchanged:** native scrolling from the photograph, the latest-choice, cache and history safeguards, references, facts and credits.
 
-**Preview** (reviewed: Codex, in-app browser at 390×844, on the local preview):
-- The new order is better.
-- The first frame, 40svh (337.59 px), left the bracelet control at 803.83–853.83, below the screen.
-- The frame is now 30svh. That should save about 84 px, but Codex has not yet measured the revised preview.
+**Preview** (reviewed: Codex, in-app browser, on the local preview). This is a layout and interaction check, not a multi-colour photograph example:
+- **First version:** the new order is better, but the 40svh frame (337.59 px) left the bracelet control at 803.83–853.83, below the screen.
+- **Revised 30svh, at 390×844 from the top:** the frame is 253.19 px. The size, dial and bracelet controls end at 642.23, 705.83 and 769.42, all on screen with the photograph.
+- **At 390×667,** after a green → black choice restored the variant's own photograph:
+  - the photograph spans 180.22–380.31 (200.09 px, uncropped);
+  - the dial spans 551.73–601.73;
+  - all are visible at scrollY 51.
+- **One transient:**
+  - a first local choice took longer than the browser's 3 s wait and completed through the full-page fallback;
+  - the preview server logged one catalogue read hitting the adapter's existing 8 s timeout (`TimeoutError`, 18:07:33);
+  - the fragment failed, and the page navigated normally, as designed;
+  - the next choice completed in 1.4 s with the in-place swap.
+
+  No latency guarantee is claimed.
 
 **Tests** (prepared):
 - **At `f31a667bd382`:**
@@ -50,7 +60,7 @@ No eligible same-design colour pair was identified. That is the blocker, not the
   - 44 px targets;
   - the post-choice reveal of the photograph.
 
-**Not yet:** Codex's check of the revised preview, the Worker upload and the public acceptance.
+**Not yet:** the Worker upload and the public acceptance (Codex). The local preview server is stopped.
 
 **Owner-observed only:** a physical iPhone swipe.
 

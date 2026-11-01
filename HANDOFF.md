@@ -7,15 +7,11 @@ Prepared and pushed:
 There is no database step.
 
 Next, in order:
-1. **Codex:** measure the revised preview at `127.0.0.1:4391` (frame 30svh): at 390×844 the size, dial and bracelet controls should be on screen with the photograph.
-2. **Codex:** deploy as the package's `DEPLOY.md` says, recording the active version first. Then the public acceptance, and the receipt for the final records.
-3. **Owner:** a physical iPhone swipe in Safari.
-4. **Photographs.** A valid multi-colour example needs an eligible same-design colour pair. It can come from decision 0016's open-licence path, written permission, or the owner's photographs. No such pair exists today (`STATE.md`).
+1. **Codex:** deploy as the package's `DEPLOY.md` says, recording the active version first. Then the public acceptance, and the receipt for the final records. The revised preview passed at 390×844 and 390×667 (`STATE.md`).
+2. **Owner:** a physical iPhone swipe in Safari.
+3. **Photographs.** A valid multi-colour example needs an eligible same-design colour pair. It can come from decision 0016's open-licence path, written permission, or the owner's photographs. No such pair exists today (`STATE.md`).
 
-In flight:
-- A local preview runs on `127.0.0.1:4391` in this Claude session, for Codex.
-- It is a Node build of `061cff21583e`, reading the live catalogue read-only.
-- It stops with the session and changes nothing.
+Nothing is running: the local preview is stopped.
 
 Rollback: the package's `DEPLOY.md`. Roll the Worker back to the recorded version; `7f837315b4ec` works with the current database.
 
