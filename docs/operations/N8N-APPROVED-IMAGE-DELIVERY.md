@@ -1,10 +1,11 @@
 # n8n: approved image delivery check (decision 0022)
 
 **State (2026-11-01):**
-- Created in n8n as "Jwleria — Approved image delivery check (manual)".
+- **Ran once by hand, successfully** (observed live): four `already_present` replies with the expected sha256 and size.
+- That run is an idempotent delivery replay, not a new upload and not cloud image processing.
 - Inactive; a manual trigger only, no schedule.
-- It landed in the owner's personal project, because the connector cannot target a project.
-- **Not yet run:** its one credential is not attached, so it is not operational.
+- **Caller:** the project's existing public anon client key, sent as an Authorization header inside the private workflow, as the owner approved. It is not in this repository.
+- **Placement:** in the owner's personal project until the owner moves it into Jwleria.
 
 ## What it does
 
@@ -28,7 +29,7 @@ A real cloud check of the **delivery** route, kept separate from local image wor
 - make or alter an image;
 - run on a schedule.
 
-## The one missing dependency (operator, n8n UI)
+## Optional: move the header into a credential (operator, n8n UI)
 
 1. Move the workflow into the Jwleria project.
 2. In the Jwleria project, create one credential named `Jwleria public function caller (anon JWT)`.

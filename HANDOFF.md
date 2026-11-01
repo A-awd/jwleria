@@ -1,4 +1,25 @@
-## Current handoff: decision 0022 live; Codex visitor check next, 2026-11-01
+## Current handoff: decision 0022 live and visitor-verified for the checked scope, 2026-11-01
+
+Nothing is running.
+
+**Live:**
+- Worker `storefront-3a5c0edef3b9`;
+- the `m126200-0006` white square;
+- the `m126234-0015` partial-view notice.
+
+The visitor check passed at 390×844 in Arabic and English (`STATE.md`).
+
+**n8n:** the manual delivery check ran once: four `already_present` replies, as an idempotent replay. The owner moves the workflow into the Jwleria project. Optionally, its public anon header can later move into a credential once the UI allows one.
+
+**Open:**
+- the `m126234-0015` white square, which is not accepted;
+- the multi-colour example;
+- photo coverage;
+- a physical iPhone and a 3× pixel ratio.
+
+**Rollback:** data first, then the Worker (`releases/storefront-3a5c0edef3b9/DEPLOY.md`).
+
+## Previous handoff: decision 0022 live; Codex visitor check next, 2026-11-01
 
 - **Live:**
   - Worker `storefront-3a5c0edef3b9`, deployed;

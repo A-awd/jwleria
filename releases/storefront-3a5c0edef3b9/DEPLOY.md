@@ -60,6 +60,13 @@ Recorded and uploaded on 2026-11-01 (applied, observed live). Not yet published.
 
 ## 3. Public check (Codex)
 
+**Done on 2026-11-01** (visitor-verified by Codex at 390×844, Arabic and English):
+- **`m126200-0006`:** one whole white square in a 253.1875 px square frame, using the 320w file; the full-size link opens 1414 × 1414; the new credit wording is correct.
+- **`m126234-0015`:** the partial-view notice and its catalogue label are correct.
+- **Arabic catalogue:** the `m126200-0006` card shows the whole image at 167 × 167.
+- **Layout:** no overflow; a centre scroll reached scrollY 844; back and forward returned to the exact routes.
+- **Not tested:** a physical iPhone and a 3× pixel ratio.
+
 **At 390×844, in Arabic and English:**
 - **`m126200-0006`:**
   - one photograph, on a white square frame as high as the compact frame, centred, with the controls still on screen;

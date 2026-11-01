@@ -1,3 +1,25 @@
+## Decision 0022 visitor-verified for the checked scope; the n8n delivery replay ran once, 2026-11-01
+
+**Visitor check** (visitor-verified by Codex in its in-app browser at 390×844, Arabic and English):
+- **`m126200-0006`:**
+  - one whole white square image, in a 253.1875 px square frame, using the 320w file;
+  - the full-size link opens 1414 × 1414 in the same tab;
+  - the new credit wording is correct in both languages.
+- **`m126234-0015`:** the partial-view notice is correct in Arabic and English, and so is its Arabic catalogue label.
+- **Arabic catalogue:** the `m126200-0006` card shows the whole image at 167 × 167.
+- **Layout and navigation:**
+  - no horizontal overflow;
+  - a native scroll from the image centre moved the page to scrollY 844, so it is not trapped;
+  - back and forward returned to the exact catalogue and product routes.
+- **Not tested:** a physical iPhone and a 3× pixel ratio.
+
+**n8n delivery replay** (observed live, run by Claude): "Jwleria — Approved image delivery check (manual)" ran once by hand.
+- **Result:** four replies from `jwl-media-upload`, each 200 `already_present`, with the expected sha256 and size. The gateway verified the JWT.
+- **What it is:** an idempotent delivery replay of the four approved files through the approval-bound route. It is not a new upload and not cloud image processing; normalization and the curator's approval stayed local and private.
+- **Caller:** the project's existing public anon client key, as an Authorization header inside the private n8n workflow (owner-approved). It is not in Git, and it adds no privilege: JWT verification and the database approval binding are unchanged. No service role, no database credential, no schedule.
+- **Placement:** the workflow sits in the owner's personal project until the owner moves it into Jwleria. Its provider identifiers stay outside the repository.
+- **Scope:** a manual check of the delivery route, not background automation.
+
 ## Decision 0022 published: `m126200-0006` on the white square and the `m126234-0015` partial-view notice are live; visitor check pending, 2026-11-01
 
 | Step | Who | Result | Label |
