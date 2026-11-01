@@ -2,6 +2,13 @@
 
 The Totals table, the brand counts, the source flags and the source-to-photo inventory come from the read-only aggregate read of 2026-10-29 10:07:44Z (observed live, interactive session; no write of any kind). The category breakdown and the model split (283 grouped, 2,603 singles) come from earlier reads (2026-10-27 18:08:50Z baseline and the 2026-10-28 mapping) and were not re-read. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand.
 
+## Current source requirements (owner, 2026-11-01)
+
+- **Rejected:** wrist, lifestyle and amateur photographs (Commons included) as substitutes for a product photograph. The owner rejected the `m126200-0006` Commons square, and it is withdrawn from display.
+- **Preferred:** the brand's official packshot of the exact reference and colour. Keep its existing alpha or white background as published: no remasking, retouching, generation or upscaling. Then place it on the decision 0022 white square, scaled down only.
+- **Rights gate, unchanged:** an official packshot is published only with the brand's express written permission for this display, recorded as a grant. Being reachable, carrying a logo or credit, or the owner accepting responsibility is not a licence. Without permission, official files are private reference only.
+- **Access:** normal public requests within robots. No retries after a refusal or timeout, no proxies, no constructed asset URLs, and no automated Prada access (its terms exclude crawling).
+
 ## Totals
 
 | Measure | Value |

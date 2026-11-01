@@ -1,3 +1,24 @@
+## Rejected `m126200-0006` photograph withdrawn (owner action-time approval); official packshot preview confirmed, 2026-11-01
+
+**Applied (observed live), on the owner's explicit approval** «أعتمد إخفاء الصورة المرفوضة», for this product only. The prepared one-row factual-lane action ran once:
+- **Precondition read:** matched the prepared state.
+- **Readback:**
+  - `m126200-0006` is active and `facts_only`, with 0 images and 0 variants;
+  - its facts hash is unchanged (`708241c0…`);
+  - 15 evidence rows, 2 live approvals (the kept approval still cites its square, so it is reversible) and 15 storage objects, all unchanged;
+  - photographed rows went from 2 to 1, and active rows stay at 4,097.
+- **Rollback:** `proposed/jwleria_withdraw_rejected_m126200-0006_photo.rollback.sql`.
+- **Scope:** this approval does not approve publishing any official image.
+
+**Private Longchamp preview, confirmed** (Codex inspected it; not permission to publish, and not the owner's final aesthetic approval):
+- **Source match:** the fetched URL is exactly the recorded first official image of `longchamp-official` `10166HSR001` ("Le Pliage Energy L Backpack — Black"; source page `/us/en/products/backpack-10166HSR001.html`; catalogue reference `10166HSR001`, active). Exactly one candidate cites that URL. The source sha256 is `a803e01f…dda6`.
+- **1600 px preview:** 346,822 bytes, a 1600 × 1600 WebP, sha256 `b955383d…8627`.
+- **Preservation:** Codex holds the original, the square, the 4 WebP files, the sheet and the unsent requests, with hashes, in the private transfer area outside the checkout.
+
+**Public check** (observed live, HTTPS, once, after the cache revalidated): the Arabic and English `m126200-0006` pages return 200 with the product and its reference, and no product media (no square, no white frame). That is the standard facts-only presentation.
+
+**Source requirements updated:** `docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md`.
+
 ## Owner rejected the `m126200-0006` Commons white square; withdrawal prepared, NOT applied; official packshot evaluated privately; publication blocked on brand permission, 2026-11-01
 
 **Owner decision (recorded, sanitized):**
