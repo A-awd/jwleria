@@ -1,3 +1,40 @@
+## Owner rejected the `m126200-0006` Commons white square; withdrawal prepared, NOT applied; official packshot evaluated privately; publication blocked on brand permission, 2026-11-01
+
+**Owner decision (recorded, sanitized):**
+- The published white square of the Remi Mathis Commons wrist photograph of `m126200-0006` is visually rejected. This supersedes its earlier visual acceptance; it is not generalized and not called approved or final.
+- The owner prefers official brand packshots, and Commons imagery is no longer sought as a substitute. Originals and earlier artifacts are kept.
+
+**Withdrawal: prepared and NOT applied (blocked):**
+- **The action:** one row through the existing factual lane: `apps/storefront/supabase/proposed/jwleria_withdraw_rejected_m126200-0006_photo.sql`, with a fresh read, the mutation and a readback.
+  - The row goes to facts only, with no image.
+  - The approval, evidence and files are kept.
+- **Rollback:** the matching `.rollback.sql` republishes the kept approval.
+- **Why it has not run:** Claude Code's auto-mode safety check refused the production call. It was not retried or worked around. It waits for explicit production approval, and the live site still shows the rejected square.
+
+**Official image availability** (observed live):
+- Every candidate of 12 official sources has recorded official image URLs. Rolex has 1,465, Prada 851, Cartier 515, Van Cleef 498, Loewe 407 and Longchamp 391.
+- Every source has `publication_allowed = false`, and Cartier and Van Cleef also have `acquisition_allowed = false`.
+- No written-permission grant exists; the only two grants are Commons open licences.
+
+**Terms** (verified by Codex on the official pages):
+- Rolex requires a prior written agreement for commercial copying or republishing, and its newsroom is editorial-only.
+- Longchamp allows personal or private use and excludes commercial use without an express agreement.
+- Prada is limited to private browsing and purchases, and excludes crawling and adaptation, so no automated Prada access.
+
+**Rolex packshot** (the exact page and file were verified by Codex on the web): a bounded request to the image host timed out at connect. It was not retried, and no other asset URL was tried. There is no private Rolex preview from this machine.
+
+**Longchamp packshot** (private evaluation only; not published, not in Git):
+- **Source:** one normal request, allowed by robots, for the recorded official image of Le Pliage Energy L Backpack `10166HSR001` (black). It returned a 2000 × 2000 RGBA PNG of 5,362,154 bytes, sha256 `a803e01f…dda6`, with real transparency, so no remasking was needed.
+- **White square:** the same white-square step gives a 1600 px square (scaled down only, fill 0.80, no edge contact) with WebP files of 320/640/960/1600 px.
+  - All at quality 92 and within budget; SSIM 0.987–0.995.
+  - A private before/after sheet exists for Codex.
+- **Status:** this is a quality preview, not a grant-bound publication run. The publication pipeline refuses it, correctly, without a grant.
+
+**The exact rights dependency:**
+- Publishing any official packshot needs the brand's express written permission for this display.
+- Example request texts for Longchamp and Rolex were drafted privately and NOT sent; no outreach was made.
+- Until then, official images stay private reference only.
+
 ## Decision 0022 visitor-verified for the checked scope; the n8n delivery replay ran once, 2026-11-01
 
 **Visitor check** (visitor-verified by Codex in its in-app browser at 390×844, Arabic and English):

@@ -1,4 +1,13 @@
-## Current handoff: decision 0022 live and visitor-verified for the checked scope, 2026-11-01
+## Current handoff: official packshot path, 2026-11-01
+
+1. **Production approval needed:** withdraw the owner-rejected `m126200-0006` photograph with `apps/storefront/supabase/proposed/jwleria_withdraw_rejected_m126200-0006_photo.sql` (one row, reversible). The auto-mode safety check refused the call, so it is NOT applied.
+2. **Codex:** inspect the private Longchamp `10166HSR001` before/after and its WebP previews. Their paths are given in the session, not in Git.
+3. **Owner:** decide whether to send the private permission requests to Longchamp and Rolex. Nothing is sent. No official image can be published without an express agreement.
+4. **Not done:**
+   - publication of any official image;
+   - a Rolex preview, because its image host timed out from here.
+
+## Previous handoff: decision 0022 live and visitor-verified for the checked scope, 2026-11-01
 
 Nothing is running.
 
