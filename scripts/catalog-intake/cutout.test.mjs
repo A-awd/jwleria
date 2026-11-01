@@ -6,7 +6,7 @@ import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {installedImageEngine,prepareResponsiveMedia} from './responsive-media.mjs';
 import {validateCutoutMaster,iccDescription,frameBackground,cutoutReviewChecks,cutoutLimits} from './cutout.mjs';
-import {cutoutBasisProblem,creditChanges,approvalBundle} from './media-pipeline.mjs';
+import {cutoutBasisProblem,creditChanges,requireCutoutReview} from './media-pipeline.mjs';
 
 // Synthetic fixtures only: a drawn ellipse on a drawn backdrop, made in memory. No product photograph is read, masked or
 // edited, and nothing leaves the process.
@@ -133,6 +133,29 @@ test('derivatives of a checked cutout keep alpha losslessly, record both files a
     }
     for(const record of [...plain.variants,plain.detail])assert.equal(record.alpha_max_delta,undefined,'an opaque original records no alpha check');
     assert.deepEqual((await prepareResponsiveMedia(treated)).manifest,m,'deterministic');
+    // The independent visual comparison of these exact files: every check literally true, never by its own batch writer
+    // or the master's producer. Code never creates a passing record; this one is a synthetic test record.
+    const owner={kind:'owner_original'},asset={sha256:f.original.sha256},prepared_by='TEST-ONLY batch writer';
+    const review={cutout_sha256:f.cutout.sha256,original_sha256:f.original.sha256,reviewer:'TEST-ONLY independent reviewer',review_reference:'TEST-ONLY synthetic cutout comparison',
+      checks:Object.fromEntries(cutoutReviewChecks.map(check=>[check,true]))};
+    assert.deepEqual(requireCutoutReview(review,{manifest:m,asset,grant:owner,prepared_by}),
+      {treatment:'background_removal',treatment_version:1,cutout_master_sha256:f.cutout.sha256,treatment_reference:review.review_reference});
+    const refuse=(over,pattern,{manifest=m,grant=owner,writer=prepared_by}={})=>assert.throws(()=>requireCutoutReview(over===null?null:{...review,...over},{manifest,asset,grant,prepared_by:writer}),pattern);
+    refuse(null,/exact cutout master and original/);
+    refuse({cutout_sha256:'c'.repeat(64)},/exact cutout master and original/);
+    refuse({original_sha256:'c'.repeat(64)},/exact cutout master and original/);
+    for(const check of cutoutReviewChecks)for(const value of [false,'uncertain',undefined])refuse({checks:{...review.checks,[check]:value}},new RegExp('incomplete: '+check));
+    refuse({reviewer:' '},/reviewer and private record/);
+    refuse({reviewer:prepared_by.toUpperCase()},/prepared the batch or made the cutout/);
+    refuse({reviewer:f.cutout.producer},/prepared the batch or made the cutout/);
+    refuse({},/batch writer named/,{writer:null});
+    refuse({},/not covered: written_permission_does_not_cover_background_removal/,{grant:{kind:'written_permission'}});
+    refuse({},/not covered: share_alike_adaptation_needs_licence_review/,{grant:{kind:'open_license',license_code:'CC-BY-SA-4.0'}});
+    refuse({},/not a checked background-only cutout/,{manifest:{...m,cutout_master:{...m.cutout_master,check:{...m.cutout_master.check,passed:false}}}});
+    refuse({},/not a checked background-only cutout/,{manifest:{...m,pixel_source:undefined}});
+    refuse({},/not a checked background-only cutout/,{manifest:{...m,treatment:{...m.treatment,cutout_sha256:'c'.repeat(64)}}});
+    refuse({},/not a checked background-only cutout/,{manifest:plain});
+    refuse({},/producer named/,{manifest:{...m,treatment:{...m.treatment,producer:null}}});
     assert.equal(sha(await readFile(f.original.path)),f.original.sha256);
     await assert.rejects(prepareResponsiveMedia({...treated,grant:input.grant}),/not covered by the grant/);
     await assert.rejects(prepareResponsiveMedia({...treated,treatment:{kind:'background_removal',cutout:{path:f.cutout.path}}}),/cutout master path and sha256/);
@@ -144,7 +167,7 @@ test('derivatives of a checked cutout keep alpha losslessly, record both files a
   }finally{await rm(solid.root,{recursive:true,force:true});}
 });
 
-test('grant basis, credit text and the publication guard',()=>{
+test('grant basis and credit text',()=>{
   assert.equal(cutoutBasisProblem({kind:'owner_original'}),null);
   for(const code of ['CC0-1.0','CC-BY-2.0','CC-BY-3.0','CC-BY-4.0'])assert.equal(cutoutBasisProblem({kind:'open_license',license_code:code}),null,code);
   for(const code of ['CC-BY-SA-2.0','CC-BY-SA-4.0'])assert.equal(cutoutBasisProblem({kind:'open_license',license_code:code}),'share_alike_adaptation_needs_licence_review',code);
@@ -154,7 +177,6 @@ test('grant basis, credit text and the publication guard',()=>{
   assert.equal(cutoutBasisProblem(undefined),'unsupported_grant_kind');
   assert.deepEqual([creditChanges({resized:true}),creditChanges({resized:false}),creditChanges({resized:true,background_removed:true}),creditChanges({resized:false,background_removed:true})],
     ['resized and converted to WebP','converted to WebP','background removed, resized and converted to WebP','background removed and converted to WebP']);
-  assert.throws(()=>approvalBundle({candidate:{},grant:{},items:[{manifest:{treatment:{kind:'background_removal'}}}],public_base_url:'https://project.example.test/storage/v1/object/public/jwl-product-media'}),/cannot be recorded yet/);
 });
 
 test('the metric background is the storefront\'s product frame colour',async()=>{

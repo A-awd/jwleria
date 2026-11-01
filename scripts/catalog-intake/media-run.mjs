@@ -91,17 +91,21 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     if(recorded.candidate_id!==candidate.candidate_id||recorded.revision_hash!==candidate.revision_hash||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate revision or grant');
     const exception=await readPerformanceException(input,out);
     const verifications=new Map((input.verifications??[]).map(v=>[v.asset_sha256,v]));
+    // Optional background-only cutouts (decision 0015): {original_sha256, path, sha256, producer, review} per original.
+    const cutouts=new Map((input.cutouts??[]).map(c=>[c?.original_sha256,c]));
+    if(cutouts.size!==(input.cutouts??[]).length||[...cutouts.keys()].some(sha=>!recorded.originals.some(o=>o.sha256===sha)))throw Error('Each cutout must name a distinct recorded original');
     const items=[];
     for(const original of recorded.originals){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
       const verification=requireVerification(verifications.get(original.sha256),{candidate,asset});
-      const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out});
-      items.push({asset,manifest:prepared.manifest,verification});
+      const cut=cutouts.get(original.sha256);
+      const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer}}:{})});
+      items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review}:{})});
     }
     const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url,performance_exception:exception,prepared_by:input.prepared_by});
     await save(join(out,'approval-bundle.json'),bundle);
     await writeFile(join(out,'record-approval.sql'),mediaApprovalSql(bundle)+'\n',{mode:0o600});
-    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,
+    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,cutout_images:cutouts.size,
       attributed_images:bundle.approval.approved_image_variants.filter(entry=>entry.attribution).length,uploaded:0,published:0};
   }
   if(phase==='upload'){

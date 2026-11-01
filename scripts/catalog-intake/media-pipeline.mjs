@@ -5,7 +5,7 @@ import {createRequire} from 'node:module';
 import {pathToFileURL} from 'node:url';
 import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
 import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
-import {cutoutTreatment} from './cutout.mjs';
+import {cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
@@ -325,7 +325,7 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
 /**
  * Builds the exact per-asset derivative binding the responsive helper requires, then prepares files. With `cutout`
  * ({path, sha256, producer}), the derivatives are made from that background-only cutout master after it passes its
- * check against this original (decision 0015); they stay private, since approvalBundle refuses to record them.
+ * check against this original (decision 0015); approvalBundle then also needs the cutout's independent review.
  */
 export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
@@ -451,16 +451,39 @@ function exceptedDerivatives(manifest,asset,exception){
 }
 
 /**
+ * The independent visual comparison of one cutout master with its original (decision 0015). The reviewer confirms each
+ * of cutoutReviewChecks, literally true, for exactly these two files; code never creates a passing record. The manifest
+ * must be a checked background-only cutout of this original, and the grant must cover the treatment. A name comparison
+ * refuses a review by the batch writer (prepared_by) or by the master's producer, so both must be named; independence is
+ * otherwise procedural.
+ * Returns what the evidence rows record.
+ */
+export function requireCutoutReview(review,{manifest,asset,grant,prepared_by}){
+  const t=manifest?.treatment,b=manifest?.binding?.treatment,m=manifest?.cutout_master;
+  if(t?.kind!==cutoutTreatment.kind||t.version!==cutoutTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==t.cutout_sha256
+    ||m?.sha256!==t.cutout_sha256||m.check?.passed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256
+    ||manifest.pixel_source!=='cutout_master'||manifest.processing?.background_removed!==true)throw Error('Prepared derivatives are not a checked background-only cutout of this original');
+  if(!text(t.producer))throw Error('A cutout needs its producer named, so that its review can be checked against it');
+  const basis=cutoutBasisProblem(grant);
+  if(basis)throw Error('Background removal is not covered: '+basis);
+  if(!review||review.cutout_sha256!==t.cutout_sha256||review.original_sha256!==asset.sha256)throw Error('Cutout review must name this exact cutout master and original');
+  if(!text(review.reviewer)||!record(review.review_reference))throw Error('Cutout review needs its reviewer and private record');
+  const failed=cutoutReviewChecks.filter(check=>review.checks?.[check]!==true);
+  if(failed.length)throw Error('Cutout review incomplete: '+failed.join(','));
+  if(!text(prepared_by))throw Error('A cutout approval needs the batch writer named (prepared_by)');
+  if([prepared_by,t.producer].some(name=>text(name)&&sameName(review.reviewer,name)))throw Error('Cutout review refused: the reviewer prepared the batch or made the cutout');
+  return {treatment:cutoutTreatment.kind,treatment_version:cutoutTreatment.version,cutout_master_sha256:t.cutout_sha256,treatment_reference:review.review_reference};
+}
+
+/**
  * Turns verified, prepared derivatives into exact public URLs, evidence rows and an approval that
- * mirror the database contract. Nothing is uploaded, recorded or published by this function.
+ * mirror the database contract. Nothing is uploaded, recorded or published by this function. A cutout item also needs
+ * its cutout_review; its evidence rows carry the treatment, and its open-licence credit states the removal.
  */
 export function approvalBundle({candidate,grant,items,public_base_url,performance_exception=null,prepared_by}){
   const base=new URL(public_base_url);
   if(base.protocol!=='https:'||base.username||base.password||base.search||base.hash||!base.pathname.endsWith('/storage/v1/object/public/jwl-product-media'))throw Error('Public product-media bucket URL required');
   if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Between one and twenty prepared images required');
-  // The applied database records neither a cutout's master and treatment in its evidence nor its credit text, and the
-  // storefront has no reviewed Arabic for that text. Until a reviewed change adds them, a cutout stays private.
-  if(items.some(item=>item?.manifest?.treatment!==undefined))throw Error('Background-removed derivatives cannot be recorded yet: the database evidence, the credit text and the storefront translation need a reviewed change first (decision 0015)');
   const exception=performance_exception===null||performance_exception===undefined?null:performanceExceptionRecord(performance_exception,{prepared_by});
   const evidence=[],entries=[],uploads=[],excepted=[];
   for(const item of items){
@@ -472,6 +495,13 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
     const b=manifest?.binding;
     if(manifest?.publication_state!=='private-prepared'||b?.candidate_id!==candidate.candidate_id||b.revision_hash!==candidate.revision_hash||b.asset_sha256!==asset.sha256||b.asset_source_url!==asset.source_url||b.media_permission_reference!==grant.grant_reference)
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
+    // Any cutout marker makes the image a cutout, which must then be complete and reviewed; a review can never turn an
+    // ordinary image into one.
+    const marked=['treatment','pixel_source','cutout_master','cutout_review_required'].some(key=>manifest[key]!==undefined)||b.treatment!==undefined||manifest.processing?.background_removed!==undefined;
+    const treatment=marked?requireCutoutReview(item.cutout_review,{manifest,asset,grant,prepared_by}):null;
+    if(!treatment&&item.cutout_review!==undefined)throw Error('A cutout review was supplied for an image that is not a cutout');
+    // Alpha is encoded losslessly, so any alpha difference is refused outright; no exception record can cover it.
+    if([...manifest.variants,manifest.detail].some(f=>f.alpha_max_delta!==undefined&&f.alpha_max_delta!==0))throw Error('A derivative changed its alpha channel; it cannot be approved');
     // A flagged derivative passes only with an exact entry in an independent reviewed exception record (never default).
     const covered=exceptedDerivatives(manifest,asset,exception);
     if(manifest.performance_review_required&&!covered.length)throw Error('Derivative byte budget needs review before approval');
@@ -482,7 +512,8 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
       const src=base.href+'/'+file.path;
       uploads.push({path:file.path,sha256:file.sha256,bytes:file.bytes,mime_type:'image/webp'});
       evidence.push({candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,public_url:src,public_sha256:file.sha256,width:file.width,height:file.height,
-        original_source:asset.source_url,original_sha256:asset.sha256,grant_reference:grant.grant_reference,verified_reference:candidate.external_id,verification_reference:verification.verification_reference});
+        original_source:asset.source_url,original_sha256:asset.sha256,grant_reference:grant.grant_reference,verified_reference:candidate.external_id,verification_reference:verification.verification_reference,
+        ...(treatment??{})});
       return {src,width:file.width,height:file.height,bytes:file.bytes};
     });
     const canonical=variants.find(v=>v.width===manifest.detail.width);
@@ -498,7 +529,7 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
         if(files.some(f=>f.width>file.rendition_width))throw Error('Open-licence derivatives cannot be wider than their source rendition');
       }
       // A rendition is already a resize of the licensed original.
-      entry.attribution=openLicenseAttribution(grant,creditChanges({resized:file.file_kind==='rendition'||files.some(f=>f.width<visual)}),file);
+      entry.attribution=openLicenseAttribution(grant,creditChanges({resized:file.file_kind==='rendition'||files.some(f=>f.width<visual),background_removed:treatment!==null}),file);
     }
     entries.push(entry);
   }

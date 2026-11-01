@@ -6,7 +6,7 @@ import {pathToFileURL} from 'node:url';
 
 // Background-only cutouts (decision 0015). This module checks a supplied cutout master against its untouched original;
 // it never makes, masks or edits an image. A passing record is not an approval: an independent visual comparison is
-// still required, and the pipeline refuses to record a cutout until a reviewed change lets the database store it.
+// still required, and a cutout can be recorded only once the database's cutout migration is applied.
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const hashPattern=/^[a-f0-9]{64}$/;
 const maxBytes=15728640;

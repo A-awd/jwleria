@@ -31,9 +31,13 @@ test('option labels come from the reviewed i18n strings, falling back to the cat
  assert.deepEqual(note.filter(p=>typeof p!=='string').map(p=>p.valueLang),['en',undefined],'each value stays its own part, so an English one can be marked');
 });
 
-test('the two credit changes the open-licence migration accepts read in Arabic on Arabic pages',async()=>{
- const sql=await (await import('node:fs/promises')).readFile(new URL('../supabase/migrations/20261028111829_jwleria_open_license_media.sql',import.meta.url),'utf8');
- const allowed=[...sql.match(/'changes' not in \(([^)]*)\)/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);
+test('every credit change the media migrations accept reads in Arabic on Arabic pages',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const accepted=async path=>{const sql=await readFile(new URL(path,import.meta.url),'utf8');return [...sql.match(/'changes' not in \(([^)]*)\)/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);};
+ const applied=await accepted('../supabase/migrations/20261028111829_jwleria_open_license_media.sql');
+ // The proposed cutout migration widens the applied list; the storefront must translate both before it is applied.
+ const allowed=await accepted('../supabase/proposed/jwleria_cutout_media.sql');
+ assert.ok(applied.every(value=>allowed.includes(value))&&allowed.length===4,'the cutout migration keeps every applied credit text');
  assert.deepEqual(Object.keys(t('ar').variants.credit.changed).sort(),[...allowed].sort());
  assert.deepEqual(Object.keys(t('en').variants.credit.changed).sort(),[...allowed].sort());
  for(const value of allowed){assert.match(t('ar').variants.credit.changed[value],/[\u0600-\u06ff]/);assert.equal(t('en').variants.credit.changed[value],value);}

@@ -21,7 +21,7 @@ Date: 2026-10-29
 1. The automated check (`scripts/catalog-intake/cutout.mjs`) passes: an 8-bit RGBA PNG with the original's upright geometry and colour profile; opaque pixels equal to the original's stored values (rounding only); real transparency; no visible pixel on the canvas edge.
 2. An independent visual comparison confirms that only the background was removed, the whole product is kept, the edges are clean on the frame colour and no detail was redrawn.
 3. The credit states "background removed, resized and converted to WebP" (or "background removed and converted to WebP").
-4. A reviewed change lets the database record the master, the treatment and that credit text, and the storefront shows the reviewed Arabic for it. Until then, cutouts are prepared privately and the pipeline refuses to record them.
+4. A reviewed change lets the database record the master, the treatment and that credit text, and the storefront shows the reviewed Arabic for it. Until that change is applied, the database refuses to record a cutout, so cutouts stay private.
 
 **Tools.** Choosing a tool is an implementation choice (decision 0010), and the output is judged only by this contract.
 - No tool, service, account, subscription or credit purchase is adopted or required. Photoroom was a private convenience trial.
