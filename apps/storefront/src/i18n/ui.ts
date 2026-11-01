@@ -109,6 +109,8 @@ const ar = {
     // Shown on the gallery the moment a variant is chosen, until its own block arrives (decision 0019).
     photoLoading: 'جارٍ تحميل صورة المرجع {ref}',
     photoMissing: 'لا توجد صورة معتمدة للمرجع {ref} بعد.',
+    // The largest approved file, named by its real size: the most detail that exists, not unlimited zoom.
+    fullSize: (w: number, h: number) => `فتح بالحجم الكامل (${w} × ${h} بكسل)`,
   },
   sizes: { title: 'مقاسات هذا الطراز', details: 'ما يختلف بين المقاسات', separator: '، ' },
   variants: {
@@ -222,6 +224,7 @@ const en: typeof ar = {
     message: 'The message names the selected reference:',
     photoLoading: 'Loading the photograph of {ref}',
     photoMissing: 'No approved photograph of {ref} yet.',
+    fullSize: (w: number, h: number) => `Open at full size (${w} × ${h} px)`,
   },
   sizes: { title: 'Sizes of this model', details: 'What differs', separator: ' · ' },
   variants: {

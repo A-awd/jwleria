@@ -43,6 +43,13 @@ No chosen file is narrower than the width the frame shows, and that includes a p
 - at the shown size (267 CSS px, so 534 device px), that file covers the display;
 - under pinch-zoom it shows less detail than the 960w file. The 4× side-by-side shows "OFFICIALLY CERTIFIED" softer at 640w.
 
+**Full-size access.** Every photograph, its own or a representative, therefore carries an inline link to its largest approved file, named by its real size, for example "Open at full size (960 × 720 px)":
+- a closer look never depends on the rendition the frame chose;
+- the gallery has no zoom control to reuse, so it is a plain link, with no gesture of the page's own;
+- its tap area is enlarged without adding height, so the compact layout keeps its measured fit.
+
+The largest file is the most detail that exists. Faithful display at the shown size does not mean unlimited zoom.
+
 ## Image quality gate (`scripts/catalog-intake/image-quality-gate.mjs`)
 
 **Approach:**
@@ -82,12 +89,16 @@ No result claims 100% accuracy.
 
 **Inspection** (a private sample, kept out of the repository):
 - **`m126234-0015`:** its small lettering stays legible at 960 px, and is softer at 640 px under zoom.
-- **The `m126200-0006` cutout is flagged.** At 4× over white, a band of dark retained pixels shows along the case's left flank. Over black it does not show. On the site's light frame it can show under zoom.
+- **The `m126200-0006` cutout has a real limitation.** It is flagged, and it is not accepted as final quality:
+  - at 4× over white, a band of dark retained pixels shows along the case's left flank;
+  - it was inspected at 960 px, and every width comes from the same mask;
+  - over black it does not show, but the site's light frame can show it under zoom;
+  - it is the first photograph on its page.
 
-It is not changed here, because a change needs review and authorization. The options are:
-- keep it after review;
+The cutout stays published as approved, but this gate does not certify it. The remaining step is a reviewed decision under decision 0015, choosing one of:
+- keep it, with this limitation recorded;
 - show the photograph first;
-- a reviewed, non-generative mask rework under decision 0015.
+- a reviewed, non-generative mask rework.
 
 ## Free-only limits
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {fragmentPath,variantPath,variantSwapper} from '../src/components/variant-swap.mjs';
 import {galleryView} from '../src/components/gallery-view.mjs';
-import {productMedia} from '../src/components/product-media.mjs';
+import {fullSizeImage,productMedia} from '../src/components/product-media.mjs';
 import {configurator} from '../src/components/variant-selection.mjs';
 
 // The owner's failed phone acceptance of 2026-11-01 (decision 0019):
@@ -242,4 +242,15 @@ test('on a phone each photograph asks for the rendition it shows, never one narr
   // The representative thumbnail in its 5.5rem column at 3x: 320w instead of 640w.
   const rep=LIVE['m126234-0015'];
   assert.deepEqual([pick(rep.files,hinted('5.5rem',phones[0]),3)[0],pick(rep.files,hinted('7.5rem',phones[0]),3)[0]],[320,640]);
+});
+
+test('the largest approved file of each photograph stays one tap away, named by its real size, with no gesture of the page\'s own',async()=>{
+  const gallery=await readFile(new URL('../src/components/ProductGallery.astro',import.meta.url),'utf8');
+  const make=name=>{const l=LIVE[name];const variants=l.files.map(([w])=>({src:`https://media.example/${w}w-x.webp`,width:w,height:Math.round(w*l.height/l.width),bytes:1}));return {...product('dj-36-black',[variants[0].src]),imageVariants:[{...variants.at(-1),variants}]};};
+  assert.deepEqual(fullSizeImage(make('m126200-0006 photograph')),{src:'https://media.example/1588w-x.webp',width:1588,height:1676});
+  assert.deepEqual(fullSizeImage(make('m126234-0015')),{src:'https://media.example/960w-x.webp',width:960,height:720},'the most detail that exists, never an enlargement');
+  assert.equal(fullSizeImage({...make('m126234-0015'),imageVariants:[]}),undefined);
+  assert.match(gallery,/<a class="full-size" href=\{v\.full\.src\}>/);assert.match(gallery,/<a class="full-size" href=\{repFull\.src\}>/);
+  assert.doesNotMatch(gallery,/class="full-size"[^>]*data-variant-link/,'a plain link: the swap script never intercepts it');
+  assert.match(of('.full-size'),/padding-block:\s*\.55rem;\s*margin-block:\s*-\.55rem/,'its tap area grows without adding height to the compact frame');
 });

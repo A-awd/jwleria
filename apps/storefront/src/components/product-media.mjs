@@ -18,6 +18,18 @@ const singleDetailSizes=image=>`(min-width: 100rem) 840px, (min-width: 60rem) 54
 // Another variant's photograph is shown small and apart (decision 0019), in a 5.5rem column (decision 0020).
 const thumbSizes='5.5rem';
 
+/**
+ * The largest approved file of a photograph, offered on demand (decision 0021). A phone loads the rendition its frame
+ * shows, which can be softer under pinch-zoom; this file is the most detail that exists, never an enlargement.
+ * @param {import('../contracts/catalog').PublicProduct} product
+ */
+export function fullSizeImage(product,index=0){
+ const image=product.imageVariants?.[index];
+ if(!image?.variants?.length)return undefined;
+ const largest=image.variants.reduce((a,b)=>(b.width>a.width?b:a));
+ return {src:largest.src,width:largest.width,height:largest.height};
+}
+
 /** The share image (og:image): the first image, unless it needs a visible credit, which a share preview cannot carry.
  * @param {import('../contracts/catalog').PublicProduct} product */
 export const shareImage=product=>product.image&&!product.imageVariants?.[0]?.attribution?product.image:null;

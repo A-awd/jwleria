@@ -194,6 +194,8 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 .pdp__gallery figure { margin: 0; }
 .pdp__gallery figcaption { font-size: .75rem; line-height: 1.55; color: var(--muted); padding-top: .6rem; }
 .representative-note { display: block; color: var(--ink-soft); }
+/* The largest approved file on demand (decision 0021): an inline link whose tap area is enlarged without adding height. */
+.full-size { display: inline-block; padding-block: .55rem; margin-block: -.55rem; color: var(--ink-soft); text-underline-offset: .2em; }
 /* No photograph of the selected variant: the state comes first; another reference's photograph follows small, apart
    and labelled, never as the selected variant. */
 .pdp__gallery--missing { gap: .9rem; }
