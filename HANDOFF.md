@@ -1,4 +1,25 @@
-## Current handoff: touch-safe gallery and fast choices live (decision 0019), 2026-11-01
+## Current handoff: compact phone product page (decision 0020), 2026-11-01
+
+Prepared and pushed:
+- source `061cff21583e`;
+- package `releases/storefront-061cff21583e/`, with a `SHA256SUMS` sha256 of `fd45c603f76f4ab68d50e30d6c4badb14f50cce5814bc5241c73e79dbd9c38ce`.
+
+There is no database step.
+
+Next, in order:
+1. **Codex:** measure the revised preview at `127.0.0.1:4391` (frame 30svh): at 390×844 the size, dial and bracelet controls should be on screen with the photograph.
+2. **Codex:** deploy as the package's `DEPLOY.md` says, recording the active version first. Then the public acceptance, and the receipt for the final records.
+3. **Owner:** a physical iPhone swipe in Safari.
+4. **Photographs.** A valid multi-colour example needs an eligible same-design colour pair. It can come from decision 0016's open-licence path, written permission, or the owner's photographs. No such pair exists today (`STATE.md`).
+
+In flight:
+- A local preview runs on `127.0.0.1:4391` in this Claude session, for Codex.
+- It is a Node build of `061cff21583e`, reading the live catalogue read-only.
+- It stops with the session and changes nothing.
+
+Rollback: the package's `DEPLOY.md`. Roll the Worker back to the recorded version; `7f837315b4ec` works with the current database.
+
+## Previous handoff: touch-safe gallery and fast choices live (decision 0019), 2026-11-01
 
 Nothing is running: the local preview is stopped. The details are in the top entry of `STATE.md`.
 - **Deploy.** Codex deployed `releases/storefront-7f837315b4ec/` (source `7f837315b4ec`). The new version is active at 100%, with the runtime and bindings unchanged.

@@ -1,3 +1,61 @@
+## Compact phone product page (decision 0020): prepared; no valid multi-colour photo example exists; Worker not yet deployed, 2026-11-01
+
+**Owner finding:**
+- choosing a colour needed scrolling, and then the photograph was off the screen;
+- the owner wants a smaller photograph next to the options, every datum kept, and a tidy, short page;
+- the owner rejected a colour change ending in "photograph unavailable" as a demonstration of photo switching.
+
+**Photo coverage** (observed live, read-only, 15:00:41Z):
+- 4,097 active products;
+- 2 photographed variants, with 2 grants and 2 live approvals:
+  - `m126234-0015` is the only photographed variant of its 56-variant Datejust family: one colourway (Bright black, Jubilee, 36 mm);
+  - `m126200-0006` is a one-variant model with no colour options.
+
+No model has two or more colourways with their own approved photographs, so **no valid multi-colour example exists**, and none is claimed.
+
+**Bounded source check** (decision 0016; Claude: two searches; Codex: 126234 and 124300):
+- the Commons files found are the published black-dial 126234 series;
+- the only 126200 file is the published `-0006`;
+- nothing was found for 126334 or 124300;
+- the refused EMore98 files stay closed.
+
+No eligible same-design colour pair was identified. That is the blocker, not the publication steps. A pair, once found, is carried through decision 0016 to publication.
+
+**Prepared** (source `f31a667bd382`, then `061cff21583e`; package `releases/storefront-061cff21583e/`, 77 files, `SHA256SUMS` sha256 `fd45c603…38ce`):
+- **Order on a phone:** the brand, name and reference; the photograph; the options right below it; one inquiry action; then the details as disclosures. Every datum is kept.
+- **The photograph** is whole and contained, in a frame of `clamp(10rem, 30svh, 20rem)`: 253 px at an 844 px screen height, 200 px at 667, 170 px at 568. From 60rem up, the two-column gallery keeps its 4:5 frame.
+- **Tighter controls:**
+  - the title is smaller on a phone;
+  - list summaries are one line, and rows are 44 px;
+  - values made only in other sizes collapse into one row;
+  - the missing-photograph note is short.
+- **After a choice,** the photograph and the used control are brought on screen together when they fit.
+- **Unchanged:** native scrolling from the photograph, the latest-choice, cache and history safeguards, references, facts and credits.
+
+**Preview** (reviewed: Codex, in-app browser at 390×844, on the local preview):
+- The new order is better.
+- The first frame, 40svh (337.59 px), left the bracelet control at 803.83–853.83, below the screen.
+- The frame is now 30svh. That should save about 84 px, but Codex has not yet measured the revised preview.
+
+**Tests** (prepared):
+- **At `f31a667bd382`:**
+  - storefront: 200 tests, 195 pass, 0 fail, 5 opt-in skips (Playwright not installed, so not run);
+  - type check: only the 7 existing Deno-function errors.
+- **At `061cff21583e`:** the targeted interaction tests pass 13 of 13, and the build passes.
+- **New** (in `tests/product-interaction.test.mjs`): a compactness test covering:
+  - the reading order and the screen-height frame;
+  - whole-photograph containment;
+  - the phone title size;
+  - the collapsed other sizes;
+  - 44 px targets;
+  - the post-choice reveal of the photograph.
+
+**Not yet:** Codex's check of the revised preview, the Worker upload and the public acceptance.
+
+**Owner-observed only:** a physical iPhone swipe.
+
+**Still open:** an eligible same-design colour pair.
+
 ## Touch-safe gallery, honest photo states and fast choices (decision 0019): deployed and visitor-verified (native browser scrolling), 2026-11-01
 
 | Step | Who | Result | Label |
