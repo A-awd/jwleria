@@ -19,6 +19,8 @@
 - **Caller:** the project's existing public anon client key, as an Authorization header inside the private n8n workflow (owner-approved). It is not in Git, and it adds no privilege: JWT verification and the database approval binding are unchanged. No service role, no database credential, no schedule.
 - **Placement:** the workflow sits in the owner's personal project until the owner moves it into Jwleria. Its provider identifiers stay outside the repository.
 - **Scope:** a manual check of the delivery route, not background automation.
+- **Duplicate (observed live):** an identical earlier copy was created by a create call that the client reported as rejected. It was never run. It was renamed "OBSOLETE duplicate, never run" and archived, which is reversible; it was not deleted. Only the canonical workflow, the one that ran once, remains listed.
+- **Local deploy state:** the operator moved the release `.wrangler/` folder out of the checkout.
 
 ## Decision 0022 published: `m126200-0006` on the white square and the `m126234-0015` partial-view notice are live; visitor check pending, 2026-11-01
 
