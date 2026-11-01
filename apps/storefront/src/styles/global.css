@@ -1,5 +1,5 @@
 :root {
-  --ivory: #fcfaf6; --paper: #fffefd; --sand: #f1ede6; --ink: #17130e; --ink-soft: #3b332a; --muted: #675d51; --line: #e5ded3;
+  --ivory: #fcfaf6; --paper: #fffefd; --sand: #f1ede6; --tile: #f0f0f0; --ink: #17130e; --ink-soft: #3b332a; --muted: #675d51; --line: #e5ded3;
   --serif-latin: "Cormorant Garamond", "Bodoni 72", Didot, "Iowan Old Style", Georgia, serif;
   --sans-latin: "Helvetica Neue", Helvetica, "Segoe UI", system-ui, sans-serif;
   --serif-ar: "El Messiri", "Noto Sans Arabic", Tahoma, sans-serif;
@@ -208,7 +208,13 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 /* Decision 0022: a normalized photograph is its own square, pure-white canvas, shown whole and square, on phones and in
    listings alike; a square need not fill the phone's width. */
 .media--white { background: #fff; }
-.card .media--white, .pdp__gallery .pdp__other .media--white { aspect-ratio: 1; }
+.pdp__gallery .pdp__other .media--white { aspect-ratio: 1; }
+/* Owner-selected reference (2026-11-01, supersedes the white frame for the product grid): each photograph sits whole on
+   a pale neutral square tile (#f0f0f0, measured), centred, its largest extent at most 70% of the tile, with no outline,
+   shadow or rounding; phones keep two cards per row. A transparent packshot shows the tile through its own alpha; an
+   opaque photograph stays the rectangle it is. */
+.card .media--tile { aspect-ratio: 1; background: var(--tile); padding: 15%; }
+.card .media--tile > img.art { width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; transform: none; }
 .pdp__gallery .media--white { aspect-ratio: 1; width: auto; height: clamp(10rem, 30svh, 20rem); margin-inline: auto; }
 /* The source photograph cuts the product off: said in words wherever the photograph is shown. */
 .source-clipped { color: var(--ink-soft); }

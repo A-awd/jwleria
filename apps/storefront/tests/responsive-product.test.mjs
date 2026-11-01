@@ -14,7 +14,7 @@ test('cards use bounded actual derivatives while detail retains its larger view'
  assert.equal(card.src,url(640));assert.equal(card.width,640);assert.equal(card.height,800);
  assert.equal(card.srcset,`${url(320)} 320w, ${url(640)} 640w, ${url(960)} 960w`);
  assert.ok(!card.srcset.includes('1600'));assert.match(card.sizes,/56rem/);
- assert.match(productMedia(p,0,'card',3).sizes,/470px/);assert.ok(!productMedia(p,0,'card',3).sizes.includes('80rem'));
+ assert.match(productMedia(p,0,'card',3).sizes,/329px/);assert.ok(!productMedia(p,0,'card',3).sizes.includes('80rem'));
  const detail=productMedia(p,0,'detail');assert.equal(detail.src,url(1600));assert.equal(detail.width,1600);assert.match(detail.srcset,/1600w/);
  const gallery={...p,images:[...p.images,...p.images],imageVariants:[...p.imageVariants,...p.imageVariants]};
  const secondary=productMedia(gallery,1,'detail');
@@ -64,4 +64,20 @@ test('a white square (decision 0022) is projected as a square canvas, sized from
  const css=await readFile(new URL('../src/styles/global.css',import.meta.url),'utf8');
  assert.match(css,/\.media--white \{ background: #fff; \}/);
  assert.match(css,/\.pdp__gallery \.media--white \{ aspect-ratio: 1; width: auto; height: clamp\(10rem, 30svh, 20rem\); margin-inline: auto; \}/,'the phone frame of a white square is the square itself, as high as the compact frame');
+});
+
+test('a photograph card is a square pale tile with the product held to 70% (owner-selected reference, 2026-11-01)',async()=>{
+ const {readFile}=await import('node:fs/promises');
+ const css=await readFile(new URL('../src/styles/global.css',import.meta.url),'utf8');
+ assert.match(css,/--tile: #f0f0f0;/,'the measured reference grey');
+ assert.match(css,/\.card \.media--tile \{ aspect-ratio: 1; background: var\(--tile\); padding: 15%; \}/,'square tile, no outline, the photograph inside 70%');
+ assert.match(css,/\.card \.media--tile > img\.art \{ width: 100%; height: 100%; object-fit: contain;/,'whole product, never cropped');
+ assert.doesNotMatch(css,/\.card \.media--white/,'the grid no longer uses the white frame');
+ const card=await readFile(new URL('../src/components/ProductCard.astro',import.meta.url),'utf8');
+ assert.match(card,/class:list=\{\['media', 'media--tile',/);
+ const {TILE_FILL}=await import('../src/components/product-media.mjs');
+ assert.equal(TILE_FILL,0.7);
+ const p=publicProduct(row);
+ assert.match(productMedia(p,0,'card').sizes,/, calc\(0\.7 \* \(\(100vw - clamp\(2\.5rem, 9vw, 8rem\) - clamp\(1rem, 2\.5vw, 2rem\)\) \/ 2\)\)$/,'a phone card names its in-tile width');
+ assert.match(productMedia(p,0,'card').sizes,/^\(min-width: 100rem\) 241px, /);
 });

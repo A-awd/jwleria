@@ -1,6 +1,13 @@
-// Match the existing two/three/four-column grid. Large originals never enter a card srcset.
-const threeColumns='(min-width: 100rem) 470px, (min-width: 56rem) calc((100vw - clamp(2.5rem, 9vw, 8rem) - clamp(2rem, 5vw, 4rem)) / 3), calc((100vw - clamp(2.5rem, 9vw, 8rem) - clamp(1rem, 2.5vw, 2rem)) / 2)';
-const cardSizes=`(min-width: 100rem) 344px, (min-width: 80rem) calc((100vw - clamp(2.5rem, 9vw, 8rem) - 6rem) / 4), ${threeColumns.replace('(min-width: 100rem) 470px, ','')}`;
+// Match the existing two/three/four-column grid. Large originals never enter a card srcset. On a card the photograph
+// is drawn inside its square tile at TILE_FILL of the column (the tile's 15% padding, owner-selected reference of
+// 2026-11-01), so the size hint names that width, not the whole column.
+export const TILE_FILL=0.7;
+const col2='((100vw - clamp(2.5rem, 9vw, 8rem) - clamp(1rem, 2.5vw, 2rem)) / 2)';
+const col3='((100vw - clamp(2.5rem, 9vw, 8rem) - clamp(2rem, 5vw, 4rem)) / 3)';
+const col4='((100vw - clamp(2.5rem, 9vw, 8rem) - 6rem) / 4)';
+const inTile=column=>`calc(${TILE_FILL} * ${column})`;
+const threeColumns=`(min-width: 100rem) ${Math.round(470*TILE_FILL)}px, (min-width: 56rem) ${inTile(col3)}, ${inTile(col2)}`;
+const cardSizes=`(min-width: 100rem) ${Math.round(344*TILE_FILL)}px, (min-width: 80rem) ${inTile(col4)}, (min-width: 56rem) ${inTile(col3)}, ${inTile(col2)}`;
 // On a phone the photograph sits in a frame of clamp(10rem, 30svh, 20rem) and is contained (decision 0020). A portrait
 // or square photograph is then as wide as the frame is high times its aspect, not as wide as its column, so the size
 // hint names that width and a phone loads the rendition it shows instead of a larger one (decision 0021). On common
