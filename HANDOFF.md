@@ -1,3 +1,15 @@
+## Writer scope: size grouping at the model layer, 2026-11-01
+
+This local interactive Claude Code session stays the sole writer of this branch, starting from `413cc10264dd`. The owner directed that sizes of the same genuine design become variants of one model, across all brands.
+
+Scope assigned:
+- **Claude:** implementation, tests and review, plus the scoped, reversible grouping migration and the mapping rebuild, through the existing connector after reviewed tests and a fresh baseline.
+- **Codex:** operates the immutable, checksummed Worker release.
+
+Limits:
+- No SKU row, approval, original image, link or grant is deleted or rewritten.
+- No other production action is authorised.
+
 ## Current handoff: real photograph batch 1 live, 2026-11-01
 
 Writer: this local interactive Claude Code session, the sole writer and the database execution actor that Codex assigned for this batch. It finished its writes, and nothing is running.
