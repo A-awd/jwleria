@@ -14,6 +14,13 @@
 
 **Next:** Codex's visitor check at 390×844 (`DEPLOY.md` step 3).
 
+**n8n delivery connection (prepared, not operational):**
+- "Jwleria — Approved image delivery check (manual)" was created in n8n: inactive, a manual trigger only, in the owner's personal project.
+- It replays the four approved files through the same JWT-verified, approval-bound upload function. It uses no service role, no database access and no schedule.
+- **It has not run:** its one credential is not attached. That credential holds the project's existing public anon key, in the Jwleria project.
+- The importable definition and the operator steps are in [docs/operations/N8N-APPROVED-IMAGE-DELIVERY.md](docs/operations/N8N-APPROVED-IMAGE-DELIVERY.md).
+- "Durable catalog intake" references no credential: its database nodes are disabled and carry none.
+
 ## Decision 0022: the white square recorded and uploaded; Worker package `storefront-3a5c0edef3b9` ready for Codex; publication waits for it, 2026-11-01
 
 **Applied (observed live):** migration `20261101181522` `jwleria_white_square_media`.

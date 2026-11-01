@@ -10,7 +10,7 @@
   - the multi-colour example;
   - photo coverage;
   - a physical iPhone;
-  - the n8n delivery check workflow, which needs one credential in the Jwleria project holding the project's existing public anon key.
+  - the n8n delivery check, which is created but inactive. The operator moves it into Jwleria, creates the one credential and runs it by hand ([docs/operations/N8N-APPROVED-IMAGE-DELIVERY.md](docs/operations/N8N-APPROVED-IMAGE-DELIVERY.md)).
 
 ## Previous handoff: Worker `storefront-3a5c0edef3b9` ready to deploy; then Claude publishes the staged images, 2026-11-01
 
