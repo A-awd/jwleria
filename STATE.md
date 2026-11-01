@@ -1,3 +1,32 @@
+## Free performance and image quality gate (decision 0021): deployed and visitor-verified for the checked scope; the cutout limitation and the missing original stay open, 2026-11-01
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-cbbc1e4d5dfc/` (source `cbbc1e4d5dfc`) | Codex | All 77 hashes matched the manifest (`e78d1ea4…7b4e`) before the upload. The new version is active, and the runtime and all three bindings, secrets included, are identical before and after. | producer-reported |
+| Public check at 390×844 | Codex | Passed for the scope below, in its in-app browser. | visitor-verified |
+
+No database, mapping, grant, asset, cache-rule or route change was made. Provider identifiers stay outside the repository.
+
+**Visitor-verified** (Codex, on the public site in its in-app browser at 390×844):
+- **Arabic `m126234-0015`:**
+  - it loads the 640w file;
+  - its full-size link opens the 960 × 720 file, and Back returns;
+  - the dial and bracelet controls end at 704.83 and 768.42, with no overflow;
+  - a scroll from the image centre moves the document to 422.
+- **Arabic `m126200-0006`:**
+  - both images load, with `sizes` ending `calc(28.4vh)`;
+  - two full-size links;
+  - no console errors on that page.
+- **English `m126200-0006`:** renders.
+- **English `m126234-0015`:** the dial and bracelet controls end at 724.52 and 788.11, with no overflow, and its full-size link is there.
+- **Screenshot:** one live screenshot is held privately by Codex.
+
+**Not tested:** a physical iPhone and a 3× pixel ratio. The 3× savings in decision 0021 stay modelled from the published files.
+
+**Open limitations:**
+- **The `m126200-0006` cutout is not certified.** It is the first photograph on its page, and it keeps a band of dark retained pixels along the case's left flank, visible on light grounds at zoom. It needs a reviewed decision under decision 0015: keep it with the limitation recorded, show the photograph first, or a reviewed non-generative mask rework.
+- **`m126200-0006`'s recorded original is not held locally,** so its delivered files' fidelity was not recomputed. They match their records.
+
 ## Free performance and image quality gate (decision 0021): prepared; Worker not yet deployed; one cutout limitation open, 2026-11-01
 
 **Direction:** performance work using only free tools and existing resources; a practical, measured answer to "how can image clarity be trusted", with no claim of 100%.

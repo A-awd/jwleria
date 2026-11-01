@@ -1,4 +1,25 @@
-## Current handoff: free performance and image quality gate (decision 0021), 2026-11-01
+## Current handoff: free performance and image quality gate live (decision 0021), 2026-11-01
+
+Nothing is running. The details are in the top entry of `STATE.md`.
+- **Deploy.** Codex deployed `releases/storefront-cbbc1e4d5dfc/` (source `cbbc1e4d5dfc`). All 77 hashes matched before the upload, and the runtime and bindings are identical before and after.
+- **Public check.** It passed at 390×844 in Arabic and English:
+  - the phone size hints;
+  - the full-size links;
+  - the compact layout;
+  - scrolling from the image centre.
+
+Next:
+1. **Owner or reviewer: the `m126200-0006` cutout.** It is not certified: dark retained pixels along the case's left flank. Decide under decision 0015.
+2. **Not tested:** a 3× pixel ratio and a physical iPhone.
+3. **Before any future photograph is published:** run `scripts/catalog-intake/image-quality-gate.mjs` and its side-by-side review.
+4. **Unchanged open items:**
+   - the missing local original of `m126200-0006`;
+   - the multi-colour photograph example;
+   - photo coverage.
+
+Rollback: `releases/storefront-cbbc1e4d5dfc/DEPLOY.md`. Roll the Worker back to the version Codex recorded; `061cff21583e` works with the current database.
+
+## Previous handoff: free performance and image quality gate prepared (decision 0021), 2026-11-01
 
 Prepared and pushed:
 - source `cbbc1e4d5dfc`;

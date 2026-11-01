@@ -11,6 +11,8 @@ This is a Worker-only release. It makes no database, mapping, grant, asset, cach
 
 ## 1. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): all 77 hashes matched the manifest before the upload. The new version is active, and the runtime and all three bindings, secrets included, are identical before and after. The provider identifiers are held privately.
+
 **Files:**
 - 77 compiled files under `dist-cloudflare/`. The file set is the same as `storefront-061cff21583e`, except for hashed chunk names.
 - `SHA256SUMS` has one line per file. Its own sha256 is `e78d1ea4305af4bdc11af2bff427bc2dd8c72601cbbf25c3338c248d2aea7b4e`.
@@ -37,6 +39,13 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - `noindex, nofollow` and robots `Disallow: /` are kept.
 
 ## 2. Public check (Codex)
+
+**Done on 2026-11-01** (visitor-verified by Codex on the public site at 390×844):
+- **Arabic `m126234-0015`:** it uses 640w; the full-size link opens 960 × 720 and Back returns; the controls end at 704.83 and 768.42; a centre scroll moves the document to 422.
+- **Arabic `m126200-0006`:** `sizes` is `calc(28.4vh)`, with two full-size links and no console errors.
+- **English `m126234-0015`:** the controls end at 724.52 and 788.11, with no overflow.
+
+Not tested: a 3× pixel ratio or a physical iPhone. Still open: the cutout limitation and the missing local original (`STATE.md`).
 
 **At 390×844, in Arabic and English, on `m126234-0015` and `m126200-0006`:**
 - the compact layout keeps the size, dial and bracelet controls on screen with the photograph;
