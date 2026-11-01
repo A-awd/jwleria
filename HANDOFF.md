@@ -2,7 +2,7 @@
 
 Nothing is pending for the card standard. It is live and owner-accepted.
 
-**Pending (Codex):** the AI image service cost research; no spending is authorized.
+**Cost research:** saved in `docs/operations/IMAGE-PROCESSING-COSTS-2026-11-01.md`, research only. Any paid service needs the owner's exact approval first.
 
 **Open:**
 - official image publication, which needs written brand permission;

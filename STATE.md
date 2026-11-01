@@ -1,3 +1,12 @@
+## AI image service cost research saved (research only, nothing authorized), 2026-11-01
+
+- **Saved:** verified prices and exact assumptions (SAMA rate, scenario counts, exclusions, source links) in [docs/operations/IMAGE-PROCESSING-COSTS-2026-11-01.md](docs/operations/IMAGE-PROCESSING-COSTS-2026-11-01.md):
+  - 851-labs about USD 0.00043 per image;
+  - BRIA USD 0.018;
+  - Photoroom Basic USD 0.02 and Plus USD 0.10.
+- **Not done:** no trial, purchase, account, paid call, workflow activation or publication. The free-only direction stays in force.
+- **Owner acceptance:** the owner's global acceptance of the decision 0023 card for all products is recorded in decision 0023 and in the owner brief (section 16).
+
 ## Owner final acceptance of the decision 0023 card standard for all products, 2026-11-01
 
 - **The approval:** the owner approved the grey-square card design for all other products: «اعتمد لكل المنتجات الاخرى».
