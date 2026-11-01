@@ -2,33 +2,36 @@
 import type { Locale, ProductModel } from '../contracts/catalog';
 import { href, optionLabel, t } from '../i18n/ui';
 import { sizeTable } from './variant-selection.mjs';
+import Chevron from './Chevron.astro';
 import VariantText from './VariantText.astro';
 
-// One row per real size of the model. Each links to the existing variant at that size that keeps most of the current
-// selection and names any option that changes with it, so no colour is implied at a size where it does not exist.
+// One row per real size of the model, in a labelled disclosure below the options. Each row gives the reference of
+// the existing variant at that size that keeps most of the current selection (linked), the facts that differ by
+// size and how many values its options have there. It never implies that a value exists at a size.
 interface Props { model: ProductModel; locale: Locale }
 const { model, locale } = Astro.props;
 const s = t(locale);
 const table = sizeTable(model);
 ---
-{table && <section class="size-table" aria-labelledby="h-sizes">
-  <h2 class="facts__title" id="h-sizes">{s.sizes.title}</h2>
-  <table>
-    <thead><tr><th scope="col">{optionLabel(locale, table.kind, table.label)}</th><th scope="col">{s.reference}</th><th scope="col">{s.sizes.details}</th></tr></thead>
-    <tbody>
-      {table.rows.map((row) => (
-        <tr aria-current={row.current ? 'true' : undefined}>
-          <th scope="row"><VariantText text={row.option.value[locale]} lang={row.option.valueLang} /></th>
-          <td>{row.current
-            ? <bdi dir="ltr">{row.reference}</bdi>
-            : <a href={href(locale, `/products/${row.slug}/`)} data-variant-link data-option-kind={table.kind} data-option-key={row.key}><bdi dir="ltr">{row.reference}</bdi></a>}</td>
-          <td>
-            {row.facts.map((fact) => <span class="size-table__fact">{optionLabel(locale, fact.kind, fact.label)}: <VariantText text={fact.value[locale]} lang={fact.valueLang} /></span>)}
-            {row.options.length > 0 && <span class="size-table__fact">{row.options.map((o) => s.variants.count(o.kind, o.count)).join(s.sizes.separator)}</span>}
-            {!row.current && row.changes.length > 0 && <small class="variant-note">{s.variants.changes(row.changes.map((c) => ({ label: optionLabel(locale, c.kind, c.label), value: c.value[locale], valueLang: c.valueLang }))).map((part) => typeof part === 'string' ? part : <VariantText text={part.value} lang={part.valueLang} />)}</small>}
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</section>}
+{table && <details class="fold" data-fold="sizes">
+  <summary class="fold__summary"><span>{s.sizes.title}</span><Chevron /></summary>
+  <div class="fold__body size-table">
+    <table>
+      <thead><tr><th scope="col">{optionLabel(locale, table.kind, table.label)}</th><th scope="col">{s.reference}</th><th scope="col">{s.sizes.details}</th></tr></thead>
+      <tbody>
+        {table.rows.map((row) => (
+          <tr aria-current={row.current ? 'true' : undefined}>
+            <th scope="row"><VariantText text={row.option.value[locale]} lang={row.option.valueLang} /></th>
+            <td>{row.current
+              ? <bdi dir="ltr">{row.reference}</bdi>
+              : <a href={href(locale, `/products/${row.slug}/`)} data-variant-link data-option-kind={table.kind} data-option-key={row.key}><bdi dir="ltr">{row.reference}</bdi></a>}</td>
+            <td>
+              {row.facts.map((fact) => <span class="size-table__fact">{optionLabel(locale, fact.kind, fact.label)}: <VariantText text={fact.value[locale]} lang={fact.valueLang} /></span>)}
+              {row.options.length > 0 && <span class="size-table__fact">{row.options.map((o) => s.variants.count(o.kind, o.count)).join(s.sizes.separator)}</span>}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+</details>}

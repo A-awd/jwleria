@@ -48,6 +48,12 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       const shown = async reference => page.waitForFunction(r => document.querySelector('[data-variant-reference]')?.textContent === r, reference, {timeout: 10000});
       const link = (kind, key) => page.locator(`a[data-variant-link][data-option-kind="${kind}"][data-option-key="${key}"]`);
       const spec = (slug, kind) => model.variants.find(v => v.slug === slug).options.find(o => o.kind === kind).value[locale];
+      // A value inside a closed list is reached by opening the list first, as a visitor does; segments are tapped directly.
+      const choose = async (kind, key) => {
+        const picker = page.locator(`details[data-picker="${kind}"]`);
+        if (await picker.count() && !(await picker.evaluate(d => d.open))) await picker.locator('summary').tap();
+        await link(kind, key).tap();
+      };
 
       await page.goto(new URL(`/${locale}/catalog/`, base).href);
       const card = page.locator('article.card', {has: page.locator('a[href$="/products/preview-watch-ivory-three-link/"]')});
@@ -68,10 +74,10 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       assert.deepEqual([s.reference, s.gallery, s.inquiry], [ref('preview-watch-ivory-three-link'), ref('preview-watch-ivory-three-link'), ref('preview-watch-ivory-three-link')]);
       assert.deepEqual(s.current, ['dial=ivory', 'bracelet=three-link']);
       assert.ok(s.overflow <= 0, `${locale}: no horizontal overflow`);
-      for (const box of await page.locator('a[data-variant-link]').evaluateAll(as => as.map(a => a.getBoundingClientRect()).map(r => [r.width, r.height]))) {
+      for (const box of await page.locator('a[data-variant-link], .pdp summary').evaluateAll(as => as.map(a => a.getBoundingClientRect()).filter(r => r.width > 0).map(r => [r.width, r.height]))) {
         assert.ok(box[0] >= 44 && box[1] >= 44, `targets are at least 44px (${box})`);
       }
-      assert.match(await page.locator('.variant-option legend').first().textContent(), locale === 'ar' ? /^الميناء: / : /^Dial: /);
+      assert.equal(await page.locator('.config__label').first().textContent(), locale === 'ar' ? 'الميناء' : 'Dial');
       await shot('1-initial');
 
       // Keyboard: Tab to the slate dial, then Enter. The focus ring is visible and focus survives the swap.
@@ -95,7 +101,7 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       await shot('3-keyboard-slate');
 
       // Tap: the bracelet changes while the dial is kept.
-      await link('bracelet', 'five-link').tap();
+      await choose('bracelet', 'five-link');
       await shown(ref('preview-watch-slate-five-link'));
       s = await state();
       assert.deepEqual([s.path, s.marker, s.current], [`/${locale}/products/preview-watch-slate-five-link/`, 'same-document', ['dial=slate', 'bracelet=five-link']]);
@@ -104,16 +110,18 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       assert.ok(s.specs.includes(spec('preview-watch-slate-five-link', 'bracelet')));
       await shot('4-tap-five-link');
 
-      // Green exists only on leather: the value says so and moves to that real variant, which has no photo.
-      const green = link('dial', 'green');
-      const note = page.locator(`[id="${await green.getAttribute('aria-describedby')}"]`);
-      assert.ok((await note.textContent()).includes(spec('preview-watch-green-leather', 'bracelet')), 'the value names the bracelet it changes to');
-      // The leather strap has no reviewed Arabic translation: its English text is marked on chip and note alike.
-      for (const value of [link('bracelet', 'leather'), note]) assert.equal(await value.locator('bdi[lang="en"][dir="ltr"]').textContent(), 'Preview leather strap');
-      await green.tap();
+      // Green exists only on leather: it moves to that real variant, which has no photo, and one notice names the
+      // bracelet that came with it. No value carries a note of its own.
+      assert.equal(await page.locator('.variant-note, [aria-describedby^="variant-note"]').count(), 0);
+      await link('dial', 'green').tap();
       await shown(ref('preview-watch-green-leather'));
       s = await state();
       assert.deepEqual([s.path, s.current, s.gallery, s.images], [`/${locale}/products/preview-watch-green-leather/`, ['dial=green', 'bracelet=leather'], null, []]);
+      const notice = page.locator('[data-config-notice]');
+      assert.ok(await notice.isVisible(), 'the changed bracelet is named once');
+      assert.ok(s.status.includes(spec('preview-watch-green-leather', 'bracelet')), 'and announced with the reference');
+      // The leather strap has no reviewed Arabic translation: its English text is marked in the list and the notice alike.
+      for (const value of [link('bracelet', 'leather'), notice]) assert.equal(await value.locator('bdi[lang="en"][dir="ltr"]').textContent(), 'Preview leather strap');
       assert.equal(await page.locator('.pdp--facts').count(), 1, 'honest facts-only state, no borrowed photo');
       assert.ok(s.overflow <= 0);
       await shot('5-tap-green-leather');
@@ -147,7 +155,7 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
 
       // A colour-only model.
       await page.goto(new URL(`/${locale}/products/preview-handbag-black/`, base).href);
-      await link('colour', 'beige').tap();
+      await choose('colour', 'beige');
       await shown(fixtures.getProductModel('preview-handbag-beige').selected.reference);
       assert.deepEqual((await state()).images, ['/images/leather-goods.webp']);
       await shot('7-handbag-beige');
@@ -157,6 +165,7 @@ test('variant selection swaps to real variants by keyboard and tap, in Arabic an
       const plain = await browser.newContext({...MOBILE, javaScriptEnabled: false});
       const noScript = await plain.newPage();
       await noScript.goto(new URL(`/${locale}/products/preview-watch-ivory-three-link/`, base).href);
+      await noScript.locator('details[data-picker="bracelet"] summary').click();
       await Promise.all([noScript.waitForURL(`**/${locale}/products/preview-watch-ivory-five-link/`), noScript.locator('a[data-variant-link][data-option-key="five-link"]').click()]);
       assert.equal(await noScript.locator('[data-variant-reference]').textContent(), ref('preview-watch-ivory-five-link'));
       assert.equal(await noScript.locator('a[data-variant-link][aria-current="true"][data-option-key="five-link"]').count(), 1);

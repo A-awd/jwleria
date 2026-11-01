@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0018 — A coherent mobile product page: the size first, other options as current-value lists](decisions/0018-coherent-mobile-product-page.md)
+
 - [0017 — Sizes of one genuine design are variants of one model](decisions/0017-sizes-as-variants-of-one-model.md)
 
 - [0016 — Verified open-licence photographs, found and published in batches](decisions/0016-verified-open-licence-photo-batches.md)

@@ -1,28 +1,68 @@
 ---
 import type { Locale, VariantLink } from '../contracts/catalog';
 import { href, optionLabel, t } from '../i18n/ui';
-import { selectorAxes } from './variant-selection.mjs';
+import { configurator, controlLayout } from './variant-selection.mjs';
+import Chevron from './Chevron.astro';
 import VariantText from './VariantText.astro';
 
-// Every value is a link to an existing variant page, so selection works without JavaScript.
-// Values reuse the existing chip (44px target, aria-current state); layout lives in the .variant-* block.
+// The product's options as one calm block (owner direction, 2026-11-01):
+// - the size as a row of equal segments;
+// - every other option as its current value, opening a list of only the values made at the selected size;
+// - values made only in other sizes apart, under one heading, each with its sizes as explicit links.
+// Every choice is a link to an existing variant page, so the block works without JavaScript; the lists are native
+// disclosures, so they open by keyboard and announce their state. No choice changes the size unless it names it.
 interface Props { variants: VariantLink[]; selected: VariantLink; locale: Locale }
 const { variants, selected, locale } = Astro.props;
 const s = t(locale);
-const axes = selectorAxes(variants, selected);
+const controls = configurator(variants, selected).map((control, i) => ({ ...control, id: `option-${i}`, layout: controlLayout(control, locale), name: optionLabel(locale, control.kind, control.label) }));
+const sizeKind = controls.find((c) => c.size)?.kind;
+const page = (slug: string) => href(locale, `/products/${slug}/`);
 ---
-{axes.length > 0 && <div class="variant-selector" role="group" aria-label={s.variants.group} data-variant-selector>
-  {axes.map((axis, a) => (
-    <fieldset class="variant-option">
-      <legend>{optionLabel(locale, axis.kind, axis.label)}{axis.current && <>: <span><VariantText text={axis.current.value[locale]} lang={axis.current.valueLang} /></span></>}</legend>
-      <ul class="variant-values" role="list">
-        {axis.values.map((v, i) => (
-          <li class="variant-item">
-            <a class="chip variant-value" href={href(locale, `/products/${v.slug}/`)} aria-current={v.current ? 'true' : undefined} aria-describedby={v.changes.length ? `variant-note-${a}-${i}` : undefined} data-variant-link data-option-kind={axis.kind} data-option-key={v.key}><VariantText text={v.value[locale]} lang={v.valueLang} /></a>
-            {v.changes.length > 0 && <small class="variant-note" id={`variant-note-${a}-${i}`}>{s.variants.changes(v.changes.map((c) => ({ label: optionLabel(locale, c.kind, c.label), value: c.value[locale], valueLang: c.valueLang }))).map((part) => typeof part === 'string' ? part : <VariantText text={part.value} lang={part.valueLang} />)}</small>}
-          </li>
-        ))}
-      </ul>
-    </fieldset>
+{controls.length > 0 && <div class="config" role="group" aria-label={s.variants.group} data-config data-changed={s.variants.changed}>
+  {controls.map((c) => (
+    <div class="config__control" data-control={c.kind} data-label={c.name} data-current-key={c.current?.key} data-current-value={c.current?.value[locale]} data-current-lang={c.current?.valueLang}>
+      {c.layout === 'segments' && <>
+        <p class="config__label" id={c.id}>{c.name}</p>
+        <ul class="segments" role="list" aria-labelledby={c.id} style={`--segments:${c.values.length}`}>
+          {c.values.map((v) => (
+            <li><a class="segment" href={page(v.slug)} aria-current={v.current ? 'true' : undefined} data-variant-link data-option-kind={c.kind} data-option-key={v.key}><VariantText text={v.value[locale]} lang={v.valueLang} /></a></li>
+          ))}
+        </ul>
+      </>}
+      {c.layout === 'list' && <details class="picker" name="product-options" data-picker={c.kind}>
+        <summary class="picker__summary">
+          <span class="picker__label">{c.name}</span>
+          <span class="picker__value">{c.current ? <VariantText text={c.current.value[locale]} lang={c.current.valueLang} /> : '—'}</span>
+          <Chevron />
+        </summary>
+        <div class="picker__panel">
+          {c.values.length > 0 && <ul class="picker__list" role="list" aria-label={c.name}>
+            {c.values.map((v) => (
+              <li><a class="picker__option" href={page(v.slug)} aria-current={v.current ? 'true' : undefined} data-variant-link data-option-kind={c.kind} data-option-key={v.key}>
+                <span class="picker__name"><VariantText text={v.value[locale]} lang={v.valueLang} /></span>
+                <svg class="picker__check" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><path d="M3 8.5l3.2 3.1L13 4.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
+              </a></li>
+            ))}
+          </ul>}
+          {c.elsewhere.length > 0 && <div class="picker__elsewhere">
+            <p class="picker__heading" id={`${c.id}-elsewhere`}>{s.variants.otherSizes}</p>
+            <ul class="picker__list" role="list" aria-labelledby={`${c.id}-elsewhere`}>
+              {c.elsewhere.map((v) => (
+                <li class="picker__row">
+                  <span class="picker__name"><VariantText text={v.value[locale]} lang={v.valueLang} /></span>
+                  <span class="picker__sizes">
+                    {v.sizes.map((z) => (
+                      <a class="picker__size" href={page(z.slug)} data-variant-link data-option-kind={c.kind} data-option-key={v.key} data-also={sizeKind}><span class="sr-only"><VariantText text={v.value[locale]} lang={v.valueLang} />{s.sizes.separator}</span><VariantText text={z.value[locale]} lang={z.valueLang} /></a>
+                    ))}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>}
+        </div>
+      </details>}
+      {c.layout === 'static' && c.current && <p class="config__static"><span class="config__label">{c.name}</span> <span class="config__value"><VariantText text={c.current.value[locale]} lang={c.current.valueLang} /></span></p>}
+    </div>
   ))}
+  <p class="config__notice" data-config-notice aria-hidden="true" hidden></p>
 </div>}

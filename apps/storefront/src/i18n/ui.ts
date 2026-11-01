@@ -40,12 +40,6 @@ export function englishCount(kind: string, n: number) {
   const [one, other] = EN_COUNTS[countKind(kind, EN_COUNTS)];
   return `${n} ${n === 1 ? one : other}`;
 }
-/** One changed option in a note; valueLang 'en' marks a value kept in its English source text. */
-type Change = { label: string; value: string; valueLang?: 'en' };
-/** A note in reading order: plain text, and the changed options whose values the selector marks by language. */
-type ChangeNote = (string | Change)[];
-const changeNote = (lead: string, separator: string, item: (label: string) => string) => (changes: Change[]): ChangeNote =>
-  [lead, ...changes.flatMap((c, i) => [...(i ? [separator] : []), item(c.label), c])];
 
 const ar = {
   langName: 'العربية',
@@ -110,13 +104,18 @@ const ar = {
     // Another variant's photograph is named with its own reference and size, and never presented as this one.
     representative: { before: 'صورة المرجع ', middle: '، معروضة لهذا الطراز، وليست صورة للمرجع المحدد ', end: '.' },
     groups: { identity: 'التعريف بالقطعة', design: 'التصميم والمواد', technical: 'التفاصيل التقنية', other: 'تفاصيل أخرى' } as Record<string, string>,
+    specs: 'المواصفات',
+    message: 'تذكر الرسالة المرجع المحدد:',
   },
   sizes: { title: 'مقاسات هذا الطراز', details: 'ما يختلف بين المقاسات', separator: '، ' },
   variants: {
     group: 'خيارات هذا الطراز',
     kinds: { dial: 'الميناء', bracelet: 'السوار', bracelet_material: 'مادة السوار', colour: 'اللون', color: 'اللون', size: 'المقاس', ring_size: 'مقاس الخاتم', bracelet_size: 'مقاس السوار', bag_size: 'مقاس الحقيبة', case_size: 'قطر العلبة', model_size: 'حجم الموديل' } as Record<string, string>,
     count: arabicCount,
-    changes: changeNote('يغيّر ', '، ', (label) => `${label} إلى `),
+    // Values made only in other sizes, listed apart under the selected size's choices.
+    otherSizes: 'بمقاسات أخرى',
+    // One notice after a choice that also changed another option; {label} and {value} are filled in the page.
+    changed: 'تغيّر {label} إلى {value}.',
     showing: (ref: string) => `تم عرض المرجع ${ref}`,
     partial: (shown: number, total: number) => `يُعرض ${shown} من أصل ${total} من خيارات هذا الطراز.`,
     // Every change text the media migrations accept. The two background-removal texts (decision 0015) add «إزالة الخلفية»
@@ -216,13 +215,16 @@ const en: typeof ar = {
     noPhoto: 'No approved photograph of this reference yet.',
     representative: { before: 'Photograph of reference ', middle: ', shown for this model. It is not a photograph of the selected reference ', end: '.' },
     groups: { identity: 'Identification', design: 'Design and materials', technical: 'Technical details', other: 'Other details' } as Record<string, string>,
+    specs: 'Specifications',
+    message: 'The message names the selected reference:',
   },
   sizes: { title: 'Sizes of this model', details: 'What differs', separator: ' · ' },
   variants: {
     group: 'Options for this model',
     kinds: { dial: 'Dial', bracelet: 'Bracelet', bracelet_material: 'Bracelet material', colour: 'Colour', color: 'Colour', size: 'Size', ring_size: 'Ring size', bracelet_size: 'Bracelet size', bag_size: 'Bag size', case_size: 'Case diameter', model_size: 'Model size' },
     count: englishCount,
-    changes: changeNote('Changes ', ', ', (label) => `${label.charAt(0).toLowerCase()}${label.slice(1)} to `),
+    otherSizes: 'In other sizes',
+    changed: '{label} changed to {value}.',
     showing: (ref: string) => `Showing reference ${ref}`,
     partial: (shown: number, total: number) => `Showing ${shown} of ${total} options of this model.`,
     credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP', 'background removed, resized and converted to WebP': 'background removed, resized and converted to WebP', 'background removed and converted to WebP': 'background removed and converted to WebP' } as Record<string, string> },

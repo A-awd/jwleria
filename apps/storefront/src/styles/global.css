@@ -175,41 +175,98 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 :is(input, select, textarea):focus { border-color: var(--ink); }
 .status { font-size: var(--s-1); color: var(--muted); margin-bottom: 1.75rem; }
 
-.pdp { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "gallery" "info" "cta"; gap: clamp(1.5rem, 4vw, 4rem); padding-top: clamp(1.25rem, 3vw, 2.5rem); }
-.pdp__gallery { grid-area: gallery; display: grid; grid-auto-flow: column; grid-auto-columns: 86%; gap: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
+/* Product page (owner direction, 2026-11-01): the product leads (image, brand, name, reference), its options follow
+   in one calm block, then one inquiry action, then the details as labelled disclosures. One geometry throughout:
+   targets of 44px or more, hairline borders, the existing tokens and type, logical properties for Arabic. */
+.pdp { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.25rem, 4vw, 4rem); padding-top: clamp(.5rem, 2vw, 2rem); }
+.pdp__gallery { display: grid; grid-auto-flow: column; grid-auto-columns: 86%; gap: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
+.pdp__gallery:has(> figure:only-child) { grid-auto-columns: 100%; }
 .pdp__gallery figure { margin: 0; scroll-snap-align: center; }
-.pdp__gallery figcaption { font-size: .75rem; color: var(--muted); padding-top: .5rem; }
-.pdp__info { grid-area: info; }
-.pdp__info h1 { font-size: var(--s3); }
-.pdp__brand { font-family: var(--serif-latin); font-size: var(--s-1); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
-.pdp__cta { grid-area: cta; position: sticky; bottom: 0; z-index: 5; background: var(--ivory); padding-block: .9rem; border-top: 1px solid var(--line); display: grid; gap: .5rem; }
+.pdp__gallery figcaption { font-size: .75rem; line-height: 1.55; color: var(--muted); padding-top: .6rem; }
+.representative-note { display: block; color: var(--ink-soft); }
+.pdp__info { display: grid; align-content: start; gap: 1.5rem; min-width: 0; }
+.pdp__head { display: grid; justify-items: start; gap: .15rem; }
+.pdp__brand { display: inline-flex; align-items: center; min-height: 2.75rem; margin: 0; font-family: var(--serif-latin); font-size: var(--s-1); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); text-decoration: none; }
+.pdp__head h1 { font-size: var(--s3); margin: 0; }
+.pdp__ref { margin: .4rem 0 0; font-size: var(--s-1); color: var(--muted); }
+.pdp__ref bdi { color: var(--ink-soft); letter-spacing: .02em; }
+.pdp__intro { margin: 0; color: var(--ink-soft); }
+.pdp__info > .note { margin: 0; }
+.pdp__cta { display: grid; gap: .6rem; }
+.pdp__cta .cta { min-height: 3.25rem; }
+.pdp__cta .note { margin: 0; max-width: none; text-align: center; }
+.cta:disabled { cursor: default; }
+.cta--solid:disabled:hover { background: var(--ink); }
+
+/* Options: the size as equal segments; any other option as its current value opening a list of the values made at
+   that size, with values made only in other sizes apart under one heading. */
+.config { display: grid; gap: 1.25rem; }
+.config__label { margin: 0 0 .6rem; font-size: var(--s-1); color: var(--muted); }
+.segments { display: grid; grid-template-columns: repeat(var(--segments, 3), minmax(0, 1fr)); gap: .5rem; list-style: none; margin: 0; padding: 0; }
+.segments li { display: flex; min-width: 0; }
+.segment { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 2.75rem; padding: .45rem .4rem; border: 1px solid var(--line); background: var(--paper); color: var(--ink-soft); font-size: var(--s-1); line-height: 1.3; text-align: center; text-decoration: none; overflow-wrap: anywhere; transition: border-color .2s var(--ease), color .2s var(--ease), box-shadow .2s var(--ease); }
+.segment:hover { border-color: var(--ink-soft); color: var(--ink); }
+.segment[aria-current="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); color: var(--ink); font-weight: 600; }
+.picker { border: 1px solid var(--line); background: var(--paper); }
+.picker__summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 1rem; min-height: 3.5rem; padding: .5rem 1rem; cursor: pointer; list-style: none; }
+.picker__summary::-webkit-details-marker { display: none; }
+.picker__label { grid-column: 1; font-size: .75rem; line-height: 1.4; color: var(--muted); }
+.picker__value { grid-column: 1; font-size: var(--s0); line-height: 1.45; color: var(--ink); overflow-wrap: anywhere; }
+.picker__summary .chevron { grid-column: 2; grid-row: 1 / span 2; }
+.chevron { width: 1rem; height: 1rem; flex: none; color: var(--muted); transition: transform .25s var(--ease); }
+details[open] > summary .chevron { transform: rotate(180deg); }
+.picker__panel { border-top: 1px solid var(--line); max-height: min(26rem, 62svh); overflow-y: auto; }
+.picker__list { list-style: none; margin: 0; padding: 0; }
+.picker__list > li + li { border-top: 1px solid color-mix(in srgb, var(--line) 65%, transparent); }
+.picker__option { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3rem; padding: .6rem 1rem; color: var(--ink-soft); text-decoration: none; }
+.picker__option:hover { background: var(--ivory); color: var(--ink); }
+.picker__option[aria-current="true"] { color: var(--ink); font-weight: 600; }
+.picker__name { min-width: 0; overflow-wrap: anywhere; }
+.picker__check { width: 1rem; height: 1rem; flex: none; visibility: hidden; }
+.picker__option[aria-current="true"] .picker__check { visibility: visible; }
+.picker__elsewhere { border-top: 1px solid var(--line); background: color-mix(in srgb, var(--sand) 45%, var(--paper)); }
+.picker__heading { margin: 0; padding: .85rem 1rem .35rem; font-size: .75rem; color: var(--muted); }
+.picker__row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 3.25rem; padding: .3rem 1rem; color: var(--ink-soft); }
+.picker__sizes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; flex: none; max-width: 60%; }
+.picker__size { display: inline-flex; align-items: center; justify-content: center; min-width: 4.25rem; min-height: 2.75rem; padding: .3rem .6rem; border: 1px solid var(--line); background: var(--paper); font-size: .8rem; color: var(--ink-soft); text-decoration: none; }
+.picker__size:hover { border-color: var(--ink-soft); color: var(--ink); }
+.config__static { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin: 0; }
+.config__static .config__label { margin: 0; }
+.config__value { color: var(--ink); }
+.config__notice { margin: 0; padding: .7rem 1rem; background: var(--sand); color: var(--ink-soft); font-size: var(--s-1); }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+
+/* Details as labelled disclosures: specifications, the sizes of the model and how to inquire. */
+.folds { border-top: 1px solid var(--line); }
+.fold { border-bottom: 1px solid var(--line); }
+.fold__summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; min-height: 3.5rem; padding-block: .6rem; cursor: pointer; list-style: none; font-size: var(--s-1); font-weight: 600; }
+.fold__summary::-webkit-details-marker { display: none; }
+.fold__body { padding-bottom: 1.5rem; }
 /* Product facts as short labelled paragraphs in modest groups (owner display decision, 2026-10-29). */
-.facts { display: grid; gap: 1.25rem; margin: 1.75rem 0; padding-block: 1.5rem; border-block: 1px solid var(--line); font-size: var(--s-1); }
-.facts__group { display: grid; gap: .35rem; }
-.facts__title { margin: 0 0 .15rem; font-family: var(--text); font-size: var(--s-1); font-weight: 600; color: var(--muted); }
+.facts { display: grid; gap: 1.1rem; font-size: var(--s-1); }
+.facts__group { display: grid; gap: .3rem; }
+.facts__title { margin: 0 0 .1rem; font-family: var(--text); font-size: .75rem; font-weight: 600; color: var(--muted); }
 .fact { margin: 0; line-height: 1.75; overflow-wrap: anywhere; }
 .fact strong { font-weight: 600; }
-/* Sizes of one model (decision 0017): one compact row per real size, readable at phone width; each reference links
-   to the existing variant at that size, with a 44px target. */
-.size-table { margin-top: 1.5rem; font-size: var(--s-1); }
+/* Sizes of one model (decision 0017): one compact row per real size; each reference links to the existing variant
+   at that size, with a 44px target. */
+.size-table { font-size: var(--s-1); }
 .size-table table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-.size-table th, .size-table td { padding: .55rem .5rem .55rem 0; border-top: 1px solid var(--line); text-align: start; vertical-align: top; overflow-wrap: anywhere; }
-.size-table thead th { border-top: 0; font-weight: 600; color: var(--muted); }
-.size-table thead th:first-child, .size-table tbody th { width: 28%; }
+.size-table th, .size-table td { padding-block: .55rem; padding-inline: 0 .75rem; border-top: 1px solid var(--line); text-align: start; vertical-align: top; overflow-wrap: anywhere; }
+.size-table thead th { border-top: 0; padding-top: 0; font-size: .75rem; font-weight: 600; color: var(--muted); }
+.size-table thead th:first-child, .size-table tbody th { width: 26%; }
 .size-table tbody th { font-weight: 600; }
 .size-table tr[aria-current="true"] :is(th, td) { color: var(--ink); background: var(--paper); }
 .size-table td a { display: inline-flex; align-items: center; min-height: 2.75rem; }
 .size-table__fact { display: block; line-height: 1.6; }
-.representative-note { display: block; color: var(--ink-soft); }
-.inquiry-note { background: var(--paper); border: 1px solid var(--line); padding: 1.5rem; margin-top: 1.5rem; font-size: var(--s-1); }
-.inquiry-note h2 { font-family: var(--text); font-size: var(--s0); font-weight: 600; }
-.inquiry-note blockquote { margin: .75rem 0 0; padding-inline-start: 1rem; border-inline-start: 2px solid var(--line); }
+.inquiry-note { font-size: var(--s-1); }
+.inquiry-note p { margin: 0 0 .75rem; color: var(--ink-soft); }
+.inquiry-note blockquote { margin: 0; padding-inline-start: 1rem; border-inline-start: 2px solid var(--line); }
 @media (min-width: 60rem) {
-  .pdp { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); grid-template-areas: "gallery info" "gallery cta"; grid-template-rows: auto 1fr; }
+  .pdp { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; }
   .pdp__gallery { grid-auto-flow: row; grid-template-columns: 1fr 1fr; margin: 0; padding: 0; overflow: visible; }
   .pdp__gallery figure:first-child { grid-column: 1 / -1; }
   .pdp__gallery figure + figure .media { aspect-ratio: 1; }
-  .pdp__cta { position: static; border: 0; align-self: start; }
 }
 
 .inquiry { border: 0; padding: 0; background: none; width: 100%; max-width: min(32rem, calc(100% - 2rem)); color: var(--ink); }
@@ -255,22 +312,14 @@ html[lang="ar"] .steps li::before { content: counter(s, arabic-indic); }
 .card--facts .card__body { padding: 1.75rem .25rem; gap: .7rem; }
 .card--facts .card__brand { font-size: 1rem; }
 .card--facts .card__name { font-family: var(--display); font-size: var(--s1); }
-.pdp.pdp--facts { max-width: 56rem; margin-inline: auto; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'info' 'cta'; grid-template-rows: auto auto; }
-.pdp--facts .pdp__info { padding-block: 1.5rem; }
+.pdp.pdp--facts { max-width: 40rem; margin-inline: auto; grid-template-columns: minmax(0, 1fr); }
+.pdp--facts .pdp__info { padding-top: 1rem; }
 .pdp--facts .pdp__info h1 { max-width: 24ch; }
 
-/* Variant controls and gallery credit: functional baseline only (owner role split, 2026-10-26).
-   The chosen design replaces this block as a whole; it reuses the existing tokens and the .chip control. */
-.variant-selector { display: grid; gap: 1.25rem; margin-top: 1.5rem; }
-.variant-option { border: 0; margin: 0; padding: 0; min-width: 0; }
-.variant-option legend { padding: 0; margin-bottom: .5rem; font-size: var(--s-1); color: var(--muted); }
-.variant-values { display: flex; flex-wrap: wrap; gap: .5rem; list-style: none; margin: 0; padding: 0; }
-.variant-item { display: grid; gap: .25rem; justify-items: start; min-width: 0; max-width: 100%; }
-.variant-value { max-width: 100%; overflow-wrap: anywhere; }
-.variant-note { max-width: 18rem; font-size: .75rem; line-height: 1.4; color: var(--muted); }
+/* Variant status and gallery credit. The product options are styled with the product page above. */
 .variant-status { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .gallery-credit { display: block; margin-top: .25rem; }
 .gallery-credit--card { margin: .25rem 0 0; font-size: .75rem; color: var(--muted); }
 /* The licence name ("CC BY 2.0") never breaks across lines, in either direction. */
 .gallery-credit a[rel~="license"] { white-space: nowrap; }
-/* End of variant controls and gallery credit. */
+/* End of variant status and gallery credit. */

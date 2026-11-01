@@ -44,6 +44,10 @@ export function optionAxes(variants) {
 
 const better = (a, b) => { for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i]; return false; };
 
+/** The other options that differ between `target` and `selected`, as they read on `target`. */
+const changedOptions = (axes, target, selected, kind) => axes.filter(a => a.kind !== kind && optionKey(target, a.kind) !== optionKey(selected, a.kind))
+  .flatMap(a => { const option = target.options.find(o => o.kind === a.kind); return option ? [{kind: a.kind, label: a.label, ...valueOf(option)}] : []; });
+
 /**
  * The existing variant with this value that keeps most of the current selection; ties prefer the
  * earlier option kinds, then the lower position.
@@ -78,12 +82,67 @@ export function selectorAxes(variants, selected) {
       current: axis.values.find(v => v.key === currentKey),
       values: axis.values.map(value => {
         const target = value.key === currentKey ? selected : closestVariant(variants, selected, axis.kind, value.key, axes);
-        const changes = axes.filter(a => a.kind !== axis.kind && optionKey(target, a.kind) !== optionKey(selected, a.kind))
-          .flatMap(a => { const option = target.options.find(o => o.kind === a.kind); return option ? [{kind: a.kind, label: a.label, ...valueOf(option)}] : []; });
-        return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes};
+        return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
       }),
     };
   });
+}
+
+/**
+ * The product page's option controls (owner direction, 2026-11-01). The size comes first and offers every real
+ * size. Every other option offers as its choices only the values made at the selected size, each linked to the
+ * existing variant at that size that keeps most of the current selection, so choosing one never changes the size.
+ * Values made only in other sizes are kept apart, each with the sizes it is made in; each of those sizes is an
+ * explicit link. Every link is an existing variant, and no combination is constructed.
+ * @param {Link[]} variants ordered by position
+ * @param {Link} selected
+ */
+export function configurator(variants, selected) {
+  const axes = optionAxes(variants);
+  const size = axes.find(a => SIZE_KINDS.includes(a.kind));
+  const sizeKey = size && optionKey(selected, size.kind);
+  const at = key => (size ? variants.filter(v => optionKey(v, size.kind) === key) : variants);
+  const here = at(sizeKey);
+  return [...(size ? [size] : []), ...axes.filter(a => a !== size)].map(axis => {
+    const currentKey = optionKey(selected, axis.kind);
+    const choice = (scope, value) => {
+      const target = value.key === currentKey ? selected : closestVariant(scope, selected, axis.kind, value.key, axes);
+      return {...value, slug: target.slug, reference: target.reference, current: target === selected, changes: changedOptions(axes, target, selected, axis.kind)};
+    };
+    const base = {kind: axis.kind, label: axis.label, size: axis === size, current: axis.values.find(v => v.key === currentKey)};
+    if (axis === size) return {...base, values: axis.values.map(value => choice(variants, value)), elsewhere: []};
+    const made = new Set(here.map(v => optionKey(v, axis.kind)));
+    const values = axis.values.filter(v => made.has(v.key)).map(value => choice(here, value));
+    const elsewhere = !size ? [] : axis.values.filter(v => !made.has(v.key)).map(value => ({
+      ...value,
+      sizes: size.values.flatMap(s => {
+        const target = closestVariant(at(s.key), selected, axis.kind, value.key, axes);
+        return target ? [{...s, slug: target.slug, reference: target.reference}] : [];
+      }),
+    })).filter(v => v.sizes.length);
+    return {...base, values, elsewhere};
+  });
+}
+
+/** The longest value, in characters, that one of n equal segments holds at phone width (390px). */
+export const SEGMENT_TEXT = {2: 20, 3: 13, 4: 10, 5: 7};
+/** Other options use segments only for this many values, and only when none is made in another size alone. */
+export const SEGMENT_OPTIONS = 3;
+
+/**
+ * How a control is shown: 'segments' (one row of equal targets) for a few short values; 'list' (the current value,
+ * opening a list) for long or numerous values or when some are made in other sizes; 'static' for an option with one
+ * value here and none elsewhere.
+ * @param {ReturnType<typeof configurator>[number]} control
+ * @param {'ar' | 'en'} locale
+ * @returns {'segments' | 'list' | 'static'}
+ */
+export function controlLayout(control, locale) {
+  if (!control.size && control.values.length <= 1 && control.elsewhere.length === 0) return 'static';
+  const count = control.values.length;
+  const fits = control.size || (count <= SEGMENT_OPTIONS && control.elsewhere.length === 0);
+  const longest = Math.max(0, ...control.values.map(v => [...(v.value[locale] ?? '')].length));
+  return fits && longest <= (SEGMENT_TEXT[count] ?? 0) ? 'segments' : 'list';
 }
 
 /** @param {import('../contracts/catalog').PublicProduct | undefined} product */

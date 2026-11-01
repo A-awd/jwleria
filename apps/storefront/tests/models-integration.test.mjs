@@ -310,6 +310,8 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       }));
       const shown=reference=>page.waitForFunction(r=>document.querySelector('[data-variant-reference]')?.textContent===r,reference,{timeout:10000});
       const link=(kind,key)=>page.locator(`a[data-variant-link][data-option-kind="${kind}"][data-option-key="${key}"]`);
+      // A value inside a closed list is reached by opening the list first; segments are tapped directly.
+      const choose=async(kind,key)=>{const picker=page.locator(`details[data-picker="${kind}"]`);if(await picker.count()&&!(await picker.evaluate(d=>d.open)))await picker.locator('summary').tap();await link(kind,key).tap();};
       const tabTo=async target=>{for(let i=0;i<120;i++){await page.keyboard.press('Tab');if((await state()).active===target)return;}assert.fail(`${target} is not reachable by keyboard`);};
       const canonical=`${SITE}${locale}/products/${slugOf('m126200-0001')}/`;
       const at=(ref,dial,bracelet)=>({path:`/${locale}/products/${slugOf(ref)}/`,reference:ref,current:[`dial=${dial}`,`bracelet=${bracelet}`],canonical});
@@ -354,19 +356,20 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       assert.ok(st.specs.includes(value('m126200-0002','dial',locale))&&!st.specs.includes(value('m126200-0006','dial',locale)),'specs follow the real variant');
       await shot('2-tap-silver');
 
-      // Keyboard: Jubilee from silver on Oyster is the primary itself.
+      // Keyboard: open the bracelet list, then Jubilee from silver on Oyster is the primary itself.
+      await page.locator('details[data-picker="bracelet"] summary').focus();
+      await page.keyboard.press('Enter');
       await tabTo('bracelet='+BRACELET[0]);
       assert.notEqual(await page.evaluate(()=>getComputedStyle(document.activeElement).outlineStyle),'none','visible focus ring');
       await page.keyboard.press('Enter');
       await shown('m126200-0001');
       st=await state();
       assert.deepEqual({path:st.path,reference:st.reference,current:st.current,canonical:st.canonical},at('m126200-0001','silver',BRACELET[0]));
-      assert.equal(st.active,'bracelet='+BRACELET[0],'focus stays on the chosen value');
+      assert.equal(await page.evaluate(()=>document.activeElement?.closest('details[data-picker]')?.dataset.picker),'bracelet','focus returns to the bracelet list, now closed');
       await shot('3-keyboard-jubilee');
 
-      // Keyboard: candy pink exists only on Oyster; its value says so and moves to that real variant.
+      // Keyboard: candy pink exists only on Oyster; it moves to that real variant and one notice names the bracelet.
       const pink=link('dial','candy-pink');
-      assert.ok((await page.locator(`[id="${await pink.getAttribute('aria-describedby')}"]`).textContent()).includes(value('m126200-0010','bracelet',locale)));
       if(locale==='ar')assert.equal(await pink.locator('bdi[lang="en"][dir="ltr"]').textContent(),'Candy pink','a value kept in English is marked as English');
       await tabTo('dial=candy-pink');
       await page.keyboard.press('Enter');
@@ -374,10 +377,11 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       st=await state();
       assert.deepEqual({path:st.path,reference:st.reference,current:st.current,canonical:st.canonical},at('m126200-0010','candy-pink',BRACELET[1]));
       assert.ok(st.specs.includes(value('m126200-0010','bracelet',locale)));
+      assert.ok((await page.locator('[data-config-notice]').textContent()).includes(value('m126200-0010','bracelet',locale)),'one notice names the bracelet that changed');
       await shot('4-keyboard-candy-pink');
 
       // Tap: Jubilee from candy pink can only be the silver primary; never an invented pink Jubilee.
-      await link('bracelet',BRACELET[0]).tap();
+      await choose('bracelet',BRACELET[0]);
       await shown('m126200-0001');
       st=await state();
       assert.deepEqual({path:st.path,reference:st.reference,current:st.current,canonical:st.canonical},at('m126200-0001','silver',BRACELET[0]));
@@ -393,7 +397,7 @@ test('private local preview: a non-primary variant URL, tap and keyboard selecti
       // A colour model reached by its non-primary URL.
       await page.goto(`${base}/${locale}/products/${slugOf('L1899089556')}/`);
       assert.equal(await page.locator('h1').textContent(),TOTE[locale]);
-      await link('colour','paper').tap();
+      await choose('colour','paper');
       await shown('L1899089P59');
       assert.equal((await state()).canonical,`${SITE}${locale}/products/${slugOf('L1899089001')}/`);
       await shot('6-tote-paper');

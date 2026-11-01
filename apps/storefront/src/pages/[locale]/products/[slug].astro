@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import Chevron from '../../../components/Chevron.astro';
 import ProductCard from '../../../components/ProductCard.astro';
 import ProductGallery from '../../../components/ProductGallery.astro';
 import VariantSelector from '../../../components/VariantSelector.astro';
@@ -24,6 +25,8 @@ const category = getCategory(product.categorySlug);
 const inquiry = productInquiry(locale, product, Astro.url.origin, brand);
 // Every available fact, grouped into short paragraphs; a generated summary is not repeated above them.
 const facts = productFacts(locale, product, (kind, fallback) => optionLabel(locale, kind, fallback));
+// The gallery shows this variant's own photographs, or its model's named representative photograph.
+const pictured = product.images.length > 0 || Boolean(model.representative);
 ---
 <BaseLayout locale={locale} title={grouped ? `${model.name[locale]} — ${product.reference}` : model.name[locale]} description={product.summary[locale]} path={`/products/${product.slug}/`} canonicalPath={`/products/${model.primary.slug}/`} image={shareImage(product)}>
   <div class="wrap">
@@ -32,48 +35,61 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
       {category && <> / <a href={href(locale, `/categories/${category.slug}/`)}>{category.name[locale]}</a></>}
     </nav>
 
-    <article class:list={['pdp', { 'pdp--facts': !product.image && !model.representative }]} data-variant-root data-reference={product.reference}>
+    {/* The product leads (image, then brand, name and reference), its options follow, then one inquiry action,
+        then the details as labelled disclosures (owner direction, 2026-11-01). */}
+    <article class:list={['pdp', { 'pdp--facts': !pictured }]} data-variant-root data-reference={product.reference}>
       <ProductGallery product={product} locale={locale} representative={model.representative} />
 
       <div class="pdp__info">
-        {brand
-          ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
-          : <p class="pdp__brand">{s.brands.ownTitle}</p>}
-        <h1>{model.name[locale]}</h1>
-        {facts.intro && <p>{facts.intro}</p>}
+        <header class="pdp__head">
+          {brand
+            ? <a class="pdp__brand" href={href(locale, `/brands/${brand.slug}/`)} lang="en" dir="ltr">{brand.name}</a>
+            : <p class="pdp__brand">{s.brands.ownTitle}</p>}
+          <h1>{model.name[locale]}</h1>
+          <p class="pdp__ref">{s.reference} <bdi dir="ltr" data-variant-reference>{product.reference}</bdi></p>
+        </header>
+        {facts.intro && <p class="pdp__intro">{facts.intro}</p>}
         {product.isPreview && <p class="note">{s.preview} — {s.previewNote}</p>}
-        {grouped && !product.image && <p class="note">{s.product.noPhoto}</p>}
+        {grouped && !pictured && <p class="note">{s.product.noPhoto}</p>}
         <VariantSelector variants={model.variants} selected={product} locale={locale} />
         {model.variantCount !== undefined && model.variantCount > model.variants.length && <p class="note">{s.variants.partial(model.variants.length, model.variantCount)}</p>}
-        <div class="facts" data-variant-specs>
-          <section class="facts__group" aria-labelledby="facts-identity">
-            <h2 class="facts__title" id="facts-identity">{s.product.groups.identity}</h2>
-            <p class="fact"><strong>{s.reference}:</strong> <bdi data-variant-reference>{product.reference}</bdi></p>
-            {brand && product.collectionKind !== 'source-group' && <p class="fact"><strong>{s.product.collection}:</strong> <bdi lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</bdi></p>}
-            {category && <p class="fact"><strong>{s.product.category}:</strong> {category.name[locale]}</p>}
-          </section>
-          {facts.groups.map((group) => (
-            <section class="facts__group" aria-labelledby={`facts-${group.key}`}>
-              <h2 class="facts__title" id={`facts-${group.key}`}>{s.product.groups[group.key]}</h2>
-              {group.facts.map((fact) => <p class="fact"><strong>{fact.label}:</strong> <VariantText text={fact.value} lang={fact.lang} /></p>)}
-            </section>
-          ))}
-        </div>
-        <SizeTable model={model} locale={locale} />
-        <section class="inquiry-note" id="inquiry" aria-labelledby="h-how">
-          <h2 id="h-how">{s.product.how}</h2>
-          <p>{product.isPreview ? s.dialog.explain : s.product.confirm}</p>
-          <blockquote>{s.dialog.product(product.name[locale], product.reference, brand?.name)}</blockquote>
-        </section>
-      </div>
 
-      <div class="pdp__cta">
-        {inquiry ? <a class="cta cta--solid" href={inquiry.href} {...inquiry.attrs}>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
-          {s.cta}
-        </a> : <button class="cta cta--solid" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
-        {/* A grouped page's variant links put other product URLs in this block, so its preview CTA carries its own label. */}
-        <p class="note">{grouped && product.isPreview && `${s.preview} — `}{s.product.confirm}</p>
+        <div class="pdp__cta">
+          {inquiry ? <a class="cta cta--solid" href={inquiry.href} {...inquiry.attrs}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
+            {s.cta}
+          </a> : <button class="cta cta--solid" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
+          {/* A grouped page's variant links put other product URLs in this block, so its preview CTA carries its own label. */}
+          <p class="note">{grouped && product.isPreview && `${s.preview} — `}{s.product.confirm}</p>
+        </div>
+
+        <div class="folds">
+          <details class="fold" data-fold="specs" open={!pictured}>
+            <summary class="fold__summary"><span>{s.product.specs}</span><Chevron /></summary>
+            <div class="fold__body facts" data-variant-specs>
+              <section class="facts__group" aria-labelledby="facts-identity">
+                <h3 class="facts__title" id="facts-identity">{s.product.groups.identity}</h3>
+                <p class="fact"><strong>{s.reference}:</strong> <bdi dir="ltr">{product.reference}</bdi></p>
+                {brand && product.collectionKind !== 'source-group' && <p class="fact"><strong>{s.product.collection}:</strong> <bdi lang="en" dir="ltr" class="brand-name">{product.collection[locale]}</bdi></p>}
+                {category && <p class="fact"><strong>{s.product.category}:</strong> {category.name[locale]}</p>}
+              </section>
+              {facts.groups.map((group) => (
+                <section class="facts__group" aria-labelledby={`facts-${group.key}`}>
+                  <h3 class="facts__title" id={`facts-${group.key}`}>{s.product.groups[group.key]}</h3>
+                  {group.facts.map((fact) => <p class="fact"><strong>{fact.label}:</strong> <VariantText text={fact.value} lang={fact.lang} /></p>)}
+                </section>
+              ))}
+            </div>
+          </details>
+          <SizeTable model={model} locale={locale} />
+          <details class="fold" data-fold="inquiry" id="inquiry">
+            <summary class="fold__summary"><span>{s.product.how}</span><Chevron /></summary>
+            <div class="fold__body inquiry-note">
+              <p>{product.isPreview ? s.dialog.explain : s.product.message}</p>
+              <blockquote>{s.dialog.product(product.name[locale], product.reference, brand?.name)}</blockquote>
+            </div>
+          </details>
+        </div>
       </div>
     </article>
     {grouped && <p class="variant-status" role="status" aria-live="polite" data-variant-status data-template={s.variants.showing('{ref}')}></p>}
@@ -88,17 +104,33 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
 </BaseLayout>
 
 <script>
-  // Progressive enhancement: the option links are real variant pages. With JavaScript the chosen
-  // variant's server-rendered product block replaces this one in place; any failure navigates normally.
+  // Progressive enhancement: every choice is a real variant page. With JavaScript the chosen variant's
+  // server-rendered product block replaces this one in place; any failure navigates normally.
   let pending: AbortController | undefined;
+
+  type Choice = { key: string; value: string; lang: string; label: string };
+  const chosen = (root: ParentNode) => new Map([...root.querySelectorAll<HTMLElement>('[data-control]')].map((c): [string, Choice] =>
+    [c.dataset.control ?? '', { key: c.dataset.currentKey ?? '', value: c.dataset.currentValue ?? '', lang: c.dataset.currentLang ?? '', label: c.dataset.label ?? '' }]));
+
+  // One sentence per option that changed without being chosen, built from the page's own template.
+  const sentence = (template: string, change: Choice) => {
+    const [before, after = ''] = template.replace('{label}', change.label).split('{value}');
+    const value = document.createElement('bdi');
+    value.textContent = change.value;
+    if (change.lang) { value.lang = change.lang; value.dir = 'ltr'; }
+    return [before, value, after];
+  };
 
   async function show(link: HTMLAnchorElement) {
     const root = document.querySelector<HTMLElement>('[data-variant-root]');
     if (!root) return location.assign(link.href);
     pending?.abort();
     const controller = (pending = new AbortController());
-    const { optionKind: kind = '', optionKey: key = '' } = link.dataset;
+    const { optionKind: kind = '', optionKey: key = '', also = '' } = link.dataset;
+    const fromList = Boolean(link.closest('[data-picker]'));
     const url = new URL(link.href);
+    const before = chosen(root);
+    const folds = new Map([...root.querySelectorAll<HTMLDetailsElement>('details[data-fold]')].map((d): [string, boolean] => [d.dataset.fold ?? '', d.open]));
     root.setAttribute('aria-busy', 'true');
     try {
       const response = await fetch(url, { signal: controller.signal, headers: { Accept: 'text/html' } });
@@ -107,19 +139,34 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
       const block = next.querySelector<HTMLElement>('[data-variant-root]');
       if (!block?.dataset.reference) throw new Error('Variant block missing');
       if (controller !== pending) return;
+      // Sections the reader opened or closed stay as they were.
+      block.querySelectorAll<HTMLDetailsElement>('details[data-fold]').forEach((d) => { const open = folds.get(d.dataset.fold ?? ''); if (open !== undefined) d.open = open; });
       root.replaceWith(document.adoptNode(block));
       document.title = next.title;
       const languages = next.querySelectorAll<HTMLAnchorElement>('a[hreflang]');
       document.querySelectorAll<HTMLAnchorElement>('a[hreflang]').forEach((a, i) => { const h = languages[i]?.getAttribute('href'); if (h) a.setAttribute('href', h); });
       history.replaceState(history.state, '', url.pathname + url.search);
-      const chip = block.querySelector<HTMLElement>(`[data-option-kind="${CSS.escape(kind)}"][data-option-key="${CSS.escape(key)}"]`);
-      chip?.focus({ preventScroll: true });
-      // The page keeps its scroll position unless the new block moved the chosen value off screen, as
-      // when a gallery appears above the selector on a phone.
-      const box = chip?.getBoundingClientRect();
-      if (chip && box && (box.top < 0 || box.bottom > innerHeight)) chip.scrollIntoView({ block: 'nearest' });
+      // Focus returns to the control that was used: a list's summary, or the chosen segment.
+      const control = block.querySelector<HTMLElement>(`[data-control="${CSS.escape(kind)}"]`);
+      const target = (fromList ? control?.querySelector<HTMLElement>('summary') : null)
+        ?? control?.querySelector<HTMLElement>(`a[data-option-key="${CSS.escape(key)}"]`)
+        ?? control?.querySelector<HTMLElement>('summary')
+        ?? block.querySelector<HTMLElement>(`a[data-option-kind="${CSS.escape(kind)}"][data-option-key="${CSS.escape(key)}"]`);
+      target?.focus({ preventScroll: true });
+      // The page keeps its scroll position unless the new block moved the used control off screen.
+      const box = target?.getBoundingClientRect();
+      if (target && box && (box.top < 0 || box.bottom > innerHeight)) target.scrollIntoView({ block: 'nearest' });
+      // One notice, only when the chosen variant also changed an option that was not chosen.
+      const named = new Set([kind, ...also.split(' ').filter(Boolean)]);
+      const changed = [...chosen(block)].filter(([k, c]) => !named.has(k) && before.has(k) && before.get(k)?.key !== c.key).map(([, c]) => c);
+      const template = block.querySelector<HTMLElement>('[data-config]')?.dataset.changed ?? '';
+      const notice = block.querySelector<HTMLElement>('[data-config-notice]');
+      if (notice && template && changed.length) {
+        notice.replaceChildren(...changed.flatMap((c, i) => [...(i ? [' '] : []), ...sentence(template, c)]));
+        notice.hidden = false;
+      }
       const status = document.querySelector<HTMLElement>('[data-variant-status]');
-      if (status) status.textContent = (status.dataset.template ?? '').replace('{ref}', block.dataset.reference);
+      if (status) status.textContent = [(status.dataset.template ?? '').replace('{ref}', block.dataset.reference), notice?.hidden === false ? notice.textContent : ''].join(' ').trim();
     } catch (error) {
       if ((error as Error).name !== 'AbortError') location.assign(url.href);
     }
@@ -129,6 +176,17 @@ const facts = productFacts(locale, product, (kind, fallback) => optionLabel(loca
     const link = (event.target as Element | null)?.closest<HTMLAnchorElement>('a[data-variant-link]');
     if (!link || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    if (link.getAttribute('aria-current') !== 'true') void show(link);
+    // Choosing the value already shown only closes its list.
+    if (link.getAttribute('aria-current') === 'true') link.closest<HTMLDetailsElement>('details[data-picker]')?.removeAttribute('open');
+    else void show(link);
+  });
+
+  // Escape closes an open list and returns focus to its summary.
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    const open = (event.target as Element | null)?.closest<HTMLDetailsElement>('details[data-picker][open]');
+    if (!open) return;
+    open.open = false;
+    open.querySelector<HTMLElement>('summary')?.focus();
   });
 </script>
