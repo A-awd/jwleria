@@ -1,3 +1,7 @@
+## Writer transfer: the database apply of jwleria_cutout_media, 2026-11-01
+
+This local interactive Claude Code session is the sole writer of this branch. It is also the database execution actor for this one reviewed additive apply, as Codex assigned (Codex coordinates and operates the Worker). No other writer is active. No other production action is authorised.
+
 ## Current handoff: cutout recording prepared, 2026-11-01
 
 Writer: the local interactive Claude Code session wrote this branch and nothing else. Nothing is running. No database, function, storage, media or provider write was made. Codex owns operator actions. Before another session writes, record the transfer here first.
