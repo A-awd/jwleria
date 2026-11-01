@@ -1,3 +1,71 @@
+## Real photograph batch 1 live: m126200-0006 as a cutout and as the photograph, 2026-11-01
+
+**Public now:** 2 of 4,097 active products have a photograph.
+- **m126200-0006** (new): 2 images, with the background-removed cutout first, so the card shows the cutout.
+  - https://jwleria.com/ar/products/rolex-m126200-0006-1765d475/
+  - https://jwleria.com/en/products/rolex-m126200-0006-1765d475/
+- **m126234-0015:** unchanged, 1 photograph.
+
+The other 4,095 have no photograph. Their image rights are unknown or not granted, so this is unfinished work, not a success rate.
+
+**Applied (observed live):**
+- Migration **`20261101112338`** `jwleria_verified_photo_batch_1` (decision 0016) ran once after a fresh baseline and a literal fidelity check.
+- Its stored statement equals the reviewed body: 6,923 bytes, sha256 `2f0b8d01…3a34`.
+- Read-back:
+  - 11 migrations, with decisions 0013 and 0016 pinned;
+  - the `share_alike_review` column and its check exist;
+  - counts and the catalog hash were unchanged at that point;
+  - security advisors show INFO only (the existing deny-by-default private tables).
+- The file now lives in `migrations/`, byte-equal to the stored statement; its rollback stays in `proposed/`.
+
+**Photograph:**
+- Commons file "Rolex Datejust 36 126200-0006" by Remi Mathis, CC BY-SA 4.0, held untouched as the original: 1588×1676, sha256 `f5b5b2b8…5f5b`.
+- **Identity:** route 2 of decision 0013. The creator states the full reference (independent reviewer B). The visual record leaves `exact_reference` uncertain, as for every file.
+- **Recorded limitations:** the photographer's frame-wide saturation and vignette, so the exact dial shade is not colour-accurate. A twin reference shares the dial colour, so the variant rests on the creator's stated suffix. No derivative carries the original's EXIF.
+
+**Cutout:**
+- **Master** `d5ba2d17…128e`: a local macOS Vision foreground mask on a watch-centred crop, plus two alpha-only refinements on the left case flank:
+  - a shadow bulge trimmed;
+  - a bite into the flank restored to the measured in-focus boundary;
+  - a skin tip trimmed.
+- **Automated check:** passed. Opaque and edge RGB are identical to the original (max delta 0), with the same geometry and ICC, one component and no border contact.
+- **Reviews, both kept as given:**
+  - Independent reviewer A put r1 on HOLD (the flank bite and a tick). On r2 it held again: 4 of 5 checks true, with `no_background_or_other_object_retained` "uncertain" for about 9 neutral-grey edge pixels on the left flank.
+  - Codex, as the independent cutout visual reviewer, accepted r2. It recorded the fringe as ordinary soft boundary under decision 0015, where removing it would notch the case. This is not owner approval; the producer is Claude.
+- **ShareAlike:** the cutout is an adaptation offered under CC BY-SA 4.0. The grant records the ShareAlike review.
+
+**Recorded and published (observed live, 12:04:02Z):**
+- One approval with two images, credited Remi Mathis · CC BY-SA 4.0 · Commons file page:
+  - the cutout: "background removed, resized and converted to WebP";
+  - the photograph: "resized and converted to WebP".
+- The stored evidence equals the bundle.
+- 8 WebP files (320/640/960/1588 px) were uploaded through `jwl-media-upload` with JWT on, each verified by download (sha256 and size).
+- Counts: 2 grants, 11 evidence rows (4 of them cutout), 2 live approvals, 11 bucket objects.
+
+**HTTP checks:**
+- **Codex, independent native HTTPS:**
+  - Arabic product page: 2 images with the cutout first, the Arabic background-removal notice, the Remi Mathis credit, and BY-SA 4.0 and Commons links. The cutout's 640 px file is 58,690 bytes and its sha256 matches its name.
+  - English product page: 2 images, the same credit and the background-removed notice.
+  - Codex's search request timed out at connection (curl 28, no response). That is not an observed app error, and it was not repeated.
+- **Claude (producer-reported to Codex):**
+  - Arabic and English product pages: 200.
+  - Arabic and English catalogue search for m126200-0006: 200, with one card showing the cutout and its credit.
+  - The m126234-0015 page: 200, unchanged.
+- **Not phone- or visitor-verified:** the operator's browser adapter is unavailable after a transport failure.
+
+**Reviewed and not published (2026-11-01 Commons research):**
+- **Four EMore98 files** (Air-King 126900, GMT-Master II 126713GRNR, OP 126000 "Med Blue", OP 34 124200): excluded because the uploader's other files carry missing-permission tags and deletion notices. Each also had its own issue:
+  - 124200: identity not established;
+  - 126000: a dial close-up with the case cut by the frame;
+  - the Air-King cutout kept an occluding accessory.
+- **277200:** 360 px, too small.
+- **126710BLRO and a "Batgirl" GMT file:** described as replicas.
+- **m126234-0015 cutout:** refused because the bracelet is cut by the frame; its photograph stays as published.
+- **IWC IW328801:** a Commons original is held privately. Its author is the same uploader (EMore98), so the same provenance hold applies. It has no independent identity, licence, visual or cutout approval.
+- **Audemars Piguet Royal Oak "ref. 15202":** the creator's statement is not specific enough for an exact catalogue variant.
+
+**Tests:** the 8 SQL test files that load migrations pass after the move, 50 of 50. Other suites were not re-run; they passed at `5c36ddb`: intake 126 of 126, storefront 161 pass, 0 fail, 5 opt-in skips.
+
 ## Cutout recording live in the database and the Worker; no cutout image yet, 2026-11-01
 
 **Deployed (producer-reported by Codex):**

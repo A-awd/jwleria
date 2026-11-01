@@ -5,15 +5,17 @@ import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 import {openLicenseDecisions} from '../../../scripts/catalog-intake/media-pipeline.mjs';
 
-// Synthetic fixtures only; the proposed batch migration runs in memory here and is applied nowhere by this test.
+// Synthetic fixtures only; the batch migration (applied as 20261101112338) runs in memory here and is applied nowhere by
+// this test.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const batch=new URL('../supabase/proposed/jwleria_verified_photo_batch_1.sql',import.meta.url);
+const BATCH='20261101112338_jwleria_verified_photo_batch_1.sql';
+const batch=new URL(BATCH,migrations);
 const rollback=new URL('../supabase/proposed/jwleria_verified_photo_batch_1.rollback.sql',import.meta.url);
 const D16='decisions/0016-verified-open-licence-photo-batches.md';
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==BATCH).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true)");
   return db;
 }

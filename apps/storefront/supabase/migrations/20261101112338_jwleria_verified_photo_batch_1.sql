@@ -1,11 +1,3 @@
--- PROPOSED, not applied: verified open-licence photo batch 1 (decision 0016). Additive:
--- 1. The pinned list of owner decisions an open-licence grant may cite gains decision 0016, for m126200-0006 only.
--- 2. A grant may record the private ShareAlike review of a CC BY-SA adaptation (share_alike_review; only on an
---    open-licence CC BY-SA grant, visible text). The evidence trigger keeps every rule of 20261101104017 and allows a
---    CC BY-SA cutout only when that review is recorded.
--- Rollback: jwleria_verified_photo_batch_1.rollback.sql (refuses while a grant cites decision 0016 or records a review).
-begin;
-
 create or replace function jwl_internal.open_license_decisions() returns jsonb
 language sql immutable security invoker set search_path='' as $$
   select '{"decisions/0013-open-licence-exact-product-photos.md":{"references":["m126234-0015"]},"decisions/0016-verified-open-licence-photo-batches.md":{"references":["m126200-0006"]}}'::jsonb
@@ -82,5 +74,3 @@ begin
   end loop;
   return new;
 end $$;
-
-commit;

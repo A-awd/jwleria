@@ -38,7 +38,7 @@ async function database({cutout=true}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
   // Every applied migration before the cutout one, then (optionally) the cutout migration itself.
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==CUTOUT).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==CUTOUT&&f!=='20261101112338_jwleria_verified_photo_batch_1.sql').sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   if(cutout)await db.exec(await readFile(proposed,'utf8'));
   await db.exec(`insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values
     ('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true),

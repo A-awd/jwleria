@@ -1,4 +1,31 @@
-## Current handoff: cutout path live; waiting for a real cutout input, 2026-11-01
+## Current handoff: real photograph batch 1 live, 2026-11-01
+
+Writer: this local interactive Claude Code session, the sole writer and the database execution actor that Codex assigned for this batch. It finished its writes, and nothing is running.
+
+Production writes:
+- one migration (`20261101112338`);
+- one grant;
+- one approval with 8 evidence rows;
+- 8 uploads through the approval-bound function;
+- one lane publication.
+
+No source flag, function, Worker or other product changed. No further production change is needed for this batch.
+
+Next, in order:
+1. **Optional operator check:** m126200-0006 at phone width in Arabic and English (product page and search card), once a browser is available. Its search card has been checked over HTTP only, by Claude.
+2. **Coverage (the remaining barrier):** 4,095 of 4,097 active products have no photograph, and their image rights are unknown or not granted. A photograph needs one of:
+   - **A further verified open-licence batch under decision 0016.** That means Commons files whose creator states the exact reference, with credible authorship, no replica wording, the whole product inside the frame and at least 960 px on the long side. Then independent identity, licence and visual reviews, a reviewed migration naming the batch, and this same path.
+   - **Written permission from a rights holder** for an open source's galleries (Rolex, Prada, LOEWE, Longchamp, Bottega Veneta), with the owner's decision on that source's `publication_allowed`.
+   - **The owner's own photographs** of exact pieces.
+
+   Closed sources stay closed. The files already reviewed in this batch are excluded or held for the reasons in `STATE.md`, including the EMore98 provenance hold, which also covers the held IWC IW328801 original. They are not next items.
+
+Rollback for this batch:
+- Revoking the grant withdraws the product and its approvals. Then delete the files listed by `jwl_revoked_media_files()`.
+- The migration's rollback (`proposed/jwleria_verified_photo_batch_1.rollback.sql`) refuses while a grant cites decision 0016.
+- The Worker is unaffected.
+
+## Previous handoff: cutout path live; waiting for a real cutout input, 2026-11-01
 
 Writer: this local interactive Claude Code session (transfer recorded below). It finished its writes, and nothing is running. Database: the one assigned apply only (`20261101104017_jwleria_cutout_media`). No grant, source flag, image, function or storage write.
 
