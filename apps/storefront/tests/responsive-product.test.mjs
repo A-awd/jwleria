@@ -80,4 +80,6 @@ test('a photograph card is a square pale tile with the product held to 70% (owne
  const p=publicProduct(row);
  assert.match(productMedia(p,0,'card').sizes,/, calc\(0\.7 \* \(\(100vw - clamp\(2\.5rem, 9vw, 8rem\) - clamp\(1rem, 2\.5vw, 2rem\)\) \/ 2\)\)$/,'a phone card names its in-tile width');
  assert.match(productMedia(p,0,'card').sizes,/^\(min-width: 100rem\) 241px, /);
+ assert.match(css,/body:has\(\.grid > \.card\):not\(:has\(\.pdp\)\) \{ background: #fff; \}/,'a listing page (not a product page) is white');
+ assert.match(css,/@media \(max-width: 55\.99rem\) \{ body:has\(\.grid > \.card\):not\(:has\(\.pdp\)\) \.grid \{ margin-inline: calc\(12px - var\(--gutter\)\); column-gap: 18px; \} \}/,'a phone listing has a 12px outer margin and an 18px gap');
 });

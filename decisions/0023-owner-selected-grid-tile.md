@@ -17,6 +17,8 @@ The owner selected a mobile screenshot of an official brand's product grid as th
    - A transparent packshot shows the tile through its own alpha.
    - An opaque photograph, or an earlier white square, stays the rectangle it is. Nothing is recoloured or blended to hide its background.
 5. **Size hints.** Card size hints name the in-tile width (70% of the column).
+6. **The listing surface.** A page that lists product cards, and is not a product page, is white (`#fff`), as in the reference.
+7. **Phone spacing.** On phones its grid widens to a 12px outer margin with an 18px gap. The rest of the site keeps its current identity.
 
 ## Unchanged
 
