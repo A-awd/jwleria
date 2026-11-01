@@ -1,3 +1,28 @@
+## Decision 0023 final package `storefront-1dd1618a5ef1` ready to deploy (Codex visual review passed for packaging), 2026-11-01
+
+**Prepared:** source `1dd1618a5ef1`, package `releases/storefront-1dd1618a5ef1/`.
+- 77 files, the same file set as live; `SHA256SUMS` sha256 `9e98d60f…467d`.
+- Leak scan: 0 hits for preview code, local hosts, private references, keys or paths.
+
+**It adds** to the decision 0023 tile:
+- a white surface for pages that list product cards (not product pages);
+- on phones, a 12px outer margin and an 18px gap.
+
+**Reviewed (Codex, private preview at 390×844):**
+- Both exact bags load, Le Smart Mocha `10352HIU002` and Le Roseau Vegetal `10327HJD514`, on clean grey tiles of 174 × 174 at about two thirds of the frame.
+- Gap 18, outer margin 12, no overflow.
+- This is approval for packaging only, not the owner's final aesthetic sign-off, and not image publication.
+- The Le Roseau file came from the official global collection page's own link (800 × 800 RGBA), because the Saudi host returned 403.
+
+**Private only, outside the repository and the build:**
+- the preview files;
+- the two-card development route;
+- the private page's truthful footer notice «معاينة خاصة غير منشورة», which replaces the generic generated-image line in that route only.
+
+**Superseded:** `storefront-662fdf4307b7`, never deployed.
+
+**Unchanged:** no database write, grant or image publication; the rejected `m126200-0006` photograph stays withdrawn.
+
 ## Owner-selected grid reference implemented (decision 0023); Worker package `storefront-662fdf4307b7` ready; private local preview running, 2026-11-01
 
 **Implemented** (prepared, not deployed):

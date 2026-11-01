@@ -1,4 +1,12 @@
-## Current handoff: decision 0023 grid tile ready to deploy, 2026-11-01
+## Current handoff: deploy `storefront-1dd1618a5ef1` (decision 0023), 2026-11-01
+
+1. **Codex:** deploy `releases/storefront-1dd1618a5ef1/` per its `DEPLOY.md`. It is a CSS and markup Worker with no data step.
+2. **Codex:** the public listing check on phone and desktop.
+3. **Open:**
+   - official image publication, which needs written brand permission;
+   - the owner's final aesthetic sign-off.
+
+## Previous handoff: decision 0023 grid tile ready to deploy, 2026-11-01
 
 1. **Codex:** inspect the private local preview (actual components). Then deploy `releases/storefront-662fdf4307b7/` per its `DEPLOY.md`. It is a CSS and markup Worker with no data step.
 2. **Codex:** the public phone and desktop listing check.

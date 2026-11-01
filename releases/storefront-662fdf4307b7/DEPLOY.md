@@ -1,3 +1,5 @@
+> **Superseded, never deployed:** use `releases/storefront-1dd1618a5ef1/`, which adds the white listing surface and the phone spacing.
+
 # Operator package — source commit 662fdf4307b7 (owner-selected pale square tile for photograph cards; decision 0023)
 
 This is a Worker-only release: CSS and card markup. It makes no database, migration, source-flag, grant, asset, cache-rule or route change.
