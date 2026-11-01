@@ -1,4 +1,25 @@
-## Current handoff: compact phone product page live (decision 0020), 2026-11-01
+## Current handoff: free performance and image quality gate (decision 0021), 2026-11-01
+
+Prepared and pushed:
+- source `cbbc1e4d5dfc`;
+- package `releases/storefront-cbbc1e4d5dfc/`, with a `SHA256SUMS` sha256 of `e78d1ea4305af4bdc11af2bff427bc2dd8c72601cbbf25c3338c248d2aea7b4e`.
+
+There is no database step.
+
+Next, in order:
+1. **Codex:** deploy as the package's `DEPLOY.md` says, recording the active version first. Then the public check, and the receipt for the final records.
+2. **Owner or reviewer: the `m126200-0006` cutout.** It is an open limitation, not certified: dark retained pixels along the case's left flank on light grounds. Decide under decision 0015 whether to keep it with the limitation recorded, show the photograph first, or run a reviewed non-generative mask rework.
+3. **Image quality gate.** Run it on any future photograph before publication: `node scripts/catalog-intake/image-quality-gate.mjs <private-input.json> <private-report.json>`. Do the side-by-side review it lists.
+4. **Unchanged open items:**
+   - the multi-colour photograph example, which needs an eligible same-design colour pair;
+   - a physical iPhone swipe;
+   - photo coverage.
+
+Nothing is running. The private sample stays outside the repository.
+
+Rollback: the package's `DEPLOY.md`. Roll the Worker back to the recorded version; `061cff21583e` works with the current database.
+
+## Previous handoff: compact phone product page live (decision 0020), 2026-11-01
 
 Nothing is running. The details are in the top entry of `STATE.md`.
 - **Deploy.** Codex deployed `releases/storefront-061cff21583e/` (source `061cff21583e`). The new version is active at 100%, with the runtime and bindings unchanged.

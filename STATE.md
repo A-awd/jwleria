@@ -1,3 +1,68 @@
+## Free performance and image quality gate (decision 0021): prepared; Worker not yet deployed; one cutout limitation open, 2026-11-01
+
+**Direction:** performance work using only free tools and existing resources; a practical, measured answer to "how can image clarity be trusted", with no claim of 100%.
+
+**Measured (labelled):**
+- **Live product page** (`m126200-0006`, a cache miss, from this machine): 17,991 B, or 5,163 B on the wire, with a 626 ms server render. This machine's network made the time to first byte 4.1 s, so it is not used as a latency figure.
+- **Deployed package files** (local):
+  - CSS: 6,006 B gzip;
+  - the product module: 2,711 B gzip;
+  - fonts are self-hosted with `font-display: swap`, and only the faces a page uses are fetched;
+  - `/_astro/*` is cached for a year, immutable.
+- **Published images** (live GET, 11 files): `public, max-age=86400`. A HEAD response showing `private, no-cache` is not what a GET serves.
+- **The bottleneck:** image selection. `m126200-0006`'s portrait photographs show about 240 CSS px wide in the compact frame, but `sizes` said `86vw`, so a 3× phone fetched the 1588w files (359,862 B and 193,466 B) instead of the 960w files (144,262 B and 102,604 B).
+
+**Prepared** (source `de90e231a19e`, then `cbbc1e4d5dfc`; package `releases/storefront-cbbc1e4d5dfc/`, 77 files, `SHA256SUMS` sha256 `e78d1ea4…7b4e`):
+- **Phone size hint:** `calc(30 × aspect vh)` where the frame's height binds, up to an aspect of 1.38. Wider photographs keep their column width, and the thumbnail hint is `5.5rem`. The desktop hints are unchanged.
+- **Modelled selection** (the published files' widths and bytes):
+
+  | Photograph | 390×844 at 3× | 375×667 at 2× |
+  |---|---|---|
+  | `m126200-0006` photograph | 1588w → 960w, −215,600 B | 960w → 640w, −50,160 B |
+  | `m126200-0006` cutout | 1588w → 960w, −90,862 B | 960w → 640w, −43,914 B |
+  | `m126234-0015` | unchanged | 960w → 640w, −67,056 B |
+
+  - The representative thumbnail at 3× drops from 640w to 320w (−51,160 B).
+  - No file narrower than what is shown is chosen, including a phone held sideways.
+- **The clarity tradeoff:** 640w softens tiny lettering under pinch-zoom; the 4× side-by-side shows "OFFICIALLY CERTIFIED" softer.
+  - Every photograph therefore links inline to its largest approved file, named by its real size, for example "Open at full size (960 × 720 px)". It is a plain link with no page gesture, and its tap area is enlarged without adding height.
+  - The largest file is the most detail that exists. Faithful display at the shown size does not mean unlimited zoom.
+- **Image quality gate** (`scripts/catalog-intake/image-quality-gate.mjs`, using free local libwebp tools and JavaScript, reading local files only):
+  - **Automatic rejections:**
+    - a sha256, byte or srcset size mismatch;
+    - an enlargement;
+    - an aspect change beyond ±1 px;
+    - an over-budget file;
+    - SSIM below 0.97 against an exact reference.
+  - **Cutout flags:** corners, frame-edge runs and soft-band halos.
+  - **A manual checklist:** side by side at the shown size and at 4×.
+
+**Gate run** (prepared, on the 11 published files):
+- every file passes the automated checks;
+- `m126234-0015` at 960w: luma SSIM 0.98852 and PSNR 43.44 dB against its held original, an exact reference;
+- `m126200-0006`'s recorded original is not held locally, so its fidelity is not recomputed;
+- cutouts: transparent corners, no edge run, a soft band of about 0.65% of the width.
+
+**Inspection** (a private sample, kept out of the repository):
+- `m126234-0015`'s small lettering is legible at 960w and softer at 640w under zoom.
+- **Open limitation, not certified:** the `m126200-0006` cutout, the first photograph on its page, keeps a band of dark retained pixels along the case's left flank. It shows at 4× over white and not over black, and the site's light frame can show it under zoom.
+- It needs a reviewed decision under decision 0015: keep it with the limitation recorded, show the photograph first, or a reviewed non-generative mask rework.
+
+**Tests:**
+- **At `de90e231a19e`:**
+  - storefront: 201 tests, 196 pass, 0 fail, 5 opt-in skips (Playwright not installed, so not run);
+  - intake: 130 of 130;
+  - type check: only the 7 existing Deno-function errors.
+- **At `cbbc1e4d5dfc`** (the full-size link): the targeted tests pass 17 of 17, and the type check and build pass.
+
+**Free-only limits:**
+- no real phone or device lab;
+- no Lighthouse or field data, and this machine's network to the site is slow;
+- no local `sharp`, so an exact SSIM is possible only where the original is the delivered width;
+- no held copy of `m126200-0006`'s recorded original.
+
+**Not yet:** the Worker upload and the public check (Codex).
+
 ## Compact phone product page (decision 0020): deployed and visitor-verified for layout and interaction; the multi-colour photograph example is unmet, 2026-11-01
 
 | Step | Who | Result | Label |
