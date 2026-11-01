@@ -4,6 +4,8 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0021 — Free performance: size hints that match the compact frame, and an image quality gate](decisions/0021-free-performance-and-image-quality-gate.md)
+
 - [0020 — A compact phone product page; colour photo switching only where every colour has its own photograph](decisions/0020-compact-phone-product-page.md)
 
 - [0019 — A touch-safe gallery, honest photograph states and fast in-place variant choices](decisions/0019-touch-safe-gallery-honest-photos-fast-choices.md)

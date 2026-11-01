@@ -19,7 +19,9 @@ test('cards use bounded actual derivatives while detail retains its larger view'
  const gallery={...p,images:[...p.images,...p.images],imageVariants:[...p.imageVariants,...p.imageVariants]};
  const secondary=productMedia(gallery,1,'detail');
  assert.match(detail.sizes,/54vw/);assert.match(secondary.sizes,/27vw/);
- assert.ok(!secondary.sizes.includes('54vw'));assert.match(secondary.sizes,/86vw$/);
+ assert.ok(!secondary.sizes.includes('54vw'));
+ // On a phone a contained 4:5 photograph is bounded by the 30svh frame's height, not its 86% column (decision 0021).
+ assert.match(secondary.sizes,/, calc\(24vh\)$/);
  assert.deepEqual(productMedia({...p,imageVariants:[]},0,'card'),{src:url(1600),width:800,height:1000});
  const small={...row,images:[url(240)],image_variants:[{src:url(240),width:240,height:300,variants:[{src:url(240),width:240,height:300,bytes:10000}]}]};
  assert.equal(productMedia(publicProduct(small),0,'card').width,240);

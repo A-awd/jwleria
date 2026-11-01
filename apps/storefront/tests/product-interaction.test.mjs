@@ -168,9 +168,13 @@ test('a variant with its own photograph shows it; without one the gallery says s
 test('the secondary photograph loads a small rendition, and a single photograph is sized to the content width',()=>{
   const shown={...product('dj-41-green'),images:[image],imageVariants:[photo]};
   const thumb=productMedia(shown,0,'thumb');
-  assert.equal(thumb.sizes,'7.5rem');assert.doesNotMatch(thumb.srcset,/960w/);assert.match(thumb.src,/320w/);
-  assert.equal(productMedia(shown,0,'single').sizes,'(min-width: 100rem) 840px, (min-width: 60rem) 54vw, calc(100vw - 2.5rem)');
-  assert.match(productMedia(shown,0,'detail').sizes,/86vw$/,'a carousel keeps its 86% columns');
+  assert.equal(thumb.sizes,'5.5rem','the thumbnail column is 5.5rem');assert.doesNotMatch(thumb.srcset,/960w/);assert.match(thumb.src,/320w/);
+  // A 4:5 photograph in the 30svh phone frame is 24vh wide; the desktop hints are unchanged (decision 0021).
+  assert.equal(productMedia(shown,0,'single').sizes,'(min-width: 100rem) 840px, (min-width: 60rem) 54vw, calc(24vh)');
+  assert.equal(productMedia(shown,0,'detail').sizes,'(min-width: 100rem) 840px, (min-width: 60rem) 54vw, calc(24vh)');
+  const wide={...shown,imageVariants:[{...photo,width:1600,height:800}]};
+  assert.match(productMedia(wide,0,'single').sizes,/, calc\(100vw - 2\.5rem\)$/,'a wide photograph still fills its column');
+  assert.match(productMedia(wide,0,'detail').sizes,/, 86vw$/);
 });
 
 test('the product page is compact on a phone: the name, a screen-sized photograph and the options together (decision 0020)',async()=>{
@@ -188,4 +192,54 @@ test('the product page is compact on a phone: the name, a screen-sized photograp
   for(const target of ['.segment','.picker__option','.picker__heading','.picker__size'])assert.match(of(target),/min-height:\s*2\.75rem/,`${target} stays at least 44px`);
   assert.match(of('.picker__summary'),/min-height:\s*3rem/);
   assert.match(page,/fresh\.querySelector\('\.pdp__gallery'\)\?\.getBoundingClientRect\(\)/,'after a choice the photograph is brought back on screen with the control when both fit');
+});
+
+// The renditions actually published (live HEAD reads and the approval bundle, 2026-11-01): widths and bytes.
+const LIVE={
+  'm126200-0006 photograph':{width:1588,height:1676,files:[[320,31380],[640,94102],[960,144262],[1588,359862]]},
+  'm126200-0006 cutout':{width:1588,height:1676,files:[[320,20994],[640,58690],[960,102604],[1588,193466]]},
+  'm126234-0015':{width:960,height:720,files:[[320,27378],[640,78538],[960,145594]]},
+};
+// A browser's choice, modelled: the smallest candidate at least as wide as the hinted CSS width times the pixel ratio.
+const pick=(files,css,dpr)=>files.find(([w])=>w>=css*dpr)??files.at(-1);
+const hinted=(sizes,{vw,vh})=>{
+  const phone=sizes.split(', ').at(-1);
+  const m=/^calc\(([\d.]+)vh\)$/.exec(phone);
+  if(m)return +m[1]*vh/100;
+  if(phone==='86vw')return .86*vw;
+  if(phone==='calc(100vw - 2.5rem)')return vw-40;
+  if(phone==='7.5rem')return 120;if(phone==='5.5rem')return 88;
+  throw new Error(phone);
+};
+// What the compact phone frame actually shows: the photograph contained in its column and clamp(160px, 30svh, 320px).
+const shownWidth=({width,height},column,vh)=>Math.min(column,Math.min(320,Math.max(160,.3*vh))*width/height);
+
+test('on a phone each photograph asks for the rendition it shows, never one narrower than it shows (decision 0021)',()=>{
+  const media=(name,kind)=>{const l=LIVE[name];const variants=l.files.map(([w])=>({src:`https://media.example/${w}w-x.webp`,width:w,height:Math.round(w*l.height/l.width),bytes:1}));
+    return productMedia({...product('dj-36-black',[variants.at(-1).src]),imageVariants:[{...variants.at(-1),variants}]},0,kind);};
+  const phones=[{vw:390,vh:844,dpr:3},{vw:375,vh:667,dpr:2}];
+  const before={'m126200-0006 photograph':'86vw','m126200-0006 cutout':'86vw','m126234-0015':'calc(100vw - 2.5rem)'};
+  const kinds={'m126200-0006 photograph':'detail','m126200-0006 cutout':'detail','m126234-0015':'single'};
+  const rows=[];
+  for(const name of Object.keys(LIVE))for(const phone of phones){
+    const l=LIVE[name],column=kinds[name]==='single'?phone.vw-40:.86*(phone.vw-40);
+    const old=pick(l.files,hinted(`x, ${before[name]}`,phone),phone.dpr),now=pick(l.files,hinted(media(name,kinds[name]).sizes,phone),phone.dpr);
+    rows.push([name,`${phone.vw}x${phone.vh}@${phone.dpr}x`,old[0],now[0],old[1]-now[1]]);
+    assert.ok(now[0]>=Math.min(l.width,Math.ceil(shownWidth(l,column,phone.vh)*phone.dpr)),`${name} ${phone.vw}x${phone.vh}: ${now[0]}w covers what is shown`);
+    assert.ok(now[1]<=old[1],'never a larger file than before');
+  }
+  assert.deepEqual(rows,[
+    ['m126200-0006 photograph','390x844@3x',1588,960,215600],['m126200-0006 photograph','375x667@2x',960,640,50160],
+    ['m126200-0006 cutout','390x844@3x',1588,960,90862],['m126200-0006 cutout','375x667@2x',960,640,43914],
+    ['m126234-0015','390x844@3x',960,960,0],['m126234-0015','375x667@2x',960,640,67056],
+  ],'bytes saved per photograph, from the published files');
+  // A phone held sideways (844x390): the frame stays at its 10rem minimum, above 30vh, yet the chosen file still covers it.
+  for(const name of Object.keys(LIVE)){
+    const l=LIVE[name],phone={vw:844,vh:390,dpr:3},column=kinds[name]==='single'?phone.vw-40:.86*(phone.vw-40);
+    const now=pick(l.files,hinted(media(name,kinds[name]).sizes,phone),phone.dpr);
+    assert.ok(now[0]>=Math.min(l.width,Math.ceil(shownWidth(l,column,phone.vh)*phone.dpr)),`${name} sideways: ${now[0]}w covers what is shown`);
+  }
+  // The representative thumbnail in its 5.5rem column at 3x: 320w instead of 640w.
+  const rep=LIVE['m126234-0015'];
+  assert.deepEqual([pick(rep.files,hinted('5.5rem',phones[0]),3)[0],pick(rep.files,hinted('7.5rem',phones[0]),3)[0]],[320,640]);
 });
