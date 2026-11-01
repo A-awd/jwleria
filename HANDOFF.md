@@ -1,4 +1,23 @@
-## Current handoff: decision 0022 sample under review, 2026-11-01
+## Current handoff: Worker `storefront-3a5c0edef3b9` ready to deploy; then Claude publishes the staged images, 2026-11-01
+
+1. **Codex:** deploy `releases/storefront-3a5c0edef3b9/` exactly as its `DEPLOY.md` step 1 says.
+   - Check `SHA256SUMS`, record the active version privately, then run the pinned `wrangler deploy` with `--no-bundle --keep-vars --no-autoconfig`.
+   - Send the receipt. Nothing visible changes yet.
+2. **Claude:** after that receipt, a fresh read, then `jwl_publish_candidate` on the open-licence lane for:
+   - `m126200-0006`, the white square;
+   - `m126234-0015`, the partial-view notice.
+3. **Codex:** the public phone check in `DEPLOY.md` step 3.
+
+**Rollback:** data first (restore the previous approvals and republish), then the Worker. See `DEPLOY.md`.
+
+**Open:**
+- the `m126234-0015` white square, which is not accepted;
+- the multi-colour example;
+- photo coverage;
+- a physical iPhone;
+- the n8n image job: the Jwleria project has no credential, and the macOS Vision step is local only.
+
+## Previous handoff: decision 0022 sample under review, 2026-11-01
 
 **Saved:**
 - the owner brief (`docs/OWNER-BRIEF-AR.md`);

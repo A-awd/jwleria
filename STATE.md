@@ -1,3 +1,44 @@
+## Decision 0022: the white square recorded and uploaded; Worker package `storefront-3a5c0edef3b9` ready for Codex; publication waits for it, 2026-11-01
+
+**Applied (observed live):** migration `20261101181522` `jwleria_white_square_media`.
+- **Match:** applied once; the stored statement's sha256 equals the reviewed file's (`bc4ef926…b03a`).
+- **What it adds:**
+  - `media_assets.square_sha256` and `source_clipped`;
+  - the `white_square` treatment;
+  - the optional manifest fields `canvas` and `source_clipped`;
+  - `jwl_record_presentation_approval`, which replaces a live approval in place: security invoker, executable only by `service_role` and `postgres`.
+- **Unchanged by the apply:** counts, the photographed catalogue rows and the approvals hash.
+- **Rollback file:** `proposed/jwleria_white_square_media.rollback.sql`.
+
+**Recorded and uploaded, not yet published:**
+
+| Step | Result | Label |
+|---|---|---|
+| Codex review | The coordinator decision accepts candidate A by its exact square hash (`0403196d…76bd`), made from the approved mask `d5ba2d17…128e` with photographed metal and reflections kept. B is rejected. The black source stays a source-limited detail. | reviewed |
+| Automated gates | The cutout check against the recovered original passed (opaque pixels identical). The square is 1414 × 1414, fill 0.7999, with no source-edge contact and 207 faint pixels (alpha below 16) left outside the box. Files at 320/640/960/1414 px, quality 92, SSIM 0.995–0.998, within budget. The quality gate passed every file; at 1414 px, SSIM 0.99464 against the square. | prepared |
+| `m126200-0006` approval | Replaced in place by one white square image with four evidence rows. The credit changes read "background removed, placed on a square white background, resized and converted to WebP". The stored texts and manifest match the private bundle by hash. | applied |
+| Uploads | 4 files through `jwl-media-upload` with JWT verification on; each was read back with the expected sha256, size and type. | observed live |
+| `m126234-0015` approval | The same photograph and evidence, plus `source_clipped: true`. Its white square is not accepted and not published. | applied |
+| Public catalogue | Unchanged: the live Worker refuses unknown manifest fields, so publication waits for the new Worker. | observed live |
+
+**Original handling:** the held original was used without a new download, because its sha256 and 1588 × 1676 size equal the original recorded in the live evidence. Codex also preserved both originals locally in the private transfer area, verified by hash; that is local preservation, not a cloud backup.
+
+**Worker package (prepared):** `releases/storefront-3a5c0edef3b9/` from source `3a5c0edef3b9`.
+- 77 files, the same file set as the live release; `SHA256SUMS` sha256 is `06cd1de5…ab19`.
+- It is backward compatible with the current catalogue.
+- Steps and rollback are in its `DEPLOY.md`. Undo the data before the Worker, once step 2 is published.
+
+**Tests:**
+- storefront: 208 tests, 203 pass, 0 fail, 5 opt-in browser skips;
+- intake: 133 of 133.
+- The new SQL, pipeline and renderer tests are included.
+- Not rendered in a browser by Claude.
+
+**n8n (operator UI read, 2026-11-01):**
+- All 5 Jwleria workflows are now in the Jwleria project, all inactive. Durable catalog intake was moved there through the normal UI, with no activation and no node change.
+- The project has no credential, and the move did not share any credential with it. No credential is named Jwleria.
+- No credential was read or changed.
+
 ## Decision 0022 real-product sample: produced and under Codex review; not yet published, 2026-11-01
 
 **Pipeline step added:** `scripts/catalog-intake/white-square.mjs` (tested), placed between the checked cutout master and the responsive renditions.
