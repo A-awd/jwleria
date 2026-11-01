@@ -9,7 +9,7 @@ Nothing is running.
 
 The visitor check passed at 390×844 in Arabic and English (`STATE.md`).
 
-**n8n:** the manual delivery check ran once: four `already_present` replies, as an idempotent replay. The owner moves the workflow into the Jwleria project. Optionally, its public anon header can later move into a credential once the UI allows one.
+**n8n:** the manual delivery check ran once: four `already_present` replies, as an idempotent replay. It is now in the Jwleria project, which lists six inactive workflows. It has no schedule and shares no credential. Optionally, its public anon header can later move into a credential.
 
 **Open:**
 - the `m126234-0015` white square, which is not accepted;

@@ -5,7 +5,7 @@
 - That run is an idempotent delivery replay, not a new upload and not cloud image processing.
 - Inactive; a manual trigger only, no schedule.
 - **Caller:** the project's existing public anon client key, sent as an Authorization header inside the private workflow, as the owner approved. It is not in this repository.
-- **Placement:** in the owner's personal project until the owner moves it into Jwleria.
+- **Placement:** in the Jwleria project, moved by the operator through the normal UI. The project lists six inactive workflows. An obsolete duplicate that never ran is archived, not deleted.
 
 ## What it does
 
@@ -31,7 +31,7 @@ A real cloud check of the **delivery** route, kept separate from local image wor
 
 ## Optional: move the header into a credential (operator, n8n UI)
 
-1. Move the workflow into the Jwleria project.
+1. (Done) The workflow is in the Jwleria project.
 2. In the Jwleria project, create one credential named `Jwleria public function caller (anon JWT)`.
    - Type: Custom Auth (templated), with the template `{"headers":{"Authorization":"Bearer {{api_key}}"}}`.
    - `api_key`: the project's existing legacy anon key, the public client key.
@@ -80,6 +80,6 @@ export default workflow('jwleria-approved-image-delivery', 'Jwleria — Approved
 
 ## Other Jwleria workflows (read 2026-11-01)
 
-- Five workflows, all inactive, now all in the Jwleria project.
+- Six workflows, all inactive, all in the Jwleria project, including this delivery check.
 - "Durable catalog intake" references no credential: its two database nodes are disabled and carry none. Its database steps would need a separately approved least-privilege runner role, which does not exist.
 - None of them handles images.

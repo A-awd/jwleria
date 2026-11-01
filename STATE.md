@@ -17,10 +17,10 @@
 - **Result:** four replies from `jwl-media-upload`, each 200 `already_present`, with the expected sha256 and size. The gateway verified the JWT.
 - **What it is:** an idempotent delivery replay of the four approved files through the approval-bound route. It is not a new upload and not cloud image processing; normalization and the curator's approval stayed local and private.
 - **Caller:** the project's existing public anon client key, as an Authorization header inside the private n8n workflow (owner-approved). It is not in Git, and it adds no privilege: JWT verification and the database approval binding are unchanged. No service role, no database credential, no schedule.
-- **Placement:** the workflow sits in the owner's personal project until the owner moves it into Jwleria. Its provider identifiers stay outside the repository.
+- **Placement (operator receipt):** the operator moved the workflow into the Jwleria project through the normal UI. The project now lists exactly six workflows, all inactive: the approved image delivery check, Durable catalog intake, Origin intake run, Google Shopping, Social draft preparation and Catalog candidate normalization. No credential was shared, the header is unchanged, nothing was activated, and the operator holds a private screenshot. Provider identifiers stay outside the repository.
 - **Scope:** a manual check of the delivery route, not background automation.
 - **Duplicate (observed live):** an identical earlier copy was created by a create call that the client reported as rejected. It was never run. It was renamed "OBSOLETE duplicate, never run" and archived, which is reversible; it was not deleted. Only the canonical workflow, the one that ran once, remains listed.
-- **Local deploy state:** the operator moved the release `.wrangler/` folder out of the checkout.
+- **Local deploy state:** the operator moved the release `.wrangler/` folder out of the checkout. The build clone in the shared folder is kept.
 
 ## Decision 0022 published: `m126200-0006` on the white square and the `m126234-0015` partial-view notice are live; visitor check pending, 2026-11-01
 
