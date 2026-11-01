@@ -37,6 +37,10 @@ export interface ResponsiveProductImage {
   height: number;
   variants: {src:string; width:number; height:number; bytes:number}[];
   attribution?: ImageAttribution;
+  /** Decision 0022: the photograph is a normalized, square, pure-white canvas (shown as a square, on white). */
+  canvas?: 'white_square';
+  /** The source photograph itself cuts the product off: shown with a partial-view notice, never as the whole product. */
+  sourceClipped?: true;
 }
 
 /** A listed model (one card) summarised from its primary variant row. */

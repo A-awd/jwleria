@@ -14,8 +14,9 @@ let playwright;
 try { playwright = createRequire(import.meta.url)('playwright'); } catch {}
 
 test('the mirrored markup matches the components: the card link is the .media element, the gallery .media is a div', () => {
-  assert.match(card, /<a class="media" href=\{url\}[^>]*>\s*<img class=\{artClass\(/, 'ProductCard: <a class="media"> directly wraps the image');
-  assert.match(gallery, /<div class="media">\s*<img class=\{/, 'ProductGallery: <div class="media"> directly wraps the image');
+  // A white square (decision 0022) adds media--white to the same element.
+  assert.match(card, /<a class:list=\{\['media', \{ 'media--white': [^}]+ \}\]\} href=\{url\}[^>]*>\s*<img class=\{artClass\(/, 'ProductCard: <a class="media"> directly wraps the image');
+  assert.match(gallery, /<div class:list=\{\['media', \{ 'media--white': v\.white \}\]\}>\s*<img class=\{/, 'ProductGallery: <div class="media"> directly wraps the image');
   assert.match(credit, /<a href=\{credit\.licenseUrl\} rel="license nofollow"><bdi>\{credit\.license\}<\/bdi><\/a>/, 'ImageCredit: the licence link');
 });
 

@@ -38,8 +38,13 @@ test('every credit change the media migrations accept reads in Arabic on Arabic 
  const accepted=async path=>{const sql=await readFile(new URL(path,import.meta.url),'utf8');return [...sql.match(/'changes' not in \(([^)]*)\)/)[1].matchAll(/'([^']+)'/g)].map(m=>m[1]);};
  const applied=await accepted('../supabase/migrations/20261028111829_jwleria_open_license_media.sql');
  // The cutout migration (20261101104017) widens the open-licence list; the storefront translates every text it accepts.
- const allowed=await accepted('../supabase/migrations/20261101104017_jwleria_cutout_media.sql');
- assert.ok(applied.every(value=>allowed.includes(value))&&allowed.length===4,'the cutout migration keeps every applied credit text');
+ const cutout=await accepted('../supabase/migrations/20261101104017_jwleria_cutout_media.sql');
+ assert.ok(applied.every(value=>cutout.includes(value))&&cutout.length===4,'the cutout migration keeps every applied credit text');
+ // The white square migration (decision 0022) adds its two texts and keeps the four.
+ const {readdir}=await import('node:fs/promises');
+ const white=(await readdir(new URL('../supabase/migrations/',import.meta.url))).find(f=>f.endsWith('_jwleria_white_square_media.sql'));
+ const allowed=await accepted(white?'../supabase/migrations/'+white:'../supabase/proposed/jwleria_white_square_media.sql');
+ assert.ok(cutout.every(value=>allowed.includes(value))&&allowed.length===6,'the white square migration keeps every earlier credit text');
  assert.deepEqual(Object.keys(t('ar').variants.credit.changed).sort(),[...allowed].sort());
  assert.deepEqual(Object.keys(t('en').variants.credit.changed).sort(),[...allowed].sort());
  for(const value of allowed){assert.match(t('ar').variants.credit.changed[value],/[\u0600-\u06ff]/);assert.equal(t('en').variants.credit.changed[value],value);}

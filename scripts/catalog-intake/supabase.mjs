@@ -8,7 +8,7 @@ export async function catalogRpc(name, args, {url,key}, fetcher = fetch) {
   const base = new URL(url);
   if (base.protocol !== 'https:' || !base.hostname.endsWith('.supabase.co') || base.username || base.password || base.pathname !== '/' || base.search || base.hash) throw new Error('Invalid Supabase endpoint');
   if (!key || typeof key !== 'string') throw new Error('Missing server credential');
-  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_record_media_approval','jwl_record_cutout_approval','jwl_publish_candidate','jwl_source_registry','jwl_revoked_media_files'].includes(name)) throw new Error('Unsupported catalog operation');
+  if (!['jwl_ingest_batch','jwl_ingest_missing_batch','jwl_record_media_approval','jwl_record_cutout_approval','jwl_record_presentation_approval','jwl_publish_candidate','jwl_source_registry','jwl_revoked_media_files'].includes(name)) throw new Error('Unsupported catalog operation');
   const headers = {apikey:key,'Content-Type':'application/json'};
   if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
   const response = await fetcher(new URL(`/rest/v1/rpc/${name}`,base),{method:'POST',headers,body:JSON.stringify(args),signal:AbortSignal.timeout(15000),redirect:'error'});
@@ -50,7 +50,9 @@ export async function sourceRegistry(config, fetcher = fetch) {
  * A bundle with cutout evidence goes to jwl_record_cutout_approval, which exists only once the cutout migration is
  * applied, so it fails closed on an older database instead of being stored without its treatment.
  */
-const approvalOperation = bundle => bundle.evidence.some(e=>e?.treatment!==undefined) ? 'jwl_record_cutout_approval' : 'jwl_record_media_approval';
+// A white square, a disclosure or a replacement of a live approval (decision 0022) goes to jwl_record_presentation_approval.
+const approvalOperation = bundle => bundle.replace===true || bundle.evidence.some(e=>e?.treatment==='white_square') || bundle.approval.approved_image_variants?.some(e=>e?.canvas!==undefined||e?.source_clipped!==undefined)
+  ? 'jwl_record_presentation_approval' : bundle.evidence.some(e=>e?.treatment!==undefined) ? 'jwl_record_cutout_approval' : 'jwl_record_media_approval';
 /** Records exact evidence and the verified approval atomically; it does not publish. */
 export async function recordMediaApproval(bundle, config, fetcher = fetch) {
   if (bundle?.approval?.image_verified!==true || !Array.isArray(bundle.evidence) || !bundle.evidence.length) throw new Error('Verified approval bundle required');

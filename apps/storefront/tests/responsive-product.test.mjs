@@ -42,3 +42,26 @@ test('responsive metadata rejects a foreign gallery, fake geometry and private f
  const p=publicProduct({...row,images:[],image_variants:[],media_state:'facts_only'});assert.deepEqual(p.imageVariants,[]);
  assert.throws(()=>productMedia(p,0,'card'),/image/i);
 });
+
+test('a white square (decision 0022) is projected as a square canvas, sized from its real phone geometry, and a source-clipped image says so',async()=>{
+ const sq=[320,640,960,1414].map(width=>({src:url('sq'+width),width,height:width,bytes:width*50}));
+ const white={src:url('sq1414'),width:1414,height:1414,variants:sq,canvas:'white_square'};
+ const p=publicProduct({...row,images:[white.src],image_variants:[white]});
+ assert.equal(p.imageVariants[0].canvas,'white_square');assert.equal(p.imageVariants[0].sourceClipped,undefined);
+ // A square in the 30svh phone frame is as wide as the frame is high: the size hint names that, not the column.
+ assert.match(productMedia(p,0,'single').sizes,/, calc\(30vh\)$/);
+ assert.equal(productMedia(p,0,'card').src,url('sq640'));
+ const clipped=publicProduct({...row,image_variants:[{...image,source_clipped:true}]});
+ assert.equal(clipped.imageVariants[0].sourceClipped,true);assert.equal(clipped.imageVariants[0].canvas,undefined);
+ for(const change of [{...white,canvas:'sand'},{...image,canvas:'white_square'},{...white,source_clipped:false},{...white,canvas:true}])
+  assert.throws(()=>publicProduct({...row,images:[change.src],image_variants:[change]}),/responsive/i,'only a square may claim the white canvas; source_clipped only discloses');
+ // The components mark the frame and the notice from these two fields alone.
+ const {readFile}=await import('node:fs/promises');
+ const gallery=await readFile(new URL('../src/components/ProductGallery.astro',import.meta.url),'utf8'),card=await readFile(new URL('../src/components/ProductCard.astro',import.meta.url),'utf8');
+ assert.match(gallery,/white: product\.imageVariants\?\.\[i\]\?\.canvas === 'white_square', clipped: product\.imageVariants\?\.\[i\]\?\.sourceClipped === true/);
+ assert.match(gallery,/\{v\.clipped && <> · <span class="source-clipped">\{s\.product\.sourceClipped\}<\/span><\/>\}/);
+ assert.match(card,/p\.imageVariants\?\.\[0\]\?\.sourceClipped && <p class="source-clipped source-clipped--card">/);
+ const css=await readFile(new URL('../src/styles/global.css',import.meta.url),'utf8');
+ assert.match(css,/\.media--white \{ background: #fff; \}/);
+ assert.match(css,/\.pdp__gallery \.media--white \{ aspect-ratio: 1; width: auto; height: clamp\(10rem, 30svh, 20rem\); margin-inline: auto; \}/,'the phone frame of a white square is the square itself, as high as the compact frame');
+});

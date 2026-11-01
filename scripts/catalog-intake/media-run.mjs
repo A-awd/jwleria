@@ -79,7 +79,8 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
       kept.push(grant.kind==='owner_original'
         ?await keepOwnerOriginal({candidate,grant,local_path:item.local_path,output_directory:out})
         :grant.kind==='open_license'&&item.local_path!==undefined
-          ?await keepOpenLicenseFile({candidate,grant,file_url:item.asset_url,local_path:item.local_path,expected_sha256:item.sha256,output_directory:out})
+          ?await keepOpenLicenseFile({candidate,grant,file_url:item.asset_url,local_path:item.local_path,expected_sha256:item.sha256,output_directory:out,
+            ...(item.recorded_original!==undefined?{recorded_original:item.recorded_original}:{})})
           :await acquireOriginal({candidate,asset_url:item.asset_url,grant,output_directory:out},{fetcher,...(pacer?{pacer}:{})}));
     }
     await save(join(out,'originals.json'),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,grant_reference:grant.grant_reference,originals:kept});
@@ -91,7 +92,8 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     if(recorded.candidate_id!==candidate.candidate_id||recorded.revision_hash!==candidate.revision_hash||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate revision or grant');
     const exception=await readPerformanceException(input,out);
     const verifications=new Map((input.verifications??[]).map(v=>[v.asset_sha256,v]));
-    // Optional background-only cutouts (decision 0015): {original_sha256, path, sha256, producer, review} per original.
+    // Optional background-only cutouts (decision 0015): {original_sha256, path, sha256, producer, review} per original. A
+    // white square (decision 0022) adds square_sha256, the hash of the square its reviewer accepted, and square_review.
     const cutouts=new Map((input.cutouts??[]).map(c=>[c?.original_sha256,c]));
     if(cutouts.size!==(input.cutouts??[]).length||[...cutouts.keys()].some(sha=>!recorded.originals.some(o=>o.sha256===sha)))throw Error('Each cutout must name a distinct recorded original');
     const items=[];
@@ -99,8 +101,9 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
       const verification=requireVerification(verifications.get(original.sha256),{candidate,asset});
       const cut=cutouts.get(original.sha256);
-      const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer}}:{})});
-      items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review}:{})});
+      const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,
+        ...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer},...(cut.square_sha256!==undefined?{square_sha256:cut.square_sha256}:{})}:{})});
+      items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review,...(cut.square_review!==undefined?{square_review:cut.square_review}:{})}:{})});
     }
     const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url,performance_exception:exception,prepared_by:input.prepared_by});
     await save(join(out,'approval-bundle.json'),bundle);

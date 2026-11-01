@@ -15,6 +15,12 @@ import {installedImageEngine} from './responsive-media.mjs';
 
 /** The configurable geometry (decision 0022). Implementation settings, not owner approvals beyond the 0022 standard. */
 export const whiteSquare=Object.freeze({version:1,background:'#ffffff',fill:0.8,alphaThreshold:16,maxSide:1600});
+export const whiteSquareTreatment=Object.freeze({kind:'white_square',version:whiteSquare.version});
+/**
+ * What the independent visual review of a white square confirms for exactly one square (by sha256), made from one cutout
+ * master whose own cutout review (cutoutReviewChecks) is already recorded. Code never records these as passed.
+ */
+export const whiteSquareReviewChecks=Object.freeze(['cutout_master_accepted','square_accepted_by_exact_hash','photographed_material_preserved','presentation_opaque_white']);
 
 /** Bounding box of the pixels whose alpha is at least `threshold`, in an RGBA buffer. Undefined when there are none. */
 export function foregroundBox(rgba,width,height,threshold=whiteSquare.alphaThreshold){
@@ -24,6 +30,16 @@ export function foregroundBox(rgba,width,height,threshold=whiteSquare.alphaThres
     if(x<left)left=x;if(x>right)right=x;if(y<top)top=y;if(y>bottom)bottom=y;
   }
   return right<0?undefined:{left,top,width:right-left+1,height:bottom-top+1};
+}
+
+/** Faint pixels (0 < alpha < threshold) outside the box: the only master pixels a square leaves out, recorded as a count. */
+export function faintOutside(rgba,width,height,box,threshold=whiteSquare.alphaThreshold){
+  let n=0;
+  for(let y=0;y<height;y++)for(let x=0;x<width;x++){
+    const a=rgba[(y*width+x)*4+3];
+    if(a>0&&a<threshold&&(x<box.left||x>=box.left+box.width||y<box.top||y>=box.top+box.height))n++;
+  }
+  return n;
 }
 
 /** How many foreground pixels lie on each edge of the source frame: a non-zero count means the source cut the product. */
@@ -66,7 +82,8 @@ export async function normalizeWhiteSquare(master,sharp=installedImageEngine(),s
     ?await sharp(opaque,{failOn:'warning'}).resize({width:geometry.side,height:geometry.side,kernel:'lanczos3'}).removeAlpha().keepIccProfile().png({compressionLevel:9}).toBuffer()
     :opaque;
   const clipped=Object.values(contact).some(n=>n>0);
-  return {png,record:{treatment:{kind:'white_square',version:settings.version},settings:{...settings},master_sha256:digest(master),square_sha256:digest(png),source:{width:info.width,height:info.height},box,geometry,contact,clipped_by_source:clipped}};
+  return {png,record:{treatment:{kind:'white_square',version:settings.version},settings:{...settings},master_sha256:digest(master),square_sha256:digest(png),source:{width:info.width,height:info.height},box,geometry,contact,clipped_by_source:clipped,
+    faint_pixels_left_out:faintOutside(data,info.width,info.height,box,settings.alphaThreshold)}};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){

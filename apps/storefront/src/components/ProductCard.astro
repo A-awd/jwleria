@@ -19,9 +19,10 @@ const name = p.model?.name ?? p.name;
 const credit = p.image ? p.imageVariants?.[0]?.attribution : undefined;
 ---
 <article class:list={['card', { 'card--facts': !p.image }]} data-brand={p.brandSlug} data-category={p.categorySlug}>
-  {p.image && <a class="media" href={url} tabindex="-1" aria-hidden="true">
+  {p.image && <a class:list={['media', { 'media--white': p.imageVariants?.[0]?.canvas === 'white_square' }]} href={url} tabindex="-1" aria-hidden="true">
     <img class={artClass(p.image, p.categorySlug, p.reference)} {...media} alt="" loading={eager ? 'eager' : 'lazy'} fetchpriority={Astro.props.priority ? 'high' : 'auto'} decoding="async" />
   </a>}
+  {p.image && p.imageVariants?.[0]?.sourceClipped && <p class="source-clipped source-clipped--card">{s.product.sourceClippedShort}</p>}
   {credit && <ImageCredit credit={credit} locale={locale} card />}
   <div class="card__body">
     <p class="card__brand">{brand?.name ?? s.brands.ownTitle}</p>

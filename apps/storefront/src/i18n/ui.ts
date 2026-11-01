@@ -111,6 +111,8 @@ const ar = {
     photoMissing: 'لا توجد صورة معتمدة للمرجع {ref} بعد.',
     // The largest approved file, named by its real size: the most detail that exists, not unlimited zoom.
     fullSize: (w: number, h: number) => `فتح بالحجم الكامل (${w} × ${h} بكسل)`,
+    sourceClipped: 'لقطة جزئية: الصورة الأصلية لا تُظهر المنتج كاملًا.',
+    sourceClippedShort: 'لقطة جزئية',
   },
   sizes: { title: 'مقاسات هذا الطراز', details: 'ما يختلف بين المقاسات', separator: '، ' },
   variants: {
@@ -125,7 +127,9 @@ const ar = {
     partial: (shown: number, total: number) => `يُعرض ${shown} من أصل ${total} من خيارات هذا الطراز.`,
     // Every change text the media migrations accept. The two background-removal texts (decision 0015) add «إزالة الخلفية»
     // to the reviewed wording of the first two; they passed a technical language review on 2026-11-01.
-    credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP', 'background removed, resized and converted to WebP': 'إزالة الخلفية وتغيير الحجم والتحويل إلى WebP', 'background removed and converted to WebP': 'إزالة الخلفية والتحويل إلى WebP' } as Record<string, string> },
+    // The two white-square texts (decision 0022) add «ووضع المنتج على خلفية بيضاء مربعة» («placing the product on a square white
+    // background») after the removal, in the same verbal-noun form.
+    credit: { photo: 'الصورة', quote: ['«', '»'] as [string, string], source: 'المصدر', changes: 'التعديلات', changed: { 'resized and converted to WebP': 'تغيير الحجم والتحويل إلى WebP', 'converted to WebP': 'التحويل إلى WebP', 'background removed, resized and converted to WebP': 'إزالة الخلفية وتغيير الحجم والتحويل إلى WebP', 'background removed and converted to WebP': 'إزالة الخلفية والتحويل إلى WebP', 'background removed, placed on a square white background, resized and converted to WebP': 'إزالة الخلفية ووضع المنتج على خلفية بيضاء مربعة وتغيير الحجم والتحويل إلى WebP', 'background removed, placed on a square white background and converted to WebP': 'إزالة الخلفية ووضع المنتج على خلفية بيضاء مربعة والتحويل إلى WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'الاستفسار عبر واتساب',
@@ -225,6 +229,8 @@ const en: typeof ar = {
     photoLoading: 'Loading the photograph of {ref}',
     photoMissing: 'No approved photograph of {ref} yet.',
     fullSize: (w: number, h: number) => `Open at full size (${w} × ${h} px)`,
+    sourceClipped: 'Partial view: the original photograph does not show the whole product.',
+    sourceClippedShort: 'Partial view',
   },
   sizes: { title: 'Sizes of this model', details: 'What differs', separator: ' · ' },
   variants: {
@@ -235,7 +241,7 @@ const en: typeof ar = {
     changed: '{label} changed to {value}.',
     showing: (ref: string) => `Showing reference ${ref}`,
     partial: (shown: number, total: number) => `Showing ${shown} of ${total} options of this model.`,
-    credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP', 'background removed, resized and converted to WebP': 'background removed, resized and converted to WebP', 'background removed and converted to WebP': 'background removed and converted to WebP' } as Record<string, string> },
+    credit: { photo: 'Photo', quote: ['“', '”'] as [string, string], source: 'Source', changes: 'Changes', changed: { 'resized and converted to WebP': 'resized and converted to WebP', 'converted to WebP': 'converted to WebP', 'background removed, resized and converted to WebP': 'background removed, resized and converted to WebP', 'background removed and converted to WebP': 'background removed and converted to WebP', 'background removed, placed on a square white background, resized and converted to WebP': 'background removed, placed on a square white background, resized and converted to WebP', 'background removed, placed on a square white background and converted to WebP': 'background removed, placed on a square white background and converted to WebP' } as Record<string, string> },
   },
   dialog: {
     title: 'WhatsApp inquiry',

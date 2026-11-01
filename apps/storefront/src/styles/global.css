@@ -205,6 +205,14 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 .pdp__gallery .pdp__other { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: .8rem; align-items: start; }
 .pdp__gallery .pdp__other .media { aspect-ratio: 4 / 5; height: auto; }
 .pdp__gallery .pdp__other figcaption { padding-top: 0; }
+/* Decision 0022: a normalized photograph is its own square, pure-white canvas, shown whole and square, on phones and in
+   listings alike; a square need not fill the phone's width. */
+.media--white { background: #fff; }
+.card .media--white, .pdp__gallery .pdp__other .media--white { aspect-ratio: 1; }
+.pdp__gallery .media--white { aspect-ratio: 1; width: auto; height: clamp(10rem, 30svh, 20rem); margin-inline: auto; }
+/* The source photograph cuts the product off: said in words wherever the photograph is shown. */
+.source-clipped { color: var(--ink-soft); }
+.source-clipped--card { margin: .35rem 0 0; font-size: .75rem; line-height: 1.5; }
 /* While a chosen variant's block loads, the gallery says what is coming instead of passing another photograph off. */
 .pdp__gallery[data-pending] img { opacity: .25; transition: opacity .15s var(--ease); }
 .pdp__gallery-status { position: absolute; inset-inline: 0; top: 0; margin: 0; max-width: none; padding: .9rem 1rem; background: color-mix(in srgb, var(--paper) 94%, transparent); color: var(--ink); font-size: var(--s-1); text-align: center; }
@@ -293,6 +301,7 @@ details[open] > summary .chevron { transform: rotate(180deg); }
   .crumb--product { padding-top: 1.5rem; margin-bottom: 1.5rem; }
   .pdp__head h1 { font-size: var(--s3); }
   .pdp__gallery .media { aspect-ratio: 4 / 5; height: auto; }
+  .pdp__gallery .media--white { aspect-ratio: 1; width: 100%; }
   .pdp__gallery--many { grid-auto-flow: row; grid-template-columns: 1fr 1fr; margin: 0; padding: 0; overflow: visible; }
   .pdp__gallery--many figure:first-child { grid-column: 1 / -1; }
   .pdp__gallery--many figure + figure .media { aspect-ratio: 1; }

@@ -6,6 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
 import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
 import {cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
+import {whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
@@ -117,7 +118,9 @@ export function openLicenseAttribution(grant,changes,file=grant.licensed_files?.
  * The visible "changes" of an open-licence credit. The applied database accepts only the first two; the background-removed
  * forms (decision 0015) are what a cutout's credit must say once a reviewed change lets the database record them.
  */
-export function creditChanges({resized,background_removed=false}){
+export function creditChanges({resized,background_removed=false,white_square=false}){
+  // A white square (decision 0022) is a cutout on a new square white background, and its credit says both.
+  if(white_square)return resized?'background removed, placed on a square white background, resized and converted to WebP':'background removed, placed on a square white background and converted to WebP';
   if(background_removed)return resized?'background removed, resized and converted to WebP':'background removed and converted to WebP';
   return resized?'resized and converted to WebP':'converted to WebP';
 }
@@ -302,13 +305,19 @@ export async function keepOwnerOriginal({candidate,grant,local_path,output_direc
  * network request. The copy is bound to its URL only by recorded values, so it must match its recorded sha256 and
  * decode to exactly the recorded rendition width. A held copy can never stand for an original: originals are
  * downloaded with acquireOriginal and checked against what Commons serves, so thumbnail bytes cannot be recorded
- * under an original URL.
+ * under an original URL. The one exception is an original already recorded: when the operator's fresh read of the live
+ * evidence gives this exact file's recorded original (recorded_original: its original_sha256, width and height, read for
+ * this grant and file URL), a held copy with that sha256 and that decoded size is accepted. Those bytes were downloaded
+ * from Commons and checked when that evidence was recorded, so no redundant download is made and no other bytes can
+ * stand for the original.
  */
-export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,expected_sha256,output_directory}){
+export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,expected_sha256,output_directory,recorded_original}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:file_url});
   if(decision.state!=='permitted'||grant.kind!=='open_license')throw Error('Permitted open-licence grant for this file required: '+decision.reasons.join(','));
   const file=licensedFile(grant,file_url);
-  if(file.file_kind!=='rendition')throw Error('A held copy is accepted only for a recorded rendition; download an original instead');
+  const recorded=file.file_kind==='original'&&recorded_original!==undefined;
+  if(recorded&&(recorded_original?.original_sha256!==expected_sha256||!Number.isInteger(recorded_original.width)||!Number.isInteger(recorded_original.height)))throw Error('A held original must carry the sha256 and size its live evidence recorded');
+  if(file.file_kind!=='rendition'&&!recorded)throw Error('A held copy is accepted only for a recorded rendition; download an original instead');
   if(!hashPattern.test(expected_sha256??''))throw Error('A held rendition needs its recorded sha256');
   const root=await privateRoot(output_directory);
   const stat=await lstat(local_path);
@@ -320,7 +329,8 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
   if(!extension)throw Error('Unsupported held Commons file format');
   // Decode the pixels (not only the header) upright, as the derivative pipeline will see them.
   const {info}=await installedImageEngine()(bytes,{failOn:'warning'}).autoOrient().raw().toBuffer({resolveWithObject:true});
-  if(info.width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
+  if(recorded){if(info.width!==recorded_original.width||info.height!==recorded_original.height)throw Error('Held original size differs from its recorded size');}
+  else if(info.width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
   const kept=await keepOriginal(root,bytes,extension);
   return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
 }
@@ -330,7 +340,7 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
  * ({path, sha256, producer}), the derivatives are made from that background-only cutout master after it passes its
  * check against this original (decision 0015); approvalBundle then also needs the cutout's independent review.
  */
-export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout}){
+export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout,square_sha256}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
   const basis=cutout===undefined?null:cutoutBasisProblem(grant);
@@ -340,7 +350,8 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
   const open=grant.kind==='open_license';
   const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(asset.source_url).origin]:grant.media_origins??[]};
   return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,
-    ...(cutout===undefined?{}:{treatment:{kind:cutoutTreatment.kind,cutout}}),
+    // With square_sha256 the cutout becomes the white square accepted by that exact hash (decision 0022).
+    ...(cutout===undefined?{}:{treatment:square_sha256===undefined?{kind:cutoutTreatment.kind,cutout}:{kind:whiteSquareTreatment.kind,cutout,square_sha256}}),
     grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
       revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
       website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode,...(cutout===undefined?{}:{background_removal:true})}});
@@ -461,8 +472,9 @@ function exceptedDerivatives(manifest,asset,exception){
  * otherwise procedural.
  * Returns what the evidence rows record.
  */
-export function requireCutoutReview(review,{manifest,asset,grant,prepared_by}){
+export function requireCutoutReview(review,{manifest,asset,grant,prepared_by,square_review}){
   const t=manifest?.treatment,b=manifest?.binding?.treatment,m=manifest?.cutout_master;
+  if(t?.kind===whiteSquareTreatment.kind||b?.kind===whiteSquareTreatment.kind||manifest?.white_square!==undefined)return requireWhiteSquareReview(review,square_review,{manifest,asset,grant,prepared_by});
   if(t?.kind!==cutoutTreatment.kind||t.version!==cutoutTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==t.cutout_sha256
     ||m?.sha256!==t.cutout_sha256||m.check?.passed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256
     ||manifest.pixel_source!=='cutout_master'||manifest.processing?.background_removed!==true)throw Error('Prepared derivatives are not a checked background-only cutout of this original');
@@ -476,6 +488,33 @@ export function requireCutoutReview(review,{manifest,asset,grant,prepared_by}){
   if(!text(prepared_by))throw Error('A cutout approval needs the batch writer named (prepared_by)');
   if([prepared_by,t.producer].some(name=>text(name)&&sameName(review.reviewer,name)))throw Error('Cutout review refused: the reviewer prepared the batch or made the cutout');
   return {treatment:cutoutTreatment.kind,treatment_version:cutoutTreatment.version,cutout_master_sha256:t.cutout_sha256,treatment_reference:review.review_reference};
+}
+
+/**
+ * A white square (decision 0022): the cutout review of its master (cutoutReviewChecks, all true, as for any cutout) and
+ * the review of exactly this square by its sha256 (whiteSquareReviewChecks, all true). The master may touch its source
+ * frame only because the source photograph cuts the product off; that is recorded as source_clipped and disclosed.
+ */
+function requireWhiteSquareReview(review,square,{manifest,asset,grant,prepared_by}){
+  const t=manifest.treatment,b=manifest.binding?.treatment,m=manifest.cutout_master,w=manifest.white_square;
+  const allowed=m?.check?.failures?.every(f=>f==='product_touches_canvas_edge');
+  if(t?.kind!==whiteSquareTreatment.kind||t.version!==whiteSquareTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==t.cutout_sha256||b.square_sha256!==t.square_sha256
+    ||m?.sha256!==t.cutout_sha256||allowed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256||w?.sha256!==t.square_sha256
+    ||typeof t.source_clipped!=='boolean'||w.record?.clipped_by_source!==t.source_clipped||manifest.pixel_source!=='white_square'||manifest.processing?.background_removed!==true||manifest.processing?.canvas?.kind!=='white_square')
+    throw Error('Prepared derivatives are not a checked white square of a background-only cutout of this original');
+  if(!text(t.producer))throw Error('A cutout needs its producer named, so that its review can be checked against it');
+  const basis=cutoutBasisProblem(grant);
+  if(basis)throw Error('Background removal is not covered: '+basis);
+  if(!review||review.cutout_sha256!==t.cutout_sha256||review.original_sha256!==asset.sha256)throw Error('Cutout review must name this exact cutout master and original');
+  if(!square||square.square_sha256!==t.square_sha256||square.cutout_sha256!==t.cutout_sha256||square.original_sha256!==asset.sha256)throw Error('White square review must name this exact square, cutout master and original');
+  for(const r of [review,square])if(!text(r.reviewer)||!record(r.review_reference))throw Error('Each review needs its reviewer and private record');
+  const failed=[...cutoutReviewChecks.filter(check=>review.checks?.[check]!==true),...whiteSquareReviewChecks.filter(check=>square.checks?.[check]!==true)];
+  if(failed.length)throw Error('White square review incomplete: '+failed.join(','));
+  if(!text(prepared_by))throw Error('A cutout approval needs the batch writer named (prepared_by)');
+  for(const r of [review,square])if([prepared_by,t.producer].some(name=>text(name)&&sameName(r.reviewer,name)))throw Error('Review refused: the reviewer prepared the batch or made the cutout');
+  const reference=`White square review of square ${t.square_sha256}: ${square.review_reference} || Cutout review of master ${t.cutout_sha256}: ${review.review_reference}`;
+  if(!record(reference))throw Error('The combined review record is longer than 8000 characters');
+  return {treatment:whiteSquareTreatment.kind,treatment_version:whiteSquareTreatment.version,cutout_master_sha256:t.cutout_sha256,treatment_reference:reference,square_sha256:t.square_sha256,source_clipped:t.source_clipped};
 }
 
 /**
@@ -500,9 +539,13 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
     // Any cutout marker makes the image a cutout, which must then be complete and reviewed; a review can never turn an
     // ordinary image into one.
-    const marked=['treatment','pixel_source','cutout_master','cutout_review_required'].some(key=>manifest[key]!==undefined)||b.treatment!==undefined||manifest.processing?.background_removed!==undefined;
-    const treatment=marked?requireCutoutReview(item.cutout_review,{manifest,asset,grant,prepared_by}):null;
-    if(!treatment&&item.cutout_review!==undefined)throw Error('A cutout review was supplied for an image that is not a cutout');
+    const marked=['treatment','pixel_source','cutout_master','cutout_review_required','white_square','white_square_review_required'].some(key=>manifest[key]!==undefined)||b.treatment!==undefined||manifest.processing?.background_removed!==undefined||manifest.processing?.canvas!==undefined;
+    const treatment=marked?requireCutoutReview(item.cutout_review,{manifest,asset,grant,prepared_by,square_review:item.square_review}):null;
+    if(!treatment&&(item.cutout_review!==undefined||item.square_review!==undefined))throw Error('A cutout review was supplied for an image that is not a cutout');
+    if(treatment?.treatment!==whiteSquareTreatment.kind&&item.square_review!==undefined)throw Error('A white square review was supplied for an image that is not a white square');
+    const squared=treatment?.treatment===whiteSquareTreatment.kind;
+    // An image whose source photograph cuts the product off says so; a white square's own record decides for it.
+    if(item.source_clipped!==undefined&&(item.source_clipped!==true||squared))throw Error('source_clipped is a disclosure (true) for an image that is not a white square');
     // Alpha is encoded losslessly, so any alpha difference is refused outright; no exception record can cover it.
     if([...manifest.variants,manifest.detail].some(f=>f.alpha_max_delta!==undefined&&f.alpha_max_delta!==0))throw Error('A derivative changed its alpha channel; it cannot be approved');
     // A flagged derivative passes only with an exact entry in an independent reviewed exception record (never default).
@@ -521,10 +564,13 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
     });
     const canonical=variants.find(v=>v.width===manifest.detail.width);
     if(!variants.some(v=>v.width<=960)||variants.length>8)throw Error('Responsive variants must include a card size and stay bounded');
-    const entry={src:canonical.src,width:canonical.width,height:canonical.height,variants};
+    const entry={src:canonical.src,width:canonical.width,height:canonical.height,variants,
+      ...(squared?{canvas:'white_square'}:{}),...((squared?treatment.source_clipped:item.source_clipped)===true?{source_clipped:true}:{})};
     if(grant.kind==='open_license'){
       // The credit states exactly what the recorded processing did: uncropped, not enlarged, colours unchanged.
       const p=manifest.processing,visual=manifest.original?.visual_width,file=licensedFile(grant,asset.source_url);
+      // A white square's derivatives are resizes of the square, not of the original's frame.
+      const frame=squared?manifest.white_square.side:visual;
       if(p?.crop!==false||p.upscale!==false||p.color_adjustments!==false||!Number.isInteger(visual))throw Error('Open-licence derivatives must be recorded uncropped resizes');
       if(file.file_kind==='rendition'){
         // A rendition is honest only at its recorded width, and nothing published from it may be wider.
@@ -532,7 +578,7 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
         if(files.some(f=>f.width>file.rendition_width))throw Error('Open-licence derivatives cannot be wider than their source rendition');
       }
       // A rendition is already a resize of the licensed original.
-      entry.attribution=openLicenseAttribution(grant,creditChanges({resized:file.file_kind==='rendition'||files.some(f=>f.width<visual),background_removed:treatment!==null}),file);
+      entry.attribution=openLicenseAttribution(grant,creditChanges({resized:file.file_kind==='rendition'||files.some(f=>f.width<frame),background_removed:treatment!==null,white_square:squared}),file);
     }
     entries.push(entry);
   }
