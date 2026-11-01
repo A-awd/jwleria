@@ -1,3 +1,39 @@
+## Decision 0022 real-product sample: produced and under Codex review; not yet published, 2026-11-01
+
+**Pipeline step added:** `scripts/catalog-intake/white-square.mjs` (tested), placed between the checked cutout master and the responsive renditions.
+- It takes the true foreground box from the mask's alpha and puts it on a square at fill 0.80.
+- The canvas is pure white, the square is fully opaque, and the largest side is 1600.
+- It never upscales.
+- It reports any product contact with a source frame edge.
+
+**The sample.** It is private and kept out of the repository. It reuses the existing pipeline: the Vision foreground mask, `cutout.mjs compose` and `sharp` 0.35.5 through Astro.
+
+**`m126200-0006`:**
+- **Original recovered:** its recorded original was fetched once from its recorded approved source, and its sha256 equals the record (`f5b5b2b8…ef5b`).
+- **Fresh Vision mask rejected:** it took the whole wrist and arm as the foreground.
+- **Candidate A**, the approved mask (lossless alpha of the published cutout) on the original's own pixels:
+  - a 1414 × 1414 white square, fill 0.7999, no upscaling, no source-edge contact;
+  - **under review and preferred:** the dark blue flank band is the polished case reflecting its surroundings, so it is genuine and kept (see the decision 0021 correction);
+  - **uncertain:** the lowest-flank boundary, by a few pixels.
+- **Candidate B**, the cosmetic edge repair: **rejected** by Claude and Codex (an angular notch, detached specks, bites into the bracelet). Its code is not kept.
+
+**`m126234-0015`:**
+- Its held original with a fresh Vision mask gives a 900 × 900 white square at fill 0.80.
+- **Source-limited detail:** the original photograph cuts the bracelet off at the top and bottom (269 and 245 px of edge contact). It must be labelled that way and never certified as a complete product, and the missing bracelet is never invented.
+
+**A bug fixed before review.** `sharp` flattens before it extends within one pipeline, which left the padding transparent. The squares are now fully opaque (3 channels, pure-white corners), and a test checks it.
+
+**Tests:** intake 134 of 134 at the time of the check, including the white-square tests.
+
+**Not yet:**
+- Codex's confirmation of candidate A, and the source-limited labelling of `m126234-0015`;
+- then the publication path:
+  - a reviewed migration for the new treatment and its truthful credit text, after a fresh read of the Supabase changelog;
+  - evidence, approvals, uploads through `jwl-media-upload`, and publication;
+  - the storefront's square white frame for normalized images, in phone and listing views;
+  - an immutable Worker package.
+- **n8n:** the image job needs macOS Vision and the local `sharp` pipeline, which the hosted n8n cannot run. The free local command-line pipeline is the working path.
+
 ## Checkpoint: owner brief saved and decision 0022 accepted (one square white presentation); implementation in progress, 2026-11-01
 
 - **The owner's agreed requirements** are saved in Arabic in [docs/OWNER-BRIEF-AR.md](docs/OWNER-BRIEF-AR.md). They are a semantic summary, not a transcript.

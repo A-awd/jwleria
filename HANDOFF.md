@@ -1,4 +1,26 @@
-## Current handoff: decision 0022 implementation in progress, 2026-11-01
+## Current handoff: decision 0022 sample under review, 2026-11-01
+
+**Saved:**
+- the owner brief (`docs/OWNER-BRIEF-AR.md`);
+- decision 0022;
+- the white-square pipeline step (`scripts/catalog-intake/white-square.mjs`, tested).
+
+**Now:**
+- **Codex** reviews the private before/after sheets. Their paths are given in the session handover, not in this repository.
+- **Candidate A** for `m126200-0006` is preferred: the flank band is genuine case reflection, and the lowest boundary is uncertain by a few pixels.
+- **`m126234-0015`** is a source-limited detail: the bracelet is cut off by its original.
+
+**Next, Claude**, once the review confirms:
+1. a reviewed migration for the `white_square` treatment and its credit text, after checking the Supabase changelog;
+2. evidence, approvals, uploads and publication through the existing path;
+3. the storefront's square white frame for normalized images, in phone and listing views;
+4. an immutable Worker package for Codex.
+
+**Unchanged and open:** the multi-colour example, photo coverage, a physical iPhone, and the n8n image runtime (macOS Vision is local only).
+
+Live release: `storefront-cbbc1e4d5dfc`. Rollback: its `DEPLOY.md`.
+
+## Previous handoff: decision 0022 implementation in progress, 2026-11-01
 
 - **Saved:** the owner brief ([docs/OWNER-BRIEF-AR.md](docs/OWNER-BRIEF-AR.md)) and decision 0022.
 - **Next:**

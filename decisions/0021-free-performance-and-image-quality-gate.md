@@ -100,6 +100,16 @@ The cutout stays published as approved, but this gate does not certify it. The r
 - show the photograph first;
 - a reviewed, non-generative mask rework.
 
+**Correction (2026-11-01, during the decision 0022 review).** Compared against the untouched original's boundary, the dark blue band left of the case rim is not background:
+- it is the polished case flank, reflecting the blue surroundings;
+- it is a smooth curved surface, with a crisp outer edge against the wrist and no fabric texture.
+
+So it is genuine product material, and the existing approved mask keeps it rightly.
+
+**The remaining uncertainty** is at the lowest flank only. There the case and the shadowed sleeve share dark tones, so the mask boundary is uncertain by a few pixels. It is recorded, not altered.
+
+**A rejected repair.** A cosmetic repair that erased exterior dark pixels was tried and rejected, because it removed product detail: bracelet edges, an angular notch and detached specks.
+
 ## Free-only limits
 
 This environment has:
