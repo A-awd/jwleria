@@ -1,3 +1,36 @@
+## Cutout recording prepared; an exact cutout input is still missing, 2026-11-01
+
+**Observed live (read-only, 2026-11-01 09:58Z):**
+- 9 migrations.
+- One media grant: open licence, CC BY 2.0, live and without expiry. It covers one licensed file, the titled 960 px rendition of m126234-0015, with 3 evidence rows from 1 original. There is no other grant.
+
+**Image input under the scope already granted:** none could be processed.
+- That rendition is the only rights-cleared file, and CC BY 2.0 allows a background-removal adaptation.
+- But there is no exact cutout master of it:
+  - the private editor trial redrew the product and stays rejected;
+  - local raster editing is excluded in this environment;
+  - no official file can be held without written permission.
+- No source was contacted.
+
+**Prepared (not applied, not deployed; nothing recorded, uploaded or published):**
+- Migration `apps/storefront/supabase/proposed/jwleria_cutout_media.sql` with an exact rollback. Its apply body has sha256 `5da1e0d2…8f58`. It adds:
+  - the written-permission `background_removal` flag;
+  - the cutout evidence fields;
+  - `jwl_record_cutout_approval`, so recording on the live database fails closed until this is applied;
+  - the evidence trigger's cutout rules and the background-removed credit texts.
+- Pipeline: `approvalBundle` records a cutout with its independent review and the producer named. Any cutout marker requires the full contract, and an alpha difference is refused. `media-run.mjs bundle` accepts `cutouts`.
+- Storefront: Arabic for the two background-removed credit texts. An Arabic reader checks it before the first cutout is published.
+- Worker package `releases/storefront-0bff02360d83/`: 73 files, `SHA256SUMS` sha256 `edb16e5e…2688`. Its `DEPLOY.md` orders the Worker first and the migration second.
+
+**Checks:**
+- Intake: 125 of 125 pass.
+- Storefront: 164 tests, 159 pass, 0 fail, 5 opt-in skips. The type check shows only the 7 existing Deno-function errors.
+- The synthetic end-to-end path passes: pipeline, recording function, upload handler, lane publication, Arabic credit and revocation.
+- Local rendered HTML shows the credit in Arabic and English on a product page and a search card.
+- An independent review found 5 defects; all are fixed, with tests.
+
+**Live, unchanged:** Worker `bf6812e3c5d4` (deployed and visitor-verified 2026-10-29); 1 public photograph.
+
 ## Cutout direction, fresh photo audit and the local cutout contract, 2026-10-29
 
 **Owner direction (decision 0015):**

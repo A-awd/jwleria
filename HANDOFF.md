@@ -1,3 +1,19 @@
+## Current handoff: cutout recording prepared, 2026-11-01
+
+Writer: the local interactive Claude Code session wrote this branch and nothing else. Nothing is running. No database, function, storage, media or provider write was made. Codex owns operator actions. Before another session writes, record the transfer here first.
+
+Next, in order:
+1. **Operator (Codex):** upload `releases/storefront-0bff02360d83/` exactly as built, following its `DEPLOY.md`: checksums, the recorded rollback target, `--no-bundle --keep-vars --no-autoconfig`. Then smoke-check it. The live site does not change visibly.
+2. **Operator (Codex), after step 1 is live:** apply `jwleria_cutout_media` following `DEPLOY.md` step 2 (apply body sha256 `5da1e0d2…8f58`; confirm it before accepting the action-time question), then read back. Claude then moves the file into `apps/storefront/supabase/migrations/` under its registered version and updates the two test paths that point to `proposed/`.
+3. **Input, the remaining external dependency:** one accepted exact cutout input. Either:
+   - an eligible original that is already transparent, under written permission with the source's `publication_allowed`; or
+   - a background-only master of a file already granted (today only the m126234-0015 rendition), from a tool that does not redraw the product.
+
+   Then Claude runs `cutout.mjs validate`, the independent visual comparison and `media-run.mjs bundle` with `cutouts`. Codex uploads; then publish and read back, with an Arabic reader checking the credit text.
+4. **Rights for the rest of the catalogue, and coverage, performance and the final read-back:** as in the 2026-10-29 handoff below.
+
+No programming gap is known on this path. After steps 1 and 2, only the inputs in step 3 and the rights in step 4 remain.
+
 ## Current handoff: the photo milestone after the cutout direction, 2026-10-29
 
 Writer: the local interactive Claude Code session wrote this branch and nothing else. Nothing is running. No database, function, storage, media or provider write was made. Codex owns operator actions. Before another session writes, record the transfer here first.
@@ -5,7 +21,7 @@ Writer: the local interactive Claude Code session wrote this branch and nothing 
 The foundation (catalogue, models and variants, minimal cards, product paragraphs, credits, phone layout) is live. What is left is real photographs: 1 of 4,097 products has one.
 
 Next, in order:
-1. **Rights basis for exact images (owner, with rights holders).** Start with one open source whose galleries name the exact reference: Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371 or Bottega Veneta 8 public products. The basis is written permission covering website publication, resizing, WebP encoding and background removal, plus the owner's decision on that source's `publication_allowed`; or the owner's own photographs of exact pieces. This is the single next step: everything after it is built.
+1. **Rights basis for exact images (owner, with rights holders).** Start with one open source whose galleries name the exact reference: Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371 or Bottega Veneta 8 public products. The basis is written permission covering website publication, resizing, WebP encoding and background removal, plus the owner's decision on that source's `publication_allowed`; or the owner's own photographs of exact pieces. This is the single next step. (Corrected 2026-11-01: recording and showing a cutout still needed programming at the time. It is now prepared; see the handoff above.)
 2. **Claude, on that basis:** run the `originals` phase on the held bytes. The manifest then shows whether an official file is already transparent; an eligible transparent original needs no removal pass. Then the identity check and the bundle; Codex uploads; then publish and read back.
 3. **Cutouts, when an accepted exact cutout input exists:** run `node scripts/catalog-intake/cutout.mjs validate` and the independent visual comparison. Then prepare the reviewed enabling change: database evidence for the master and treatment, the credit text `background removed, …`, and its Arabic in the storefront. That change is applied with the usual confirmation and shipped in a Worker release.
 4. **Coverage, performance, read-back:** primary variants of the 2,886 models first; then photo-filled mobile measurements and the cache labels (CA-1); then a final bilingual visitor read-back.
