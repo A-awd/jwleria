@@ -1,4 +1,24 @@
-## Current handoff: size grouping done (decision 0017), 2026-11-01
+## Current handoff: coherent mobile product page (decision 0018), 2026-11-01
+
+Prepared and pushed:
+- source `13acacfb79d6`;
+- package `releases/storefront-13acacfb79d6/`, with a `SHA256SUMS` sha256 of `c3f4caef…49ae9`.
+
+There is no database step.
+
+Next, in order:
+1. **Codex:** deploy the package as its `DEPLOY.md` says. Record the active version first, as the rollback target, then smoke-check.
+2. **Codex:** the public phone-width acceptance in Arabic and English, using the checklist in `DEPLOY.md`.
+3. **Then:** photo coverage resumes, as the batch-1 handoff below describes.
+
+In flight:
+- A local preview server runs on `127.0.0.1:4391` in this Claude session, for Codex's checks.
+- It is a Node build of `13acacfb79d6`, reading the live catalogue read-only.
+- It stops with the session. It is not a release and changes nothing.
+
+Rollback: `releases/storefront-13acacfb79d6/DEPLOY.md`. Roll the Worker back to the recorded version; `88e2e3cc0de9` works with the current database.
+
+## Previous handoff: size grouping done (decision 0017), 2026-11-01
 
 Nothing is running. All four steps are done; the details are in the top entry of `STATE.md`.
 1. Claude applied migration `20261101133722`.

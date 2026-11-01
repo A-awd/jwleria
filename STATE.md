@@ -1,3 +1,49 @@
+## Coherent mobile product page (decision 0018): prepared and preview-reviewed; Worker not yet deployed, 2026-11-01
+
+**Owner finding (a failed phone acceptance).** The live Datejust 41 mm page showed:
+- a ragged pile of 15 dial pills;
+- repeated "changes case diameter to 31 / 36 mm" notes;
+- an abrupt sticky inquiry bar.
+
+The size-family data is valid and unchanged.
+
+**Prepared** (source `13acacfb79d6`, pushed; package `releases/storefront-13acacfb79d6/`):
+- **Order.** The product leads: its image, then the brand, the name and the reference. The options follow, then one inline inquiry action, then the specifications, sizes and how to inquire as disclosures. The specifications are open only when the page has no photograph.
+- **Size.** The size is one row of equal segments.
+- **Other options.** Every other option shows its current value and opens a native list of only the values made at the selected size. Values made only in other sizes are listed apart, with explicit size links. A choice never changes the size unless it names it.
+- **After a choice.** One notice names an option that changed with the choice, and no value carries a note of its own. Focus returns to the control used, and opened sections stay open.
+- **Package.** 73 files; `SHA256SUMS` sha256 `c3f4caef…49ae9`. The file set is the same as `storefront-88e2e3cc0de9` apart from hashed names, and the secret scan is clean. No database, mapping, grant or asset change.
+
+**Tests at `13acacfb79d6`** (prepared):
+- Storefront: 186 tests, 181 pass, 0 fail, 5 opt-in skips. The two updated Playwright checks skip without Playwright, so they were not run.
+- Intake: 126 of 126.
+- Type check: only the 7 existing Deno-function errors.
+- New, `tests/configurator.test.mjs` (9 tests):
+  - no dial or bracelet choice changes the size;
+  - only values made at the selected size are offered;
+  - other sizes list exactly their sizes;
+  - every variant stays reachable;
+  - the layouts hold for singles and for 2-, 3- and 56-variant models.
+
+**Rendered check** (prepared). A local Node build of the same source read the live catalogue (read-only) on `127.0.0.1:4391`:
+- **`rolex-m126334-0018` (41 mm), in Arabic and English:**
+  - segments for 31, 36 and 41 mm;
+  - the 7 dials made at 41 mm, with 8 more under "In other sizes" and their sizes;
+  - 2 bracelets;
+  - the representative caption and credit kept, and no per-value notes.
+- **Other pages:**
+  - the LOEWE Amazona Large and Mini pages;
+  - Van Cleef & Arpels model sizes as a list;
+  - Oyster Perpetual 28 mm with 5 size segments, facts-only, with the specifications open;
+  - the single `m126200-0006` with no options.
+
+**Preview review** (reviewed: Codex, in-app browser at 390×844, on the local preview):
+- The 41 mm dial list is coherent, with the 7 current-size choices apart from the other sizes.
+- Mint green opened `m126334-0028`. The size stayed 41 mm, the reference and title changed, the list closed and focus returned.
+- Codex requested no further design changes.
+
+**Not yet:** the Worker upload and the public phone-width acceptance (Codex, as `releases/storefront-13acacfb79d6/DEPLOY.md` says).
+
 ## Sizes as variants of one model (decision 0017): live and visitor-verified, 2026-11-01
 
 All four release steps are done.
