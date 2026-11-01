@@ -1,3 +1,13 @@
+## Owner final acceptance of the decision 0023 card standard for all products, 2026-11-01
+
+- **The approval:** the owner approved the grey-square card design for all other products: «اعتمد لكل المنتجات الاخرى».
+- **Already live:** the shared implementation is live globally (`storefront-1dd1618a5ef1`), so no rebuild or redeploy was made.
+- **Scope:** design approval only. It is not a licence and not an image publication.
+- **AI image service cost research:** requested by the owner, between n8n and Supabase; Codex is verifying official pricing.
+  - No spending, subscription, paid call or credential is authorized.
+  - No workflow activation or backend access change.
+  - The free-only direction stays in force.
+
 ## Decision 0023 deployed and visitor-verified: `storefront-1dd1618a5ef1` is live, 2026-11-01
 
 **Correction:** the entry below said "no deploy receipt has been recorded yet". Claude missed Codex's receipt while handling queued messages. The package is deployed, as follows.

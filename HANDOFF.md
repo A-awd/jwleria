@@ -1,4 +1,15 @@
-## Current handoff: decision 0023 live (`storefront-1dd1618a5ef1`), 2026-11-01
+## Current handoff: decision 0023 accepted by the owner for all products, 2026-11-01
+
+Nothing is pending for the card standard. It is live and owner-accepted.
+
+**Pending (Codex):** the AI image service cost research; no spending is authorized.
+
+**Open:**
+- official image publication, which needs written brand permission;
+- photo coverage;
+- a physical iPhone and a 3× pixel ratio.
+
+## Previous handoff: decision 0023 live (`storefront-1dd1618a5ef1`), 2026-11-01
 
 Nothing is running and nothing is pending for this change.
 

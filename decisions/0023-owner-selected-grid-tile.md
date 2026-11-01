@@ -1,6 +1,6 @@
 # 0023 — The owner-selected product grid: a pale neutral square tile
 
-Status: accepted (owner selection of a reference screenshot, 2026-11-01). It supersedes decision 0022's white frame **for the product grid only**.
+Status: accepted, with final owner acceptance for every product (2026-11-01). It supersedes decision 0022's white frame **for the product grid only**.
 
 Date: 2026-11-01
 
@@ -25,3 +25,11 @@ The owner selected a mobile screenshot of an official brand's product grid as th
 - The product page's gallery frame.
 - The source rights gate: an official packshot is published only with the brand's express written permission.
 - Facts-only cards, which have no image and no tile.
+
+## Final owner acceptance (2026-11-01)
+
+The owner approved this card standard for all other products: «اعتمد لكل المنتجات الاخرى».
+- The shared card implementation has been live for every product since `storefront-1dd1618a5ef1`. No per-product copy, rebuild or redeploy is needed.
+- Aspect ratios, valid variants and the accepted exact-reference style are kept.
+- This approves the design only. It is not a licence: no image is published without its rights basis.
+
