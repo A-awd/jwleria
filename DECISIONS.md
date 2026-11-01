@@ -6,6 +6,7 @@ Only durable, public-safe decisions may be indexed here.
 
 - [0022 — One square white presentation for every product photograph](decisions/0022-uniform-white-square-product-presentation.md)
 - [0023 — The owner-selected product grid: a pale neutral square tile](decisions/0023-owner-selected-grid-tile.md)
+- [0024 — Free local generation for backgrounds only](decisions/0024-free-local-background-only.md)
 
 - [0021 — Free performance: size hints that match the compact frame, and an image quality gate](decisions/0021-free-performance-and-image-quality-gate.md)
 

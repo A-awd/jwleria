@@ -1,4 +1,13 @@
-## Current handoff: decision 0023 accepted by the owner for all products, 2026-11-01
+## Current handoff: free local background trial in progress (decision 0024), 2026-11-01
+
+1. **Claude:**
+   - after the install, generate one seeded background;
+   - compose the two private Longchamp cutouts (`10352HIU002`, `10327HJD514`) over it;
+   - give Codex the private paths for a phone-size review.
+2. **Owner or Codex:** the visual verdict. Nothing is published; the catalogue stays on the grey card.
+3. **Any later batch:** an operator-run local job (decision 0024). Not autonomous n8n.
+
+## Previous handoff: decision 0023 accepted by the owner for all products, 2026-11-01
 
 Nothing is pending for the card standard. It is live and owner-accepted.
 

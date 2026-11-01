@@ -1,3 +1,19 @@
+## Free local background-only path (decision 0024): engine install in progress; no background generated yet, 2026-11-01
+
+- **Authorization:** the owner authorized starting the free local path («ابدأ اذا»), for backgrounds only. There is no paid API, no product generation and no public licensing (decision 0024).
+- **Done:**
+  - `scripts/catalog-intake/background-composite.mjs`, tested (2 of 2): the product at native scale, opaque pixels verified unchanged, passthrough for transparent sources, duplicates processed once.
+  - `scripts/local-background/generate_background.py`: a CLI with a pinned model and revision and no private paths.
+- **In progress** (not yet generated):
+  - a private isolated environment outside Git, for PyTorch MPS and `diffusers`;
+  - model `stable-diffusion-v1-5` (CreativeML OpenRAIL-M), revision `451f4fe1…9a14`, fp16 UNet, text encoder and VAE only.
+  - The first install hit its 15-minute bound with the 138.6 MB torch wheel cached. One retry, with a 30-minute bound, is running.
+- **Supabase storage** (read-only, connector):
+  - one bucket, `jwl-product-media`: public, WebP only, a 15 MiB file limit, 15 objects totalling 1,612,030 bytes;
+  - there is no private staging bucket, and the plan quota is not visible through the connector;
+  - private composites stay local and never bypass the approval-bound upload.
+- **Unchanged:** the live catalogue stays on the approved grey card.
+
 ## AI image service cost research saved (research only, nothing authorized), 2026-11-01
 
 - **Saved:** verified prices and exact assumptions (SAMA rate, scenario counts, exclusions, source links) in [docs/operations/IMAGE-PROCESSING-COSTS-2026-11-01.md](docs/operations/IMAGE-PROCESSING-COSTS-2026-11-01.md):
