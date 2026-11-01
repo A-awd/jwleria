@@ -6,13 +6,13 @@ The Totals table, the brand counts, the source flags and the source-to-photo inv
 
 | Measure | Value |
 |---|---|
-| Registered migrations | 10 (last `20261101104017`; read 2026-11-01 10:40Z, when grants, evidence, approvals, rows and bucket objects were also unchanged) |
-| Active public catalog fact records | 4,097 (of 4,097 rows), of which exactly 1 carries a photograph and 4,096 are facts-only |
+| Registered migrations | 12 (last `20261101133722`; read 2026-11-01 13:49:50Z) |
+| Active public catalog fact records | 4,097 (of 4,097 rows), of which exactly 2 carry a photograph and 4,095 are facts-only (read 2026-11-01 13:49:50Z) |
 | Candidates | 4,150 |
-| Public products with a photograph | 1: m126234-0015, one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read |
-| Media bucket objects | 3 (320, 640 and 960 px encodings of that one photograph) |
-| Media grants / approvals | 1 / 1, both live; 3 media evidence rows |
-| Model grouping | applied: 4,097 mapped variant rows, 2,886 displayed models (283 grouped holding 1,494 variants and 2,603 singles, from the 2026-10-28 mapping) |
+| Public products with a photograph | 2. m126234-0015: one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read. m126200-0006: photo batch 1 under decision 0016 (`STATE.md`) |
+| Media bucket objects | 11: 3 encodings of the m126234-0015 photograph and 8 uploads for m126200-0006 |
+| Media grants / approvals | 2 / 2, all live; 11 media evidence rows |
+| Model grouping | applied: 4,097 mapped variant rows in 2,579 displayed models since the size rebuild of 2026-11-01. 395 grouped models hold 1,913 variants, 196 of them size families holding 1,055, and 2,184 models are singles. The 2026-10-28 mapping had 2,886 models: 283 grouped holding 1,494 variants, and 2,603 singles |
 | m126234-0015 | active, `approved_media` |
 
 ## Public facts by brand

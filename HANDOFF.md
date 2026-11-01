@@ -1,4 +1,26 @@
-## Current handoff: size grouping, step 2 of 4, 2026-11-01
+## Current handoff: size grouping done (decision 0017), 2026-11-01
+
+Nothing is running. All four steps are done; the details are in the top entry of `STATE.md`.
+1. Claude applied migration `20261101133722`.
+2. Codex deployed the Worker from source `88e2e3cc0de9`.
+3. Claude rebuilt the mapping once. The interrupted call had committed at 13:41:49Z, so it was read back and not repeated.
+4. Codex passed the phone-width acceptance in Arabic and English.
+
+Result:
+- 2,579 models, down from 2,886, for the same 4,097 variants;
+- 196 size families holding 1,055 variants;
+- catalogue, approvals and media unchanged.
+
+The size-grouping writer scope is complete and authorises no further production action. No further rebuild is needed. Rollback: `releases/storefront-88e2e3cc0de9/DEPLOY.md`.
+
+Next:
+1. **Photo coverage remains the barrier.** This is unchanged from the batch-1 handoff below. A family page without its own photograph shows only its model's photographed variant, captioned with that photograph's reference and size.
+2. **Ungrouped rows stay as they are until a source states more.**
+   - 207 rows have several models per size.
+   - 555 rows are flagged by the base mapping, including 502 Rolex `single:ambiguous-options`.
+   - Grouping any of them needs new evidence and a reviewed rule change, not a re-run.
+
+## Previous handoff: size grouping, step 2 of 4, 2026-11-01
 
 In flight:
 1. **Done:** migration `20261101133722`, applied and read back by Claude.

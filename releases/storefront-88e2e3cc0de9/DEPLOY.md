@@ -44,6 +44,8 @@ Four steps, two actors, in this order. Each step can be read back before the nex
 
 ## 2. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): deployed at 100%, with runtime and bindings unchanged.
+
 **Files:**
 - 73 compiled files under `dist-cloudflare/`: the same file set as `storefront-0bff02360d83`, except for hashed chunk names.
 - `SHA256SUMS` has one line per file. Its own sha256 is `fe302580bbd7dd9965ed937df0d63b38f4582b521f86ba3acea6fcfe94bf2705`.
@@ -67,6 +69,8 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 
 ## 3. Mapping rebuild (Claude, only after step 2 is live)
 
+**Done on 2026-11-01:** one call, committed at 13:41:49Z. The terminal disconnected before the result returned, so the outcome was read back and the call was not repeated. Read back at 13:49:50Z: 2,579 models, down from 2,886, for the same 4,097 variants, with 196 size families holding 1,055 variants; catalogue, approvals and media unchanged. Details are in `STATE.md`.
+
 `select jwl_internal.apply_product_variants();` runs once as `service_role`. It is one transaction, and any inconsistent model aborts it with the earlier mapping intact.
 
 **Read back:**
@@ -77,6 +81,8 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - `jwl_product_model_v2` for the example URLs, which are then given to Codex.
 
 ## 4. Public acceptance (Codex)
+
+**Done on 2026-11-01** (visitor-verified by Codex at 390×844): the Datejust family in Arabic and English, the LOEWE Amazona family in Arabic, and the Rolex brand and Datejust catalogue pages. Details are in `STATE.md`.
 
 At phone width, in Arabic and English:
 - a size family page: the size option first, the size table, and a representative photograph caption where one applies;

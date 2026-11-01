@@ -1,3 +1,114 @@
+## Sizes as variants of one model (decision 0017): live and visitor-verified, 2026-11-01
+
+All four release steps are done.
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| 1. Migration `20261101133722` `jwleria_size_families` | Claude | applied once; read back at 13:37:34Z with nothing regrouped | applied |
+| 2. Worker from source `88e2e3cc0de9` | Codex | live at 100%, with runtime and bindings unchanged | producer-reported |
+| 3. Mapping rebuild | Claude | one `jwl_internal.apply_product_variants()` call, committed at 13:41:49Z | observed live |
+| 4. Phone-width acceptance in Arabic and English | Codex | passed for the scope below | visitor-verified |
+
+**Step 3 recovery.** The terminal disconnected before the rebuild call returned, and the call was not repeated. A read-only read at 13:46:46Z found that it had committed:
+- every row was mapped at 13:41:49Z;
+- 1,055 rows carried size-family rules;
+- no session was still running it, and no lock was held.
+
+The read-back below is from 13:49:50Z.
+
+**Models by brand** (observed live). The 4,097 variants are unchanged.
+
+| Brand | Models before | Models after | Variants |
+|---|---|---|---|
+| Rolex | 674 | 638 | 1,465 |
+| Prada | 851 | 756 | 851 |
+| Van Cleef & Arpels | 498 | 396 | 498 |
+| Cartier | 463 | 418 | 463 |
+| LOEWE | 232 | 212 | 407 |
+| Longchamp | 145 | 136 | 390 |
+| Bottega Veneta | 8 | 8 | 8 |
+| Audemars Piguet, IWC Schaffhausen, Jaeger-LeCoultre, Panerai, Piaget | 3 each | 3 each | 3 each |
+| **All** | **2,886** | **2,579** | **4,097** |
+
+After the rebuild, 395 grouped models hold 1,913 variants, and 2,184 models are singles.
+
+**Size families formed** (observed live). Every count equals the dry run.
+
+| Source | Families | Variants | Base models merged | Largest | Most sizes |
+|---|---|---|---|---|---|
+| Rolex | 29 | 521 | 65 | 56 | 5 |
+| Prada | 66 | 161 | 161 | 3 | 3 |
+| Van Cleef & Arpels | 48 | 150 | 150 | 5 | 5 |
+| LOEWE | 14 | 85 | 34 | 16 | 4 |
+| Cartier | 30 | 75 | 75 | 4 | 4 |
+| Longchamp | 9 | 63 | 18 | 12 | 2 |
+| **All** | **196** | **1,055** | **503** | **56** | **5** |
+
+**Left ungrouped, with the recorded reason** (observed live; given as rows / base models):
+- **One size.** The source states a size, but the catalogue holds only one size of that design.
+  - Rolex 160 / 22, Prada 133 / 133, Longchamp 132 / 36.
+  - LOEWE 76 / 61, Cartier 63 / 63, Van Cleef & Arpels 9 / 9.
+- **Several models per size.** A size has more than one base model, so that size cannot point to one model.
+  - LOEWE 99 / 47, Longchamp 65 / 26, Rolex 32 / 3, Prada 11 / 11.
+- **No other reason occurred.** None was an incomplete base model, a name mismatch or a case of unresolved options.
+- **Not eligible: 555 rows that the base mapping already flags.** Each stays its own card.
+  - Rolex: 502 `single:ambiguous-options` (including `m126200-0006`) and 16 `single:arabic-name-mismatch`.
+  - Longchamp: 19 `single:unrecognised-reference` and 16 `single:inconsistent`.
+  - Bottega Veneta: 2 `single:inconsistent`.
+
+**Unchanged** (observed live):
+- catalogue hash `572b6ffe…f3a9`, approvals hash `2ffecd3a…19f6` and media-evidence hash `c0b2b9ae…2134`;
+- 12 migrations, the last `20261101133722`;
+- 2 grants, 11 media evidence rows and 2 live approvals;
+- 4,097 active rows, 2 of them with a photograph, and 11 bucket objects.
+
+The mapping hash changed from `ff582213…f0ca` to `9637cee5…a74a`.
+
+**Integrity** (observed live). Each of these counts is 0:
+- active rows without a mapping;
+- inactive rows with a mapping;
+- models without exactly one primary and contiguous positions;
+- variants without matching evidence.
+
+**Visitor-verified** (Codex, in the live in-app browser at 390×844):
+- **Datejust in Arabic** (`/ar/products/rolex-m126234-0015-e45f1880/`):
+  - The page shows the size-neutral Datejust name, the 31, 36 and 41 mm options and a three-row size table.
+  - Choosing 41 mm opened `m126334-0018`. The URL, title, reference and facts changed.
+  - The gallery kept the real 36 mm photograph, captioned with its own reference and size.
+  - There was no horizontal overflow (scroll width 375 at a 390 viewport).
+- **Datejust in English:** from a 41 mm page, choosing 31 mm opened `m278274-0002`.
+  - It showed a 31 mm diameter and a 55-hour power reserve, against 70 hours at 36 and 41 mm.
+  - The caption was correct, and the photograph loaded.
+- **LOEWE in Arabic** (`/ar/products/loewe-a039as4x12-1100/`):
+  - Amazona appears as one product in Mini, Small, Medium and Large, with a four-row dimension table and the real colour availability.
+  - There was no overflow at 390 px.
+  - Choosing Large opened `loewe-a039asrx02-1100`. The reference and dimensions changed to 34.5X27X14 cm, and Black was kept.
+- **Brand and catalogue:** the Rolex brand page and the Datejust catalogue pages load, and the ambiguous singles stay separate.
+- **Screenshot:** one phone screenshot is held privately by Codex. It is not in this repository.
+
+**Observed live** (Claude, over HTTP):
+- **LOEWE page, English and Arabic:** both return 200, with `noindex, nofollow` and 16 variant links. The size table rows:
+  - Mini, `A039AS4X12-1100`: 20X11.5X7 cm, 4 colours;
+  - Small, `A039AS0X01-1100`: 24.5X18.5X10 cm, 9 colours;
+  - Medium, `A03918MX01-1100`: 28X22.5X11 cm, 2 colours;
+  - Large, `A039ASRX02-1100`: 34.5X27X14 cm, 1 colour.
+- **Single page** (`rolex-m126200-0006-1765d475`):
+  - The Arabic page returns 200, with no size table.
+  - The English request timed out while connecting (curl 28) and got no HTTP response. It was not repeated.
+- **Inquiry copy:** the product pages ask about the price on WhatsApp and show no price (decision 0005).
+- **Catalogue:** both pages return 200. The first card is a Longchamp size family, Le Pliage One Handbag, with 10 variants.
+
+**`jwl_product_model_v2`** (observed live):
+- **Datejust family:** 56 variants, in 31 mm (16), 36 mm (26) and 41 mm (14). Diameter and power reserve differ by size.
+- **Datejust representative:** the card is `m126234-0015`. A page without its own photograph names `m126234-0015` (36 mm) as its representative.
+  - It is labelled as another size on `m126334-0003` (41 mm) and `m278274-0001` (31 mm).
+  - It is labelled as the same size on `m126234-0013`.
+- **Jewellery model sizes:** these read as expected, but their pages were not visitor-checked.
+  - `cartier-b6062617`: Juste un Clou bracelet, 4 sizes.
+  - `van-cleef-and-arpels-vcarp6x000`: Perlée sweet clovers bracelet, 5 sizes.
+
+**Rollback:** `releases/storefront-88e2e3cc0de9/DEPLOY.md`.
+
 ## Sizes as variants of one model (decision 0017): migration applied, Worker prepared, mapping not yet rebuilt, 2026-11-01
 
 **Applied (observed live, 13:37:34Z):**

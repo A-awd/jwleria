@@ -28,6 +28,7 @@ Visible appearance stays the current production identity.
    - Apply `apps/storefront/supabase/proposed/jwleria_product_models.sql`. It is additive: new tables, a view and functions; existing tables, rows and functions are untouched.
    - Then run `select jwl_internal.apply_product_variants();` once as the service role.
    - Expected result on the unchanged catalogue (catalog hash `b2182069…`): 4,097 variants, 2,886 models, 283 grouped models holding 1,494 variants, 0 key collisions.
+   - Since migration `20261101133722` (decision 0017), the same call also forms the size families. On the catalogue of 2026-11-01 (catalog hash `572b6ffe…`) it gives 4,097 variants in 2,579 models, 196 of them size families holding 1,055 variants.
    - The currently deployed Worker ignores the new objects, so this step is safe before or after the deploy.
    - Do not reapply `20261026114541`.
 2. **Build.**
