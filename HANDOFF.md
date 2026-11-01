@@ -1,4 +1,21 @@
-## Current handoff: touch-safe gallery and fast choices (decision 0019), 2026-11-01
+## Current handoff: touch-safe gallery and fast choices live (decision 0019), 2026-11-01
+
+Nothing is running: the local preview is stopped. The details are in the top entry of `STATE.md`.
+- **Deploy.** Codex deployed `releases/storefront-7f837315b4ec/` (source `7f837315b4ec`). The new version is active at 100%, with the runtime and bindings unchanged.
+- **Public check.** It passed in Codex's in-app browser at 390×844 with native scrolling:
+  - scrolling from the image centre, on one- and two-photograph pages;
+  - the missing-photograph state with the small, labelled representative;
+  - Back and Forward;
+  - no overflow.
+
+Next:
+1. **Owner:** a physical iPhone swipe in Safari, starting on the photograph. It is untested.
+2. **Optional:** public checks of a bag family, a jewellery model-size page and a facts-only family page.
+3. **Photo coverage remains the barrier**, still open and unchanged from the batch-1 handoff below: 2 of 4,097 active products have a photograph.
+
+Rollback: `releases/storefront-7f837315b4ec/DEPLOY.md`. Roll the Worker back to the version Codex recorded; `13acacfb79d6` works with the current database.
+
+## Previous handoff: touch-safe gallery and fast choices prepared (decision 0019), 2026-11-01
 
 Prepared and pushed:
 - source `7f837315b4ec`;

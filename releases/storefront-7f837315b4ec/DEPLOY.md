@@ -9,6 +9,8 @@ This is a Worker-only release. It makes no database, mapping, grant or asset cha
 
 ## 1. Worker upload (Codex)
 
+**Done on 2026-11-01** (producer-reported by Codex): verified against `SHA256SUMS` and uploaded. The new version is active at 100%, and the runtime and all three bindings, both secrets included, are byte-equal before and after. The provider identifiers are held privately.
+
 **Files:**
 - 77 compiled files under `dist-cloudflare/`. The file set is that of `storefront-13acacfb79d6` plus four new files:
   - the product page's client module;
@@ -37,6 +39,15 @@ npx wrangler@4.147.0 deploy --config dist-cloudflare/server/wrangler.json --no-b
 - `noindex, nofollow` and robots `Disallow: /` are kept.
 
 ## 2. Public acceptance (Codex)
+
+**Done on 2026-11-01** (visitor-verified by Codex on the public site at 390×844, with native browser scrolling; not a finger swipe). Passed:
+- the centre scroll on `m126234-0015` and `m126200-0006`;
+- Mint green at 36 mm, with the missing-photograph panel and the small, labelled representative;
+- Back and Forward;
+- English 36 → 41 mm, keeping Mint green;
+- no overflow.
+
+Not covered: the physical iPhone swipe, and the LOEWE item of this list. `STATE.md` labels each check.
 
 At 390 px, in Arabic and English:
 - **Scrolling:** native scroll that starts at the centre of the photograph moves the document, on a one-photograph page and on `m126200-0006`.

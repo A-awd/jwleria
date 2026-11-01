@@ -1,3 +1,37 @@
+## Touch-safe gallery, honest photo states and fast choices (decision 0019): deployed and visitor-verified (native browser scrolling), 2026-11-01
+
+| Step | Who | Result | Label |
+|---|---|---|---|
+| Worker `releases/storefront-7f837315b4ec/` (source `7f837315b4ec`) | Codex | Verified against its 77-file manifest (`604520ec…0fd1`) and uploaded. The new version is active at 100%, and the runtime and all three bindings, both secrets included, are byte-equal before and after. | producer-reported |
+| Public check at 390×844 | Codex | Passed for the scope below, with native scrolling in its in-app browser. | visitor-verified |
+
+No database, mapping, grant or asset change was made. Provider identifiers and private logs stay outside the repository.
+
+**Visitor-verified** (Codex, on the public site in its in-app browser at 390×844; a native browser check, not a finger swipe):
+- **Single photograph, `m126234-0015`:** the gallery computes `overflow` visible. A half-page scroll that starts at the image centre (195, 350) ends with the document at 422 and the gallery at 0, once the event settles.
+- **Two photographs, `m126200-0006`:** the same centre scroll ends with the document at 422 and the gallery at 0.
+- **Arabic, Mint green at 36 mm (`m126234-0051`):**
+  - the size is kept, and the reference, URL and title are exact;
+  - the gallery shows the "no approved photograph" panel;
+  - the black representative is a 104×130 thumbnail, captioned with its real 36 mm and black dial.
+- **History:** Back restores `m126234-0015` with its own photograph, and Forward restores the green 36 mm missing-photograph state.
+- **English:** green 36 mm → 41 mm opens `m126334-0028`, keeps Mint green and shows the correct reference.
+- **Layout:** no page overflow (375 ≤ 390).
+- **Screenshot:** one live screenshot is held privately by Codex.
+
+**A measurement caution (Codex):** the native scroll tool can return before the input settles. An immediate read can show 0 where a settled read shows 422. The earlier isolated live reading of 0 is therefore not claimed as a sustained measurement. The owner's report and the root cause in the code (an `overflow-x`-only gallery is a two-axis scroller) stand.
+
+**Untested:** a physical iPhone finger swipe in Safari. It stays owner-observed.
+
+**Not visitor-checked in this release:**
+- bag families such as LOEWE and Longchamp;
+- the jewellery model-size pages (Cartier, Van Cleef & Arpels);
+- a facts-only family page.
+
+**Still open: photo coverage.** 2 of 4,097 active products have a photograph, unchanged. No photo work was done.
+
+The local preview server is stopped, and its temporary connection file is deleted.
+
 ## Touch-safe gallery, honest photo states and fast choices (decision 0019): prepared and preview-reviewed; Worker not yet deployed, 2026-11-01
 
 **Owner finding (a failed usability acceptance):**

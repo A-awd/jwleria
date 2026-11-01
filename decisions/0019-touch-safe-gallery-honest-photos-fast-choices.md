@@ -21,6 +21,7 @@ The earlier visual acceptance (decision 0018) was not a touch-gesture or latency
   - The gallery computed `overflowX: auto`, `overflowY: auto` and `touchAction: auto`.
   - Scrolling from the page edge moved the document (scrollY 496 → 0).
   - Scrolling half a page down from the image centre left the document at 0 and `gallery.scrollTop` at 0.
+- **A caution on that reading (Codex, at release).** The native scroll tool can return before the input settles, so an immediate read can show 0 where a settled read shows the moved position. The isolated earlier 0 is therefore not claimed as a sustained measurement. The owner's report and the root cause in the code stand. After the release, the settled public reading is document 422 with the gallery at 0, on one- and two-photograph pages.
 - **The open option list was a second nested scroller.** It was capped at `min(26rem, 62svh)` with its own vertical scroll.
 - **The home page's brand strip had the same `overflow-x`-only rule.**
 
