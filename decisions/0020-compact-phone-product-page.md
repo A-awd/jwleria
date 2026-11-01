@@ -16,7 +16,7 @@ The owner rejected a colour change that ends in "photograph unavailable" as a de
 ## Layout (shared, every brand and category)
 
 1. **Order on a phone:** the brand, name and reference; the photograph; the options right below it; one inquiry action; then the specifications, sizes and how to inquire as disclosures. Every datum is kept.
-2. **The photograph** shows the whole product, contained and never cropped, in a frame sized by the screen: `clamp(13rem, 40svh, 26rem)` instead of a tall 4:5 column. From 60rem up, the two-column layout keeps its 4:5 gallery.
+2. **The photograph** shows the whole product, contained and never cropped, in a frame sized by the screen: `clamp(10rem, 30svh, 20rem)` instead of a tall 4:5 column. That gives 253 px at an 844 px screen height, 200 px at 667 and 170 px at 568. After Codex's 390×844 preview, 40svh (337.59 px) left the third control below the screen. From 60rem up, the two-column layout keeps its 4:5 gallery.
 3. **Tighter controls:**
    - the title is smaller on a phone;
    - a list's summary is one line (name, current value, chevron);

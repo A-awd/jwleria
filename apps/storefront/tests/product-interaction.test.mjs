@@ -180,7 +180,7 @@ test('the product page is compact on a phone: the name, a screen-sized photograp
   assert.ok(order.every((at,i)=>at>0&&(i===0||at>order[i-1])),'name, photograph, options, inquiry, then the details, in reading order');
   assert.match(of('.pdp'),/grid-template-areas:\s*"head" "gallery" "info"/);
   const frame=of('.pdp__gallery .media');
-  assert.match(frame,/aspect-ratio:\s*auto;\s*height:\s*clamp\(13rem,\s*40svh,\s*26rem\)/,'the photograph frame follows the screen height, bounded, instead of a tall 4:5 column');
+  assert.match(frame,/aspect-ratio:\s*auto;\s*height:\s*clamp\(10rem,\s*30svh,\s*20rem\)/,'the photograph frame follows the screen height (30svh: 253px at 844, 200px at 667, 170px at 568), bounded, instead of a tall 4:5 column');
   assert.match(frame,/aspect-ratio:\s*4 \/ 5;\s*height:\s*auto/,'the two-column desktop gallery keeps its 4:5 frame');
   assert.match(css,/:is\(\.pdp__gallery, \.card\) \.media > img\.art\[srcset\] \{ object-fit: contain;/,'the whole product, never cropped');
   assert.match(of('.pdp__head h1'),/font-size:\s*var\(--s2\)/,'a smaller title on a phone');

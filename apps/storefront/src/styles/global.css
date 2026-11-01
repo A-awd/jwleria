@@ -188,7 +188,7 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
      auto, which turned even one photograph into a nested vertical scroller that took the page's scroll. */
 .pdp__gallery { grid-area: gallery; position: relative; display: grid; gap: .75rem; min-width: 0; }
 /* The whole product, contained, in a frame sized by the screen's height rather than a tall 4:5 column. */
-.pdp__gallery .media { aspect-ratio: auto; height: clamp(13rem, 40svh, 26rem); }
+.pdp__gallery .media { aspect-ratio: auto; height: clamp(10rem, 30svh, 20rem); }
 .pdp__gallery--many { grid-auto-flow: column; grid-auto-columns: 86%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
 .pdp__gallery--many figure { scroll-snap-align: center; }
 .pdp__gallery figure { margin: 0; }
