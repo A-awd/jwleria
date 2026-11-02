@@ -1,4 +1,20 @@
-## Current handoff: exact originals in the flat standard, 2026-11-02
+## Current handoff: bulk photo architecture ready; first batch awaits source rights, 2026-11-02
+
+Nothing is running. The architecture is [docs/architecture/BULK-ORIGINAL-IMAGES.md](docs/architecture/BULK-ORIGINAL-IMAGES.md), and its status is proposed.
+
+1. **Owner:**
+   - choose the first source (Longchamp is proposed);
+   - decide whether to send the drafted permission request. It is private and not sent.
+   - Without written permission, no official photograph can be published.
+2. **Claude, executable now with no owner dependency:** stage 0, a read-only private batch manifest for the chosen source, reconciled with the live counts. Then G1, G5 and G6, with tests.
+3. **After permission:**
+   - the operator records the `written_permission` grant;
+   - the owner sets the source's `publication_allowed`;
+   - stages 2 to 6 run in sub-batches.
+   - G2 needs a reviewed migration and the owner's approval to apply it.
+4. **Still open:** a physical iPhone and a 3× pixel ratio check; field performance data.
+
+## Previous handoff: exact originals in the flat standard, 2026-11-02
 
 Nothing is running.
 

@@ -1,3 +1,35 @@
+## Bulk original-photo architecture consolidated (proposed); no public change, 2026-11-02
+
+- **Authoritative document:** [docs/architecture/BULK-ORIGINAL-IMAGES.md](docs/architecture/BULK-ORIGINAL-IMAGES.md), written by Claude under decision 0010. It is not an owner approval. It covers:
+  - the components and roles, with diagrams;
+  - the source-onboarding contract;
+  - matching evidence and quarantine reasons;
+  - the model, variant and image-selection rules;
+  - a mapping of every concept to the existing tables, functions and modules;
+  - deterministic processing, the cloud and local boundary, and the lifecycle;
+  - mobile delivery targets, the rollout stages, counting rules, gaps G1 to G8, and dated vendor facts.
+- **Live counts** (observed live, read-only, 2026-11-02 18:53Z):
+  - 4,097 active variants in 2,579 displayed models, 395 of them grouped. The 2,886 figure is the superseded 2026-10-28 mapping.
+  - 1 model has a photograph (1 of its 56 variants), and 0 models have every variant photographed.
+- **Longchamp supply shape** (observed live): 390 variants in 136 models. In 117 models, every variant's recorded gallery URLs all name the exact reference.
+- **Proposed first batch:** Longchamp, toward 100 distinct models with correct photographs. It is not achieved and not approved, and it depends on written permission. Nothing is sent.
+- **n8n** (observed live, read-only): 6 workflows, all inactive. The manual delivery check is the only image-related one that can be run, and it proves delivery of already-approved files only.
+- **Vendor facts** (official docs, checked 2026-11-02):
+  - the n8n Cloud Code node cannot import external modules, and Execute Command isn't available on n8n Cloud;
+  - Supabase's Smart CDN needs the Pro plan (this project's plan is unknown);
+  - Supabase advises read-only, project-scoped MCP for real data;
+  - Workers Cache API contents stay in the data center that wrote them.
+- **Gaps recorded, not implemented:**
+  - G1: size-shared photographs are blocked by the single-file guard in `background-composite.mjs` and by the missing gallery identity route in `requireVerification`.
+  - G2: an exact-occupancy `flat_tile` presentation, which needs a migration. The flat files are lighter: 53,092 B against 137,594 B at 960 px for `10166HSR001`.
+  - G3: credits for written permission.
+  - G4: expiring grants.
+  - G5: a batch ledger.
+  - G6: a fuller acquisition record.
+  - G7: read-only MCP for routine reads.
+  - G8: cloud orchestration.
+- **Not done:** no production write, n8n edit, source-flag change, media upload, publication or billing change. No photo search or generation was rerun.
+
 ## Exact originals in the flat `#f0f0f0` standard: one catalogue-bound bag prepared privately; publishable photos 0, 2026-11-02
 
 **Owner direction** («ابدأ», relayed by the coordinator): exact original product photos, native transparency where available, background-only removal only if needed, a flat `#f0f0f0` square with consistent occupancy, the whole piece uncropped, light responsive WebP. No generative edits, AI backgrounds, paid services or accounts.

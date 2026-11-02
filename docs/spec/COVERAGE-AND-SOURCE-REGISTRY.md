@@ -20,7 +20,7 @@ The Totals table, the brand counts, the source flags and the source-to-photo inv
 | Media bucket objects | 15, 1,612,030 bytes (read 2026-11-02) |
 | Media grants / approvals | 2 / 2, both open-licence and unrevoked; 15 media evidence rows (read 2026-11-02). Each grant names one file, and both files are already used, so no further photograph is publishable under an existing grant |
 | Prepared privately, not publishable (2026-11-02) | 1 rights pending: Longchamp `10166HSR001` (Black), an exact-reference official packshot with native alpha, in the flat `#f0f0f0` square and the transparent form, gate 8 of 8. It has no written permission, and `publication_allowed=false`. 2 non-catalogue-bound: `10352HIU002` and `10327HJD514` have no catalogue row (`STATE.md`) |
-| Model grouping | applied: 4,097 mapped variant rows in 2,579 displayed models since the size rebuild of 2026-11-01. 395 grouped models hold 1,913 variants, 196 of them size families holding 1,055, and 2,184 models are singles. The 2026-10-28 mapping had 2,886 models: 283 grouped holding 1,494 variants, and 2,603 singles |
+| Model grouping | applied: 4,097 mapped variant rows in 2,579 displayed models since the size rebuild of 2026-11-01 (re-read 2026-11-02 18:53Z: unchanged, with 1 model photographed in 1 of its 56 variants, and 0 models with every variant photographed). 395 grouped models hold 1,913 variants, 196 of them size families holding 1,055, and 2,184 models are singles. The 2026-10-28 mapping had 2,886 models: 283 grouped holding 1,494 variants, and 2,603 singles |
 | m126234-0015 | active, `approved_media` |
 
 ## Public facts by brand
@@ -139,6 +139,15 @@ Four kinds of evidence, never interchangeable:
 ### Photo routes
 
 No new acquisition request goes to a recorded stopped or closed origin.
+
+The end-to-end bulk design, including the source-onboarding contract and the rollout stages, is in [BULK-ORIGINAL-IMAGES.md](../architecture/BULK-ORIGINAL-IMAGES.md) (proposed, 2026-11-02).
+
+Longchamp's supply shape (observed live, 2026-11-02):
+- 390 active variants in 136 models;
+- 371 variants whose recorded gallery URLs all name the exact reference;
+- 117 models where that holds for every variant.
+
+That is enough for the proposed first milestone of 100 distinct models, once written permission exists.
 
 1. **Open sources whose galleries name the exact reference** (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371, Bottega Veneta 8 public products). This is the shortest path to exact photographs. It needs three things:
    - written permission from the brand or an authorised distributor, covering website publication, resizing and WebP encoding, plus background removal for a cutout;

@@ -57,6 +57,9 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | Verified WhatsApp number | genuine owner decision (owner input) | open | blocks `PUBLIC_RELEASE=live` |
 | Lifting a closed source (Cartier, Van Cleef & Arpels, CELINE, RIMOWA, Piaget, Panerai) | genuine owner decision, plus a reviewed code change | closed | terms, robots or challenge recorded |
 | Activating the intake schedule; enabling the n8n database nodes | genuine owner decision | open | the recorded runner defects must be fixed first |
+| First bulk-photo source, and sending its drafted permission request ([bulk images](../architecture/BULK-ORIGINAL-IMAGES.md) §4) | genuine owner decision | open (2026-11-02) | Longchamp is proposed; nothing is sent. No official photograph is publishable without written permission. |
+| A source's `publication_allowed` after its permission is recorded | genuine owner decision | open | set per source, never by tools |
+| Applying the `flat_tile` presentation migration (bulk images G2) | genuine owner decision, after a reviewed migration | not yet prepared | needs a storefront change and a Worker release as well |
 | Reconciling `jwleria-s-gembox`; merging the foundation branch | genuine owner decision | open | README merge gate |
 
 ## Licence title outcome

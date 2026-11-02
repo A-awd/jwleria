@@ -86,6 +86,7 @@ This repository is public. Never commit secrets, credentials, project refs, prov
 - [Stop and recovery runbook](docs/spec/STOP-RECOVERY-RUNBOOK.md): failure playbooks, including the MCP elicitation timeout.
 - [Maintenance backlog](docs/spec/MAINTENANCE-BACKLOG.md): trigger, benefit, owner, dependency and acceptance.
 - [Coverage and source registry](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md): public facts and media counts, sources and their flags, closed lanes and pacing.
+- [Bulk original photos](docs/architecture/BULK-ORIGINAL-IMAGES.md) (proposed architecture): source onboarding, matching, image processing, the cloud and local boundary, the photo lifecycle, rollout stages and counting rules.
 
 ## Stopping criteria
 

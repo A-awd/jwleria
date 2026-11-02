@@ -22,7 +22,7 @@ Proposed locale defaults are Arabic first plus English, with `/ar/` and `/en/` r
 
 - **Public data gateway:** a server-only read role through Hyperdrive with query caching disabled. Public views never join private operations. Separate database roles have connection limits and statement timeouts; these reduce shared load but do not provide physical database isolation.
 
-- **Media:** private object storage behind a controlled media gateway. File hashes identify assets; they are not authorization. Publication and media reads enforce current grants and expiry.
+- **Media:** private object storage behind a controlled media gateway. File hashes identify assets; they are not authorization. Publication and media reads enforce current grants and expiry. *(Superseded on 2026-11-02 by the implemented design: a public, WebP-only bucket written only through the approval-bound upload function. See [architecture/BULK-ORIGINAL-IMAGES.md](architecture/BULK-ORIGINAL-IMAGES.md).)*
 
 - **Catalog updates:** controlled developer/importer tools and scripts with separate write roles. No owner-facing dashboard or separate administration application. Persist review, publication and withdrawal records internally; prepare changes through the existing working conversation and development workflow.
 
