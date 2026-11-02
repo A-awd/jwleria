@@ -104,3 +104,22 @@ Decision 0013 accepts open-licence exact-product photographs of m126234-0015 onl
 Queue runners need the database registry (`jwl_source_registry()`, service role); the CLI loads it with server credentials from the environment, and a registry inside the local config is ignored. The `ingest-ready.ndjson` outbox is replayed until each record has a matching receipt, so a failed database call never loses records or stops collection.
 
 Migration `20261026114541_jwleria_media_evidence_and_missing_intake.sql` adds the append-only `media_grants`/`media_assets` evidence tables, the approval and publication triggers, final revocation with cascade, the registry and revoked-file RPCs and the missing-only intake RPC. It creates no grant, asset, approval or publication. Status 2026-10-26: applied to production after explicit owner approval; registered version `20261026114541`, readback verified unchanged existing data (see STATE).
+
+## Flat-square preparation (decision 0024; private, local)
+
+`node scripts/catalog-intake/background-composite.mjs PRIVATE_JOB.json` reads a job of the form `{out_directory, items:[{reference, colour, product_path, product_sha256, background_colour, binding}]}`.
+
+What the job does:
+- It places a transparent original, at native scale, on a flat colour square (`background_colour: "#f0f0f0"`). The product's largest extent fills 68% of the square, and the whole product stays in the frame.
+- It verifies that every opaque product pixel is unchanged before any encoding.
+- An item with no background passes the transparent original through unchanged.
+- Each source file is processed once.
+
+It refuses:
+- a changed file;
+- a product under 653 px on its longest side, which could not fill the 960 px card;
+- one file bound to two references, because each size or colour needs its own photograph.
+
+The WebP files use the production quality ladder, byte budgets and fidelity floor. Validate the real outputs with `image-quality-gate.mjs`.
+
+Outputs, inputs and `binding` evidence stay outside Git. Nothing is uploaded or recorded: publication needs the photograph's own rights basis and the approval path above.

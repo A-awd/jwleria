@@ -21,3 +21,19 @@ Status: accepted (owner, 2026-11-01: «ابدأ اذا»). This authorizes the f
 - n8n Cloud cannot reach this Mac, so the job is a local, operator-run command. No public endpoint, tunnel, new role, credential transfer, schedule or worker is added.
 - Delivery of any rights-cleared output uses the existing approval-bound upload function, and n8n's manual delivery check.
 - This is operator-assisted, not autonomous.
+
+## Outcome and flat standard (2026-11-01 and 2026-11-02)
+
+- **Generated backgrounds:** all four candidates worked technically but failed visual acceptance, so the AI background path is closed (`STATE.md`, 2026-11-01).
+- **Owner direction, 2026-11-02 («ابدأ»):**
+  - exact original photos, keeping native transparency where it exists, with background-only removal only if needed;
+  - a flat `#f0f0f0` square with consistent occupancy and the whole piece uncropped;
+  - light responsive WebP;
+  - no generative edits, AI backgrounds or paid services.
+- **Implementation** (`background-composite.mjs` version 2, an implementation rule under decision 0010, not an owner approval):
+  - a deterministic flat colour fill;
+  - fill 0.68;
+  - a 653 px minimum product extent, so the square reaches the 960 px card;
+  - one source file per reference;
+  - the production WebP budgets and fidelity floor.
+- **Rights are unchanged:** publication still needs the photograph's own rights basis and the existing grant and approval path.

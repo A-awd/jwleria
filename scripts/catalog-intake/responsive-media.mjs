@@ -31,7 +31,7 @@ export const byteBudgets=Object.freeze({card:150000,detail:600000});
 export const fidelityFloor=Object.freeze({ssim:0.97});
 export const detailTarget=Object.freeze({ssim:0.985,min_quality:85});
 // Every encoder option is pinned so the same input always produces the same bytes.
-const webpEncoder=Object.freeze({lossless:false,nearLossless:false,alphaQuality:100,effort:6,preset:'photo',smartSubsample:true,smartDeblock:false});
+export const webpEncoder=Object.freeze({lossless:false,nearLossless:false,alphaQuality:100,effort:6,preset:'photo',smartSubsample:true,smartDeblock:false});
 const round=(value,places)=>Number.isFinite(value)?Number(value.toFixed(places)):null;
 const repository=resolve(fileURLToPath(new URL('../..',import.meta.url)));
 const knownWebRoots=[join(homedir(),'Sites'),'/Library/WebServer/Documents','/var/www','/srv/www','/usr/share/nginx/html','/usr/local/var/www','/opt/homebrew/var/www'];

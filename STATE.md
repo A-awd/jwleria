@@ -1,3 +1,75 @@
+## Exact originals in the flat `#f0f0f0` standard: one catalogue-bound bag prepared privately; publishable photos 0, 2026-11-02
+
+**Owner direction** («ابدأ», relayed by the coordinator): exact original product photos, native transparency where available, background-only removal only if needed, a flat `#f0f0f0` square with consistent occupancy, the whole piece uncropped, light responsive WebP. No generative edits, AI backgrounds, paid services or accounts.
+
+**Live read** (observed live, read-only, 2026-11-02):
+- **Catalogue:** 4,097 active public products, and 1 shows a photograph (m126234-0015, unchanged). The m126200-0006 photograph stays withdrawn from display.
+- **Media:** 2 open-licence grants, 2 live approvals, 15 media evidence rows; the bucket holds 15 objects (1,612,030 bytes).
+- **Rights flags:** all 12 sources have `publication_allowed=false`.
+- **Open-licence decisions:** 0013 lists m126234-0015 and 0016 lists m126200-0006.
+- **Migrations:** 13, the last being `20261101181522`.
+- **Publishable under an existing grant:** 0 new photographs. Each grant names one file, and both are already used.
+
+**Open-licence search** (bounded, 2026-11-02):
+- **Robots:** Commons forbids its search and API paths (`/w/`, `Special:`) to every agent, so none was used. Only allowed category pages were read.
+- **Requests:** 12, the cap:
+  - 8 pages read, 174 file names in all;
+  - 3 not found (Rolex Explorer, Rolex Oyster Perpetual, Audemars Piguet Royal Oak);
+  - 1 lost to a false positive in the scan's own challenge check (an ordinary 200 page). It was fixed and still counts toward the cap.
+- **Result:** no new exact-reference photograph.
+- **Candidates:** 4 named a catalogue reference (Daytona 126500LN, Air-King 126900, GMT-Master II 126713GRNR, Oyster Perpetual 124200). After 10 evidence reads (4 file pages, 4 originals, 2 uploader talk pages), all 4 were **rejected**:
+  - **Look:** a green cloth tray, a warm boutique display, a pedestal at an angle, a hand-held shot, and clipped bracelets (coordinator's visual inspection).
+  - **Authorship:** three come from an uploader whose talk page carries repeated file-tagging and "source not properly indicated" notices, which fails decision 0016's credibility rule.
+  - **Identity:** 124200 has 7 catalogue dials, and its suffix is not established.
+  - **Owner rule:** the owner rejected amateur Commons photographs on 2026-11-01.
+  - They stay private as evidence only (1,289,466 bytes). No grant was created and nothing was published.
+
+**Prepared privately: Longchamp `10166HSR001`, Le Pliage Energy L Backpack, Black** (an official packshot already held):
+- **Binding** (observed live):
+  - an active candidate and public row (facts only);
+  - 5 of its 5 recorded gallery URLs name the exact reference;
+  - the held file is the first of them, fetched once on 2026-11-01, and no other candidate cites it. It is a 2000 × 2000 RGBA PNG, sha256 `a803e01f…dda6`, re-hashed today.
+  - Model `10166HSR`, colour Black. The colour siblings `10166HSR299`, `742` and `892` get nothing.
+- **Native transparency:** yes, so no removal pass was needed.
+- **Flat square:**
+  - 2,759 px, with the whole product (1,647 × 1,876 px) at native scale and fill 0.68;
+  - 0 changed opaque pixels; not clipped by its source.
+- **WebP, flat:** 320w 4,410 B, 640w 13,254 B, 960w 53,092 B, 1600w 223,254 B. All are quality 92 with SSIM 0.991–0.996.
+- **Transparent form, for the live grey card:** 320w 14,002 B, 640w 52,764 B, 960w 137,594 B (quality 88), 1600w 574,894 B. SSIM 0.979–0.995.
+- **Validation:**
+  - the existing image quality gate passes 8 of 8 files, all within the card and detail budgets;
+  - the job took 26.6 s at a peak of 629 MB.
+- **Visual check** (coordinator, private only, not a licence or publication approval): the whole product is clean, and the WebP detail keeps the fabric and logo against the lossless master.
+- **Private files:** a review sheet and a clean owner preview with no text. Their paths are given in the session, not in Git.
+
+**Prior pair:** `10352HIU002` and `10327HJD514` have no catalogue candidate or public row. They stay as the earlier, non-catalogue-bound preview.
+
+**Counts:**
+
+| Status | Count |
+|---|---|
+| Publication-ready | 0 |
+| Rights pending | 1 (`10166HSR001`) |
+| Non-catalogue-bound | 2 |
+| Rejected | 4 |
+
+**Code** (prepared):
+- **`background-composite.mjs` version 2:**
+  - a flat colour background with no file;
+  - a resolution floor: the product's largest extent must be at least 653 px, so that a square at fill 0.68 reaches the 960 px card;
+  - one source file binds one reference: a size or colour needs its own photograph;
+  - WebP from the production quality ladder, byte budgets and fidelity floor, with a performance-review flag;
+  - the detail file is at most 1,600 px.
+- **`responsive-media.mjs`:** exports its pinned `webpEncoder`.
+- **Tests:** the module's 3 of 3 pass, and the whole intake suite passes 136 of 136.
+
+**Public changes:** none. No database write, grant, approval, upload, source flag change, deploy or n8n change.
+
+**Next dependency:** Longchamp's express written permission for this display. The drafted request is not sent, and sending it is the owner's choice. Then:
+- the owner decides on `longchamp-official` `publication_allowed`;
+- the existing path runs: grant, identity record, approval, approval-bound upload, publish.
+- No code deploy is needed for the card.
+
 ## Free local background trial: technically successful, aesthetically rejected; deterministic #f0f0f0 fallback is the preview (decision 0024), 2026-11-01
 
 - **Setup** (prepared): pinned and reproducible, in `scripts/local-background/` (README, `requirements.txt`, CLI generator).

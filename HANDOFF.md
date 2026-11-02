@@ -1,4 +1,18 @@
-## Current handoff: free local background trial closed, 2026-11-01
+## Current handoff: exact originals in the flat standard, 2026-11-02
+
+Nothing is running.
+
+- **Prepared privately:** Longchamp `10166HSR001` (Black). It is bound to its exact reference, and the flat `#f0f0f0` square and transparent WebP pass the quality gate (8 of 8). The coordinator's visual check passed, as a private check only.
+- **Not done:** no publication. 0 photographs are publishable today. Every brand source has `publication_allowed=false`, and no written permission exists.
+- **Owner:** decide whether to send the drafted Longchamp permission request (private, not sent).
+- **When permission arrives:** a `written_permission` grant, then the owner's decision on the source flag, then the existing approval-bound path. No code deploy is needed.
+- **Closed:**
+  - the 4 Commons watch candidates, rejected on look, authorship and identity, and kept private as evidence;
+  - the AI background path;
+  - the open-licence search for this round (12 of 12 requests used).
+- **Prior pair** `10352HIU002`, `10327HJD514`: not in the catalogue; preview only.
+
+## Previous handoff: free local background trial closed, 2026-11-01
 
 - **Outcome:**
   - generated backgrounds failed visual acceptance;

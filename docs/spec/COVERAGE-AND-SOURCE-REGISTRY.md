@@ -1,6 +1,6 @@
 # Coverage and source registry
 
-The Totals table, the brand counts, the source flags and the source-to-photo inventory come from the read-only aggregate read of 2026-10-29 10:07:44Z (observed live, interactive session; no write of any kind). The category breakdown and the model split (283 grouped, 2,603 singles) come from earlier reads (2026-10-27 18:08:50Z baseline and the 2026-10-28 mapping) and were not re-read. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand.
+The Totals table, the brand counts, the source flags and the source-to-photo inventory come from the read-only aggregate read of 2026-10-29 10:07:44Z (observed live, interactive session; no write of any kind). The category breakdown and the model split (283 grouped, 2,603 singles) come from earlier reads (2026-10-27 18:08:50Z baseline and the 2026-10-28 mapping) and were not re-read. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand. Rows dated 2026-11-02 come from that day's read-only read (observed live).
 
 ## Current source requirements (owner, 2026-11-01)
 
@@ -13,12 +13,13 @@ The Totals table, the brand counts, the source flags and the source-to-photo inv
 
 | Measure | Value |
 |---|---|
-| Registered migrations | 12 (last `20261101133722`; read 2026-11-01 13:49:50Z) |
-| Active public catalog fact records | 4,097 (of 4,097 rows), of which exactly 2 carry a photograph and 4,095 are facts-only (read 2026-11-01 13:49:50Z) |
-| Candidates | 4,150 |
-| Public products with a photograph | 2. m126234-0015: one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read. m126200-0006: photo batch 1 under decision 0016 (`STATE.md`) |
-| Media bucket objects | 11: 3 encodings of the m126234-0015 photograph and 8 uploads for m126200-0006 |
-| Media grants / approvals | 2 / 2, all live; 11 media evidence rows |
+| Registered migrations | 13 (last `20261101181522`; read 2026-11-02) |
+| Active public catalog fact records | 4,097 (of 4,097 rows), of which exactly 1 carries a photograph and 4,096 are facts-only (read 2026-11-02) |
+| Candidates | 4,150 (read 2026-11-02) |
+| Public products with a photograph | 1 (read 2026-11-02): m126234-0015, one independent CC BY 2.0 photograph (Ajay Suresh), identity via creator-stated reference 126234; the full suffix -0015 is not a conclusive pixel read. The m126200-0006 photograph (decision 0016 batch 1) is withdrawn from display at the owner's request; its grant and approval are kept for the rollback |
+| Media bucket objects | 15, 1,612,030 bytes (read 2026-11-02) |
+| Media grants / approvals | 2 / 2, both open-licence and unrevoked; 15 media evidence rows (read 2026-11-02). Each grant names one file, and both files are already used, so no further photograph is publishable under an existing grant |
+| Prepared privately, not publishable (2026-11-02) | 1 rights pending: Longchamp `10166HSR001` (Black), an exact-reference official packshot with native alpha, in the flat `#f0f0f0` square and the transparent form, gate 8 of 8. It has no written permission, and `publication_allowed=false`. 2 non-catalogue-bound: `10352HIU002` and `10327HJD514` have no catalogue row (`STATE.md`) |
 | Model grouping | applied: 4,097 mapped variant rows in 2,579 displayed models since the size rebuild of 2026-11-01. 395 grouped models hold 1,913 variants, 196 of them size families holding 1,055, and 2,184 models are singles. The 2026-10-28 mapping had 2,886 models: 283 grouped holding 1,494 variants, and 2,603 singles |
 | m126234-0015 | active, `approved_media` |
 
@@ -110,7 +111,7 @@ Four kinds of evidence, never interchangeable:
 | Evidence | What it is | Count |
 |---|---|---|
 | Official image URL | a gallery URL stored with a candidate. It was never fetched as bytes and is never permission | 15,016 URLs across 4,150 candidates |
-| Held original bytes | an untouched file kept privately by sha256 | 0 official files; 7 Wikimedia Commons renditions (the m126234-0015 series, "Presentation Ready" and m126200-0006), private |
+| Held original bytes | an untouched file kept privately by sha256 | 3 official Longchamp packshots, held for private evaluation only: 1 catalogue-bound (`10166HSR001`) and 2 without a catalogue row. Wikimedia Commons: the 7 earlier renditions (the m126234-0015 series, "Presentation Ready" and m126200-0006), the m126200-0006 original, and 4 candidates rejected on 2026-11-02, held as evidence. All private (updated 2026-11-02) |
 | Approved exact-variant image | a grant, an identity check and an approval for one exact reference | 1: the m126234-0015 front photograph |
 | Public photograph | published and visible on the site | 1 product (3 encodings) |
 
@@ -148,4 +149,9 @@ No new acquisition request goes to a recorded stopped or closed origin.
 2. **Open sources whose galleries do not name the reference** (Audemars Piguet, IWC, Jaeger-LeCoultre: 9 products). The same permission route applies, plus a visual identity check per file. IWC's robots stop stays until a source review.
 3. **Closed sources** (Cartier 463, Van Cleef & Arpels 498, Piaget 3, Panerai 3; CELINE and RIMOWA have none). Nothing is acquired from these origins. A photo can only come from the owner's own photograph, or from written permission together with a reviewed code change that lifts the stop.
 4. **Open-licence photographs** (any brand except the six closed ones). Each needs an exact-match review per reference, an amendment of decision 0013 naming that reference, and a reviewed migration that widens `open_license_decisions()`.
+   - **Bounded search, 2026-11-02:**
+     - **Method:** Commons' robots file forbids its search and API paths (`/w/`, `Special:`) to every agent, so only allowed category pages were read: 12 requests (8 read, 3 not found, 1 lost to the scan's own false challenge check).
+     - **Result:** no new exact-reference photograph.
+     - **Rejected:** the 4 candidates that named a catalogue reference (126500LN, 126900, 126713GRNR, 124200), on look (display scenes, clipped bracelets), authorship (repeated tagging notices on the uploader's talk page, decision 0016) and identity (an unestablished suffix).
+     - **Still in force:** the owner's 2026-11-01 rejection of amateur Commons photographs.
 5. **The owner's own photographs** of exact pieces (`owner_original`). These work for any brand, but publication still needs the source's `publication_allowed` flag (an owner decision).
