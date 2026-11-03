@@ -2,7 +2,7 @@ import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
-import {installedImageEngine,webpQualityLadder,byteBudgets,fidelityFloor,webpEncoder} from './responsive-media.mjs';
+import {installedImageEngine,webpQualityLadder,byteBudgets,fidelityFloor,webpEncoder,privateOutputRoot} from './responsive-media.mjs';
 import {lumaSsim} from './image-fidelity.mjs';
 import {foregroundBox,edgeContact} from './white-square.mjs';
 
@@ -24,6 +24,32 @@ import {foregroundBox,edgeContact} from './white-square.mjs';
 export const backgroundComposite=Object.freeze({version:2,fill:0.68,alphaThreshold:16,widths:[320,640,960],detailMax:1600,minSide:960,tile:'#f0f0f0'});
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const flatColour=/^#[0-9a-f]{6}$/i;
+const hashPattern=/^[a-f0-9]{64}$/;
+const sizeKinds=new Set(['size','bag_size']);
+
+/**
+ * Null, or why several references may not share one source file (G1). Sharing is allowed only between genuine size
+ * variants of one design and colour: every item declares the same shared_with set (all the references), the same
+ * model_key and colour, options that differ only in a size kind, and its own current gallery evidence
+ * {reference, revision_hash, gallery_url, sha256} naming exactly this file. A different colour or design never shares.
+ */
+export function sharedFileProblem(items){
+  const refs=[...new Set(items.map(i=>i.reference))].sort();
+  if(refs.length<2)return null;
+  const first=items[0],norm=v=>String(v??'').trim().toLowerCase();
+  for(const item of items){
+    if(JSON.stringify([...new Set(item.shared_with??[])].sort())!==JSON.stringify(refs))return `shared_with of ${item.reference} must list exactly ${refs.join(', ')}`;
+    if(!item.model_key||item.model_key!==first.model_key)return `${item.reference} belongs to another model`;
+    if(norm(item.colour)!==norm(first.colour))return `${item.reference} is another colour`;
+    const options=item.options??{},base=first.options??{};
+    for(const kind of new Set([...Object.keys(options),...Object.keys(base)]))if(!sizeKinds.has(kind)&&norm(options[kind])!==norm(base[kind]))return `${item.reference} differs in ${kind}, not only in size`;
+    const own=(item.gallery_evidence??[]).find(e=>e.reference===item.reference);
+    if(!hashPattern.test(item.revision_hash??'')||!own||own.revision_hash!==item.revision_hash||own.sha256!==item.product_sha256||!/^https:\/\/[^/@\s]+\//.test(own.gallery_url??''))return `stale or missing gallery evidence for ${item.reference}`;
+  }
+  const sizes=new Set(items.map(i=>JSON.stringify(Object.entries(i.options??{}).filter(([k])=>sizeKinds.has(k)).sort())));
+  if(sizes.size!==refs.length)return 'shared references must be distinct sizes';
+  return null;
+}
 
 /** The square around the product's true alpha box at native resolution: never scales the product. */
 export function compositeGeometry(box,{fill}=backgroundComposite){
@@ -106,19 +132,33 @@ export async function webpVariants(master,sharp=installedImageEngine(),settings=
  * product below the resolution floor is refused. `binding` is the caller's private identity evidence, copied as given.
  */
 export async function runJob({items,out_directory},sharp=installedImageEngine(),settings=backgroundComposite){
-  const done=new Map(),bound=new Map(),records=[];
+  const done=new Map(),records=[];
+  out_directory=await privateOutputRoot(out_directory);
   await mkdir(out_directory,{recursive:true,mode:0o700});
+  // One source file binds one reference, unless every reference sharing it passes sharedFileProblem.
+  const bySha=new Map();
+  for(const item of items){if(!bySha.has(item.product_sha256))bySha.set(item.product_sha256,[]);bySha.get(item.product_sha256).push(item);}
+  for(const group of bySha.values()){
+    const refs=[...new Set(group.map(i=>i.reference))];
+    if(refs.length<2)continue;
+    if(group.every(i=>i.shared_with===undefined))throw Error(`One source file cannot be bound to two references (${refs[0]}, ${refs[1]}): each size or colour needs its own exact photograph`);
+    const problem=sharedFileProblem(group);
+    if(problem)throw Error('Shared source file refused: '+problem);
+  }
   for(const item of items){
     if(!item.reference?.trim()||!item.colour?.trim())throw Error('Each item needs its exact reference and colour');
     if(item.background_colour!==undefined&&item.background_path!==undefined)throw Error(`One background per item: ${item.reference}`);
     const product=await readFile(item.product_path);
     if(digest(product)!==item.product_sha256)throw Error(`Product file changed: ${item.reference}`);
-    const owner=bound.get(item.product_sha256);
-    if(owner!==undefined&&owner!==item.reference)throw Error(`One source file cannot be bound to two references (${owner}, ${item.reference}): each size or colour needs its own exact photograph`);
-    bound.set(item.product_sha256,item.reference);
     const background=item.background_colour??(item.background_path!==undefined?await readFile(item.background_path):null);
     const key=item.product_sha256+':'+(background===null?'passthrough':typeof background==='string'?background.toLowerCase():digest(background));
-    if(done.has(key)){records.push({reference:item.reference,colour:item.colour,duplicate_of:done.get(key)});continue;}
+    if(done.has(key)){
+      const first=done.get(key);
+      // A size variant sharing the file gets its own record and binding; the same reference repeated is a duplicate.
+      records.push({reference:item.reference,colour:item.colour,duplicate_of:first.reference,...(item.binding?{binding:item.binding}:{}),
+        ...(first.reference!==item.reference?{shared_with:[...item.shared_with].sort(),gallery_evidence:item.gallery_evidence.find(e=>e.reference===item.reference),master_sha256:first.master_sha256,variants:first.variants}:{})});
+      continue;
+    }
     let master,record;
     if(background!==null)({png:master,record}=await composeOnBackground(product,background,sharp,settings));
     else{
@@ -131,7 +171,9 @@ export async function runJob({items,out_directory},sharp=installedImageEngine(),
     await writeFile(join(out_directory,`${record.master_sha256}.png`),master,{mode:0o600});
     const variants=[];
     for(const v of await webpVariants(master,sharp,settings)){const {bytes,...rest}=v;await writeFile(join(out_directory,`${v.width}w-${v.sha256}.webp`),bytes,{mode:0o600});variants.push({...rest,bytes:bytes.length});}
-    done.set(key,item.reference);records.push({reference:item.reference,colour:item.colour,...(item.binding?{binding:item.binding}:{}),...record,variants});
+    done.set(key,{reference:item.reference,master_sha256:record.master_sha256,variants});
+    records.push({reference:item.reference,colour:item.colour,...(item.binding?{binding:item.binding}:{}),
+      ...(item.shared_with?{shared_with:[...item.shared_with].sort(),gallery_evidence:item.gallery_evidence.find(e=>e.reference===item.reference)}:{}),...record,variants});
   }
   await writeFile(join(out_directory,'job-record.json'),JSON.stringify(records,null,2),{mode:0o600});
   return records;

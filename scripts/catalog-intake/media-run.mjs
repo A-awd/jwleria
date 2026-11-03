@@ -2,7 +2,7 @@ import {readFile,writeFile,rename,realpath} from 'node:fs/promises';
 import {join,isAbsolute,relative,resolve,sep} from 'node:path';
 import {pathToFileURL} from 'node:url';
 import {privateRoot} from './source-queue.mjs';
-import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,prepareGrantedMedia,requireVerification,approvalBundle,performanceExceptionRecord} from './media-pipeline.mjs';
+import {evaluateMediaGrant,keepOwnerOriginal,keepOpenLicenseFile,acquireOriginal,recheckOriginal,createMediaPacer,prepareGrantedMedia,requireVerification,approvalBundle,performanceExceptionRecord} from './media-pipeline.mjs';
 import {uploadThroughFunction,verifyPublishedDerivatives} from './media.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
 
@@ -87,6 +87,21 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     // The reviewer now inspects each original by checksum and writes one verification record per original.
     return {phase,originals:kept.map(o=>({sha256:o.sha256,path:o.path,source_url:o.source_url})),verification_required:kept.length};
   }
+  if(phase==='recheck'){
+    // Re-checks recorded downloads only, through one pacer seeded with every origin a ledger recorded as refused, so a
+    // new process never repeats a refused call. originals.json is never rewritten; a changed file is a new original.
+    const recorded=JSON.parse(await readFile(join(out,'originals.json'),'utf8'));
+    if(recorded.candidate_id!==candidate.candidate_id||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate or grant');
+    const checker=pacer??createMediaPacer();
+    for(const origin of input.stopped_origins??[])checker.stop(new URL(origin).origin);
+    const results=[];
+    for(const original of recorded.originals.filter(o=>o.acquisition==='download')){
+      try{results.push(await recheckOriginal({candidate,asset_url:original.source_url,grant,output_directory:out,recorded:original},{fetcher,pacer:checker}));}
+      catch(error){results.push({state:'failed',source_url:original.source_url,sha256:original.sha256,error:error.message});}
+    }
+    await save(join(out,'recheck.json'),{candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,results});
+    return {phase,checked:results.length,changed:results.filter(r=>r.state==='changed').length,failed:results.filter(r=>r.state==='failed').length};
+  }
   if(phase==='bundle'){
     const recorded=JSON.parse(await readFile(join(out,'originals.json'),'utf8'));
     if(recorded.candidate_id!==candidate.candidate_id||recorded.revision_hash!==candidate.revision_hash||recorded.grant_reference!==grant.grant_reference)throw Error('Originals belong to another candidate revision or grant');
@@ -99,7 +114,7 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     const items=[];
     for(const original of recorded.originals){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
-      const verification=requireVerification(verifications.get(original.sha256),{candidate,asset});
+      const verification=requireVerification(verifications.get(original.sha256),{candidate,asset,grant});
       const cut=cutouts.get(original.sha256);
       const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,
         ...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer},...(cut.square_sha256!==undefined?{square_sha256:cut.square_sha256}:{})}:{})});
@@ -125,6 +140,6 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const [phase,inputPath]=process.argv.slice(2);
-  if(!['originals','bundle','upload'].includes(phase)||!inputPath)throw Error('Usage: node media-run.mjs originals|bundle|upload PRIVATE_MEDIA_INPUT.json');
+  if(!['originals','recheck','bundle','upload'].includes(phase)||!inputPath)throw Error('Usage: node media-run.mjs originals|recheck|bundle|upload PRIVATE_MEDIA_INPUT.json');
   console.log(JSON.stringify(await mediaRun(phase,JSON.parse(await readFile(inputPath,'utf8')))));
 }

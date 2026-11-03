@@ -50,7 +50,8 @@ async function resolveOutputPath(path){
     return resolve(canonical,...missing);
   }
 }
-async function privateOutputRoot(path){
+/** The canonical private output root; refuses the repository and known served web roots, symlinks resolved. */
+export async function privateOutputRoot(path){
   const requested=resolve(path),canonical=await resolveOutputPath(requested);
   for(const protectedPath of [repository,...knownWebRoots]){
     const protectedCanonical=await resolveOutputPath(protectedPath);

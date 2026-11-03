@@ -229,6 +229,40 @@ async function boundedBytes(response){
   if(!size)throw Error('Empty image');
   return Buffer.concat(chunks);
 }
+/** Upright size, EXIF orientation, format and alpha of held bytes, decoded once; undecodable bytes are refused. */
+async function imageFacts(bytes){
+  const m=await installedImageEngine()(bytes,{failOn:'warning',limitInputPixels:60000000}).metadata();
+  if(!m.width||!m.height)throw Error('Undecodable source image');
+  const orientation=m.orientation??1,turned=orientation>=5;
+  return {width:turned?m.height:m.width,height:turned?m.width:m.height,orientation,format:m.format,has_alpha:m.hasAlpha===true};
+}
+// One paced, robots-checked request path per media origin. A refusal or rate limit stops the origin in the pacer; a
+// redirect stops the transfer. A 304 is accepted only as the answer to a conditional request this code sent.
+function mediaRequester(origin,{fetcher,pacer}){
+  return async(target,headers={})=>{
+    await pacer.wait(origin);
+    const response=await fetcher(target,{headers:{'User-Agent':mediaAgent,...headers},redirect:'manual',signal:AbortSignal.timeout(20000)});
+    if([401,403].includes(response.status)){pacer.stop(origin);throw Error(`Media source refused access (${response.status})`);}
+    if(response.status===429){const v=response.headers.get('retry-after'),s=Number(v);pacer.stop(origin,v==null?null:Number.isFinite(s)?pacer.now()+s*1000:Date.parse(v)||null);throw Error('Media source rate limited (429)');}
+    if(response.status===304&&Object.keys(headers).some(h=>/^if-(none-match|modified-since)$/i.test(h)))return response;
+    if(response.status>=300&&response.status<400)throw Error('Media redirect requires review');
+    return response;
+  };
+}
+async function robotsAllow(url,request,pacer){
+  let policy=pacer.robots(url.origin);
+  if(!policy){
+    const robots=await request(url.origin+'/robots.txt');
+    // RFC 9309: an absent robots file allows access; any other failure stops the download.
+    if(robots.ok)policy=robotsParser(url.origin+'/robots.txt',(await boundedBytes(robots)).toString('utf8'));
+    else if([404,410].includes(robots.status))policy=robotsParser(url.origin+'/robots.txt','');
+    else throw Error(`Media robots unavailable (${robots.status})`);
+    pacer.remember(url.origin,policy);
+  }
+  if(policy.isAllowed(url.href,agent)!==true)throw Error('Media robots refused');
+}
+// Server validators are recorded as the server's own claims; only an equal sha256 proves the bytes are the same.
+const validators=response=>({etag:response.headers.get('etag')??null,last_modified:response.headers.get('last-modified')??null});
 
 /**
  * Per-origin pacing and robots cache shared by every download made through one pacer, so a caller
@@ -258,31 +292,43 @@ export async function acquireOriginal({candidate,asset_url,grant,output_director
   const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
   if(decision.state!=='permitted'||!['written_permission','open_license'].includes(grant.kind))throw Error('Permitted written or open-licence media grant required: '+decision.reasons.join(','));
   const root=await privateRoot(output_directory),url=new URL(asset_url);
-  const request=async target=>{
-    await pacer.wait(url.origin);
-    const response=await fetcher(target,{headers:{'User-Agent':mediaAgent},redirect:'manual',signal:AbortSignal.timeout(20000)});
-    if([401,403].includes(response.status)){pacer.stop(url.origin);throw Error(`Media source refused access (${response.status})`);}
-    if(response.status===429){const v=response.headers.get('retry-after'),s=Number(v);pacer.stop(url.origin,v==null?null:Number.isFinite(s)?pacer.now()+s*1000:Date.parse(v)||null);throw Error('Media source rate limited (429)');}
-    if(response.status>=300&&response.status<400)throw Error('Media redirect requires review');
-    return response;
-  };
-  let policy=pacer.robots(url.origin);
-  if(!policy){
-    const robots=await request(url.origin+'/robots.txt');
-    // RFC 9309: an absent robots file allows access; any other failure stops the download.
-    if(robots.ok)policy=robotsParser(url.origin+'/robots.txt',(await boundedBytes(robots)).toString('utf8'));
-    else if([404,410].includes(robots.status))policy=robotsParser(url.origin+'/robots.txt','');
-    else throw Error(`Media robots unavailable (${robots.status})`);
-    pacer.remember(url.origin,policy);
-  }
-  if(policy.isAllowed(url.href,agent)!==true)throw Error('Media robots refused');
+  const request=mediaRequester(url.origin,{fetcher,pacer});
+  await robotsAllow(url,request,pacer);
   const response=await request(url.href);
   if(!response.ok)throw Error(`Source media unavailable (${response.status})`);
+  return keepDownloaded({root,url,response,grant,pacer});
+}
+async function keepDownloaded({root,url,response,grant,pacer}){
   const mime=(response.headers.get('content-type')??'').split(';')[0].trim().toLowerCase();
   if(!formats[mime])throw Error('Unsupported source image type');
   const bytes=await boundedBytes(response);
+  const facts=await imageFacts(bytes);
   const kept=await keepOriginal(root,bytes,formats[mime]);
-  return {source_url:url.href,sha256:kept.sha256,bytes:bytes.length,mime_type:mime,path:kept.path,acquired_at:new Date(pacer.now()).toISOString(),grant_reference:grant.grant_reference};
+  return {source_url:url.href,sha256:kept.sha256,bytes:bytes.length,mime_type:mime,path:kept.path,acquired_at:new Date(pacer.now()).toISOString(),grant_reference:grant.grant_reference,
+    acquisition:'download',http_status:response.status,...validators(response),...facts};
+}
+
+/**
+ * Re-checks one recorded download through the same grant, pacing and robots path, conditionally when the record holds
+ * an ETag or Last-Modified. 304 means the server claims no change (no bytes kept); a 200 is hashed: the same sha256 is
+ * 'unchanged', another is 'changed' and kept under its own sha256 beside the old file, never overwriting it. A changed
+ * file is a new original: no verification, review or approval of the old bytes carries over to it.
+ */
+export async function recheckOriginal({candidate,asset_url,grant,output_directory,recorded},{fetcher=fetch,pacer=defaultPacer}={}){
+  if(recorded?.acquisition!=='download'||recorded.source_url!==asset_url||!hashPattern.test(recorded.sha256??''))throw Error('Only a recorded download of this URL can be re-checked');
+  const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
+  if(decision.state!=='permitted'||!['written_permission','open_license'].includes(grant.kind))throw Error('Permitted written or open-licence media grant required: '+decision.reasons.join(','));
+  const root=await privateRoot(output_directory),url=new URL(asset_url);
+  const request=mediaRequester(url.origin,{fetcher,pacer});
+  await robotsAllow(url,request,pacer);
+  const headers={...(recorded.etag?{'If-None-Match':recorded.etag}:{}),...(recorded.last_modified?{'If-Modified-Since':recorded.last_modified}:{})};
+  const response=await request(url.href,headers);
+  const checked_at=new Date(pacer.now()).toISOString();
+  if(response.status===304)return {state:'not_modified',source_url:url.href,sha256:recorded.sha256,checked_at,...validators(response)};
+  if(!response.ok)throw Error(`Source media unavailable (${response.status})`);
+  const kept=await keepDownloaded({root,url,response,grant,pacer});
+  return kept.sha256===recorded.sha256?{state:'unchanged',source_url:url.href,sha256:kept.sha256,checked_at,etag:kept.etag,last_modified:kept.last_modified}
+    :{state:'changed',previous_sha256:recorded.sha256,checked_at,original:kept};
 }
 
 /** Preserves an owner's own photograph of one exact product; no network request. */
@@ -296,8 +342,10 @@ export async function keepOwnerOriginal({candidate,grant,local_path,output_direc
   const head=bytes.subarray(0,12).toString('latin1');
   const extension=head.startsWith('\xff\xd8\xff')?'jpg':head.startsWith('\x89PNG')?'png':head.startsWith('RIFF')&&head.slice(8,12)==='WEBP'?'webp':null;
   if(!extension)throw Error('Unsupported owner original format');
+  const facts=await imageFacts(bytes);
   const kept=await keepOriginal(root,bytes,extension);
-  return {source_url:'owner-original:'+kept.sha256,sha256:kept.sha256,bytes:bytes.length,path:kept.path,grant_reference:grant.grant_reference};
+  return {source_url:'owner-original:'+kept.sha256,sha256:kept.sha256,bytes:bytes.length,path:kept.path,grant_reference:grant.grant_reference,
+    acquisition:'owner_file',etag:null,last_modified:null,...facts};
 }
 
 /**
@@ -331,8 +379,10 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
   const {info}=await installedImageEngine()(bytes,{failOn:'warning'}).autoOrient().raw().toBuffer({resolveWithObject:true});
   if(recorded){if(info.width!==recorded_original.width||info.height!==recorded_original.height)throw Error('Held original size differs from its recorded size');}
   else if(info.width!==file.rendition_width)throw Error('Held rendition width differs from the recorded rendition width');
+  const facts=await imageFacts(bytes);
   const kept=await keepOriginal(root,bytes,extension);
-  return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference};
+  return {source_url:file_url,sha256:kept.sha256,bytes:bytes.length,width:info.width,height:info.height,path:kept.path,file_kind:file.file_kind,rendition_width:file.rendition_width,grant_reference:grant.grant_reference,
+    acquisition:'held_copy',orientation:facts.orientation,format:facts.format,has_alpha:facts.has_alpha};
 }
 
 /**
@@ -399,17 +449,42 @@ export function identityDeterminationProblem(verification,{candidate,asset}){
 }
 
 /**
+ * Why an official gallery listing cannot settle exact_reference for this file, or null when it can (G1: one photograph
+ * a source uses for several sizes of one design and colour). Under written permission only, the determination must
+ * name this exact file (sha256) as listed in this reference's own gallery at the candidate's current revision, the
+ * same URL the bytes came from, by a reviewer other than the visual reviewer, quoted in the record. color_and_variant
+ * stays a separate check that must be literally true, so a listing never settles another colour or design.
+ */
+export function galleryListingProblem(verification,{candidate,asset,grant}){
+  const d=verification?.identity_determination;
+  if(!d||typeof d!=='object')return 'no identity determination';
+  if(grant?.kind!=='written_permission')return 'a gallery listing settles identity only under written permission';
+  if(d.asset_sha256!==asset.sha256)return 'identity determination names other bytes';
+  if(d.identity_established!==true)return 'identity_established is not true';
+  if(d.reference!==candidate.external_id)return 'gallery listing names another reference';
+  if(!hashPattern.test(d.revision_hash??'')||d.revision_hash!==candidate.revision_hash)return 'gallery listing is for another candidate revision';
+  if(d.gallery_url!==asset.source_url||!(candidate.image_urls??[]).includes(d.gallery_url))return "the file is not in this reference's own current gallery";
+  if(!text(d.reviewer)||!record(d.reason))return 'identity determination needs its reviewer and reason';
+  if(String(d.reviewer).trim().toLowerCase()===String(verification.reviewer).trim().toLowerCase())return 'identity determination must name a reviewer other than the visual reviewer';
+  const quoted=verification.verification_reference??'';
+  if(![d.reviewer,d.reason,d.gallery_url,asset.sha256].every(part=>quoted.includes(part)))return 'verification record does not quote the gallery listing';
+  return null;
+}
+
+/**
  * A human or agent visual check of one exact original. Code never creates a passing record itself. Every check must
  * be literally true, except that exact_reference may be "uncertain" (never false) when an independent identity
  * determination establishes the reference from the creator's own statement (identityDeterminationProblem).
  */
-export function requireVerification(verification,{candidate,asset}){
+export function requireVerification(verification,{candidate,asset,grant}){
   if(!verification||verification.asset_sha256!==asset.sha256||verification.verified_reference!==candidate.external_id)throw Error('Verification must name this exact original and reference');
   if(!text(verification.reviewer)||!record(verification.verification_reference))throw Error('Verification reviewer and private record required');
   const failed=verificationChecks.filter(check=>check!=='exact_reference'&&verification.checks?.[check]!==true);
   const exact=verification.checks?.exact_reference;
   if(exact!==true){
-    const problem=exact==='uncertain'?identityDeterminationProblem(verification,{candidate,asset}):'not true or uncertain';
+    const basis=verification.identity_determination?.basis;
+    const route=basis===undefined||basis==='creator_stated_reference'?identityDeterminationProblem:basis==='official_gallery_listing'?galleryListingProblem:()=>'unknown identity basis';
+    const problem=exact==='uncertain'?route(verification,{candidate,asset,grant}):'not true or uncertain';
     if(problem)failed.unshift(`exact_reference (${problem})`);
   }
   if(failed.length)throw Error('Visual verification incomplete: '+failed.join(','));
@@ -533,7 +608,7 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
     if('performance_review_accepted' in item)throw Error('performance_review_accepted is not accepted: record an independent performance exception file');
     const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
     if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
-    requireVerification(verification,{candidate,asset});
+    requireVerification(verification,{candidate,asset,grant});
     const b=manifest?.binding;
     if(manifest?.publication_state!=='private-prepared'||b?.candidate_id!==candidate.candidate_id||b.revision_hash!==candidate.revision_hash||b.asset_sha256!==asset.sha256||b.asset_source_url!==asset.source_url||b.media_permission_reference!==grant.grant_reference)
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
