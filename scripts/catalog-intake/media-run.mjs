@@ -111,19 +111,25 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
     // white square (decision 0022) adds square_sha256, the hash of the square its reviewer accepted, and square_review.
     const cutouts=new Map((input.cutouts??[]).map(c=>[c?.original_sha256,c]));
     if(cutouts.size!==(input.cutouts??[]).length||[...cutouts.keys()].some(sha=>!recorded.originals.some(o=>o.sha256===sha)))throw Error('Each cutout must name a distinct recorded original');
+    // Flat tiles (G2) of native-alpha originals: {original_sha256, tile_sha256, review}. A cutout-based tile instead adds
+    // tile_sha256 and tile_review to its cutout entry.
+    const tiles=new Map((input.tiles??[]).map(t=>[t?.original_sha256,t]));
+    if(tiles.size!==(input.tiles??[]).length||[...tiles.keys()].some(sha=>!recorded.originals.some(o=>o.sha256===sha)||cutouts.has(sha)))throw Error('Each native-alpha tile must name a distinct recorded original without a cutout');
     const items=[];
     for(const original of recorded.originals){
       const asset={path:original.path,source_url:original.source_url,sha256:original.sha256};
       const verification=requireVerification(verifications.get(original.sha256),{candidate,asset,grant});
-      const cut=cutouts.get(original.sha256);
+      const cut=cutouts.get(original.sha256),tile=tiles.get(original.sha256);
       const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,
-        ...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer},...(cut.square_sha256!==undefined?{square_sha256:cut.square_sha256}:{})}:{})});
-      items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review,...(cut.square_review!==undefined?{square_review:cut.square_review}:{})}:{})});
+        ...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer},...(cut.square_sha256!==undefined?{square_sha256:cut.square_sha256}:{}),...(cut.tile_sha256!==undefined?{tile_sha256:cut.tile_sha256}:{})}:{}),
+        ...(tile?{tile_sha256:tile.tile_sha256}:{})});
+      items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review,...(cut.square_review!==undefined?{square_review:cut.square_review}:{}),...(cut.tile_review!==undefined?{tile_review:cut.tile_review}:{})}:{}),
+        ...(tile?{tile_review:tile.review}:{})});
     }
     const bundle=approvalBundle({candidate,grant,items,public_base_url:input.public_base_url,performance_exception:exception,prepared_by:input.prepared_by});
     await save(join(out,'approval-bundle.json'),bundle);
     await writeFile(join(out,'record-approval.sql'),mediaApprovalSql(bundle)+'\n',{mode:0o600});
-    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,cutout_images:cutouts.size,
+    return {phase,files:bundle.uploads.length,evidence_rows:bundle.evidence.length,approved_images:bundle.approval.approved_images.length,cutout_images:cutouts.size,tile_images:tiles.size+[...cutouts.values()].filter(c=>c.tile_sha256!==undefined).length,
       attributed_images:bundle.approval.approved_image_variants.filter(entry=>entry.attribution).length,uploaded:0,published:0};
   }
   if(phase==='upload'){

@@ -7,6 +7,7 @@ import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
 import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
 import {cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
 import {whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
+import {flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
 const robotsParser=require('robots-parser');
@@ -390,9 +391,21 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
  * ({path, sha256, producer}), the derivatives are made from that background-only cutout master after it passes its
  * check against this original (decision 0015); approvalBundle then also needs the cutout's independent review.
  */
-export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout,square_sha256}){
+export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout,square_sha256,tile_sha256}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
+  if(tile_sha256!==undefined){
+    // A flat tile (G2): the native alpha of the original, or a checked cutout, on the flat grey square accepted by hash.
+    if(square_sha256!==undefined)throw Error('An image is a white square or a flat tile, not both');
+    if(grant.kind==='open_license')throw Error('A flat tile is not offered for open-licence images: its credit wording is not reviewed');
+    const basis=cutout===undefined?null:cutoutBasisProblem(grant);
+    if(basis)throw Error('Background removal is not covered: '+basis);
+    return prepareResponsiveMedia({purpose:'catalog',source:{...source,media_permission_reference:grant.grant_reference,media_origins:grant.media_origins??[]},candidate,asset,output_directory,
+      treatment:{kind:flatTileTreatment.kind,tile_sha256,...(cutout===undefined?{}:{cutout})},
+      grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
+        revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
+        website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode,...(cutout===undefined?{}:{background_removal:true})}});
+  }
   const basis=cutout===undefined?null:cutoutBasisProblem(grant);
   if(basis)throw Error('Background removal is not covered: '+basis);
   // The source's own publication flag stays a separate owner decision; it is passed through, never set here.
@@ -547,8 +560,9 @@ function exceptedDerivatives(manifest,asset,exception){
  * otherwise procedural.
  * Returns what the evidence rows record.
  */
-export function requireCutoutReview(review,{manifest,asset,grant,prepared_by,square_review}){
+export function requireCutoutReview(review,{manifest,asset,grant,prepared_by,square_review,tile_review}){
   const t=manifest?.treatment,b=manifest?.binding?.treatment,m=manifest?.cutout_master;
+  if(t?.kind===flatTileTreatment.kind||b?.kind===flatTileTreatment.kind||manifest?.flat_tile!==undefined)return requireFlatTileReview(review,tile_review,{manifest,asset,grant,prepared_by});
   if(t?.kind===whiteSquareTreatment.kind||b?.kind===whiteSquareTreatment.kind||manifest?.white_square!==undefined)return requireWhiteSquareReview(review,square_review,{manifest,asset,grant,prepared_by});
   if(t?.kind!==cutoutTreatment.kind||t.version!==cutoutTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==t.cutout_sha256
     ||m?.sha256!==t.cutout_sha256||m.check?.passed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256
@@ -570,6 +584,34 @@ export function requireCutoutReview(review,{manifest,asset,grant,prepared_by,squ
  * the review of exactly this square by its sha256 (whiteSquareReviewChecks, all true). The master may touch its source
  * frame only because the source photograph cuts the product off; that is recorded as source_clipped and disclosed.
  */
+/**
+ * A flat tile is approved only with an independent tile review naming its exact hash, plus the cutout review when its
+ * alpha came from a cutout. A native-alpha tile has no cutout review; its source transparency is the tile review's
+ * first check. The evidence row records the tile in square_sha256 and the cutout master, if any.
+ */
+function requireFlatTileReview(review,tileReview,{manifest,asset,grant,prepared_by}){
+  const t=manifest.treatment,b=manifest.binding?.treatment,m=manifest.cutout_master,f=manifest.flat_tile,cut=t?.cutout_sha256??null;
+  if(t?.kind!==flatTileTreatment.kind||t.version!==flatTileTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==cut||b.tile_sha256!==t.tile_sha256
+    ||f?.sha256!==t.tile_sha256||f.record?.changed_opaque_product_pixels!==0||t.source_clipped!==false||manifest.pixel_source!=='flat_tile'||manifest.processing?.canvas?.kind!=='flat_tile'
+    ||(cut!==null&&(m?.sha256!==cut||m.check?.passed!==true||m.check.original?.sha256!==asset.sha256||manifest.processing?.background_removed!==true))
+    ||(cut===null&&(m!==undefined||manifest.processing?.background_removed!==undefined)))
+    throw Error('Prepared derivatives are not a checked flat tile of this original');
+  if(grant.kind==='open_license')throw Error('A flat tile is not offered for open-licence images');
+  if(cut!==null){const basis=cutoutBasisProblem(grant);if(basis)throw Error('Background removal is not covered: '+basis);}
+  if(cut!==null&&(!review||review.cutout_sha256!==cut||review.original_sha256!==asset.sha256))throw Error('Cutout review must name this exact cutout master and original');
+  if(cut===null&&review!==undefined)throw Error('A native-alpha flat tile has no cutout to review');
+  if(!tileReview||tileReview.tile_sha256!==t.tile_sha256||tileReview.cutout_sha256!==cut||tileReview.original_sha256!==asset.sha256)throw Error('Flat tile review must name this exact tile, cutout master (or null) and original');
+  const reviews=cut===null?[tileReview]:[review,tileReview];
+  for(const r of reviews)if(!text(r.reviewer)||!record(r.review_reference))throw Error('Each review needs its reviewer and private record');
+  const failed=[...(cut===null?[]:cutoutReviewChecks.filter(check=>review.checks?.[check]!==true)),...flatTileReviewChecks.filter(check=>tileReview.checks?.[check]!==true)];
+  if(failed.length)throw Error('Flat tile review incomplete: '+failed.join(','));
+  if(!text(prepared_by))throw Error('A flat tile approval needs the batch writer named (prepared_by)');
+  for(const r of reviews)if([prepared_by,t.producer].some(name=>text(name)&&sameName(r.reviewer,name)))throw Error('Review refused: the reviewer prepared the batch or made the cutout');
+  const reference=`Flat tile review of tile ${t.tile_sha256}: ${tileReview.review_reference}`+(cut===null?'':` || Cutout review of master ${cut}: ${review.review_reference}`);
+  if(!record(reference))throw Error('The combined review record is longer than 8000 characters');
+  return {treatment:flatTileTreatment.kind,treatment_version:flatTileTreatment.version,cutout_master_sha256:cut,treatment_reference:reference,square_sha256:t.tile_sha256,source_clipped:false};
+}
+
 function requireWhiteSquareReview(review,square,{manifest,asset,grant,prepared_by}){
   const t=manifest.treatment,b=manifest.binding?.treatment,m=manifest.cutout_master,w=manifest.white_square;
   const allowed=m?.check?.failures?.every(f=>f==='product_touches_canvas_edge');
@@ -614,13 +656,14 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
       throw Error('Prepared derivatives do not bind this exact candidate revision, original and grant');
     // Any cutout marker makes the image a cutout, which must then be complete and reviewed; a review can never turn an
     // ordinary image into one.
-    const marked=['treatment','pixel_source','cutout_master','cutout_review_required','white_square','white_square_review_required'].some(key=>manifest[key]!==undefined)||b.treatment!==undefined||manifest.processing?.background_removed!==undefined||manifest.processing?.canvas!==undefined;
-    const treatment=marked?requireCutoutReview(item.cutout_review,{manifest,asset,grant,prepared_by,square_review:item.square_review}):null;
-    if(!treatment&&(item.cutout_review!==undefined||item.square_review!==undefined))throw Error('A cutout review was supplied for an image that is not a cutout');
+    const marked=['treatment','pixel_source','cutout_master','cutout_review_required','white_square','white_square_review_required','flat_tile','flat_tile_review_required'].some(key=>manifest[key]!==undefined)||b.treatment!==undefined||manifest.processing?.background_removed!==undefined||manifest.processing?.canvas!==undefined;
+    const treatment=marked?requireCutoutReview(item.cutout_review,{manifest,asset,grant,prepared_by,square_review:item.square_review,tile_review:item.tile_review}):null;
+    if(!treatment&&(item.cutout_review!==undefined||item.square_review!==undefined||item.tile_review!==undefined))throw Error('A cutout review was supplied for an image that is not a cutout');
     if(treatment?.treatment!==whiteSquareTreatment.kind&&item.square_review!==undefined)throw Error('A white square review was supplied for an image that is not a white square');
-    const squared=treatment?.treatment===whiteSquareTreatment.kind;
+    if(treatment?.treatment!==flatTileTreatment.kind&&item.tile_review!==undefined)throw Error('A flat tile review was supplied for an image that is not a flat tile');
+    const squared=treatment?.treatment===whiteSquareTreatment.kind,tiled=treatment?.treatment===flatTileTreatment.kind;
     // An image whose source photograph cuts the product off says so; a white square's own record decides for it.
-    if(item.source_clipped!==undefined&&(item.source_clipped!==true||squared))throw Error('source_clipped is a disclosure (true) for an image that is not a white square');
+    if(item.source_clipped!==undefined&&(item.source_clipped!==true||squared||tiled))throw Error('source_clipped is a disclosure (true) for an image that is not a white square');
     // Alpha is encoded losslessly, so any alpha difference is refused outright; no exception record can cover it.
     if([...manifest.variants,manifest.detail].some(f=>f.alpha_max_delta!==undefined&&f.alpha_max_delta!==0))throw Error('A derivative changed its alpha channel; it cannot be approved');
     // A flagged derivative passes only with an exact entry in an independent reviewed exception record (never default).
@@ -640,7 +683,7 @@ export function approvalBundle({candidate,grant,items,public_base_url,performanc
     const canonical=variants.find(v=>v.width===manifest.detail.width);
     if(!variants.some(v=>v.width<=960)||variants.length>8)throw Error('Responsive variants must include a card size and stay bounded');
     const entry={src:canonical.src,width:canonical.width,height:canonical.height,variants,
-      ...(squared?{canvas:'white_square'}:{}),...((squared?treatment.source_clipped:item.source_clipped)===true?{source_clipped:true}:{})};
+      ...(squared?{canvas:'white_square'}:tiled?{canvas:'flat_tile'}:{}),...((squared?treatment.source_clipped:item.source_clipped)===true?{source_clipped:true}:{})};
     if(grant.kind==='open_license'){
       // The credit states exactly what the recorded processing did: uncropped, not enlarged, colours unchanged.
       const p=manifest.processing,visual=manifest.original?.visual_width,file=licensedFile(grant,asset.source_url);

@@ -51,7 +51,7 @@ export async function sourceRegistry(config, fetcher = fetch) {
  * applied, so it fails closed on an older database instead of being stored without its treatment.
  */
 // A white square, a disclosure or a replacement of a live approval (decision 0022) goes to jwl_record_presentation_approval.
-const approvalOperation = bundle => bundle.replace===true || bundle.evidence.some(e=>e?.treatment==='white_square') || bundle.approval.approved_image_variants?.some(e=>e?.canvas!==undefined||e?.source_clipped!==undefined)
+const approvalOperation = bundle => bundle.replace===true || bundle.evidence.some(e=>e?.treatment==='white_square'||e?.treatment==='flat_tile') || bundle.approval.approved_image_variants?.some(e=>e?.canvas!==undefined||e?.source_clipped!==undefined)
   ? 'jwl_record_presentation_approval' : bundle.evidence.some(e=>e?.treatment!==undefined) ? 'jwl_record_cutout_approval' : 'jwl_record_media_approval';
 /** Records exact evidence and the verified approval atomically; it does not publish. */
 export async function recordMediaApproval(bundle, config, fetcher = fetch) {

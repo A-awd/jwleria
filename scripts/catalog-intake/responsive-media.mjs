@@ -7,6 +7,7 @@ import {fileURLToPath,pathToFileURL} from 'node:url';
 import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
 import {validateCutoutMaster,frameBackground,cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
 import {normalizeWhiteSquare,whiteSquare,whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
+import {normalizeFlatTile,flatTile,flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const hashPattern=/^[a-f0-9]{64}$/;
@@ -104,7 +105,15 @@ function bindingOf(input){
   const binding={source_id:source.id,candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,media_permission_reference:source.media_permission_reference,asset_source_url:asset.source_url,asset_sha256:asset.sha256};
   // A background-only cutout (decision 0015) is bound to its own master file as well, so its derivatives never share a
   // directory or a name with the original's.
-  if(input.treatment!==undefined){
+  if(input.treatment?.kind===flatTileTreatment.kind){
+    // A flat tile (G2) binds the accepted tile and, when the alpha came from a cutout, that master too. A native-alpha
+    // original needs no removal; a cutout needs background removal covered by the grant.
+    const {cutout,tile_sha256}=input.treatment;
+    if(!hashPattern.test(tile_sha256??''))throw new Error('A flat tile treatment needs the sha256 of its accepted tile');
+    if(cutout!==undefined&&(!isAbsolute(cutout?.path??'')||!hashPattern.test(cutout?.sha256??'')))throw new Error('A cutout-based flat tile needs its cutout master path and sha256');
+    if(cutout!==undefined&&grant.background_removal!==true)throw new Error('Background removal is not covered by the grant');
+    binding.treatment={kind:flatTileTreatment.kind,version:flatTileTreatment.version,cutout_sha256:cutout?.sha256??null,tile_sha256};
+  }else if(input.treatment!==undefined){
     const {kind,cutout,square_sha256}=input.treatment??{};
     // A white square (decision 0022) is a cutout placed on a white square: it binds its master and the accepted square.
     const white=kind===whiteSquareTreatment.kind;
@@ -145,9 +154,22 @@ export async function prepareResponsiveMedia(input){
   const visualHeight=orientation>=5?metadata.width:metadata.height;
   // A cutout's derivatives are made from its checked master (same upright geometry and stored pixel values where opaque),
   // never from the original directly; the untouched original stays identified by its own sha256.
-  let pixelSource=original,cutout=null,square=null;
-  const white=binding.treatment?.kind===whiteSquareTreatment.kind;
-  if(input.treatment!==undefined){
+  let pixelSource=original,cutout=null,square=null,tile=null;
+  const white=binding.treatment?.kind===whiteSquareTreatment.kind,tiled=binding.treatment?.kind===flatTileTreatment.kind;
+  if(tiled){
+    // Every cutout check failure blocks a tile (the whole product must be shown); a native-alpha original is checked by
+    // normalizeFlatTile itself (transparency, upright, sRGB, not clipped).
+    if(binding.treatment.cutout_sha256){
+      const check=await validateCutoutMaster({original:{path:originalPath,sha256:binding.asset_sha256},cutout:input.treatment.cutout},sharp);
+      if(check.failures.length)throw new Error('Cutout master failed its check: '+check.failures.join(','));
+      pixelSource=await readFile(input.treatment.cutout.path);
+      if(digest(pixelSource)!==binding.treatment.cutout_sha256)throw new Error('Cutout master changed after its check');
+      cutout={sha256:binding.treatment.cutout_sha256,bytes:pixelSource.length,check};
+    }
+    const {png,record}=await normalizeFlatTile(pixelSource,sharp);
+    if(record.tile_sha256!==binding.treatment.tile_sha256)throw new Error('The flat tile differs from the accepted tile');
+    tile={png,record};pixelSource=png;
+  }else if(input.treatment!==undefined){
     const check=await validateCutoutMaster({original:{path:originalPath,sha256:binding.asset_sha256},cutout:input.treatment.cutout},sharp);
     // A white square may start from a master that its source photograph cuts off: that contact is recorded as
     // source_clipped and disclosed, never certified as a whole product. Every other failure still refuses.
@@ -163,8 +185,9 @@ export async function prepareResponsiveMedia(input){
     }
   }
   // The derivatives' own source frame: the upright original or cutout, or the square made from the cutout.
-  const frameWidth=square?square.record.geometry.side:visualWidth,frameHeight=square?square.record.geometry.side:visualHeight;
-  const hasAlpha=!square&&(cutout!==null||metadata.hasAlpha===true);
+  const side=square?square.record.geometry.side:tile?tile.record.geometry.side:null;
+  const frameWidth=side??visualWidth,frameHeight=side??visualHeight;
+  const hasAlpha=!square&&!tile&&(cutout!==null||metadata.hasAlpha===true);
   const targetWidths=[...widths.filter(width=>width<=frameWidth),Math.min(frameWidth,1600)];
   if(targetWidths.some(width=>width>4096||Math.round(frameHeight*width/frameWidth)>8192))throw new Error('Derivative geometry exceeds public manifest limits');
   const relativeRoot=`v1/${digest(JSON.stringify(binding))}/${binding.asset_sha256}`;
@@ -172,6 +195,8 @@ export async function prepareResponsiveMedia(input){
   // The square stays private beside its derivatives, named by its own sha256; it is never uploaded.
   const squarePath=square?`${relativeRoot}/square-${square.record.square_sha256}.png`:null;
   if(square)await immutableFile(join(outputRoot,squarePath),square.png);
+  const tilePath=tile?`${relativeRoot}/tile-${tile.record.tile_sha256}.png`:null;
+  if(tile)await immutableFile(join(outputRoot,tilePath),tile.png);
   const detailWidth=Math.min(frameWidth,1600);
   // A card width equal to the detail width is one shared file, so it carries the smaller (card) budget.
   const roles=new Map();
@@ -231,9 +256,13 @@ export async function prepareResponsiveMedia(input){
   for(const width of widths)if(width<=frameWidth)variants.push(await encode(width));
   const detail=await encode(detailWidth);
   const review=record=>record.over_budget||!record.fidelity_floor_met||record.alpha_max_delta>0;
-  const manifest={schema_version:square?5:cutout?4:3,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
+  const manifest={schema_version:tile?6:square?5:cutout?4:3,publication_state:'private-prepared',image_verification_state:'pending',purpose:input.purpose,binding,
     original:{local_path:originalPath,sha256:binding.asset_sha256,bytes:original.length,width:metadata.width,height:metadata.height,orientation,visual_width:visualWidth,visual_height:visualHeight,format:metadata.format},
-    ...(square?{treatment:{...whiteSquareTreatment,cutout_sha256:cutout.sha256,square_sha256:square.record.square_sha256,producer:cutout.check.cutout.producer,source_clipped:square.record.clipped_by_source},pixel_source:'white_square',
+    ...(tile?{treatment:{...flatTileTreatment,cutout_sha256:cutout?.sha256??null,tile_sha256:tile.record.tile_sha256,producer:cutout?.check.cutout.producer??null,source_clipped:false},pixel_source:'flat_tile',
+      ...(cutout?{cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},cutout_review_required:[...cutoutReviewChecks]}:{}),
+      flat_tile:{local_path:join(outputRoot,tilePath),sha256:tile.record.tile_sha256,bytes:tile.png.length,side:frameWidth,record:tile.record},
+      flat_tile_review_required:[...flatTileReviewChecks]}
+    :square?{treatment:{...whiteSquareTreatment,cutout_sha256:cutout.sha256,square_sha256:square.record.square_sha256,producer:cutout.check.cutout.producer,source_clipped:square.record.clipped_by_source},pixel_source:'white_square',
       cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},
       white_square:{local_path:join(outputRoot,squarePath),sha256:square.record.square_sha256,bytes:square.png.length,side:frameWidth,record:square.record},
       cutout_review_required:[...cutoutReviewChecks],white_square_review_required:[...whiteSquareReviewChecks]}
@@ -246,9 +275,10 @@ export async function prepareResponsiveMedia(input){
       fidelity_metric:'luma (BT.601) SSIM, 11x11 Gaussian window sigma 1.5, and RGB PSNR, against an in-memory Lanczos3 resize of the same pipeline at the same width',
       crop:false,upscale:false,color_adjustments:false,
       // A cutout master is already upright (its check requires it), so the pipeline applies no orientation of its own to it.
-      orientation_applied:cutout?1:orientation,orientation_normalized:!cutout&&orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied',
+      orientation_applied:cutout||tile?1:orientation,orientation_normalized:!cutout&&!tile&&orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied',
       ...(hasAlpha?{alpha:'kept, encoded losslessly',metric_background:frameBackground}:{}),...(cutout?{background_removed:true}:{}),
       // No product pixel is cropped: only the removed background outside the product's box is replaced by white padding.
+      ...(tile?{canvas:{kind:'flat_tile',settings:{...flatTile},geometry:tile.record.geometry,box:tile.record.box,opaque:true,changed_opaque_product_pixels:0}}:{}),
       ...(square?{canvas:{kind:'white_square',settings:{...whiteSquare},geometry:square.record.geometry,box:square.record.box,faint_pixels_left_out:square.record.faint_pixels_left_out,opaque:true}}:{})},
     performance_review_required:review(detail)||variants.some(review),
     // Lossy WebP is used only after a visual comparison (docs/STOREFRONT-PERFORMANCE-2026-10-21.md); this helper cannot do it.
