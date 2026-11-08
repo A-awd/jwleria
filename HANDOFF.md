@@ -11,6 +11,20 @@ There are 0 new public photographs. **In flight:** the local Astro dev server, s
    - the Worker release `releases/storefront-2fa63291cdf2/`, which is safe on today's data;
    - then the migration `sql/jwleria_bulk_media_contract.sql`;
    - scheduling the expiry sweep is a separate decision.
+Exact next actions:
+- **The local fixture (pending, not passed):**
+  - the owner enables local browser use in Work settings;
+  - Codex opens `http://127.0.0.1:4391/private-smoke-flat-tile/` in its in-app browser at 390×844, compares the left (flat tile) and right (transparent, padded) cards, and records the result in `STATE.md`.
+  - If the server has stopped, from `apps/storefront` of the worktree run `node_modules/.bin/astro dev --port 4391 --host 127.0.0.1 --ignore-lock`.
+  - Afterwards, stop the server and delete `src/pages/private-smoke-flat-tile.astro` and `public/__smoke/` (both untracked and excluded).
+- **Release and migration approvals, in order:**
+  1. the owner's go-ahead for the Worker release;
+  2. Codex runs `releases/storefront-2fa63291cdf2/DEPLOY.md` steps 1 and 2;
+  3. the owner's explicit approval of `sql/jwleria_bulk_media_contract.sql`;
+  4. the operator applies it as a registered migration and reads it back (step 3);
+  5. the upload function is deployed from commit `2fa63291cdf2` or later (step 4).
+- Scheduling the sweep is a separate decision.
+
 3. **Once rights exist:** run stages 1 to 6 against the private Stage 0 manifest (100 models, 354 planned variants) through the ledger. G7 and G8 stay proposed.
 
 ## Previous handoff: bulk photo architecture ready; first batch awaits source rights, 2026-11-02

@@ -59,7 +59,10 @@ Approving line (a) alone does not approve (b) or (c). Without (b), the front pho
 | Activating the intake schedule; enabling the n8n database nodes | genuine owner decision | open | the recorded runner defects must be fixed first |
 | First bulk-photo source, and sending its drafted permission request ([bulk images](../architecture/BULK-ORIGINAL-IMAGES.md) §4) | genuine owner decision | open (2026-11-02) | Longchamp is proposed; nothing is sent. No official photograph is publishable without written permission. |
 | A source's `publication_allowed` after its permission is recorded | genuine owner decision | open | set per source, never by tools |
-| Applying the `flat_tile` presentation migration (bulk images G2) | genuine owner decision, after a reviewed migration | not yet prepared | needs a storefront change and a Worker release as well |
+| Worker release `releases/storefront-2fa63291cdf2/` (accepts `flat_tile` and `permission_credit`; renders today's data unchanged) | genuine owner decision (release go-ahead) | open; package prepared 2026-11-08 | Codex deploys per its `DEPLOY.md` step 1, then runs the visitor check |
+| Applying `jwleria_bulk_media_contract.sql` (G2 flat tile, G3 required credit, G4 fail-closed expiry) | genuine owner decision | open; prepared and tested on PGlite, with an exact rollback | only after the Worker release (spec D3); then deploy the upload function from the same commit |
+| Scheduling the expiry sweep in pg_cron | genuine owner decision | open | without it, expiring grants stay refused |
+| Phone-width visual check of `flat_tile` | platform interaction | pending | Codex's in-app browser needs local browser use enabled in Work settings; no other browser may be used |
 | Reconciling `jwleria-s-gembox`; merging the foundation branch | genuine owner decision | open | README merge gate |
 
 ## Licence title outcome
