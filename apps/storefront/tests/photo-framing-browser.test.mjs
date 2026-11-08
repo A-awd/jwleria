@@ -16,8 +16,8 @@ try { playwright = createRequire(import.meta.url)('playwright'); } catch {}
 test('the mirrored markup matches the components: the card link is the .media element, the gallery .media is a div', () => {
   // A white square (decision 0022) adds media--white to the same element.
   assert.match(card, /<a class:list=\{\['media', 'media--tile', \{ 'media--white': [^}]+ \}\]\} href=\{url\}[^>]*>\s*<img class=\{artClass\(/, 'ProductCard: <a class="media"> directly wraps the image');
-  assert.match(gallery, /<div class:list=\{\['media', \{ 'media--white': v\.white \}\]\}>\s*<img class=\{/, 'ProductGallery: <div class="media"> directly wraps the image');
-  assert.match(credit, /<a href=\{credit\.licenseUrl\} rel="license nofollow"><bdi>\{credit\.license\}<\/bdi><\/a>/, 'ImageCredit: the licence link');
+  assert.match(gallery, /<div class:list=\{\['media', \{ 'media--white': v\.white, 'media--flat': v\.flat \}\]\}>\s*<img class=\{/, 'ProductGallery: <div class="media"> directly wraps the image');
+  assert.match(credit, /<a href=\{open_\.licenseUrl\} rel="license nofollow"><bdi>\{open_\.license\}<\/bdi><\/a>/, 'ImageCredit: the licence link');
 });
 
 const page = dir => `<!doctype html><html lang="${dir === 'rtl' ? 'ar' : 'en'}" dir="${dir}"><head><meta charset="utf-8">

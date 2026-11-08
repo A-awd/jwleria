@@ -215,11 +215,16 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
    opaque photograph stays the rectangle it is. */
 .card .media--tile { aspect-ratio: 1; background: var(--tile); padding: 15%; }
 .card .media--tile > img.art { width: 100%; height: 100%; object-fit: contain; object-position: 50% 50%; transform: none; }
+/* Gap G2: a flat tile already holds its #f0f0f0 margin (product at 0.68), so it fills the tile edge to edge. */
+.media--flat { background: var(--tile); }
+.card .media--tile.media--flat { padding: 0; }
+.pdp__gallery .pdp__other .media--flat { aspect-ratio: 1; }
 /* The selected reference's listing surface is white, with neutral tiles (decision 0023): a page that lists product cards
    and is not a product page. On phones the grid widens to a 12px outer margin with an 18px gap. */
 body:has(.grid > .card):not(:has(.pdp)) { background: #fff; }
 @media (max-width: 55.99rem) { body:has(.grid > .card):not(:has(.pdp)) .grid { margin-inline: calc(12px - var(--gutter)); column-gap: 18px; } }
 .pdp__gallery .media--white { aspect-ratio: 1; width: auto; height: clamp(10rem, 30svh, 20rem); margin-inline: auto; }
+.pdp__gallery .media--flat { aspect-ratio: 1; width: auto; height: clamp(10rem, 30svh, 20rem); margin-inline: auto; }
 /* The source photograph cuts the product off: said in words wherever the photograph is shown. */
 .source-clipped { color: var(--ink-soft); }
 .source-clipped--card { margin: .35rem 0 0; font-size: .75rem; line-height: 1.5; }
@@ -312,6 +317,7 @@ details[open] > summary .chevron { transform: rotate(180deg); }
   .pdp__head h1 { font-size: var(--s3); }
   .pdp__gallery .media { aspect-ratio: 4 / 5; height: auto; }
   .pdp__gallery .media--white { aspect-ratio: 1; width: 100%; }
+  .pdp__gallery .media--flat { aspect-ratio: 1; width: 100%; }
   .pdp__gallery--many { grid-auto-flow: row; grid-template-columns: 1fr 1fr; margin: 0; padding: 0; overflow: visible; }
   .pdp__gallery--many figure:first-child { grid-column: 1 / -1; }
   .pdp__gallery--many figure + figure .media { aspect-ratio: 1; }

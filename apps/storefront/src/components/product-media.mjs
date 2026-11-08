@@ -8,6 +8,10 @@ const col4='((100vw - clamp(2.5rem, 9vw, 8rem) - 6rem) / 4)';
 const inTile=column=>`calc(${TILE_FILL} * ${column})`;
 const threeColumns=`(min-width: 100rem) ${Math.round(470*TILE_FILL)}px, (min-width: 56rem) ${inTile(col3)}, ${inTile(col2)}`;
 const cardSizes=`(min-width: 100rem) ${Math.round(344*TILE_FILL)}px, (min-width: 80rem) ${inTile(col4)}, (min-width: 56rem) ${inTile(col3)}, ${inTile(col2)}`;
+// A flat tile (gap G2) already holds its grey margin, so it fills the whole tile and its hint names the full column.
+const full=column=>`calc${column}`;
+const flatThreeColumns=`(min-width: 100rem) 470px, (min-width: 56rem) ${full(col3)}, ${full(col2)}`;
+const flatCardSizes=`(min-width: 100rem) 344px, (min-width: 80rem) ${full(col4)}, (min-width: 56rem) ${full(col3)}, ${full(col2)}`;
 // On a phone the photograph sits in a frame of clamp(10rem, 30svh, 20rem) and is contained (decision 0020). A portrait
 // or square photograph is then as wide as the frame is high times its aspect, not as wide as its column, so the size
 // hint names that width and a phone loads the rendition it shows instead of a larger one (decision 0021). On common
@@ -39,7 +43,7 @@ export function fullSizeImage(product,index=0){
 
 /** The share image (og:image): the first image, unless it needs a visible credit, which a share preview cannot carry.
  * @param {import('../contracts/catalog').PublicProduct} product */
-export const shareImage=product=>product.image&&!product.imageVariants?.[0]?.attribution?product.image:null;
+export const shareImage=product=>product.image&&!product.imageVariants?.[0]?.attribution&&!product.imageVariants?.[0]?.permissionCredit?product.image:null;
 
 /**
  * @param {import('../contracts/catalog').PublicProduct} product
@@ -55,6 +59,7 @@ export function productMedia(product,index=0,kind='card',columns=4){
  const variants=small?image.variants.filter(v=>v.width<=(kind==='thumb'?640:960)):image.variants;
  if(!variants.length)throw new Error('Responsive card derivative missing');
  const fallback=small?(variants.filter(v=>v.width<=(kind==='thumb'?320:640)).at(-1)??variants[0]):image;
- const sizes=kind==='card'?(columns===3?threeColumns:cardSizes):kind==='thumb'?thumbSizes:kind==='single'?singleDetailSizes(image):(index===0?detailSizes(image):secondaryDetailSizes(image));
+ const flat=image.canvas==='flat_tile';
+ const sizes=kind==='card'?(columns===3?(flat?flatThreeColumns:threeColumns):(flat?flatCardSizes:cardSizes)):kind==='thumb'?thumbSizes:kind==='single'?singleDetailSizes(image):(index===0?detailSizes(image):secondaryDetailSizes(image));
  return {src:fallback.src,width:fallback.width,height:fallback.height,srcset:variants.map(v=>`${v.src} ${v.width}w`).join(', '),sizes};
 }

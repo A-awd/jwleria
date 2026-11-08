@@ -31,14 +31,22 @@ export interface ImageAttribution {
   changes?: string;
 }
 
+/** Gap G3: the credit a written permission requires, shown verbatim; never presented as a licence. */
+export interface PermissionCredit {
+  text: string;
+  url?: string;
+}
+
 export interface ResponsiveProductImage {
   src: string;
   width: number;
   height: number;
   variants: {src:string; width:number; height:number; bytes:number}[];
   attribution?: ImageAttribution;
-  /** Decision 0022: the photograph is a normalized, square, pure-white canvas (shown as a square, on white). */
-  canvas?: 'white_square';
+  permissionCredit?: PermissionCredit;
+  /** Decision 0022: a normalized, square, pure-white canvas. Gap G2 'flat_tile': an opaque #f0f0f0 square with the whole
+   * product at 0.68, drawn edge to edge in the grey tile. */
+  canvas?: 'white_square' | 'flat_tile';
   /** The source photograph itself cuts the product off: shown with a partial-view notice, never as the whole product. */
   sourceClipped?: true;
 }

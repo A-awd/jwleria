@@ -21,6 +21,12 @@ export function imageAttribution(value){
  return {creator:value.creator.trim(),license:value.license.trim(),licenseUrl:value.license_url,sourceUrl:value.source_url,...(value.title?{title:value.title.trim()}:{}),...(value.changes?{changes:value.changes.trim()}:{})};
 }
 
+/** A credit a written permission requires (gap G3), as jwl_internal.valid_image_variants: {text} or {text,url}. */
+export function permissionCredit(value){
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).some(k=>!['text','url'].includes(k))||!text(value.text,300)||(value.url!==undefined&&!creditUrl(value.url)))throw new Error('Invalid image credit');
+ return {text:value.text.trim(),...(value.url!==undefined?{url:value.url}:{})};
+}
+
 /** Only already approved public derivative metadata belongs in this projection. */
 export function responsiveImages(value,images,factsOnly){
  if(value===undefined)value=[]; // Compatibility with earlier projections/fixtures.
@@ -30,8 +36,10 @@ export function responsiveImages(value,images,factsOnly){
   const credited=Boolean(image&&typeof image==='object'&&'attribution' in image);
   // Decision 0022, as jwl_internal.valid_image_variants: a white square canvas is square; source_clipped only discloses.
   const canvas=Boolean(image&&typeof image==='object'&&'canvas' in image),clipped=Boolean(image&&typeof image==='object'&&'source_clipped' in image);
-  const keys=['src','width','height','variants',...(credited?['attribution']:[]),...(canvas?['canvas']:[]),...(clipped?['source_clipped']:[])];
-  if((canvas&&(image.canvas!=='white_square'||image.width!==image.height))||(clipped&&image.source_clipped!==true))throw new Error('Invalid responsive image manifest');
+  // Gap G2: a flat tile is also square. Gap G3: a permission credit never sits beside an open-licence attribution.
+  const permitted=Boolean(image&&typeof image==='object'&&'permission_credit' in image);
+  const keys=['src','width','height','variants',...(credited?['attribution']:[]),...(permitted?['permission_credit']:[]),...(canvas?['canvas']:[]),...(clipped?['source_clipped']:[])];
+  if((canvas&&(!['white_square','flat_tile'].includes(image.canvas)||image.width!==image.height))||(clipped&&image.source_clipped!==true)||(credited&&permitted))throw new Error('Invalid responsive image manifest');
   if(!exactKeys(image,keys)||image.src!==images[index]||!publicUrl(image.src)||!positive(image.width,4096)||!positive(image.height,8192)||!Array.isArray(image.variants)||!image.variants.length||image.variants.length>8)throw new Error('Invalid responsive image manifest');
   let lastWidth=0;let canonical=0;
   const variants=image.variants.map(v=>{
@@ -41,6 +49,6 @@ export function responsiveImages(value,images,factsOnly){
    return {src:v.src,width:v.width,height:v.height,bytes:v.bytes};
   });
   if(canonical!==1||!variants.some(v=>v.width<=960))throw new Error('Missing responsive canonical/card variant');
-  return {src:image.src,width:image.width,height:image.height,variants,...(credited?{attribution:imageAttribution(image.attribution)}:{}),...(canvas?{canvas:'white_square'}:{}),...(clipped?{sourceClipped:true}:{})};
+  return {src:image.src,width:image.width,height:image.height,variants,...(credited?{attribution:imageAttribution(image.attribution)}:{}),...(permitted?{permissionCredit:permissionCredit(image.permission_credit)}:{}),...(canvas?{canvas:image.canvas==='flat_tile'?'flat_tile':'white_square'}:{}),...(clipped?{sourceClipped:true}:{})};
  });
 }

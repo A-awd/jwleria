@@ -17,7 +17,7 @@ interface Props { product: PublicProduct; locale: Locale; representative?: Repre
 const { product, locale, representative, variants = [] } = Astro.props;
 const s = t(locale);
 const view = galleryView(product, representative, variants);
-const views = view.mode === 'own' ? product.images.slice(0, LIMIT).map((src, i) => ({ src, i, label: s.product.views[i] ?? s.product.details, credit: product.imageVariants?.[i]?.attribution, full: fullSizeImage(product, i), white: product.imageVariants?.[i]?.canvas === 'white_square', clipped: product.imageVariants?.[i]?.sourceClipped === true })) : [];
+const views = view.mode === 'own' ? product.images.slice(0, LIMIT).map((src, i) => ({ src, i, label: s.product.views[i] ?? s.product.details, credit: product.imageVariants?.[i]?.attribution ?? product.imageVariants?.[i]?.permissionCredit, full: fullSizeImage(product, i), white: product.imageVariants?.[i]?.canvas === 'white_square', clipped: product.imageVariants?.[i]?.sourceClipped === true, flat: product.imageVariants?.[i]?.canvas === 'flat_tile' })) : [];
 const many = views.length > 1;
 const rep = view.mode === 'missing' ? view.representative : undefined;
 const details = view.mode === 'missing' ? view.details : [];
@@ -28,7 +28,7 @@ const repFull = repMedia && fullSizeImage(repMedia, 0);
 {views.length > 0 && <div class:list={['pdp__gallery', { 'pdp__gallery--many': many }]} aria-label={product.name[locale]} data-gallery={product.reference}>
   {views.map((v) => (
     <figure>
-      <div class:list={['media', { 'media--white': v.white }]}>
+      <div class:list={['media', { 'media--white': v.white, 'media--flat': v.flat }]}>
         <img class={v.i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} {...productMedia(product, v.i, many ? 'detail' : 'single')} alt={product.name[locale]} loading={v.i === 0 ? 'eager' : 'lazy'} fetchpriority={v.i === 0 ? 'high' : undefined} decoding="async" />
         {product.isPreview && v.i === 0 && <span class="badge">{s.preview}</span>}
       </div>
@@ -43,12 +43,12 @@ const repFull = repMedia && fullSizeImage(repMedia, 0);
     <p class="photo-missing__ref"><bdi dir="ltr">{product.reference}</bdi></p>
   </div>
   <figure class="pdp__other">
-    <div class:list={['media', { 'media--white': rep.imageVariants?.[0]?.canvas === 'white_square' }]}><img class="art" {...productMedia(repMedia, 0, 'thumb')} alt={`${product.name[locale]} — ${rep.reference}`} decoding="async" /></div>
+    <div class:list={['media', { 'media--white': rep.imageVariants?.[0]?.canvas === 'white_square', 'media--flat': rep.imageVariants?.[0]?.canvas === 'flat_tile' }]}><img class="art" {...productMedia(repMedia, 0, 'thumb')} alt={`${product.name[locale]} — ${rep.reference}`} decoding="async" /></div>
     <figcaption>
       <span class="representative-note">{caption.before}<bdi dir="ltr">{rep.reference}</bdi>{details.length > 0 && <> ({details.map((o, i) => <>{i > 0 && ' · '}<VariantText text={o.value[locale]} lang={o.valueLang} /></>)})</>}{caption.middle}<bdi dir="ltr">{product.reference}</bdi>{caption.end}</span>
       {rep.imageVariants?.[0]?.sourceClipped && <span class="source-clipped">{s.product.sourceClipped}</span>}
       {repFull && <a class="full-size" href={repFull.src}>{s.product.fullSize(repFull.width, repFull.height)}</a>}
-      {rep.imageVariants?.[0]?.attribution && <ImageCredit credit={rep.imageVariants[0].attribution} locale={locale} />}
+      {(rep.imageVariants?.[0]?.attribution ?? rep.imageVariants?.[0]?.permissionCredit) && <ImageCredit credit={(rep.imageVariants[0].attribution ?? rep.imageVariants[0].permissionCredit)!} locale={locale} />}
     </figcaption>
   </figure>
   <p class="pdp__gallery-status" data-gallery-status hidden></p>
