@@ -1,3 +1,12 @@
+## Checkpoint: G1 and G6 prepared on `claude/stage0-g1-g6-20261102`; no public change, 2026-11-08
+
+- **Prepared** (not deployed):
+  - **G1:** a gallery-listing identity route, for written permission only, and size-shared photo reuse. It is accepted only for size variants of one model and colour, each with its own current gallery evidence for the same sha256.
+  - **G6:** each acquisition records its dimensions, alpha, orientation, format, ETag and Last-Modified. A conditional re-check never overwrites an original, and `media-run.mjs recheck` skips origins that refused.
+- **Tests:** the new tests pass 3 of 3, intake passes 136 of 136, and the related media suites pass 18 of 18.
+- **Stage 0 export** (private, read-only, observed 2026-11-02 19:25Z): 390 Longchamp variants in 136 models. In 371 variants, every gallery URL names the exact reference; 19 are unbound.
+- **Remaining work in progress:** G2, G5, G3 and G4, the storefront, and the migration and operator package.
+
 ## Bulk original-photo architecture consolidated (proposed); no public change, 2026-11-02
 
 - **Authoritative document:** [docs/architecture/BULK-ORIGINAL-IMAGES.md](docs/architecture/BULK-ORIGINAL-IMAGES.md), written by Claude under decision 0010. It is not an owner approval. It covers:

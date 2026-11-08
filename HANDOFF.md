@@ -1,4 +1,8 @@
-## Current handoff: bulk photo architecture ready; first batch awaits source rights, 2026-11-02
+## Checkpoint, 2026-11-08
+
+Claude is continuing in the feature branch `claude/stage0-g1-g6-20261102`: G2, then G5 with Stage 0, then G3 and G4, the storefront, and the package. The implementation branch fast-forwards when this is done. Nothing is published or applied.
+
+## Previous handoff: bulk photo architecture ready; first batch awaits source rights, 2026-11-02
 
 Nothing is running. The architecture is [docs/architecture/BULK-ORIGINAL-IMAGES.md](docs/architecture/BULK-ORIGINAL-IMAGES.md), and its status is proposed.
 
