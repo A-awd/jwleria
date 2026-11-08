@@ -61,17 +61,24 @@ export async function handleUpload(request,{public_base,approved,put,get,digest,
  * verified approval. The grant must be unrevoked, without an expiry date and scoped to this product and source, as
  * the approval trigger requires. Uncited evidence, a superseded revision or another grant never opens an upload.
  */
-export const approvalQuery=`select 1 from jwl_internal.media_assets a
+export const approvalQueryFor=usable=>`select 1 from jwl_internal.media_assets a
  join jwl_internal.candidates c on c.candidate_id=a.candidate_id and c.revision_hash=a.revision_hash
  join jwl_internal.publication_approvals p on p.candidate_id=a.candidate_id and p.revision_hash=a.revision_hash and p.media_reference=a.grant_reference
  join jwl_internal.media_grants g on g.grant_reference=p.media_reference
  where a.public_url=$1 and a.public_sha256=$2 and a.width=$4::integer and a.height=$5::integer and a.verified_reference=c.external_id
    and p.image_verified and p.revoked_at is null
-   and g.revoked_at is null and g.expires_at is null
+   and g.revoked_at is null and ${usable?'jwl_internal.media_grant_is_usable(g.grant_reference)':'g.expires_at is null'}
    and (g.candidate_id is null or g.candidate_id=c.candidate_id) and (g.source_id is null or g.source_id=c.source_id)
    and exists(select 1 from jsonb_array_elements(p.approved_image_variants) e cross join jsonb_array_elements(e->'variants') v
      where v @> jsonb_build_object('src',a.public_url,'bytes',$3::integer,'width',$4::integer,'height',$5::integer))
  limit 1`;
+/** The query before the bulk media contract migration exists: an expiring grant never opens an upload. */
+export const approvalQuery=approvalQueryFor(false);
+/**
+ * After that migration (gap G4), an expiring grant opens an upload only while its expiry sweep is scheduled and its
+ * expiry is beyond the withdrawal lead, exactly as the approval and publication triggers decide.
+ */
+export const usableQuery="select to_regprocedure('jwl_internal.media_grant_is_usable(text)') is not null as ready";
 
 /**
  * Browser and CDN lifetime of a public derivative. Names are content-addressed, so the bytes behind a URL never

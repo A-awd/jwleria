@@ -83,15 +83,15 @@ returns jsonb language sql security definer set search_path='' as $$
   select jsonb_build_object('closed',(select count(*) from closed));
 $$;
 
--- Scheduled grant expiry: a lapsed grant is revoked (its approvals revoke and products withdraw through the
--- existing triggers) and its public files are listed for the approval-bound cleanup.
+-- Scheduled grant expiry delegates to the one sweep of jwleria_bulk_media_contract.sql (apply that first): a grant
+-- whose expiry falls within the 25-hour withdrawal lead is revoked (its approvals revoke and products withdraw through
+-- the existing triggers) and its public files are listed for the approval-bound cleanup.
 create function jwl_internal.runner_expire_grants()
 returns jsonb language plpgsql security definer set search_path='' as $$
-declare expired integer;
+declare r jsonb;
 begin
-  update jwl_internal.media_grants set revoked_at=now() where revoked_at is null and expires_at is not null and expires_at<=now();
-  get diagnostics expired=row_count;
-  return jsonb_build_object('expired_grants',expired,'revoked_files',public.jwl_revoked_media_files());
+  r:=public.jwl_expire_media_grants(now());
+  return jsonb_build_object('expired_grants',jsonb_array_length(r->'revoked'),'revoked_files',r->'files');
 end $$;
 
 revoke all on function jwl_internal.runner_begin(text,text,integer),jwl_internal.runner_identities(text),jwl_internal.runner_ingest_missing(text,jsonb),
