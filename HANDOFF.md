@@ -1,6 +1,6 @@
 ## Current handoff: bulk-photo software prepared; photos still need a rights-cleared source, 2026-11-08
 
-Nothing is running. There are 0 new public photographs.
+There are 0 new public photographs. **In flight:** the local Astro dev server, serving the private fixture at `http://127.0.0.1:4391/private-smoke-flat-tile/` for Codex's in-app browser, at phone width 390×844. It waits on the owner enabling local browser use, and its visual check is pending. Stop it after the check; the fixture files are untracked and excluded.
 
 1. **The external dependency:** a rights basis for the first batch. Under GLOBAL-0039, company outreach is a last resort, after published evidence and supported alternatives; nothing is sent. The options:
    - a published licence or media programme;

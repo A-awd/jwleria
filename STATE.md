@@ -37,6 +37,11 @@
 - intake: 138 of 138 pass;
 - the contract SQL and its rollback snapshot run on PGlite only.
 
+**Phone-width visual smoke check of `flat_tile`: pending, not passed.**
+- A private local fixture renders the real `ProductCard` with the held exact `10166HSR001` files. Its markup was confirmed over HTTP: `media--flat`, and a 344 px full-column hint against 241 px for the padded tile.
+- The fixture route and assets are untracked, excluded locally, and absent from the package.
+- Codex's in-app browser is blocked by the Work setting that disables local browser use; the owner has been asked to enable it. Only Codex's in-app browser is authorized, so no other browser was used.
+
 ## Bulk original-photo architecture consolidated (proposed); no public change, 2026-11-02
 
 - **Authoritative document:** [docs/architecture/BULK-ORIGINAL-IMAGES.md](docs/architecture/BULK-ORIGINAL-IMAGES.md), written by Claude under decision 0010. It is not an owner approval. It covers:
