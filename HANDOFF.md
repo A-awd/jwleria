@@ -1,4 +1,16 @@
-## Current handoff: bulk-photo software prepared; photos still need a rights-cleared source, 2026-11-08
+## Current handoff: bulk media contract live; photos still need a rights-cleared source, 2026-11-08
+
+The Worker, the migration `20261108072948` and upload function v2 are live. There are 0 new public photographs.
+
+Next unfinished actions:
+1. **Visual checks (pending, not passed):**
+   - the owner enables local browser use in Work settings;
+   - Codex runs the 390×844 Arabic and English check on jwleria.com and the local `flat_tile` fixture (see below), and records both.
+2. **Rights for the first batch:** a published licence or media programme, an authorized feed, or owner photographs. Outreach is a last resort (GLOBAL-0039), and nothing has been sent. Then run stages 1 to 6 against the private Stage 0 manifest.
+3. **Optional, owner decision:** scheduling the pg_cron expiry sweep. Without it, expiring grants stay refused.
+- **Rollback, if ever needed:** apply `proposed/jwleria_bulk_media_contract.rollback.sql` first (it refuses while anything depends on the contract), then the recorded Worker version.
+
+## Previous handoff, 2026-11-08 (before application)
 
 There are 0 new public photographs. **In flight:** the local Astro dev server, serving the private fixture at `http://127.0.0.1:4391/private-smoke-flat-tile/` for Codex's in-app browser, at phone width 390×844. It waits on the owner enabling local browser use, and its visual check is pending. Stop it after the check; the fixture files are untracked and excluded.
 

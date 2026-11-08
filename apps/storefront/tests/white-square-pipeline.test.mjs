@@ -28,7 +28,7 @@ const LICENCE=['CC BY 2.0','https://creativecommons.org/licenses/by/2.0/'];
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const f of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==WHITE_FILE).sort())await db.exec(await readFile(new URL(f,migrations),'utf8'));
+  for(const f of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_bulk_media_contract.sql')&&f!==WHITE_FILE).sort())await db.exec(await readFile(new URL(f,migrations),'utf8'));
   await db.exec(await readFile(WHITE,'utf8'));
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true)");
   return db;

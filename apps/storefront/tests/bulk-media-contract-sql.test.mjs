@@ -4,16 +4,16 @@ import {readFile,readdir} from 'node:fs/promises';
 import {PGlite} from '@electric-sql/pglite';
 import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 
-// Synthetic fixtures only. The proposed bulk media contract (gaps G2, G3, G4) runs in memory after every applied
+// Synthetic fixtures only. The bulk media contract (applied 2026-11-08 as 20261108072948) (gaps G2, G3, G4) runs in memory after every applied
 // migration; nothing reaches a real database and nothing is scheduled.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const FORWARD=new URL('../supabase/proposed/jwleria_bulk_media_contract.sql',import.meta.url);
+const FORWARD=new URL('../supabase/migrations/20261108072948_jwleria_bulk_media_contract.sql',import.meta.url);
 const ROLLBACK=new URL('../supabase/proposed/jwleria_bulk_media_contract.rollback.sql',import.meta.url);
 const sha=c=>c.repeat(64);
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_bulk_media_contract.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true)");
   return db;
 }

@@ -1,4 +1,4 @@
--- Rollback of jwleria_bulk_media_contract.sql. It restores the exact applied definitions of
+-- Rollback of 20261108072948_jwleria_bulk_media_contract.sql. It restores the exact applied definitions of
 -- 20261101181522_jwleria_white_square_media.sql (treatment check, valid_image_variants, require_media_evidence) and
 -- 20261026114541_jwleria_media_evidence_and_missing_intake.sql (require_live_media_grant), and refuses while any row
 -- depends on the contract: a flat tile, a permission credit, a required credit, a live expiring grant or a scheduled sweep.

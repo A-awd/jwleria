@@ -1,4 +1,4 @@
--- PROPOSED, NOT APPLIED. Bulk media contract (docs/architecture/BULK-ORIGINAL-IMAGES.md gaps G2, G3, G4).
+-- APPLIED 2026-11-08 as registered migration 20261108072948 (owner-approved, after Worker storefront-2fa63291cdf2). Bulk media contract (docs/architecture/BULK-ORIGINAL-IMAGES.md gaps G2, G3, G4).
 -- Applying it is an owner-approved production action, after the Worker release that accepts canvas 'flat_tile' and
 -- 'permission_credit' (spec D3). Rollback: jwleria_bulk_media_contract.rollback.sql.
 -- G2: evidence and image entries for the flat_tile presentation. G3: the credit a written permission requires.

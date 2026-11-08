@@ -17,7 +17,7 @@ const sha=c=>c.repeat(64);
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==WHITE_NAME).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_bulk_media_contract.sql')&&f!==WHITE_NAME).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('test','https://example.test','permitted-page','synthetic acquisition review',true,false,true)");
   return db;
 }

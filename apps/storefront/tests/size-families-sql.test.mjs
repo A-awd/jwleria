@@ -87,7 +87,7 @@ const slugOf=ref=>{const f=[...fixtures,...many].find(x=>x.ref===ref);return slu
 async function database(rows=fixtures,{sized=true}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&f!==SIZE).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_bulk_media_contract.sql')&&f!==SIZE).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   for(const [id,s] of Object.entries(sources))await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values($1,$2,'permitted-page','synthetic review',true,false,true)",[id,s.origin]);
   for(let i=0;i<rows.length;i+=50){
     const batch=rows.slice(i,i+50),records=batch.map(record);

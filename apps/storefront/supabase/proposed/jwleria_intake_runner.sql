@@ -83,7 +83,7 @@ returns jsonb language sql security definer set search_path='' as $$
   select jsonb_build_object('closed',(select count(*) from closed));
 $$;
 
--- Scheduled grant expiry delegates to the one sweep of jwleria_bulk_media_contract.sql (apply that first): a grant
+-- Scheduled grant expiry delegates to the one sweep of 20261108072948_jwleria_bulk_media_contract.sql (apply that first): a grant
 -- whose expiry falls within the 25-hour withdrawal lead is revoked (its approvals revoke and products withdraw through
 -- the existing triggers) and its public files are listed for the approval-bound cleanup.
 create function jwl_internal.runner_expire_grants()

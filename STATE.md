@@ -1,3 +1,25 @@
+## Bulk media contract live: Worker `storefront-2fa63291cdf2` deployed, migration applied, upload function v2; 0 new public photos, 2026-11-08
+
+- **Worker** (deployed, producer-reported by Codex):
+  - `releases/storefront-2fa63291cdf2/`, with all 79 hashes verified;
+  - the new version takes 100% of traffic;
+  - the runtime and all three binding metadata entries are identical to before, with both secret bindings kept;
+  - the previous version is recorded privately.
+  - Public automated HTTP returned 403 both before and after, so there is no visitor pass.
+- **Preflight** (observed live, read-only, 07:26Z): 13 migrations, the last `20261101181522`. The definitions the migration replaces and the rollback restores (`valid_image_variants`, `require_media_evidence`, `require_live_media_grant`, the treatment check) were byte-identical to the repository. No new object existed, and there was no pg_cron.
+- **Migration** (applied): registered as `20261108072948 jwleria_bulk_media_contract`. It is the package's `sql/jwleria_bulk_media_contract.sql` (sha256 `ac00658fbf468c77…`), with its `begin;`/`commit;` wrapper left out because the connector supplies the transaction.
+  - **Readback** (observed live): all seven function bodies and both constraints match the package applied locally, fingerprint for fingerprint. The 2 new columns exist. The sweep executes for `service_role` only. `media_grant_expiry_sweep_scheduled()` is false, so expiring grants stay refused.
+  - **Rollback:** the package copy `releases/storefront-2fa63291cdf2/sql/jwleria_bulk_media_contract.rollback.sql` (sha256 `7287b9fa…378da`). The working copy in `proposed/` differs only in a comment, which now names the registered migration file.
+- **Upload function** (deployed): `jwl-media-upload` version 2 from source commit `2fa63291cdf2`, `verify_jwt=true`, ACTIVE.
+- **Counts after** (observed live), unchanged from 2026-11-02 and from the preflight:
+  - 4,097 active products, 1 with a photograph;
+  - 2 live open-licence grants and 2 live approvals;
+  - 15 evidence rows and 15 storage objects.
+  - **New public photographs: 0.**
+- **Not changed:** no source flag, grant, approval, publication, sweep schedule or n8n workflow.
+- **Visual smoke check:** the 390×844 Arabic and English check is unverified. The `flat_tile` local fixture check is pending; Codex's in-app browser is disabled in Work settings.
+- **Repository:** the applied migration file moved from `proposed/` to `migrations/`. The SQL test loaders that replay older migrations exclude it: 82 affected tests pass.
+
 ## Bulk-photo gaps G1 to G6 implemented and packaged (prepared); Stage 0 manifest built; no public change, 2026-11-08
 
 **What changed publicly:** nothing. There are 0 new public product photographs: still 1 product (`m126234-0015`) shows a photograph. Nothing was applied, deployed, published, granted, approved or flag-changed, and no n8n workflow was touched.
