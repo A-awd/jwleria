@@ -18,6 +18,7 @@
   - **New public photographs: 0.**
 - **Not changed:** no source flag, grant, approval, publication, sweep schedule or n8n workflow.
 - **Visual smoke check:** the 390×844 Arabic and English check is unverified. The `flat_tile` local fixture check is pending; Codex's in-app browser is disabled in Work settings.
+- **Fixture cleanup** (producer-reported by the operator): the temporary local Astro server is stopped. The two untracked fixture files were moved to a private archive, outside Git and the build inputs; no original was deleted. The `flat_tile` visual check stays pending: to resume it, restore the fixture from that private archive once Codex's in-app browser is enabled.
 - **Repository:** the applied migration file moved from `proposed/` to `migrations/`. The SQL test loaders that replay older migrations exclude it: 82 affected tests pass.
 
 ## Bulk-photo gaps G1 to G6 implemented and packaged (prepared); Stage 0 manifest built; no public change, 2026-11-08

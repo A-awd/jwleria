@@ -5,7 +5,8 @@ The Worker, the migration `20261108072948` and upload function v2 are live. Ther
 Next unfinished actions:
 1. **Visual checks (pending, not passed):**
    - the owner enables local browser use in Work settings;
-   - Codex runs the 390×844 Arabic and English check on jwleria.com and the local `flat_tile` fixture (see below), and records both.
+   - Codex runs the 390×844 Arabic and English check on jwleria.com and records it.
+   - For `flat_tile`, the fixture is archived privately and its server is stopped. Restore it from the archive, start the local server (the steps below), run the check, then archive it again.
 2. **Rights for the first batch:** a published licence or media programme, an authorized feed, or owner photographs. Outreach is a last resort (GLOBAL-0039), and nothing has been sent. Then run stages 1 to 6 against the private Stage 0 manifest.
 3. **Optional, owner decision:** scheduling the pg_cron expiry sweep. Without it, expiring grants stay refused.
 - **Rollback, if ever needed:** apply `proposed/jwleria_bulk_media_contract.rollback.sql` first (it refuses while anything depends on the contract), then the recorded Worker version.
