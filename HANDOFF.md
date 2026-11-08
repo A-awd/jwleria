@@ -1,4 +1,16 @@
-## Current handoff: bulk media contract live; photos still need a rights-cleared source, 2026-11-08
+## Current handoff: no published image licence fits; photos need a written grant or owner photographs, 2026-11-08
+
+There are 0 new public photographs. The published-terms check (`STATE.md`, top entry) found no self-service programme that permits our display. Richemont's terms forbid it outright, and the Rolex press room is journalist-only and refused us. Do not repeat these lookups.
+
+Next unfinished actions, in order:
+1. **Owner decision (the only unblocker), choose one:**
+   - **Owner photographs:** supply one or more photographs of a real exact piece, with its reference established. This is the fastest path, because no third party is involved.
+   - **Written permission:** approve sending the request already drafted to Longchamp, for `10166HSR001` on jwleria.com. Its packshot is already held privately and passes gate 8 of 8. The missing item is Longchamp's express written permission, recorded as a grant. Nothing has been sent.
+2. **Visual checks (pending, not passed):** they wait on the owner enabling local browser use in Work settings. HTTP checks with the application User-Agent pass, but they are not visual verification.
+3. **Optional, owner decision:** scheduling the pg_cron expiry sweep.
+- **Rollback, if ever needed:** apply `proposed/jwleria_bulk_media_contract.rollback.sql` first, then the recorded Worker version.
+
+## Previous handoff, 2026-11-08 (contract live)
 
 The Worker, the migration `20261108072948` and upload function v2 are live. There are 0 new public photographs.
 

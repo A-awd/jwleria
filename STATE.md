@@ -1,3 +1,19 @@
+## Image-rights source check: no published route permits our display; 0 new photos; site HTTP check passes with an application User-Agent, 2026-11-08
+
+- **Rights lookups** (observed live; 5 searches and 2 page reads; Longchamp public terms and Awin general help were not repeated):
+  - **Richemont Media Centre terms** (Cartier, Van Cleef & Arpels, Piaget, Panerai, IWC, Jaeger-LeCoultre): use is limited "solely for external communications and newsworthy editorial purposes". They also say "you are not authorised to use the Content to offer, distribute, display, make available, market" genuine Maison products. That rules out our showcase. https://www.richemont.com/media-centre-terms-of-use/
+  - **Rolex Press Room** (`newsroom.rolex.com/legal`): the page returned 403, which is recorded as a refusal and not retried. A search snippet describes membership limited to journalists and producers, and marks usable only inside editorial products. That is not a usable licence.
+  - **Kering (Bottega Veneta), LOEWE, Prada Group, Audemars Piguet:** no published self-service image licence or feed was found. Third-party agency listings (Getty) require separate clearance for commercial or promotional use.
+  - **Result:** no brand in the catalogue publishes a programme that lets a non-retailer, inquiry-only site display its official packshots. No file was acquired.
+  - **New public photographs: 0.** No source flag, grant, approval, account or outreach changed.
+- **Site HTTP check** (observed live by the operator; HTTP only, not phone or visual verification): the earlier 403 was Cloudflare error 1010, triggered by the default Python client. With the truthful application User-Agent `Jwleria-Verification/1.0 (+https://jwleria.com)`, and no setting changed:
+  - `/ar/` returned 200;
+  - `/en/catalog/?q=m126234-0015` returned 200, with the exact reference present;
+  - `/ar/products/rolex-m126234-0015-e45f1880/` returned 200, with the exact reference present;
+  - `/robots.txt` returned 200.
+  - The existing public photograph's Storage file returned 200 `image/webp`, 78,538 bytes, sha256 `adaf1c17d2a87d93502362ad50a809ff0b06904e9e423ebfdb3a954c4e47896f`. This verifies delivery of the existing photograph only.
+- **Visual check:** still pending; the in-app browser is disabled.
+
 ## Bulk media contract live: Worker `storefront-2fa63291cdf2` deployed, migration applied, upload function v2; 0 new public photos, 2026-11-08
 
 - **Worker** (deployed, producer-reported by Codex):
