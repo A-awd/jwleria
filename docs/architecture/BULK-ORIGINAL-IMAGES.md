@@ -430,6 +430,11 @@ Never count the sizes of one WebP, or a size-shared photograph, as several produ
 
 ## 14. Gaps and the next implementation scope
 
+**Status, 2026-11-08:**
+- **G1 to G6:** implemented and tested on the implementation branch, and prepared. G2, G3 and G4 also need the owner-approved migration in `releases/storefront-2fa63291cdf2/`.
+- **G7 and G8:** remain proposed.
+- **Stage 0:** a private Longchamp manifest selects 100 of 117 eligible models (354 variants). No image has been acquired or published.
+
 | Gap | Exact place | Proposed change | Needs |
 |---|---|---|---|
 | G1 size-shared photographs | `background-composite.mjs` `runJob`; `media-pipeline.mjs` `requireVerification` | `shared_with` with per-reference gallery evidence, accepted only when the variants differ in size alone | code and tests; no migration |

@@ -149,6 +149,8 @@ Longchamp's supply shape (observed live, 2026-11-02):
 
 That is enough for the proposed first milestone of 100 distinct models, once written permission exists.
 
+Stage 0 (2026-11-08, private manifest, metadata only): 100 distinct models are selected, with 354 planned variants and 327 model-and-colour pairs. 19 variants are excluded as unbound. 0 files are held, approved or published.
+
 1. **Open sources whose galleries name the exact reference** (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371, Bottega Veneta 8 public products). This is the shortest path to exact photographs. It needs three things:
    - written permission from the brand or an authorised distributor, covering website publication, resizing and WebP encoding, plus background removal for a cutout;
    - the owner's decision to set that source's `publication_allowed`;

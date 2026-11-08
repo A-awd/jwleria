@@ -1,11 +1,41 @@
-## Checkpoint: G1 and G6 prepared on `claude/stage0-g1-g6-20261102`; no public change, 2026-11-08
+## Bulk-photo gaps G1 to G6 implemented and packaged (prepared); Stage 0 manifest built; no public change, 2026-11-08
 
-- **Prepared** (not deployed):
-  - **G1:** a gallery-listing identity route, for written permission only, and size-shared photo reuse. It is accepted only for size variants of one model and colour, each with its own current gallery evidence for the same sha256.
-  - **G6:** each acquisition records its dimensions, alpha, orientation, format, ETag and Last-Modified. A conditional re-check never overwrites an original, and `media-run.mjs recheck` skips origins that refused.
-- **Tests:** the new tests pass 3 of 3, intake passes 136 of 136, and the related media suites pass 18 of 18.
-- **Stage 0 export** (private, read-only, observed 2026-11-02 19:25Z): 390 Longchamp variants in 136 models. In 371 variants, every gallery URL names the exact reference; 19 are unbound.
-- **Remaining work in progress:** G2, G5, G3 and G4, the storefront, and the migration and operator package.
+**What changed publicly:** nothing. There are 0 new public product photographs: still 1 product (`m126234-0015`) shows a photograph. Nothing was applied, deployed, published, granted, approved or flag-changed, and no n8n workflow was touched.
+
+**Prepared code** (merged on `claude/admiring-dirac-nfavfx`):
+- **G1:** an official-gallery-listing identity route, for written permission only. A source file may be shared by size variants of one model and colour only when each reference's own current gallery evidence names the same sha256.
+- **G2:** the `flat_tile` treatment in the pipeline (`flat-tile.mjs`):
+  - the product's own alpha, from a native-alpha original or a checked cutout, is placed whole at native scale on flat `#f0f0f0` at 0.68;
+  - 0 opaque pixels may change; a clipped, rotated or opaque source is refused;
+  - the tile is reviewed by its hash and goes through the presentation route.
+- **G3:** a required written-permission credit, shown verbatim.
+- **G4:** fail-closed expiry. Expiring grants stay unusable until a scheduled sweep exists, and the one sweep (`public.jwl_expire_media_grants`) revokes 25 hours before expiry. The proposed intake runner now delegates to it.
+- **G5:** `batch-ledger.mjs`:
+  - a deterministic manifest;
+  - an append-only lifecycle ledger: idempotent, resumable, with quarantine codes, bounded failures and no acquisition before rights;
+  - distinct counters for models, variants, originals, derivative files and publications.
+- **G6:** each acquisition records its dimensions, alpha, orientation, format, ETag and Last-Modified. A conditional re-check never overwrites an original.
+- **Storefront:** the `flat_tile` canvas is drawn edge to edge in the grey tile, with full-column size hints, and the permission credit is supported. Both are backward compatible.
+
+**Stage 0, Longchamp** (private manifest built from the 2026-11-02 read-only export; no network, no download):
+- 390 variants in 136 models, with 363 model-and-colour pairs.
+- 371 eligible variants in 117 eligible models; 19 are excluded as `gallery_unbound`.
+- **Selected:** 100 distinct models, with 354 planned variants (100 in wave 1, 254 in wave 2) covering 327 model-and-colour pairs.
+- **Held, processed, approved or published:** 0.
+- **Blocked by:** missing rights (no written permission; `publication_allowed=false`).
+- These are source metadata matches, not acquired or approved photographs.
+
+**Package:**
+- `releases/storefront-2fa63291cdf2/`:
+  - the Worker (77 files);
+  - `sql/jwleria_bulk_media_contract.sql` and its exact rollback;
+  - `DEPLOY.md`, with the Worker first and the migration only after the owner's approval.
+- `SHA256SUMS` sha256: `73d480dc…e81e9d3`.
+
+**Tests:**
+- storefront: 219 tests, 214 pass, 0 fail, 5 opt-in browser checks skipped;
+- intake: 138 of 138 pass;
+- the contract SQL and its rollback snapshot run on PGlite only.
 
 ## Bulk original-photo architecture consolidated (proposed); no public change, 2026-11-02
 

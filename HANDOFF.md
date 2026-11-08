@@ -1,6 +1,17 @@
-## Checkpoint, 2026-11-08
+## Current handoff: bulk-photo software prepared; photos still need a rights-cleared source, 2026-11-08
 
-Claude is continuing in the feature branch `claude/stage0-g1-g6-20261102`: G2, then G5 with Stage 0, then G3 and G4, the storefront, and the package. The implementation branch fast-forwards when this is done. Nothing is published or applied.
+Nothing is running. There are 0 new public photographs.
+
+1. **The external dependency:** a rights basis for the first batch. Under GLOBAL-0039, company outreach is a last resort, after published evidence and supported alternatives; nothing is sent. The options:
+   - a published licence or media programme;
+   - an authorized feed;
+   - owner photographs;
+   - the Longchamp request drafted earlier.
+2. **Owner approvals, on request:**
+   - the Worker release `releases/storefront-2fa63291cdf2/`, which is safe on today's data;
+   - then the migration `sql/jwleria_bulk_media_contract.sql`;
+   - scheduling the expiry sweep is a separate decision.
+3. **Once rights exist:** run stages 1 to 6 against the private Stage 0 manifest (100 models, 354 planned variants) through the ledger. G7 and G8 stay proposed.
 
 ## Previous handoff: bulk photo architecture ready; first batch awaits source rights, 2026-11-02
 
