@@ -1,5 +1,7 @@
 # 0011 — Per-origin queues, missing-only intake and exact media evidence
 
+> **Superseded in part by decision 0025 (owner, 2026-11-09):** any requirement here for a brand's written permission, or for brand outreach, no longer applies. There is no brand contact, and official exact-product images follow the decision 0025 owner-direction route. Every other part of this decision stands.
+
 Status: accepted technical decision by the implementation owner (decision 0010), 2026-10-26. It narrows existing gates; it grants no source or media permission.
 
 ## Collection

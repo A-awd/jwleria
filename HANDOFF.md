@@ -1,4 +1,31 @@
-## Current handoff: no published image licence fits; photos need a written grant or owner photographs, 2026-11-08
+## Current handoff: adapt the photo contract to decision 0025 (no brand contact), 2026-11-09
+
+There are 0 new public photographs. There is no brand contact of any kind (decision 0025). Do not propose outreach, programme applications or waiting for a brand.
+
+**Next technical action:** Claude prepares a reviewed change, not yet implemented or deployed, that adds an honestly named owner-direction provenance route. It needs:
+1. **Migration:** a new `media_grants` kind, for example `owner_directed_official`. It records:
+   - decision 0025 as its basis;
+   - the official product page, and the exact gallery URL recorded on the candidate;
+   - the original's sha256 and acquisition time;
+   - `brand_licence: none`.
+
+   It must never reuse `written_permission`, CC terms or `owner_original`. The changes it covers:
+   - widen the kind check;
+   - allow background-only treatment and `flat_tile` under this kind in the evidence trigger;
+   - let the publication checks accept this kind in place of `media_permission_reference`;
+   - set `publication_allowed` only for the named open sources;
+   - write a rollback.
+2. **Pipeline:**
+   - `evaluateMediaGrant` and `cutoutBasisProblem` accept the new kind;
+   - `acquireOriginal` fetches only the exact recorded gallery URL, within robots and the pacer, and stops on any refusal;
+   - tests cover each of these.
+3. **Then the usual route:** package, apply and deploy by Codex, run the Stage 0 manifest (100 models, 354 variants), review, and publish. The held Longchamp `10166HSR001` packshot is the first candidate.
+
+Still in force: the access stops (the Rolex sitemap, IWC robots, the Rolex newsroom 403, the closed lanes, Prada's crawling exclusion), JWT on the upload function, and approval and revocation. No generated or upscaled product pixels.
+
+The visual check is still pending: it waits on local browser use being enabled in Work settings.
+
+## Previous handoff, 2026-11-08 (superseded by decision 0025; its Longchamp email action is cancelled)
 
 There are 0 new public photographs. The published-terms check (`STATE.md`, top entry) found no self-service programme that permits our display. Richemont's terms forbid it outright, and the Rolex press room is journalist-only and refused us. Do not repeat these lookups.
 

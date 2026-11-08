@@ -6,7 +6,8 @@ The Totals table, the brand counts, the source flags and the source-to-photo inv
 
 - **Rejected:** wrist, lifestyle and amateur photographs (Commons included) as substitutes for a product photograph. The owner rejected the `m126200-0006` Commons square, and it is withdrawn from display.
 - **Preferred:** the brand's official packshot of the exact reference and colour. Keep its existing alpha or white background as published: no remasking, retouching, generation or upscaling. Then place it on the decision 0022 white square, scaled down only.
-- **Rights gate, unchanged:** an official packshot is published only with the brand's express written permission for this display, recorded as a grant. Being reachable, carrying a logo or credit, or the owner accepting responsibility is not a licence. Without permission, official files are private reference only.
+- **Superseded by decision 0025 (owner, 2026-11-09):** there is no brand contact. Official exact-product images are used under the owner's direction, with a truthful provenance record that claims no brand licence. The access rules below still apply. The following historical rule no longer applies:
+- **Rights gate (historical):** an official packshot is published only with the brand's express written permission for this display, recorded as a grant. Being reachable, carrying a logo or credit, or the owner accepting responsibility is not a licence. Without permission, official files are private reference only.
 - **Access:** normal public requests within robots. No retries after a refusal or timeout, no proxies, no constructed asset URLs, and no automated Prada access (its terms exclude crawling).
 
 ## Totals
@@ -147,18 +148,18 @@ Longchamp's supply shape (observed live, 2026-11-02):
 - 371 variants whose recorded gallery URLs all name the exact reference;
 - 117 models where that holds for every variant.
 
-That is enough for the proposed first milestone of 100 distinct models, once written permission exists.
+That is enough for the proposed first milestone of 100 distinct models, once the decision 0025 owner-direction route is implemented (no brand contact).
 
 Stage 0 (2026-11-08, private manifest, metadata only): 100 distinct models are selected, with 354 planned variants and 327 model-and-colour pairs. 19 variants are excluded as unbound. 0 files are held, approved or published.
 
 1. **Open sources whose galleries name the exact reference** (Rolex 1,465, Prada 851, LOEWE 407, Longchamp 371, Bottega Veneta 8 public products). This is the shortest path to exact photographs. It needs three things:
-   - written permission from the brand or an authorised distributor, covering website publication, resizing and WebP encoding, plus background removal for a cutout;
-   - the owner's decision to set that source's `publication_allowed`;
+   - the decision 0025 owner-direction provenance route, with no brand contact. This replaces the historical requirement for written permission from the brand;
+   - that source's `publication_allowed` set through the reviewed decision 0025 migration;
    - the existing pipeline: originals, identity check, bundle, upload, publish.
 
    A Rolex `upright-c` packshot or a Longchamp PNG may already be transparent. That is checked on the held bytes, and an eligible transparent original needs no removal pass. Rolex's recorded sitemap refusal stays in force: a source review, under that permission, comes before any request to that origin.
 2. **Open sources whose galleries do not name the reference** (Audemars Piguet, IWC, Jaeger-LeCoultre: 9 products). The same permission route applies, plus a visual identity check per file. IWC's robots stop stays until a source review.
-3. **Closed sources** (Cartier 463, Van Cleef & Arpels 498, Piaget 3, Panerai 3; CELINE and RIMOWA have none). Nothing is acquired from these origins. A photo can only come from the owner's own photograph, or from written permission together with a reviewed code change that lifts the stop.
+3. **Closed sources** (Cartier 463, Van Cleef & Arpels 498, Piaget 3, Panerai 3; CELINE and RIMOWA have none). Nothing is acquired from these origins. These are access stops, not outreach. A photo can only come from the owner's own photograph, or from a source-access review together with a reviewed code change that lifts the stop. No brand is contacted (decision 0025).
 4. **Open-licence photographs** (any brand except the six closed ones). Each needs an exact-match review per reference, an amendment of decision 0013 naming that reference, and a reviewed migration that widens `open_license_decisions()`.
    - **Bounded search, 2026-11-02:**
      - **Method:** Commons' robots file forbids its search and API paths (`/w/`, `Special:`) to every agent, so only allowed category pages were read: 12 requests (8 read, 3 not found, 1 lost to the scan's own false challenge check).

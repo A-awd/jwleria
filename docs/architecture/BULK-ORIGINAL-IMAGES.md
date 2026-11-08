@@ -1,5 +1,6 @@
 # Bulk original product photos: architecture and rollout
 
+- **Superseded rights rule (decision 0025, owner, 2026-11-09):** there is no communication with any brand. Wherever this document requires written permission or a permission request, read it as the owner-direction provenance route in decision 0025. That route claims no brand licence. Every other stage, gate and access stop stays.
 - **Status:** proposed architecture, written by Claude as implementation owner (decision 0010). It is not an owner approval. It authorizes no outreach, spending, production change, source-flag change or publication.
 - **Date:** 2026-11-02. Each fact carries its read time and an evidence label from `CLAUDE.md`. The vendor checks are listed in [section 15](#15-vendor-facts-checked-on-2026-11-02).
 - **Scope:** the authoritative design for taking genuine product photographs from a rights-cleared source to the public site at catalogue scale.
@@ -34,7 +35,7 @@ The pipeline below does not create photo coverage by existing. Coverage arrives 
    - No generation, redrawing, retouching, recolouring or upscaling of a product, and no third-party AI upload.
    - The only alteration allowed is background-only removal with a non-generative mask (decision 0015).
    - Presentation is a flat `#f0f0f0` square or the grey catalogue tile (decisions 0023 and 0024). The local AI background trial is closed.
-2. **Rights before publication.** A photo needs one recorded basis: written permission from the rights holder or an authorized distributor, an owner original, or an open licence under decisions 0013 and 0016. A reachable URL, a logo, a supplier relationship or the owner's taste is not a licence (decision 0011).
+2. **A truthful basis before publication.** A photo needs one recorded basis: an owner original, an open licence under decisions 0013 and 0016, or the decision 0025 owner direction for an official exact-product image, with no brand contact and no claimed licence. Written permission is no longer required (historical). A reachable URL, a logo, a supplier relationship or the owner's taste is not a licence (decision 0011).
 3. **One card and page per real model.** Sizes are variants of one model (decision 0017). A colour shows only its own photograph (decision 0020).
 4. **Free existing stack first:** the Mac, Supabase, n8n and Cloudflare already in use. No new paid model, API, service or subscription.
 5. **Honest counting.** A model, a variant, a colour, a photograph and a derivative file are different units ([section 13](#13-counting-and-reporting)).
@@ -94,7 +95,8 @@ flowchart LR
 
 | Class | Rights basis (existing grant kind) | Scale | State, 2026-11-02 |
 |---|---|---|---|
-| Brand media library or feed | `written_permission` from the rights holder | best: whole collections with colour-specific files | none obtained; no outreach sent |
+| Official product pages and galleries (decision 0025) | owner-direction provenance; the new grant kind is an implementation gap | best: whole collections with colour-specific files | route to be implemented; no brand contact, ever |
+| Brand media library or feed (historical) | `written_permission` | — | closed by decision 0025; no outreach |
 | Authorized distributor or supplier feed | `written_permission` from an authorized distributor, plus proof that it may sublicense these photographs for this display | good | none. Supplier status alone proves nothing. |
 | Owner's own photographs | `owner_original`, one grant per exact product | limited by physical access | none supplied yet |
 | Official website images | `written_permission` only | good once permitted | 3 Longchamp packshots held for private evaluation. No permission, so none is publishable. |
@@ -146,8 +148,7 @@ One record per source, kept as a private evidence file. Its pointer goes in `med
   - One held file, `10166HSR001`, has observed native alpha at 2000 × 2000.
 - **Milestone:** 100 distinct displayed models, each showing a correct, rights-cleared photograph of an exact variant, and each card showing the variant it links to.
   - It is counted in models, not in files, colours or sizes.
-  - It has not been achieved or approved. It depends on Longchamp's written permission.
-- **If permission is refused:** owner photographs, an authorized distributor feed or another brand, each through the same stages.
+  - It has not been achieved. It depends on implementing the decision 0025 owner-direction route, with no brand contact.
 
 ## 5. Acquisition and matching
 

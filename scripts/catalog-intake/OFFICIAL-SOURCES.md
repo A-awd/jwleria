@@ -51,6 +51,8 @@ not official brand translations. Full-word matching prevents model substrings
 from corrupting unrelated terms. Remaining source-language terms are flagged;
 even complete Arabic renderings retain an editorial review requirement.
 
+Decision 0025 (owner, 2026-11-09) replaces brand-permission prerequisites for images: there is no brand contact, and no source waits for written permission. The paragraph below still governs access stops: a source whose terms or responses refuse automated access stays stopped, without bypass.
+
 Robots access and the owner's collection request do not prove source permission
 or override published source terms. When actual terms require written permission
 for automated acquisition, stop that source and set `acquisition_allowed: false`

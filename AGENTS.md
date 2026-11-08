@@ -19,6 +19,10 @@ Work only with public-safe code and documentation for the jewelry commerce exper
 
 Do not copy or merge content from `jwleria-s-gembox` until a read-only forensic comparison identifies provenance, licensing, sensitivity, and unique useful history. Do not change repository visibility or archive a repository without separate authorization.
 
+## Product photographs
+
+Decision 0025 (owner, 2026-11-09): there is no communication with any brand. Never propose outreach, permission requests, programme applications or waiting for a brand reply. Use publicly available official exact-product images, with a truthful provenance record that claims no brand licence. Access refusals and robots still stop a source, and the product pixels are never generated or retouched.
+
 ## Session end
 
 Update `STATE.md` and `HANDOFF.md`, record durable public-safe decisions in `DECISIONS.md`, and commit and push only when authorized. Leave the migration branch unmerged while its blockers remain.

@@ -1,5 +1,7 @@
 # 0015 — Authentic 2D cutouts; interactive 3D deferred
 
+> **Superseded in part by decision 0025 (owner, 2026-11-09):** any requirement here for a brand's written permission, or for brand outreach, no longer applies. There is no brand contact, and official exact-product images follow the decision 0025 owner-direction route. Every other part of this decision stands.
+
 Status: accepted (owner direction)
 
 Date: 2026-10-29

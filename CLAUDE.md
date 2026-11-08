@@ -20,6 +20,8 @@ A fast, phone-first, bilingual (Arabic and English) showcase of products and bra
 
 Photographs are 2D. An exact-product cutout over the current product frame colour is preferred, and background-only removal is the only alteration allowed (decision 0015). Interactive 3D is deferred.
 
+**No communication with any brand (decision 0025, owner, 2026-11-09).** That means no outreach, permission requests, messages or programme applications, and none is ever the next action. Photographs come from publicly available official exact-product images, through the route in decision 0025, with a truthful provenance record. That record never claims a brand licence. Recorded access refusals still stop a source.
+
 Out of scope, always: prices, login or accounts, cart, checkout, currency or country selectors, CRM, an owner admin or dashboard, and any new service. Copy stays neutral and inquiry-only (decision 0005): no personal-shopping or concierge positioning, no implied stock or brand affiliation.
 
 ## Current milestone

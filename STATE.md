@@ -1,3 +1,20 @@
+## Owner decision 0025: no communication with any brand; official images by owner direction; 0 new photos, 2026-11-09
+
+- **Decision** (accepted, owner): [0025](decisions/0025-official-images-without-brand-contact.md).
+  - There is no outreach, permission request, message or programme application to any brand.
+  - Publicly available official exact-product images are used under the owner's direction, with a truthful provenance record that claims no brand licence.
+  - This supersedes the brand written-permission prerequisite. Decisions 0011, 0015, 0016 and 0024 carry supersession pointers, and their history is unchanged.
+- **Longchamp draft** (producer-reported by the operator): cancelled and marked do-not-send. Its recipient was removed and sending was disabled. The private draft files are marked cancelled and kept, not deleted. **Nothing was sent.** The operator's local planning notes, outside Git, carry the same superseding header.
+- **Updated:**
+  - entry points: `CLAUDE.md`, `AGENTS.md`, `DECISIONS.md`, `HANDOFF.md`, and the Arabic owner brief;
+  - specs: the execution spec (P2), the requirements ledger, and the decision and approval ledger;
+  - records and plans: the source registry, the bulk-image architecture, and the intake and official-sources READMEs.
+- **Unchanged:** production, source flags, grants and code. The access stops still apply (refusals, robots, closed lanes).
+  - Counts are as last read: 1 public product with a photograph, and the private Stage 0 manifest of 100 models and 354 variants.
+  - **New public photographs: 0.**
+  - The visual smoke check is still pending.
+- **Implementation gap:** the runtime accepts only the `owner_original`, `written_permission` and `open_license` grant kinds, and publication needs `publication_allowed` and a permission reference. See the handoff.
+
 ## Image-rights source check: no published route permits our display; 0 new photos; site HTTP check passes with an application User-Agent, 2026-11-08
 
 - **Rights lookups** (observed live; 5 searches and 2 page reads; Longchamp public terms and Awin general help were not repeated):
