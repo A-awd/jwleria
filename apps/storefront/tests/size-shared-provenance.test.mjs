@@ -26,8 +26,8 @@ const verified=(d=listing,over={})=>({asset_sha256:asset.sha256,verified_referen
 test('an official gallery listing settles an uncertain size only for this file, revision, gallery and colour, under written permission',()=>{
   assert.equal(requireVerification(verified(),{candidate,asset,grant:written}).checks.exact_reference,'uncertain','never rounded up');
   const refuse=(v,grant,pattern,label)=>assert.throws(()=>requireVerification(v,{candidate,asset,grant}),pattern,label);
-  refuse(verified(),undefined,/only under written permission/,'no grant');
-  refuse(verified(),{...written,kind:'owner_original'},/only under written permission/,'another grant kind');
+  refuse(verified(),undefined,/only for an official-gallery grant/,'no grant');
+  refuse(verified(),{...written,kind:'owner_original'},/only for an official-gallery grant/,'another grant kind');
   refuse(verified({...listing,revision_hash:'c'.repeat(64)}),written,/another candidate revision/,'stale evidence');
   refuse(verified({...listing,reference:'SYN100M001'}),written,/another reference/,'another size reference');
   refuse(verified({...listing,gallery_url:'https://media.example.test/bags/SYN100M_side.png'}),written,/own current gallery/,'a file not in this gallery');

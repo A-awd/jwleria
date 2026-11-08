@@ -132,8 +132,17 @@ export function creditChanges({resized,background_removed=false,white_square=fal
  * also binds the adaptation to its ShareAlike terms, which needs a licence review first; NC and ND are never allowlisted.
  * This covers the treatment only: the grant must still permit the exact product (evaluateMediaGrant).
  */
+/**
+ * Grant kinds whose files come from the exact candidate's own official gallery, bound by origin and URL. Decision 0025:
+ * owner_directed_official records the owner's direction to use the brand's published official image, with no brand
+ * contact and no claimed brand licence; it is never relabelled as written permission, a licence or an owner original.
+ */
+export const officialGalleryKinds=Object.freeze(['written_permission','owner_directed_official']);
+
 export function cutoutBasisProblem(grant){
   if(grant?.kind==='owner_original')return null;
+  // Decision 0025 directs background-only, non-generative extraction (decision 0015) for official images.
+  if(grant?.kind==='owner_directed_official')return grant.background_removal===true?null:'owner_direction_does_not_record_background_removal';
   if(grant?.kind==='written_permission')return grant.background_removal===true?null:'written_permission_does_not_cover_background_removal';
   if(grant?.kind==='open_license'){
     if(grant.license_code==='CC0-1.0'||/^CC-BY-[234]\.0$/.test(grant.license_code??''))return null;
@@ -166,7 +175,8 @@ export function galleryBinding(candidate){
  */
 export function evaluateMediaGrant(grant,{candidate,asset_url,now=Date.now()}={}){
   if(!grant)return {state:'awaiting_permission',reasons:['no_media_grant']};
-  if(!['owner_original','written_permission','open_license'].includes(grant.kind))return {state:'rejected',reasons:['unsupported_grant_kind']};
+  if(!['owner_original','open_license',...officialGalleryKinds].includes(grant.kind))return {state:'rejected',reasons:['unsupported_grant_kind']};
+  if(grant.kind==='owner_directed_official'&&grant.evidence_reference!=='decision-0025')return {state:'rejected',reasons:['owner_direction_must_cite_decision_0025']};
   const reasons=[];
   if(!/^[a-z0-9][a-z0-9._-]{2,80}$/.test(grant.grant_reference??''))reasons.push('invalid_grant_reference');
   if(!text(grant.evidence_reference))reasons.push('permission_evidence_missing');
@@ -291,7 +301,7 @@ const defaultPacer=createMediaPacer();
  */
 export async function acquireOriginal({candidate,asset_url,grant,output_directory},{fetcher=fetch,pacer=defaultPacer}={}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
-  if(decision.state!=='permitted'||!['written_permission','open_license'].includes(grant.kind))throw Error('Permitted written or open-licence media grant required: '+decision.reasons.join(','));
+  if(decision.state!=='permitted'||![...officialGalleryKinds,'open_license'].includes(grant.kind))throw Error('Permitted official-gallery or open-licence media grant required: '+decision.reasons.join(','));
   const root=await privateRoot(output_directory),url=new URL(asset_url);
   const request=mediaRequester(url.origin,{fetcher,pacer});
   await robotsAllow(url,request,pacer);
@@ -318,7 +328,7 @@ async function keepDownloaded({root,url,response,grant,pacer}){
 export async function recheckOriginal({candidate,asset_url,grant,output_directory,recorded},{fetcher=fetch,pacer=defaultPacer}={}){
   if(recorded?.acquisition!=='download'||recorded.source_url!==asset_url||!hashPattern.test(recorded.sha256??''))throw Error('Only a recorded download of this URL can be re-checked');
   const decision=evaluateMediaGrant(grant,{candidate,asset_url,now:pacer.now()});
-  if(decision.state!=='permitted'||!['written_permission','open_license'].includes(grant.kind))throw Error('Permitted written or open-licence media grant required: '+decision.reasons.join(','));
+  if(decision.state!=='permitted'||![...officialGalleryKinds,'open_license'].includes(grant.kind))throw Error('Permitted official-gallery or open-licence media grant required: '+decision.reasons.join(','));
   const root=await privateRoot(output_directory),url=new URL(asset_url);
   const request=mediaRequester(url.origin,{fetcher,pacer});
   await robotsAllow(url,request,pacer);
@@ -471,7 +481,7 @@ export function identityDeterminationProblem(verification,{candidate,asset}){
 export function galleryListingProblem(verification,{candidate,asset,grant}){
   const d=verification?.identity_determination;
   if(!d||typeof d!=='object')return 'no identity determination';
-  if(grant?.kind!=='written_permission')return 'a gallery listing settles identity only under written permission';
+  if(!officialGalleryKinds.includes(grant?.kind))return 'a gallery listing settles identity only for an official-gallery grant';
   if(d.asset_sha256!==asset.sha256)return 'identity determination names other bytes';
   if(d.identity_established!==true)return 'identity_established is not true';
   if(d.reference!==candidate.external_id)return 'gallery listing names another reference';
