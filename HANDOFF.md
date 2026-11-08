@@ -5,7 +5,7 @@ There are 0 new public photographs. The published-terms check (`STATE.md`, top e
 Next unfinished actions, in order:
 1. **Owner decision (the only unblocker), choose one:**
    - **Owner photographs:** supply one or more photographs of a real exact piece, with its reference established. This is the fastest path, because no third party is involved.
-   - **Written permission:** approve sending the request already drafted to Longchamp, for `10166HSR001` on jwleria.com. Its packshot is already held privately and passes gate 8 of 8. The missing item is Longchamp's express written permission, recorded as a grant. Nothing has been sent.
+   - **Written permission (pending owner approval):** the operator has saved one updated, unsent Longchamp request in the site mailbox. It covers the initial 100-model batch with exact packshots, downscaling, WebP and background-only removal on `#f0f0f0`, and asks for scope, territories, CDN, credit and treatment terms. The owner has been asked to approve sending this one message, with no answer yet. After approval, the operator sends it and records only the send date here, public-safe. Any reply's terms are reviewed before anything becomes a grant. Nothing has been sent, and no grant, flag, licence or fee has been accepted.
 2. **Visual checks (pending, not passed):** they wait on the owner enabling local browser use in Work settings. HTTP checks with the application User-Agent pass, but they are not visual verification.
 3. **Optional, owner decision:** scheduling the pg_cron expiry sweep.
 - **Rollback, if ever needed:** apply `proposed/jwleria_bulk_media_contract.rollback.sql` first, then the recorded Worker version.

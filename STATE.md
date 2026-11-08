@@ -13,6 +13,12 @@
   - `/robots.txt` returned 200.
   - The existing public photograph's Storage file returned 200 `image/webp`, 78,538 bytes, sha256 `adaf1c17d2a87d93502362ad50a809ff0b06904e9e423ebfdb3a954c4e47896f`. This verifies delivery of the existing photograph only.
 - **Visual check:** still pending; the in-app browser is disabled.
+- **Longchamp permission request** (producer-reported by the operator; pending owner approval, **not sent**):
+  - One updated draft is saved unsent in the site's own mailbox. It is addressed to the customer-service contact on Longchamp's official legal page and asks for it to be forwarded to image rights or commercial partnerships.
+  - It requests the initial 100-model batch with genuine variants and exact packshots, with these treatments: downscaling, WebP, and non-generative background-only removal on `#f0f0f0`.
+  - It states independent, inquiry-only commercial use, and asks for scope, territories, CDN, credit and treatment terms.
+  - It supersedes the earlier white-only draft.
+  - The owner has been asked for explicit approval to send this one message, with no answer yet. No grant, flag, licence or fee has been accepted. The addresses and correspondence are kept privately, outside Git.
 
 ## Bulk media contract live: Worker `storefront-2fa63291cdf2` deployed, migration applied, upload function v2; 0 new public photos, 2026-11-08
 
