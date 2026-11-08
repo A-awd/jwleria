@@ -1,3 +1,24 @@
+## Decision 0025 route implemented and tested (prepared); its application was denied by the tool classifier and is waiting on the owner; 0 new public photos, 2026-11-09
+
+- **Prepared** (commit `7301098`, both branches):
+  - `apps/storefront/supabase/proposed/jwleria_owner_directed_official.sql` (sha256 `065dbb84e305c92c59470dafd5bc7889aa599718afdc0bbe71a82e14d3e66a6f`) and its rollback (`01caed6b86b1c64a236d6d6be8603326e5a8d2abcce58f7072e0e71409413831`).
+  - It adds the grant kind `owner_directed_official`, which:
+    - must cite `decision-0025`;
+    - never expires;
+    - is refused for the closed lanes;
+    - requires a recorded origin.
+  - Background-only extraction is covered only when the grant records it. The exact-gallery and origin evidence rules are unchanged.
+  - The only data change is one Longchamp grant, plus Longchamp's `publication_allowed` and permission note, and only from the exact reviewed source row. No other source changes.
+  - The pipeline (`media-pipeline.mjs`) accepts the kind for official-gallery acquisition, the G1 listing and extraction. Upload, JWT and the Worker are unchanged, so no release is needed.
+- **Tests:**
+  - new SQL tests: 4 of 4 pass, including a rollback that restores the snapshot exactly and refuses while in use;
+  - new pipeline tests: 3 of 3 pass;
+  - storefront suite: 218 pass and 5 skipped (the opt-in browser tests; skips are not passes);
+  - intake suite: 141 of 141 pass.
+- **Not applied:** the connector call `apply_migration` was denied by the auto-mode classifier ("Production Deploy"). It was not retried and no other write path was used. The operator has asked the owner to approve applying it and completing publication. Live state is unchanged: 14 migrations, Longchamp `publication_allowed=false`, 2 grants, 1 photographed product.
+- **Fresh read** (observed live): all 354 planned Longchamp variants keep their Stage 0 candidate IDs and revisions. Their first recorded gallery URLs match the private URL list byte for byte (digest compared in the database).
+- **Independent visual review** (producer-reported by the operator): the held `10166HSR001` original and its four flat WebPs pass. This covers those bytes only.
+
 ## Owner decision 0025: no communication with any brand; official images by owner direction; 0 new photos, 2026-11-09
 
 - **Decision** (accepted, owner): [0025](decisions/0025-official-images-without-brand-contact.md).

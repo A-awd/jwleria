@@ -1,4 +1,17 @@
-## Current handoff: adapt the photo contract to decision 0025 (no brand contact), 2026-11-09
+## Current handoff: apply the decision 0025 migration (owner approval pending), then publish the Longchamp batch, 2026-11-09
+
+There are 0 new public photographs. There is no brand contact (decision 0025).
+
+1. **Owner approval pending** (the operator asked; tool denial honored): apply `proposed/jwleria_owner_directed_official.sql` at commit `7301098` (sha256 `065dbb84…6a6f`) as a registered migration, without its `begin;`/`commit;` wrapper.
+   - **Preflight:** 14 migrations, the last `20261108072948`; the Longchamp source row unchanged.
+   - **Readback:** the kind check, `jwl_owner_directed_official_check`, the grant `owner-directed-longchamp-0025`, and Longchamp `publication_allowed=true`.
+   - **Then:** move the file to `migrations/` and exclude it in the SQL test loaders.
+   - No Worker or function release is needed.
+2. **Private batch** (in progress): the batch driver `scripts/catalog-intake/batch-official.mjs` downloads the 354 exact recorded files and builds the flat tiles. Contact sheets follow for the operator's independent visual review.
+3. **After approval and review:** for each reviewed variant, the approval bundle, the database record, the approval-bound upload, `jwl_publish_candidate`, and an HTTP readback of the images.
+4. **The visual smoke check is still pending:** local browser use is disabled.
+
+## Previous handoff, 2026-11-09 (decision 0025 recorded)
 
 There are 0 new public photographs. There is no brand contact of any kind (decision 0025). Do not propose outreach, programme applications or waiting for a brand.
 
