@@ -1,4 +1,24 @@
-## Current continuation: preserve completed bundles, resume Claude Medium after usage reset, and honor the production boundary, 2026-11-09
+## Current continuation: resume after Claude quota reset; preserve real image reviews and production boundary, 2026-11-09
+
+Read the current STATE entry first. This supersedes older Medium-only, reset-time, optional-grouping and running-collection directions below. No new photograph was published by this run. Both page collections and the image acquisition process have terminated; do not claim they are still running.
+
+1. **Real runtime boundary:** the official Claude client reports the five-hour limit, resetting at **20:50 Asia/Riyadh, 2026-11-09**. Resume the existing session from the private operator continuation on **Opus 5.5, MAX effort**, in English, sequentially, Ultracode off, no extra agents. Do not reactivate the cancelled credits gate, buy usage, change billing/account, install a worker/schedule or reload the huge old conversation.
+
+2. **Consume the real private asset reviews:** preserve the 382 Longchamp dry-run bundles and 1,528 files, the seven reviewed Bottega masters including the repaired green bag, and all eight reviewed Longchamp refresh masters including the greyscale shoe. For LOEWE, read reviewed-codex-121.json: 118 accepted source/cutout/frame sets and three rejected cutout/frame sets. Codex actually viewed all 121 rows and seven native close-ups. Do not infer exact SKU identity from pixels or claim derivative/public review.
+
+3. **Fix the three actual LOEWE failures:** A120HPLX04-9003 retains handle background and loses its silver zip pull; A411NBPX40-1193 loses most of its hanging chain; A510P60X96-1160 retains handle-opening background. Preserve originals and negative reviews, repair only masks with original product pixels, add appropriate regression coverage, and obtain fresh exact-hash visual reviews. Do not bundle the rejected hashes.
+
+4. **Finish technical preparation:** verify no-upscaling behavior for the 1362-pixel first LOEWE master before encoding the 1600 rendition. Do not weaken image quality or optical framing. Diagnose the actual saved Media robots refused stop at A538H13X03-1150; continue the remaining 197 planned items only if the exact access/robots scope permits it. Keep the 15 real resolution holds, 73 stale held references and 25 new pages separate. Reuse the completed 395-page collection and 136 acquired originals. Finish honest gallery refreshes, any source-specific grant proposal and reviewed bundles.
+
+5. **Owner approval remains pending, unchanged in scope:** the exact Longchamp route SQL (sha256 065dbb84…6a6f), the required grouping repair (dbab881e…a3ea9, rollback cc1f3581…4188), and recording/uploading/publishing the 382 prepared variants. The previous automatic Production Deploy denial remains binding: no retry, alternate writer or permission-mode bypass before the scoped approval. Do not ask the same pending question again. Bottega activation, the eight Longchamp gallery refreshes and LOEWE binding/activation are outside that question.
+
+6. **After actual approval:** read fresh migration/source/revision/grant state; apply only the approved payloads, including the required grouping repair; bind the exact reviewed assets, record approvals, use the existing secured upload route and publish, then read back real public images. The documented caller is the existing public legacy anon client key, entered transiently for JWL_FUNCTION_CALLER_TOKEN; absence from the shell is not proof it is unavailable. No new key/scope or dummy write. Reachability/JWT are observed; authenticated bulk acceptance is unverified until the approved run.
+
+7. Phone-width visual verification requires the Codex in-app browser, whose last attempt reported disabled local browser use. No external/headless fallback. Save sanitized actual outcomes in STATE/HANDOFF, commit/push the authorized branches and verify the remote revision.
+
+No brand contact (decision 0025), fabricated licence, WhatsApp/social/ads/3D blocker, new paid resource or unrelated change. Claude owns implementation and technical review; Codex owns coordination and genuine operator asset review. A quota/access/approval boundary is not project completion.
+
+## Earlier continuation: preserve completed bundles, resume Claude Medium after usage reset, and honor the production boundary, 2026-11-09
 
 Read the top STATE entry first. The official Claude Code client hit the subscription usage limit; its actual display says **04:30 Asia/Riyadh, 2026-11-09**. The existing private continuation pointer identifies the same session. Do not start another chat, buy extra usage, switch account/model, or read the huge historical transcript. Use Opus 5.5 Medium, English, sequential, no agents.
 
@@ -22,7 +42,7 @@ There are 0 new public photographs. There is no brand contact (decision 0025). T
 3. **Approvals:** the operator records the chunked approval statements: 36 for batch 1, 2 for batch 2, 2 for batch 3.
 4. **Upload:** through the JWT upload function per item directory (`media-run upload`), with the caller token from the operator's environment.
 5. **Publish:** the operator runs each batch's `publish.sql`, then reads the images back over HTTP.
-6. **Optional, owner-approved:** apply the grouping repair `proposed/jwleria_longchamp_material_option.sql` (it rebuilds only the derived variant tables) and read back that `L1621089` and `L1911089` are one model each.
+6. **Required in the current owner scope, after scoped approval:** apply the grouping repair `proposed/jwleria_longchamp_material_option.sql` (it rebuilds only the derived variant tables) and read back that `L1621089` and `L1911089` are one model each.
 
 **Independent work remaining:**
 - Bottega Veneta: background-only extraction for its 7 available files, then visual review.

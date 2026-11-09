@@ -1,3 +1,68 @@
+## Current checkpoint: Claude usage capped; 136 LOEWE originals retained and 118 masters visually accepted; no new public photos, 2026-11-09
+
+This entry supersedes older Medium-only, reset-time and unfinished-collection lines below. The owner requested a higher model. The official subscription client ran **Opus 5.5 with MAX effort**, in English, sequentially, with Ultracode off and no extra agents. The alternative model required disabled usage credits; that gate was cancelled and no extra usage or purchase was enabled.
+
+- **Actual execution boundary:** Claude displayed its five-hour usage limit, resetting at **20:50 Asia/Riyadh on 2026-11-09**. Do not send unchanged retries, switch to API billing, create a worker/schedule or claim background model work. The existing session and resume instructions are in the private operator continuation.
+
+- **Completed implementation:** Claude committed the mask/greyscale/generic-path work at 748e6e7, the declared-rendition and missing-file handling at afb6e4c, and the widened LOEWE gallery reader at 77c0e1e. The repaired Bottega and Longchamp assets below were actually reviewed and persisted with identical hashes.
+
+- **LOEWE page collection terminated:** 395 current pages processed, 359 extracted and 36 incomplete. The private cohort contains 334 existing references with the same official gallery file paths at newly declared 1200-pixel renditions. Resized bytes are not assumed identical to the old 500-pixel renditions. The 73 stale held references and 25 new complete pages remain separate, unimported work.
+
+- **LOEWE image acquisition also terminated:** 136 originals were downloaded and retained; 121 cutouts/flat masters were made. Fifteen originals were held for insufficient photographed-product resolution: their product extents are below the 653 pixels needed for a 960-pixel frame at 0.68 fill. One further item, A538H13X03-1150, stopped the run with source_refused / Media robots refused. The actual process exited 1. The other 197 planned items were not reached. Diagnose the exact refused lane from saved evidence; do not retry unchanged, bypass it or infer that every LOEWE route is permanently blocked.
+
+- **Actual operator visual review:** Codex viewed every one of the 121 original/checkerboard-cutout/alpha/flat-frame rows, plus native detail views for seven cases. **118 pass; 3 cutout/master hashes are rejected.** The source originals remain preserved. Private hash-bound records are in reviewed-codex-121.json.
+  - A120HPLX04-9003: retained background inside the handle opening and substantial loss of the lower silver zip pull.
+  - A411NBPX40-1193: most of the hanging silver chain was removed.
+  - A510P60X96-1160: retained background inside the silver handle opening.
+  - Four initially uncertain weave cases were cleared by actual native-image inspection. A visual asset review does not establish the exact SKU from pixels, a current database gallery binding, a grant or publication approval.
+
+- **Still open for Claude:** repair those three masks without changing product detail; verify the native-size/1600-rendition behavior before LOEWE preview encoding; finish the applicable bindings, grant proposal and bundles. The first LOEWE master is 1362 square; this is an open no-upscaling/profile check, not a confirmed encoder defect. No LOEWE derivative or public-image review is claimed.
+
+- **Production database/media remain unmodified by this run:** no migration retry, recording, upload, source activation or publication occurred. The pending consolidated approval still covers only the two exact Longchamp SQL updates and the 382 prepared variants. The grouping repair is required in that scope. Bottega activation and the eight Longchamp gallery refreshes are separate; LOEWE binding/activation is unfinished. Preserve the prior automatic Production Deploy denial.
+
+- **Existing upload mechanism:** live reads and an unauthenticated 401 establish reachability and JWT enforcement. The documented caller is the existing public legacy anon client key, entered at upload time; its absence from the shell is not a missing-credential finding. Authenticated bulk acceptance remains unverified until the approved upload, and no dummy write was made.
+
+- **Operator/browser boundary:** the last Codex in-app browser attempt reported disabled local browser use. No external/headless fallback or phone-width public verification was performed. No brand contact, paid resource, new key/scope, social/WhatsApp/3D work or Easy Life routine was introduced.
+
+## Implementation detail from the same run: reviewed mask/greyscale fixes and proposed Bottega activation, 2026-11-09
+
+Claude, Opus 5.5 at max effort, Ultracode off, sequential, no agents. Production is unchanged: the denied route migration was not retried or bypassed, and no new owner approval has arrived.
+
+- **Bottega `569041VMAA03715`, repaired** (prepared; reviewed):
+  - Cause: the local Vision mask left six soft see-through regions inside the bag body (9,991 pixels; minimum alpha 41 to 225). Every opaque pixel was the original's own, so the old opaque-pixel check could not see the loss.
+  - Fix: the cutout check now refuses `product_material_made_transparent`, meaning an enclosed non-opaque region whose original pixels are not the removed backdrop. `repairEnclosedProductMask` restores only such regions from the original's own pixels. The real hole under the handle (92% backdrop-like pixels) stays transparent.
+  - The rejection is recorded in the ledger (`processed → quarantined visual_rejected`) and the same held original was re-cut from its stored mask. New cutout `399f256c…cfefca5`, new tile `79ea4336…6d3dcd2`.
+  - Codex actually viewed the proof sheet, including all six enlarged regions. Both exact hashes **pass** (reviewed). The old negative review (`reviewed-codex-7.json`, sha256 `9310f710…9221d`) is preserved unchanged, and the old cutout `85d704eb…` and tile `7fa33359…` are listed as rejected and are refused by the bundler.
+  - The other six accepted masters are unchanged. The new path rebuilds each of them byte-identically from its stored mask (nothing restored).
+- **Longchamp `70355SJZ001380`, greyscale** (prepared; reviewed; still unbound):
+  - It is a valid untagged 8-bit greyscale-with-alpha PNG. `standard-channels.mjs` now reads such a PNG losslessly as R=G=B=grey with its own alpha, decoded from the PNG data itself and read back exactly: 0 of 4,000,000 pixels differ from an independent decode.
+  - Format failures are now `unsupported_image_format`, never `low_resolution`. The ledger's earlier wrong label stays in history, and the re-process entry names it as mislabelled.
+  - The faint mark was a detached one-pixel line, 967 pixels tall at x=1926, alpha at most 47, 39 px right of the shoe. It also widened the tile's framing box. Only it was removed, by rule: detached, never visible, under 0.05% of the canvas. The check refuses any master that lowers a visible source pixel or adds alpha.
+  - New cutout `85358868…974d979`, tile `394bd0ca…24eb3c4`. Codex actually viewed the proof, including the stray-line crop: **pass** (reviewed). Its current gallery binding still needs the real database refresh.
+- **Generic official-image path** (prepared; tested):
+  - The bundler passes a cutout master and its own cutout review through the existing pipeline, takes the source's own grant row, and never bundles a rejected cutout or tile.
+  - Private labelled Bottega dry run: **7 bundled, 28 files**, with 1 refusal, which was the old negative review. The live Bottega source row, all 7 revisions and gallery URLs were read and match (observed live).
+  - Actual producer receipts: intake 154 of 154 after the driver changes; the final widened extractor file 30 of 30. Storefront suite: 220 pass and 5 opt-in browser checks skip; 3 Bottega activation tests passed separately. A skip is not a pass.
+- **Bottega activation** (proposed, not approved):
+  - `proposed/jwleria_owner_directed_bottega.sql` and its rollback. They need the base owner-direction migration first and change only the Bottega source row and its own grant `owner-directed-bottega-0025`, on the official image host, with background removal recorded.
+  - They refuse a drifted row and roll back exactly. SQL-tested in memory. No Bottega activation is approved.
+- **Upload readiness** (read-only checks; authenticated bulk readiness **unverified**):
+  - Observed live: `jwl-media-upload` is ACTIVE, version 2, with JWT verification on. An unauthenticated request gets 401.
+  - Observed live: the bucket `jwl-product-media` is public, WebP only, with a 15 MiB limit and 15 objects.
+  - Documented caller type: the project's existing legacy anon JWT, a public client key. It only passes the gateway; the function authorizes a file solely by a live recorded approval (decision ledger; function source).
+  - Documented caller configuration:
+    - `media-run upload` reads `JWL_FUNCTION_CALLER_TOKEN`, which the operator enters at upload time with `read -rs`. It is never stored. Its absence from Claude's shell therefore says nothing about availability.
+    - The n8n workflow "Jwleria — Approved image delivery check (manual)" exists, inactive and manual-only. Its description names the public anon client key header (observed live, metadata only).
+  - The client uploads one file per request, in sequence, with a 30 s limit.
+  - No supported read-only preflight proves current authenticated acceptance at bulk scale, and the n8n replay issues PUTs. So authenticated bulk readiness stays **unverified** until the approved upload itself runs. No key was requested, no value read or shown, and nothing written.
+- **LOEWE current page collection** (observed live; private; the later media refusal is recorded above):
+  - Re-collected through the existing adapter: robots-advertised sitemap, `JwleriaCatalog/1.0`, at least 2 s pacing. 395 current product pages; 359 extracted. 36 are incomplete: 35 lack a collection or line field (the adapter refuses to guess) and 1 redirect needs review.
+  - The first pass kept 500 px. The page declares larger widths in responsive gallery sets, and the extractor now reads every declared gallery array, so each file is kept at the largest width the page itself declares: 1,200 for every first file. No URL is built or enlarged, and a fitted crop such as the social preview is never used.
+  - The live recorded LOEWE galleries equal the October export: aggregate digest `5d628818…d757d89` over 407 rows (observed live).
+  - **Cohort:** 334 held references have a current page and the same gallery file path, at a newly declared 1,200-pixel rendition instead of 500. New downloaded bytes have their own hashes; byte identity with the older rendition is not claimed. Real gallery refreshes remain pending. The 73 held references without a current extracted page and 25 new complete pages remain separate and unimported.
+  - The image run has terminated; actual acquisition totals, rejected masks and operator reviews are in the current checkpoint above. Do not restart either completed page collection or redownload accepted originals.
+- **Still not done:** the database steps after owner approval (route migration, grouping repair, recording, upload, publication); the 8 Longchamp gallery refreshes; Bottega activation; the phone-width browser check (Codex in-app browser disabled).
+
 ## Operator checkpoint: Claude subscription limit reached; additional image reviews preserved; production unchanged, 2026-11-09
 
 - **Actual platform boundary:** the official Claude Code client displayed `Usage limit reached`, resetting at **04:30 Asia/Riyadh on 2026-11-09**. No upgrade, extra usage, model change, alternate account or API was purchased or enabled. Continue with Opus 5.5 Medium, Ultracode off, in the existing session after the limit permits it.
