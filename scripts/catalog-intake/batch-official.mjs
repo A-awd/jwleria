@@ -20,9 +20,9 @@ export const longchampOwnerDirection=Object.freeze({grant_reference:'owner-direc
  * urls: [{key, ref, asset_url}], each asset_url byte-identical to the candidate's recorded gallery file (checked
  * against the database before the run). Returns per-state counts.
  */
-export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDirection,run_id,fetcher=fetch,pacer=createMediaPacer(),sharp=installedImageEngine()}){
+export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDirection,run_id,fetcher=fetch,pacer=createMediaPacer(),sharp=installedImageEngine(),mask_tool=null}){
   const root=await privateOutputRoot(out);
-  for(const d of ['originals','tiles'])await mkdir(join(root,d),{recursive:true,mode:0o700});
+  for(const d of ['originals','tiles','cutouts'])await mkdir(join(root,d),{recursive:true,mode:0o700});
   const ledger=await openLedger(join(root,'ledger.ndjson'));
   const byKey=new Map(urls.map(u=>[u.key,u])),items=manifest.items.filter(i=>byKey.has(i.key));
   const results=JSON.parse(await readFile(join(root,'results.json'),'utf8').catch(()=>'{}'));
@@ -47,13 +47,20 @@ export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDire
     }
     if(ledger.state.get(item.key).to==='rights_ready')await record(ledger,{key:item.key,to:'acquired',evidence:{original_sha256:original.sha256,asset_url,bytes:original.bytes,width:original.width,height:original.height,has_alpha:original.has_alpha??null},run_id},limits);
     try{
-      const {png,record:tile}=await normalizeFlatTile(await readFile(original.path),sharp);
+      // An opaque original needs the approved local, non-generative background-only extraction (mask_tool): the mask
+      // only sets alpha on the original's own pixels, and the existing automated check must pass before any tile.
+      let cut=null;
+      if(original.has_alpha!==true){
+        if(!mask_tool)throw Error('A flat tile needs a source with its own transparency');
+        cut=await localCutout({original,dir:join(root,'cutouts'),mask_tool,sharp});
+      }
+      const {png,record:tile}=await normalizeFlatTile(await readFile(cut?cut.path:original.path),sharp);
       const path=join(root,'tiles',tile.tile_sha256+'.png');
       await writeFile(path,png,{mode:0o600});
-      results[item.key]={ref:item.ref,model:item.model,colour:item.colour,size:item.size,asset_url,original:{...original},tile:{sha256:tile.tile_sha256,path,side:tile.geometry.side,changed_opaque_product_pixels:tile.changed_opaque_product_pixels}};
-      await record(ledger,{key:item.key,to:'processed',evidence:{original_sha256:original.sha256,tile_sha256:tile.tile_sha256,derivative_sha256:[tile.tile_sha256]},run_id},limits);
+      results[item.key]={ref:item.ref,model:item.model,colour:item.colour,size:item.size,asset_url,original:{...original},tile:{sha256:tile.tile_sha256,path,side:tile.geometry.side,changed_opaque_product_pixels:tile.changed_opaque_product_pixels},...(cut?{cutout:cut}:{})};
+      await record(ledger,{key:item.key,to:'processed',evidence:{original_sha256:original.sha256,tile_sha256:tile.tile_sha256,...(cut?{cutout_sha256:cut.sha256}:{}),derivative_sha256:[tile.tile_sha256]},run_id},limits);
     }catch(error){
-      const reason=/transparency|own transparency/i.test(error.message)?'cutout_failed':/touches its source frame/.test(error.message)?'clipped_by_source':'low_resolution';
+      const reason=/transparency|own transparency|Cutout master|mask|vision/i.test(error.message)?'cutout_failed':/touches its source frame/.test(error.message)?'clipped_by_source':'low_resolution';
       results[item.key]={ref:item.ref,model:item.model,colour:item.colour,asset_url,original:{...original},quarantine:reason,error:error.message};
       await record(ledger,{key:item.key,to:'quarantined',reason,evidence:{original_sha256:original.sha256,error:error.message},run_id},limits);
     }
@@ -62,6 +69,20 @@ export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDire
   const all=Object.values(results);
   return {items:items.length,unique_originals:new Set(all.filter(r=>r.original).map(r=>r.original.sha256)).size,tiles:all.filter(r=>r.tile).length,
     quarantined:all.filter(r=>r.quarantine).reduce((a,r)=>({...a,[r.quarantine]:(a[r.quarantine]??0)+1}),{})};
+}
+/** Local mask (foreground-mask, macOS Vision) -> cutout master from the original's own pixels -> existing automated check. */
+async function localCutout({original,dir,mask_tool,sharp}){
+  const {execFile}=await import('node:child_process'),{promisify}=await import('node:util'),{createHash}=await import('node:crypto');
+  const {composeCutoutMaster,validateCutoutMaster}=await import('./cutout.mjs');
+  const prefix=join(dir,original.sha256);
+  await promisify(execFile)(mask_tool,[original.path,prefix],{timeout:120000});
+  const {width,height}=JSON.parse(await readFile(prefix+'.mask.json','utf8'));
+  const png=await composeCutoutMaster({original:await readFile(original.path),mask:await readFile(prefix+'.mask.raw'),width,height},sharp);
+  const sha256=createHash('sha256').update(png).digest('hex'),path=join(dir,sha256+'.png');
+  await writeFile(path,png,{mode:0o600});
+  const check=await validateCutoutMaster({original:{path:original.path,sha256:original.sha256},cutout:{path,sha256,producer:'foreground-mask (macOS Vision, local)'}},sharp);
+  if(!check.passed)throw Error('Cutout master failed its check: '+check.failures.join(','));
+  return {sha256,path,producer:'foreground-mask (macOS Vision, local)',check:{passed:true,review_flags:check.review_flags,opaque_identical_to_original:check.product_pixels?.opaque_identical_to_original??null}};
 }
 const save=(root,results)=>writeFile(join(root,'results.json'),JSON.stringify(results,null,1),{mode:0o600});
 
@@ -81,7 +102,7 @@ export async function contactSheets({out,per_sheet=12,cell=360,sharp=installedIm
         const text=`${r.ref} ${j?'tile':'original'} ${(j?r.tile.sha256:r.original.sha256).slice(0,10)}`;
         layers.push({input:Buffer.from(`<svg width="${cell}" height="${label}"><text x="6" y="26" font-family="Helvetica" font-size="17">${text}</text></svg>`),left:x,top:y+cell});
       }
-      index.push({sheet:s+1,key,ref:r.ref,model:r.model,colour:r.colour,size:r.size,original_sha256:r.original.sha256,tile_sha256:r.tile.sha256,tile_path:r.tile.path,original_path:r.original.path});
+      index.push({sheet:s+1,key,ref:r.ref,model:r.model,colour:r.colour,size:r.size,original_sha256:r.original.sha256,tile_sha256:r.tile.sha256,tile_path:r.tile.path,original_path:r.original.path,...(r.cutout?{cutout_sha256:r.cutout.sha256,cutout_path:r.cutout.path}:{})});
     }
     const sheet=join(root,'sheets',`sheet-${String(s+1).padStart(3,'0')}.png`);
     await sharp({create:{width:cols*cell,height:rows*(cell+label),channels:3,background:'#ffffff'}}).composite(layers).png().toFile(sheet);
@@ -92,7 +113,9 @@ export async function contactSheets({out,per_sheet=12,cell=360,sharp=installedIm
   await writeFile(join(root,'sheets','review-template.json'),JSON.stringify(index.map(i=>({key:i.key,ref:i.ref,sheet:i.sheet,
     verification:{asset_sha256:i.original_sha256,verified_reference:i.ref,reviewer:null,verification_reference:null,
       checks:blank(['exact_reference','color_and_variant','authentic_product_photo','not_generated_or_altered','clear_product_view'])},
-    tile_review:{tile_sha256:i.tile_sha256,cutout_sha256:null,original_sha256:i.original_sha256,reviewer:null,review_reference:null,
+    ...(i.cutout_sha256?{cutout_review:{cutout_sha256:i.cutout_sha256,original_sha256:i.original_sha256,reviewer:null,review_reference:null,
+      checks:blank(['background_only_removed','no_background_or_other_object_retained','whole_product_retained','edges_clean_on_frame_background','no_redrawn_or_generated_detail'])}}:{}),
+    tile_review:{tile_sha256:i.tile_sha256,cutout_sha256:i.cutout_sha256??null,original_sha256:i.original_sha256,reviewer:null,review_reference:null,
       checks:blank(['source_alpha_accepted','tile_accepted_by_exact_hash','photographed_material_preserved','whole_product_on_flat_tile'])}})),null,1),{mode:0o600});
   return {sheets:Math.ceil(results.length/per_sheet),tiles:results.length};
 }
@@ -167,12 +190,12 @@ const text=value=>typeof value==='string'&&value.trim().length>0;
  */
 const fileName=url=>decodeURIComponent(new URL(url).pathname.split('/').pop());
 const namesRef=(url,ref)=>new RegExp('(^|[^a-z0-9])'+ref.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])').test(fileName(url).toLowerCase());
-export async function identityDeterminations({out,revisions,checked,page_evidence=null}){
+export async function identityDeterminations({out,revisions,checked,page_evidence=null,source_id='longchamp-official'}){
   const root=await privateOutputRoot(out),results=JSON.parse(await readFile(join(root,'results.json'),'utf8'));
   const reviewer='Claude (implementation owner; database-bound gallery check, not the visual reviewer)';
   const list=Object.entries(results).filter(([,x])=>x.tile).sort(([,a],[,b])=>a.ref<b.ref?-1:1).map(([key,x])=>{
     if(!/^[a-f0-9]{64}$/.test(revisions[x.ref]??''))throw Error('Full current revision required: '+x.ref);
-    const o=x.original,reason=`The untouched original sha256 ${o.sha256} was downloaded at ${o.acquired_at} from ${x.asset_url}. That URL is byte-identical to image_urls[0] of the live candidate for reference ${x.ref} (source longchamp-official, revision ${revisions[x.ref]}), ${checked}; ${namesRef(x.asset_url,x.ref)?`the file name names ${x.ref} exactly`:`the file name names ${fileName(x.asset_url)}, not ${x.ref}: ${page_evidence??'no page evidence recorded'}`}. This settles the reference only; colour and variant remain a separate visual check. Decision 0025 owner direction; no brand licence is claimed.`;
+    const o=x.original,reason=`The untouched original sha256 ${o.sha256} was downloaded at ${o.acquired_at} from ${x.asset_url}. That URL is byte-identical to image_urls[0] of the live candidate for reference ${x.ref} (source ${source_id}, revision ${revisions[x.ref]}), ${checked}; ${namesRef(x.asset_url,x.ref)?`the file name names ${x.ref} exactly`:`the file name names ${fileName(x.asset_url)}, not ${x.ref}: ${page_evidence??'no page evidence recorded'}`}. This settles the reference only; colour and variant remain a separate visual check. Decision 0025 owner direction; no brand licence is claimed.`;
     return {key,ref:x.ref,colour:x.colour??null,size:x.size??null,identity_determination:{basis:'official_gallery_listing',asset_sha256:o.sha256,identity_established:true,reference:x.ref,
       revision_hash:revisions[x.ref],gallery_url:x.asset_url,reviewer,reason},verification_reference_must_quote:[reviewer,reason,x.asset_url,o.sha256]};
   });
@@ -257,7 +280,12 @@ where (exists(select 1 from jwl_internal.published_revisions p where p.catalog_i
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const [command,a,b,c]=process.argv.slice(2);
-  if(command==='acquire'&&a&&b&&c)console.log(JSON.stringify(await acquireAndTile({manifest:JSON.parse(await readFile(a,'utf8')),urls:JSON.parse(await readFile(b,'utf8')),out:c,run_id:'decision-0025-'+new Date().toISOString().slice(0,10)})));
+  if(command==='acquire'&&a&&b&&c){
+    // Optional: a private grant-row JSON for another source (never Longchamp's identity) and the local mask tool path.
+    const [grantFile,mask_tool]=process.argv.slice(6);
+    console.log(JSON.stringify(await acquireAndTile({manifest:JSON.parse(await readFile(a,'utf8')),urls:JSON.parse(await readFile(b,'utf8')),out:c,run_id:'decision-0025-'+new Date().toISOString().slice(0,10),
+      ...(grantFile?{grant:JSON.parse(await readFile(grantFile,'utf8'))}:{}),...(mask_tool?{mask_tool}:{})})));
+  }
   else if(command==='bundle'&&a){
     // a: private input {out, review_files[], determinations_file, derivative_review_file, revisions_file, source, public_base_url, prepared_by}
     const i=JSON.parse(await readFile(a,'utf8')),load=async p=>JSON.parse(await readFile(p,'utf8'));
@@ -265,7 +293,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     console.log(JSON.stringify(await bundleReviewed({out:i.out,reviews,determinations:await load(i.determinations_file),derivative_review:i.derivative_review_file?await load(i.derivative_review_file):null,
       revisions:await load(i.revisions_file),source:i.source,public_base_url:i.public_base_url,prepared_by:i.prepared_by,dry_run:i.dry_run??null})));
   }
-  else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c,page_evidence:process.argv[6]??null})));
+  else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c,page_evidence:process.argv[6]||null,...(process.argv[7]?{source_id:process.argv[7]}:{})})));
   else if(command==='proofs'&&a)console.log(JSON.stringify(await proofSheets({out:a})));
   else if(command==='previews'&&a)console.log(JSON.stringify(await webpPreviews({out:a})));
   else if(command==='sheets'&&a)console.log(JSON.stringify(await contactSheets({out:a})));
