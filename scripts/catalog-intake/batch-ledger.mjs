@@ -25,7 +25,10 @@ export const lifecycle=Object.freeze({
 });
 export const quarantineReasons=Object.freeze(['source_refused','rights_missing','rights_scope_mismatch','identity_reference_mismatch','identity_suffix_unestablished',
   'colour_mismatch','size_unestablished','gallery_unbound','shared_file_conflict','low_resolution','not_whole_product','clipped_by_source','cutout_failed','edge_defect',
-  'generated_or_altered','over_budget','below_fidelity_floor','visual_rejected','owner_rejected','duplicate_of','changed_after_review']);
+  'generated_or_altered','over_budget','below_fidelity_floor','visual_rejected','owner_rejected','duplicate_of','changed_after_review',
+  // A format the image readers do not support is its own reason, never a resolution problem; an unrecognised processing
+  // failure is recorded as such rather than guessed.
+  'unsupported_image_format','processing_failed']);
 const sizeKinds=['bag_size','size'];
 const sha=value=>createHash('sha256').update(typeof value==='string'?value:canonical(value)).digest('hex');
 /** JSON with sorted keys, so equal content always hashes the same. */

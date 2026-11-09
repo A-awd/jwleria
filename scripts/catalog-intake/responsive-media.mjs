@@ -8,6 +8,7 @@ import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
 import {validateCutoutMaster,frameBackground,cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
 import {normalizeWhiteSquare,whiteSquare,whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
 import {normalizeFlatTile,flatTile,flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
+import {standardChannels} from './standard-channels.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const hashPattern=/^[a-f0-9]{64}$/;
@@ -147,7 +148,11 @@ export async function prepareResponsiveMedia(input){
   const sharp=installedImageEngine();
   const metadata=await sharp(original,{failOn:'warning',limitInputPixels:60000000}).metadata();
   if(!['jpeg','png','webp','avif','heif'].includes(metadata.format)||!metadata.width||!metadata.height||(metadata.pages??1)!==1)throw new Error('Unsupported or animated original image');
-  if(metadata.space!=='srgb'||metadata.depth!=='uchar')throw new Error('Unsupported original color space or depth');
+  // A flat tile may start from an untagged 8-bit greyscale PNG: normalizeFlatTile and the cutout check read it losslessly
+  // as R=G=B=grey (standard-channels.mjs), and refuse any other greyscale. Every other derivative needs 8-bit sRGB.
+  const greyTile=binding.treatment?.kind===flatTileTreatment.kind&&metadata.space==='b-w';
+  if(greyTile)await standardChannels(original,sharp);
+  else if(metadata.space!=='srgb'||metadata.depth!=='uchar')throw new Error('Unsupported original color space or depth');
   const orientation=metadata.orientation??1;
   if(!Number.isInteger(orientation)||orientation<1||orientation>8)throw new Error('Unsupported original EXIF orientation');
   const visualWidth=orientation>=5?metadata.height:metadata.width;

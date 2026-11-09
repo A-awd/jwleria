@@ -5,7 +5,7 @@ import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {createHash} from 'node:crypto';
 import {installedImageEngine,prepareResponsiveMedia} from './responsive-media.mjs';
-import {validateCutoutMaster,iccDescription,frameBackground,cutoutReviewChecks,cutoutLimits,composeCutoutMaster} from './cutout.mjs';
+import {validateCutoutMaster,iccDescription,frameBackground,cutoutReviewChecks,cutoutLimits,composeCutoutMaster,repairedCutoutMaster,repairEnclosedProductMask,enclosedAlphaRegions} from './cutout.mjs';
 import {cutoutBasisProblem,creditChanges,requireCutoutReview} from './media-pipeline.mjs';
 
 // Synthetic fixtures only: a drawn ellipse on a drawn backdrop, made in memory. No product photograph is read, masked or
@@ -208,5 +208,86 @@ test('a composed master keeps the original\'s stored pixels and its exact ICC pr
     await assert.rejects(composeCutoutMaster({original,mask:mask.subarray(1),width:W,height:H},sharp),/differ in geometry/);
     const rotated=await sharp(sceneRaw(),{raw:{width:W,height:H,channels:3}}).jpeg().withMetadata({orientation:6}).toBuffer();
     await assert.rejects(composeCutoutMaster({original:rotated,mask,width:W,height:H},sharp),/EXIF orientation/);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+// A synthetic woven bag on a light backdrop (made in memory): a body of green and black squares with a real hole (the
+// opening under a handle) that shows the backdrop, and a light patch whose colour lies inside the backdrop's range.
+const BW=240,BH=200,green=[1,128,59],black=[16,16,16],light=[232,233,236];
+const inBody=(x,y)=>x>=40&&x<200&&y>=40&&y<180,inHole=(x,y)=>x>=100&&x<140&&y>=55&&y<80,inLight=(x,y)=>x>=150&&x<185&&y>=140&&y<170;
+function bagOriginal(){
+  const raw=Buffer.alloc(BW*BH*3);
+  for(let y=0;y<BH;y++)for(let x=0;x<BW;x++){
+    const backdrop=[236-(y>>5),237-(x>>6),238];
+    const c=!inBody(x,y)||inHole(x,y)?backdrop:inLight(x,y)?light:((x>>4)+(y>>4))&1?black:green;
+    raw.set(c,(y*BW+x)*3);
+  }
+  return sharp(raw,{raw:{width:BW,height:BH,channels:3}}).png().toBuffer();
+}
+// The mask a segmentation gives: the body opaque with a one-pixel soft edge, the hole transparent with a soft edge.
+function bagMask(blobs=[]){
+  const m=Buffer.alloc(BW*BH);
+  for(let y=0;y<BH;y++)for(let x=0;x<BW;x++){
+    if(!inBody(x,y))continue;
+    const edge=x===40||x===199||y===40||y===179,holeEdge=x>=99&&x<=140&&y>=54&&y<=80&&!inHole(x,y);
+    m[y*BW+x]=inHole(x,y)?0:edge||holeEdge?128:255;
+  }
+  // A soft see-through blob (as the rejected master had inside its green leather): alpha falls to `low` at the centre.
+  for(const {cx,cy,r,low} of blobs)for(let y=cy-r;y<=cy+r;y++)for(let x=cx-r;x<=cx+r;x++){
+    const d=Math.hypot(x-cx,y-cy)/r;if(d<1)m[y*BW+x]=Math.min(m[y*BW+x],Math.round(low+(255-low)*d*d));
+  }
+  return m;
+}
+const productBlobs=[{cx:56,cy:120,r:7,low:41},{cx:120,cy:150,r:6,low:83}],lightBlob={cx:167,cy:155,r:5,low:60};
+
+test('product material made see-through inside the product is refused, though every opaque pixel is unchanged',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-cutout-enclosed-TEST-ONLY-'));
+  try{
+    const original=await bagOriginal(),mask=bagMask([...productBlobs,lightBlob]);
+    const png=await composeCutoutMaster({original,mask,width:BW,height:BH},sharp);
+    const originalPath=join(root,'TEST-ONLY-original.png'),masterPath=join(root,'TEST-ONLY-master.png');
+    await writeFile(originalPath,original);await writeFile(masterPath,png);
+    const r=await validateCutoutMaster({original:{path:originalPath,sha256:sha(original)},cutout:{path:masterPath,sha256:sha(png),producer:'TEST-ONLY synthetic mask'}},sharp);
+    // The opaque-pixel check alone is blind to this loss: every opaque pixel is the original's own.
+    assert.equal(r.product_pixels.opaque_identical_to_original,true);
+    assert.equal(r.passed,false);assert.deepEqual(r.failures,['product_material_made_transparent']);assert.match(r.statement,/cannot be used/);
+    const e=r.enclosed_regions;
+    assert.deepEqual([e.product_material,e.background_holes,e.undetermined],[2,2,0]);
+    const kinds=e.regions.map(x=>[x.kind,x.box.x,x.box.y]);
+    assert.ok(kinds.some(([k,x,y])=>k==='background_hole'&&x===99&&y===54),'the real hole is a background hole');
+    assert.ok(kinds.some(([k,x])=>k==='product_material'&&x===productBlobs[0].cx-productBlobs[0].r+1),'the blob on green leather is product material');
+    // Conservative limit: a blob over product whose colour lies inside the backdrop's range is not called product
+    // material (it stays for the visual comparison, which the flag points to).
+    assert.ok(kinds.some(([k,x])=>k==='background_hole'&&x>=lightBlob.cx-lightBlob.r&&x<=lightBlob.cx),'the blob on backdrop-coloured product is left as undecided by colour');
+    assert.ok(r.review_flags.includes('enclosed_transparent_regions'));
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('the mask repair restores only the product regions, from the original\'s own pixels; real holes stay transparent',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-cutout-repair-TEST-ONLY-'));
+  try{
+    const original=await bagOriginal(),mask=bagMask([...productBlobs,lightBlob]);
+    const {png,repair}=await repairedCutoutMaster({original,mask,width:BW,height:BH},sharp);
+    let expected=0;for(const b of productBlobs)for(let y=b.cy-b.r;y<=b.cy+b.r;y++)for(let x=b.cx-b.r;x<=b.cx+b.r;x++)if(mask[y*BW+x]<255&&Math.hypot(x-b.cx,y-b.cy)<b.r)expected++;
+    assert.deepEqual([repair.changed,repair.restored_regions,repair.restored_pixels],[true,2,expected]);
+    assert.equal(repair.mask_sha256,sha(mask),'the record names the mask it repaired');
+    const {data:o}=await sharp(original).raw().toBuffer({resolveWithObject:true}),{data:c}=await sharp(png).raw().toBuffer({resolveWithObject:true});
+    for(const b of productBlobs){const p=b.cy*BW+b.cx;assert.deepEqual([...c.subarray(p*4,p*4+4)],[...o.subarray(p*3,p*3+3),255],'a restored pixel is the original\'s own, opaque');}
+    assert.equal(c[(65*BW+120)*4+3],0,'the real hole stays transparent');
+    assert.equal(c[(lightBlob.cy*BW+lightBlob.cx)*4+3],lightBlob.low,'a region not proven to be product is left as the mask made it');
+    let other=0;for(let p=0;p<BW*BH;p++)if(c[p*4+3]!==mask[p]&&!productBlobs.some(b=>Math.hypot(p%BW-b.cx,Math.floor(p/BW)-b.cy)<b.r))other++;
+    assert.equal(other,0,'no other alpha changes');
+    const originalPath=join(root,'TEST-ONLY-original.png'),masterPath=join(root,'TEST-ONLY-master.png');
+    await writeFile(originalPath,original);await writeFile(masterPath,png);
+    const r=await validateCutoutMaster({original:{path:originalPath,sha256:sha(original)},cutout:{path:masterPath,sha256:sha(png),producer:'TEST-ONLY synthetic mask'}},sharp);
+    assert.equal(r.passed,true,r.failures.join());assert.equal(r.enclosed_regions.product_material,0);assert.deepEqual(r.review_flags,['enclosed_transparent_regions']);
+    // A mask with no proven loss is composed exactly as before: the repair path changes no accepted master.
+    const clean=bagMask([lightBlob]),plain=await composeCutoutMaster({original,mask:clean,width:BW,height:BH},sharp),again=await repairedCutoutMaster({original,mask:clean,width:BW,height:BH},sharp);
+    assert.equal(again.repair.changed,false);assert.equal(sha(again.png),sha(plain));
+    // Without a measurable backdrop (too few transparent border pixels) nothing is classified, so nothing is restored.
+    const full=Buffer.alloc(BW*BH,255);full[100*BW+120]=40;
+    const blind=repairEnclosedProductMask({rgb:(await sharp(original).raw().toBuffer()),mask:full,width:BW,height:BH});
+    assert.deepEqual([blind.record.backdrop,blind.record.changed,blind.record.kept[0].kind],[null,false,'undetermined']);
+    assert.deepEqual(enclosedAlphaRegions({rgb:o,alpha:mask,width:BW,height:BH,source_alpha:true}).regions.map(x=>x.kind),new Array(4).fill('undetermined'),'a source with its own alpha has no photographed backdrop');
   }finally{await rm(root,{recursive:true,force:true});}
 });

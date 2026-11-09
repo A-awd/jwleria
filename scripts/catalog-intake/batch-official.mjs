@@ -46,45 +46,138 @@ export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDire
       await record(ledger,{key:item.key,to:'quarantined',reason:'source_refused',evidence:{asset_url,error:error.message},run_id},limits);
     }
     if(ledger.state.get(item.key).to==='rights_ready')await record(ledger,{key:item.key,to:'acquired',evidence:{original_sha256:original.sha256,asset_url,bytes:original.bytes,width:original.width,height:original.height,has_alpha:original.has_alpha??null},run_id},limits);
-    try{
-      // An opaque original needs the approved local, non-generative background-only extraction (mask_tool): the mask
-      // only sets alpha on the original's own pixels, and the existing automated check must pass before any tile.
-      let cut=null;
-      if(original.has_alpha!==true){
-        if(!mask_tool)throw Error('A flat tile needs a source with its own transparency');
-        cut=await localCutout({original,dir:join(root,'cutouts'),mask_tool,sharp});
-      }
-      const {png,record:tile}=await normalizeFlatTile(await readFile(cut?cut.path:original.path),sharp);
-      const path=join(root,'tiles',tile.tile_sha256+'.png');
-      await writeFile(path,png,{mode:0o600});
-      results[item.key]={ref:item.ref,model:item.model,colour:item.colour,size:item.size,asset_url,original:{...original},tile:{sha256:tile.tile_sha256,path,side:tile.geometry.side,changed_opaque_product_pixels:tile.changed_opaque_product_pixels},...(cut?{cutout:cut}:{})};
-      await record(ledger,{key:item.key,to:'processed',evidence:{original_sha256:original.sha256,tile_sha256:tile.tile_sha256,...(cut?{cutout_sha256:cut.sha256}:{}),derivative_sha256:[tile.tile_sha256]},run_id},limits);
-    }catch(error){
-      const reason=/transparency|own transparency|Cutout master|mask|vision/i.test(error.message)?'cutout_failed':/touches its source frame/.test(error.message)?'clipped_by_source':'low_resolution';
-      results[item.key]={ref:item.ref,model:item.model,colour:item.colour,asset_url,original:{...original},quarantine:reason,error:error.message};
-      await record(ledger,{key:item.key,to:'quarantined',reason,evidence:{original_sha256:original.sha256,error:error.message},run_id},limits);
-    }
+    await processItem({root,ledger,results,key:item.key,base:{ref:item.ref,model:item.model,colour:item.colour,size:item.size,asset_url,original:{...original}},mask_tool,sharp,run_id,limits});
     await save(root,results);
   }
   const all=Object.values(results);
   return {items:items.length,unique_originals:new Set(all.filter(r=>r.original).map(r=>r.original.sha256)).size,tiles:all.filter(r=>r.tile).length,
     quarantined:all.filter(r=>r.quarantine).reduce((a,r)=>({...a,[r.quarantine]:(a[r.quarantine]??0)+1}),{})};
 }
-/** Local mask (foreground-mask, macOS Vision) -> cutout master from the original's own pixels -> existing automated check. */
+
+/**
+ * The ledger reason for a processing failure, from its message. A format the readers do not support is never called
+ * low resolution, and an unrecognised failure is recorded as such rather than guessed.
+ */
+export function processingFailureReason(message){
+  if(/^Unsupported image format|Unsupported original color space|must be 8-bit sRGB/i.test(message))return 'unsupported_image_format';
+  if(/Insufficient source resolution/i.test(message))return 'low_resolution';
+  if(/touches its source frame/i.test(message))return 'clipped_by_source';
+  if(/transparency|Cutout master|mask|vision|fragment/i.test(message))return 'cutout_failed';
+  return 'processing_failed';
+}
+
+// One held original -> (cutout master when needed) -> flat tile, recorded in the ledger as processed or quarantined.
+// An opaque original needs the local, non-generative background-only extraction (localCutout); a native-alpha original
+// is used as it is unless its own alpha carries a faint detached stray mark (strayFragmentCutout). Every master passes
+// the automated cutout check before any tile, and still needs its own independent review.
+async function processItem({root,ledger,results,key,base,mask_tool,sharp,run_id,limits}){
+  const {original}=base;
+  try{
+    const dir=join(root,'cutouts');
+    const cut=original.has_alpha===true?await strayFragmentCutout({original,dir,sharp}):await localCutout({original,dir,mask_tool,sharp});
+    const {png,record:tile}=await normalizeFlatTile(await readFile(cut?cut.path:original.path),sharp);
+    const path=join(root,'tiles',tile.tile_sha256+'.png');
+    await writeFile(path,png,{mode:0o600});
+    results[key]={...base,tile:{sha256:tile.tile_sha256,path,side:tile.geometry.side,changed_opaque_product_pixels:tile.changed_opaque_product_pixels,...(tile.decoding?{decoding:tile.decoding.kind}:{})},...(cut?{cutout:cut}:{})};
+    await record(ledger,{key,to:'processed',evidence:{original_sha256:original.sha256,tile_sha256:tile.tile_sha256,...(cut?{cutout_sha256:cut.sha256}:{}),derivative_sha256:[tile.tile_sha256]},run_id},limits);
+  }catch(error){
+    const reason=processingFailureReason(error.message);
+    results[key]={...base,quarantine:reason,error:error.message};
+    await record(ledger,{key,to:'quarantined',reason,evidence:{original_sha256:original.sha256,error:error.message},run_id},limits);
+  }
+}
+
+const sha256Of=async bytes=>(await import('node:crypto')).createHash('sha256').update(bytes).digest('hex');
+const cutCheck=check=>({passed:true,review_flags:check.review_flags,opaque_identical_to_original:check.product_pixels?.opaque_identical_to_original??null});
+
+/**
+ * Local mask (foreground-mask, macOS Vision) -> cutout master from the original's own pixels, with proven mask loss
+ * repaired (repairEnclosedProductMask: an enclosed product region made see-through is restored to the original's own
+ * pixels; real holes stay transparent) -> the automated check. A mask already computed for these exact original bytes
+ * (it is named by the original's sha256) is reused, so a re-cut after a rejected review repairs the very mask that
+ * produced the rejected master; the mask tool runs only when no mask is held.
+ */
 async function localCutout({original,dir,mask_tool,sharp}){
-  const {execFile}=await import('node:child_process'),{promisify}=await import('node:util'),{createHash}=await import('node:crypto');
-  const {composeCutoutMaster,validateCutoutMaster}=await import('./cutout.mjs');
+  const {repairedCutoutMaster,validateCutoutMaster}=await import('./cutout.mjs');
   const prefix=join(dir,original.sha256);
-  await promisify(execFile)(mask_tool,[original.path,prefix],{timeout:120000});
+  let mask=await readFile(prefix+'.mask.raw').catch(()=>null);
+  if(!mask){
+    if(!mask_tool)throw Error('A flat tile needs a source with its own transparency, or the local mask tool');
+    const {execFile}=await import('node:child_process'),{promisify}=await import('node:util');
+    await promisify(execFile)(mask_tool,[original.path,prefix],{timeout:120000});
+    mask=await readFile(prefix+'.mask.raw');
+  }
   const {width,height}=JSON.parse(await readFile(prefix+'.mask.json','utf8'));
-  const png=await composeCutoutMaster({original:await readFile(original.path),mask:await readFile(prefix+'.mask.raw'),width,height},sharp);
-  const sha256=createHash('sha256').update(png).digest('hex'),path=join(dir,sha256+'.png');
+  const {png,repair}=await repairedCutoutMaster({original:await readFile(original.path),mask,width,height},sharp);
+  const sha256=await sha256Of(png),path=join(dir,sha256+'.png');
+  const producer=repair.changed?'foreground-mask (macOS Vision, local) with enclosed-region mask repair (local, deterministic)':'foreground-mask (macOS Vision, local)';
   await writeFile(path,png,{mode:0o600});
-  const check=await validateCutoutMaster({original:{path:original.path,sha256:original.sha256},cutout:{path,sha256,producer:'foreground-mask (macOS Vision, local)'}},sharp);
+  const record_path=join(dir,sha256+'.mask-repair.json');
+  if(repair.changed)await writeFile(record_path,JSON.stringify(repair,null,1),{mode:0o600});
+  const check=await validateCutoutMaster({original:{path:original.path,sha256:original.sha256},cutout:{path,sha256,producer}},sharp);
   if(!check.passed)throw Error('Cutout master failed its check: '+check.failures.join(','));
-  return {sha256,path,producer:'foreground-mask (macOS Vision, local)',check:{passed:true,review_flags:check.review_flags,opaque_identical_to_original:check.product_pixels?.opaque_identical_to_original??null}};
+  return {sha256,path,producer,mask_sha256:repair.mask_sha256,
+    ...(repair.changed?{mask_repair:{restored_regions:repair.restored_regions,restored_pixels:repair.restored_pixels,repaired_mask_sha256:repair.repaired_mask_sha256,record:record_path}}:{}),check:cutCheck(check)};
+}
+
+/** A native-alpha original whose own alpha carries a faint detached stray mark: the master without it (strayFragmentMaster), checked. */
+async function strayFragmentCutout({original,dir,sharp}){
+  const {strayFragmentMaster,validateCutoutMaster}=await import('./cutout.mjs');
+  const made=await strayFragmentMaster(await readFile(original.path),sharp);
+  if(!made)return null;
+  const sha256=await sha256Of(made.png),path=join(dir,sha256+'.png'),record_path=join(dir,sha256+'.stray-removal.json');
+  const producer='stray-fragment removal of the source alpha (local, deterministic)';
+  await writeFile(path,made.png,{mode:0o600});
+  await writeFile(record_path,JSON.stringify(made.record,null,1),{mode:0o600});
+  const check=await validateCutoutMaster({original:{path:original.path,sha256:original.sha256},cutout:{path,sha256,producer}},sharp);
+  if(!check.passed)throw Error('Cutout master failed its check: '+check.failures.join(','));
+  return {sha256,path,producer,stray_removal:{fragments:made.record.fragments.length,removed_pixels:made.record.removed_pixels,record:record_path},check:cutCheck(check)};
 }
 const save=(root,results)=>writeFile(join(root,'results.json'),JSON.stringify(results,null,1),{mode:0o600});
+
+/** The review checks a rejection names as not passed, as section.check (cutout_review, tile_review). */
+export function failedReviewChecks(review){
+  return ['cutout_review','tile_review'].flatMap(section=>Object.entries(review?.[section]?.checks??{}).filter(([,v])=>v!==true).map(([k])=>`${section}.${k}`));
+}
+
+/**
+ * Re-processes one held original through the current path, without a new download (the held file must still match its
+ * sha256): after an independent reviewer rejected its cutout or tile (rejection: that review record, naming the current
+ * hashes and at least one failed check), or after a processing quarantine that a code change addresses (basis says
+ * which). A rejection is recorded first (processed -> quarantined visual_rejected) and the rejected hashes stay listed
+ * on the item, so they can never be bundled. The ledger then walks matched -> rights_ready -> acquired (the same
+ * original) -> processed or quarantined. The new files need their own new review; no earlier review carries over.
+ */
+export async function reprocessItem({out,key,grant,basis,rejection=null,run_id,mask_tool=null,sharp=installedImageEngine()}){
+  if(!text(basis))throw Error('A re-process needs its basis');
+  if(grant?.kind!=='owner_directed_official'||!text(grant.grant_reference))throw Error('A re-process needs the source\'s own grant row');
+  const root=await privateOutputRoot(out),ledger=await openLedger(join(root,'ledger.ndjson'));
+  const results=JSON.parse(await readFile(join(root,'results.json'),'utf8')),x=results[key];
+  if(!x?.original?.path)throw Error('No held original for '+key);
+  if(!key.startsWith(grant.source_id+':'))throw Error('The grant row is for another source');
+  if(await sha256Of(await readFile(x.original.path))!==x.original.sha256)throw Error('The held original no longer matches its sha256');
+  const limits={max_quarantined:400},rejected=[...(x.rejected??[])];
+  if(rejection){
+    const failed=failedReviewChecks(rejection);
+    if(rejection.key!==key||!x.tile||rejection.tile_review?.tile_sha256!==x.tile.sha256||(rejection.cutout_review?.cutout_sha256??null)!==(x.cutout?.sha256??null))throw Error('The rejection must name this item\'s current cutout and tile');
+    if(!failed.length)throw Error('A rejection needs at least one failed review check');
+    if(ledger.state.get(key)?.to!=='processed')throw Error('Only a processed item can be rejected');
+    const entry={cutout_sha256:x.cutout?.sha256??null,tile_sha256:x.tile.sha256,reviewer:rejection.tile_review?.reviewer??rejection.cutout_review?.reviewer??null,
+      review_references:[rejection.cutout_review?.review_reference,rejection.tile_review?.review_reference].filter(Boolean),failed_checks:failed,status:rejection.review_status??null};
+    await record(ledger,{key,to:'quarantined',reason:'visual_rejected',evidence:entry,run_id},limits);
+    rejected.push(entry);
+  }
+  const state=ledger.state.get(key);
+  if(state?.to!=='quarantined'||state.reason==='source_refused')throw Error('Only an item quarantined after its original was held can be re-processed');
+  await record(ledger,{key,to:'matched',evidence:{basis,previous_quarantine:state.reason},run_id},limits);
+  await record(ledger,{key,to:'rights_ready',evidence:{basis:'decision-0025 owner direction; no brand contact; no brand licence claimed',grant_reference:grant.grant_reference},run_id},limits);
+  const o=x.original;
+  await record(ledger,{key,to:'acquired',evidence:{original_sha256:o.sha256,asset_url:x.asset_url,bytes:o.bytes,width:o.width,height:o.height,has_alpha:o.has_alpha??null,held_original_reused:true},run_id},limits);
+  await processItem({root,ledger,results,key,base:{ref:x.ref,model:x.model,colour:x.colour,size:x.size,asset_url:x.asset_url,original:{...o},...(rejected.length?{rejected}:{})},mask_tool,sharp,run_id,limits});
+  await save(root,results);
+  const y=results[key];
+  return {key,state:ledger.state.get(key).to,...(y.quarantine?{quarantine:y.quarantine,error:y.error}:{tile_sha256:y.tile.sha256,cutout_sha256:y.cutout?.sha256??null}),rejected:rejected.length};
+}
 
 /** Contact sheets for the independent visual review: each tile beside its untouched original, labelled by reference. */
 export async function contactSheets({out,per_sheet=12,cell=360,sharp=installedImageEngine()}){
@@ -145,7 +238,9 @@ export async function webpPreviews({out,sharp=installedImageEngine()}){
 /** Derivative proof sheets: per item, its four prepared WebPs side by side at one display size, labelled by width and hash. */
 export async function proofSheets({out,per_sheet=8,cell=300,sharp=installedImageEngine()}){
   const root=await privateOutputRoot(out);
-  const previews=Object.values(JSON.parse(await readFile(join(root,'previews.json'),'utf8'))).sort((a,b)=>a.ref<b.ref?-1:1);
+  // Only the current tile of each item: a tile replaced after a rejected review is never shown for review again.
+  const current=new Set(Object.values(JSON.parse(await readFile(join(root,'results.json'),'utf8'))).filter(r=>r.tile).map(r=>r.tile.sha256));
+  const previews=Object.values(JSON.parse(await readFile(join(root,'previews.json'),'utf8'))).filter(p=>current.has(p.tile_sha256)).sort((a,b)=>a.ref<b.ref?-1:1);
   await mkdir(join(root,'proofs'),{recursive:true,mode:0o700});
   const index=[];
   for(let s=0;s*per_sheet<previews.length;s++){
@@ -238,28 +333,104 @@ export async function bundleReviewed({out,reviews,determinations,derivative_revi
     const x=byKey.get(r.key);
     try{
       if(!x?.tile||x.ref!==r.ref)throw Error('unknown or unprocessed item');
+      // A file an independent reviewer rejected is never bundled, whatever review is supplied with it.
+      if((x.rejected??[]).some(j=>j.tile_sha256===r.tile_review?.tile_sha256||(j.cutout_sha256!==null&&j.cutout_sha256===r.cutout_review?.cutout_sha256)))throw Error('a rejected cutout or tile is never bundled');
       if(r.tile_review?.tile_sha256!==x.tile.sha256||r.verification?.asset_sha256!==x.original.sha256)throw Error('reviews name other bytes');
+      // A tile made from a cutout master carries that master through the pipeline (which re-checks it against the
+      // original and rebuilds the tile from it) and needs the master's own cutout review; a native-alpha tile has neither.
+      if((r.cutout_review?.cutout_sha256??null)!==(x.cutout?.sha256??null)||(r.tile_review.cutout_sha256??null)!==(x.cutout?.sha256??null))throw Error('reviews name another cutout master');
+      const cutout=x.cutout?{path:x.cutout.path,sha256:x.cutout.sha256,producer:x.cutout.producer}:undefined;
       const candidate={candidate_id:createHash('sha256').update(JSON.stringify([grant.source_id,x.ref])).digest('hex'),revision_hash:revisions[x.ref],source_id:grant.source_id,
         external_id:x.ref,source_url:source.origin+'/',image_urls:[x.asset_url]};
       const asset={path:x.original.path,source_url:x.asset_url,sha256:x.original.sha256};
       const dir=join(root,bundles,x.ref);
-      const prepared=await prepareGrantedMedia({source,candidate,asset,grant,output_directory:dir,tile_sha256:x.tile.sha256});
+      const prepared=await prepareGrantedMedia({source,candidate,asset,grant,output_directory:dir,tile_sha256:x.tile.sha256,...(cutout?{cutout}:{})});
       const files=[...prepared.manifest.variants,prepared.manifest.detail];
       // The bundle's derivatives must be byte-identical to the completed private previews, so every review of those
       // previews binds the uploaded bytes. A supplementary derivative review, where one exists for this tile, must pass.
       const preview=previews?.[x.tile.sha256];
       if(!preview||files.some(f=>!preview.variants.some(v=>v.width===f.width&&v.sha256===f.sha256)))throw Error('bundle derivatives differ from the completed previews');
       if(derivativeReviewed(derivative_review,x.tile.sha256)){const gate=derivativeReviewProblem(derivative_review,{tile_sha256:x.tile.sha256,files});if(gate)throw Error(gate);}
-      const bundle=approvalBundle({candidate,grant,items:[{asset,manifest:prepared.manifest,verification:mergedVerification(r.verification,det.get(r.key)),tile_review:r.tile_review}],public_base_url,prepared_by});
+      const bundle=approvalBundle({candidate,grant,items:[{asset,manifest:prepared.manifest,verification:mergedVerification(r.verification,det.get(r.key)),tile_review:r.tile_review,...(cutout?{cutout_review:r.cutout_review}:{})}],public_base_url,prepared_by});
       await writeFile(join(dir,'approval-bundle.json'),JSON.stringify(bundle,null,1),{mode:0o600});
       sql.push(mediaApprovalSql(bundle));done.push({ref:x.ref,candidate_id:candidate.candidate_id,files:bundle.uploads.length});
     }catch(error){refused.push({key:r.key,ref:r.ref,reason:error.message});}
   }
   await mkdir(join(root,bundles),{recursive:true,mode:0o700});
   for(let i=0;i*chunk<sql.length;i++)await writeFile(join(root,bundles,`record-approvals-${String(i+1).padStart(3,'0')}.sql`),sql.slice(i*chunk,(i+1)*chunk).join('\n')+'\n',{mode:0o600});
-  await writeFile(join(root,bundles,'publish.sql'),batchPublishSql(done.map(d=>d.candidate_id))+'\n',{mode:0o600});
+  // A run in which every item was refused still writes its report; it has nothing to publish.
+  if(done.length)await writeFile(join(root,bundles,'publish.sql'),batchPublishSql(done.map(d=>d.candidate_id))+'\n',{mode:0o600});
   await writeFile(join(root,bundles,'bundle-report.json'),JSON.stringify({...(dry_run?{dry_run}:{}),prepared_by,bundled:done,refused},null,1),{mode:0o600});
   return {bundled:done.length,files:done.reduce((n,d)=>n+d.files,0),refused:refused.length};
+}
+
+/**
+ * A review proof for one item's current cutout master and tile, for the independent reviewer: a full row (original,
+ * master on a checkerboard, master alpha, flat tile) and, for every region the local path changed (a restored mask
+ * region or a removed stray fragment), zoomed crops of the original, the rejected master (when one exists) and the new
+ * master on a checkerboard, and their alpha (a faint fragment's alpha is amplified, and labelled so). It also writes a
+ * blank review record naming the exact new hashes; code never fills a check.
+ */
+export async function reviewProof({out,key,cell=300,sharp=installedImageEngine()}){
+  const root=await privateOutputRoot(out),x=JSON.parse(await readFile(join(root,'results.json'),'utf8'))[key];
+  if(!x?.tile)throw Error('No current tile for '+key);
+  const label=36,text=s=>Buffer.from(`<svg width="${cell}" height="${label}"><text x="5" y="23" font-family="Helvetica" font-size="13">${s.replace(/[<&>]/g,'')}</text></svg>`);
+  // Checker squares scale with the image, so they stay visible after the image is fitted to its cell.
+  const checker=async(w,h)=>{const square=Math.max(6,Math.round(Math.max(w,h)/40)),raw=Buffer.alloc(w*h*3);for(let y=0;y<h;y++)for(let i=0;i<w;i++){const v=((Math.floor(i/square)+Math.floor(y/square))&1)?204:255;raw.fill(v,(y*w+i)*3,(y*w+i)*3+3);}return sharp(raw,{raw:{width:w,height:h,channels:3}}).png().toBuffer();};
+  // Each cell is framed in grey, so a fully opaque (white) alpha view is not mistaken for an empty cell.
+  const fit=(png,kernel='lanczos3')=>sharp(png).resize(cell-4,cell-4,{fit:'contain',kernel,background:'#ffffff'}).extend({top:2,bottom:2,left:2,right:2,background:'#888888'}).png().toBuffer();
+  const region=(file,box)=>sharp(file).extract({left:box.x,top:box.y,width:box.width,height:box.height}).png().toBuffer();
+  const onChecker=async png=>{const {width,height}=await sharp(png).metadata();return sharp(await checker(width,height)).composite([{input:png}]).png().toBuffer();};
+  const onBlack=png=>sharp(png).flatten({background:'#000000'}).png().toBuffer();
+  const alphaOf=(png,gain=1)=>sharp(png).ensureAlpha().extractChannel(3).linear(gain,0).png().toBuffer();
+  const cutoutPath=sha=>join(root,'cutouts',sha+'.png');
+  const rows=[];
+  const master=x.cutout?.path;
+  const full=[['original '+x.original.sha256.slice(0,12),await fit(await readFile(x.original.path))]];
+  if(master)full.push(['master on checker '+x.cutout.sha256.slice(0,12),await fit(await onChecker(await readFile(master)))],['master alpha',await fit(await alphaOf(await readFile(master)))]);
+  full.push(['flat tile '+x.tile.sha256.slice(0,12),await fit(await readFile(x.tile.path))]);
+  rows.push(full);
+  // The regions the local path changed, from its own records.
+  const changed=[];
+  if(x.cutout?.mask_repair)for(const r of JSON.parse(await readFile(x.cutout.mask_repair.record,'utf8')).restored)changed.push({kind:'restored mask region',box:r.box,gain:1});
+  if(x.cutout?.stray_removal)for(const f of JSON.parse(await readFile(x.cutout.stray_removal.record,'utf8')).fragments)changed.push({kind:'removed stray fragment',box:f.box,gain:4});
+  const meta=await sharp(x.original.path).metadata();
+  const rejectedMaster=(x.rejected??[]).map(j=>j.cutout_sha256).filter(Boolean).at(-1)??null;
+  for(const c of changed){
+    const pad=Math.max(24,Math.round(Math.max(c.box.width,c.box.height)/2));
+    const box={x:Math.max(0,c.box.x-pad),y:Math.max(0,c.box.y-pad)};box.width=Math.min(meta.width,c.box.x+c.box.width+pad)-box.x;box.height=Math.min(meta.height,c.box.y+c.box.height+pad)-box.y;
+    const where=`${c.box.x},${c.box.y} ${c.box.width}x${c.box.height}`;
+    const row=[[`original crop ${where}`,await fit(await onChecker(await region(x.original.path,box)),'nearest')]];
+    if(rejectedMaster){
+      const old=await region(cutoutPath(rejectedMaster),box);
+      row.push([`REJECTED ${rejectedMaster.slice(0,10)} checker`,await fit(await onChecker(old),'nearest')],[`REJECTED alpha${c.gain>1?' x'+c.gain:''}`,await fit(await alphaOf(old,c.gain),'nearest')]);
+    }else if(c.gain>1){
+      // A faint light mark is invisible on a light checker: show the original on black as well as its amplified alpha.
+      const before=await region(x.original.path,box);
+      row.push([`original on black`,await fit(await onBlack(before),'nearest')],[`original alpha x${c.gain}`,await fit(await alphaOf(before,c.gain),'nearest')]);
+    }
+    const now=await region(master,box);
+    row.push([`NEW ${x.cutout.sha256.slice(0,10)} checker`,await fit(await onChecker(now),'nearest')]);
+    if(c.gain>1)row.push([`NEW on black`,await fit(await onBlack(now),'nearest')]);
+    row.push([`NEW alpha${c.gain>1?' x'+c.gain:''} (${c.kind})`,await fit(await alphaOf(now,c.gain),'nearest')]);
+    rows.push(row);
+  }
+  const columns=Math.max(...rows.map(r=>r.length)),layers=[];
+  for(const [i,row] of rows.entries())for(const [j,[caption,png]] of row.entries()){
+    layers.push({input:png,left:j*cell,top:i*(cell+label)},{input:text(caption),left:j*cell,top:i*(cell+label)+cell});
+  }
+  await mkdir(join(root,'review-proofs'),{recursive:true,mode:0o700});
+  const path=join(root,'review-proofs',`${x.ref}-${x.tile.sha256.slice(0,12)}.png`);
+  const png=await sharp({create:{width:columns*cell,height:rows.length*(cell+label),channels:3,background:'#ffffff'}}).composite(layers).png().toBuffer();
+  await writeFile(path,png,{mode:0o600});
+  const blank=keys=>Object.fromEntries(keys.map(k=>[k,null]));
+  const template={key,ref:x.ref,proof:{path,sha256:await sha256Of(png)},rejected:x.rejected??[],
+    ...(x.cutout?{cutout_review:{cutout_sha256:x.cutout.sha256,original_sha256:x.original.sha256,reviewer:null,review_reference:null,
+      checks:blank(['background_only_removed','no_background_or_other_object_retained','whole_product_retained','edges_clean_on_frame_background','no_redrawn_or_generated_detail'])}}:{}),
+    tile_review:{tile_sha256:x.tile.sha256,cutout_sha256:x.cutout?.sha256??null,original_sha256:x.original.sha256,reviewer:null,review_reference:null,
+      checks:blank(['source_alpha_accepted','tile_accepted_by_exact_hash','photographed_material_preserved','whole_product_on_flat_tile'])}};
+  await writeFile(path.replace(/\.png$/,'.review-template.json'),JSON.stringify(template,null,1),{mode:0o600});
+  return {path,sha256:template.proof.sha256,regions:changed.length,rows:rows.length};
 }
 
 /**
@@ -291,8 +462,18 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     const i=JSON.parse(await readFile(a,'utf8')),load=async p=>JSON.parse(await readFile(p,'utf8'));
     const reviews=(await Promise.all(i.review_files.map(load))).flat();
     console.log(JSON.stringify(await bundleReviewed({out:i.out,reviews,determinations:await load(i.determinations_file),derivative_review:i.derivative_review_file?await load(i.derivative_review_file):null,
-      revisions:await load(i.revisions_file),source:i.source,public_base_url:i.public_base_url,prepared_by:i.prepared_by,dry_run:i.dry_run??null})));
+      revisions:await load(i.revisions_file),source:i.source,public_base_url:i.public_base_url,prepared_by:i.prepared_by,dry_run:i.dry_run??null,
+      ...(i.grant_file?{grant:await load(i.grant_file)}:{})})));
   }
+  else if(command==='reprocess'&&a){
+    // a: private input {out, key, basis, grant_file (absent: Longchamp's own row), rejection_file (a review list), mask_tool}
+    const i=JSON.parse(await readFile(a,'utf8')),load=async p=>JSON.parse(await readFile(p,'utf8'));
+    const rejection=i.rejection_file?(await load(i.rejection_file)).find(r=>r.key===i.key)??null:null;
+    if(i.rejection_file&&!rejection)throw Error('The review file has no record for '+i.key);
+    console.log(JSON.stringify(await reprocessItem({out:i.out,key:i.key,basis:i.basis,grant:i.grant_file?await load(i.grant_file):longchampOwnerDirection,rejection,
+      run_id:'reprocess-'+new Date().toISOString().slice(0,10),mask_tool:i.mask_tool??null})));
+  }
+  else if(command==='review-proof'&&a&&b)console.log(JSON.stringify(await reviewProof({out:a,key:b})));
   else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c,page_evidence:process.argv[6]||null,...(process.argv[7]?{source_id:process.argv[7]}:{})})));
   else if(command==='proofs'&&a)console.log(JSON.stringify(await proofSheets({out:a})));
   else if(command==='previews'&&a)console.log(JSON.stringify(await webpPreviews({out:a})));
