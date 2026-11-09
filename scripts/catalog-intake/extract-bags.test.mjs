@@ -209,3 +209,18 @@ test('Actual source extraction carries corroborated main boot taxonomy only in s
  const result=extractBagPage(html,{brand:'prada',source_id:'synthetic',page_url:'https://www.prada.com/ae/en/p/boots/BOOT123'});
  assert.ok(result.evidence.product_category);assert.equal(result.evidence.product_category.category_slug,'shoes');assert.ok(!('category_slug' in result.candidate));assert.equal(result.candidate.collection_kind,'source_group');
 });
+test('LOEWE keeps the largest width the page itself declares for each gallery file; it never builds or enlarges a URL',()=>{
+ const dw='/dw/image/v2/X/on/demandware.static/-/Sites/default/dwabc123/images_rd/SYNTH-500/SYNTH-500_1F.jpg',side='/dw/image/v2/X/on/demandware.static/-/Sites/default/dwdef456/images_rd/SYNTH-500/SYNTH-500_2F.jpg';
+ const product={id:'SYNTH-500',name:'Small Puzzle bag',customAttributes:{c_LW_collection:['Puzzle'],c_allImages:[{alt:'a "quoted] alt',src:dw+'?sw=500&q=100'},{src:side+'?sw=500&q=100'}]}};
+ // Other page-state copies of the same gallery at larger widths; a foreign host, a file outside the gallery and the
+ // social preview crop must all be ignored.
+ const state=JSON.stringify({x:{c_allImages:[{alt:'b ] [ \\" tricky',src:dw+'?sw=1000&q=90'},{src:side+'?sw=850&q=100'},{src:'/dw/image/v2/X/other/SYNTH-500_9Z.jpg?sw=1450&q=75'}]},
+   y:{c_allImages:[{src:'https://cdn.example.test'+dw+'?sw=2000&q=100'},{src:dw+'?sw=750&q=100'}]}});
+ const html=`<meta property="og:image" content="https://www.loewe.com${dw}?sw=1200&sh=630"/><script>window['__pid_SYNTH-500'] = ${JSON.stringify({data:product})};</script><script>window.__STATE__=${state}</script>`;
+ const {candidate,evidence}=extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/puzzle/SYNTH-500.html'});
+ assert.deepEqual(candidate.image_urls,['https://www.loewe.com'+dw+'?sw=1000&q=90','https://www.loewe.com'+side+'?sw=850&q=100']);
+ assert.deepEqual(evidence.image_renditions,[{file:'SYNTH-500_1F.jpg',declared_widths:[500,750,1000],kept_width:1000},{file:'SYNTH-500_2F.jpg',declared_widths:[500,850],kept_width:850}]);
+ // A page that declares only its literal keeps the literal's own files.
+ const only=extractBagPage(`<script>window['__pid_SYNTH-500'] = ${JSON.stringify({data:product})};</script>`,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/puzzle/SYNTH-500.html'});
+ assert.deepEqual(only.candidate.image_urls,['https://www.loewe.com'+dw+'?sw=500&q=100','https://www.loewe.com'+side+'?sw=500&q=100']);
+});

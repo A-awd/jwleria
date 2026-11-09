@@ -8,7 +8,8 @@ import {installedImageEngine} from './responsive-media.mjs';
 import {composeCutoutMaster,validateCutoutMaster} from './cutout.mjs';
 import {normalizeFlatTile} from './flat-tile.mjs';
 import {openLedger,record,quarantineReasons} from './batch-ledger.mjs';
-import {processingFailureReason,reprocessItem,failedReviewChecks,bundleReviewed} from './batch-official.mjs';
+import {processingFailureReason,reprocessItem,failedReviewChecks,bundleReviewed,acquireAndTile} from './batch-official.mjs';
+import {createMediaPacer} from './media-pipeline.mjs';
 
 // Synthetic private batch only: a drawn opaque "packshot" on a drawn backdrop, its segmentation mask and a ledger, in
 // a temporary directory. No product photograph is read, nothing is downloaded, recorded, uploaded or published.
@@ -119,4 +120,32 @@ test('a rejected cutout is recorded, re-cut from the same held original with onl
     await writeFile(x.original.path,Buffer.concat([await readFile(x.original.path),Buffer.from([0])]));
     await assert.rejects(reprocessItem({...run,rejection:b.rejection}),/no longer matches its sha256/);
   }finally{await rm(b.root,{recursive:true,force:true});}
+});
+
+test('one missing declared file is quarantined alone and the run continues; a real refusal still stops the source',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'jwl-batch-missing-TEST-ONLY-'));
+  try{
+    // A native-alpha packshot large enough for a tile, served by a stub; nothing leaves the process.
+    const raw=Buffer.alloc(1000*800*4);for(let y=150;y<650;y++)for(let x=150;x<850;x++){const p=(y*1000+x)*4;raw[p]=40;raw[p+1]=60;raw[p+2]=90;raw[p+3]=255;}
+    const png=await sharp(raw,{raw:{width:1000,height:800,channels:4}}).png().toBuffer();
+    const base='https://media.example.test/img/',grant={grant_reference:'test-only-owner-direction',kind:'owner_directed_official',source_id:'test-only-official',candidate_id:null,
+      media_origins:['https://media.example.test'],website_publication:true,resize:true,webp_encode:true,background_removal:true,evidence_reference:'decision-0025'};
+    const fetcher=async url=>{
+      const u=String(url);
+      if(u.endsWith('/robots.txt'))return new Response('User-agent: *\nAllow: /\n',{status:200});
+      if(u.endsWith('GONE.png'))return new Response('',{status:404});
+      if(u.endsWith('DENIED.png'))return new Response('',{status:403});
+      return new Response(png,{status:200,headers:{'content-type':'image/png'}});
+    };
+    const items=['GONE','HERE','DENIED'].map(ref=>({key:'test-only-official:'+ref,ref,model:'TEST-ONLY',colour:'Blue',size:null}));
+    const ledger=await openLedger(join(root,'ledger.ndjson'));
+    for(const i of items)for(const to of ['discovered','matched'])await record(ledger,{key:i.key,to,evidence:{},run_id:'TEST-ONLY-seed'});
+    const run=keys=>acquireAndTile({manifest:{items:items.filter(i=>keys.includes(i.ref))},urls:items.map(i=>({key:i.key,ref:i.ref,asset_url:base+i.ref+'.png'})),out:root,grant,
+      run_id:'TEST-ONLY-run',fetcher,pacer:createMediaPacer({sleep:async()=>{}})});
+    const r=await run(['GONE','HERE']);
+    assert.deepEqual([r.tiles,r.quarantined],[1,{source_file_missing:1}]);
+    const after=await openLedger(join(root,'ledger.ndjson'));
+    assert.deepEqual([after.state.get('test-only-official:GONE').reason,after.state.get('test-only-official:HERE').to],['source_file_missing','processed']);
+    await assert.rejects(run(['DENIED']),/stopped: source refused/,'a 403 still stops the source');
+  }finally{await rm(root,{recursive:true,force:true});}
 });

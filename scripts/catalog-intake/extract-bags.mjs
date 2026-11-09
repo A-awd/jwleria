@@ -195,6 +195,41 @@ export function repairPradaTechnicalFacts(input){
 }
 
 /** Parse one official product page. No script execution, guessed images, prices or public reuse grant. */
+// Every "c_allImages" array the page text declares (its product literal and its other page-state copies), parsed as
+// JSON data with a string-aware bracket scan; nothing is evaluated. An array that does not parse is skipped.
+function declaredGalleryArrays(html){
+  const arrays=[];
+  for(const m of html.matchAll(/"c_allImages":\[/g)){
+    const start=m.index+m[0].length-1;let depth=0,quoted=false,escaped=false,end=-1;
+    for(let i=start;i<html.length&&i-start<500000;i++){
+      const ch=html[i];
+      if(quoted){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')quoted=false;continue;}
+      if(ch==='"')quoted=true;else if(ch==='[')depth++;else if(ch===']'&&--depth===0){end=i;break;}
+    }
+    if(end<0)continue;
+    try{const value=JSON.parse(html.slice(start,end+1));if(Array.isArray(value))arrays.push(value);}catch{}
+  }
+  return arrays;
+}
+/**
+ * LOEWE pages declare the same gallery files (same path, same content hash segment) at several widths (sw) in their
+ * page-state copies of c_allImages. For each file of the selected variant's own gallery, the largest width the page
+ * itself declares on the official origin is kept; a URL is never constructed or enlarged, files outside the variant's
+ * gallery and other hosts are ignored, and the social preview image (og:image) is not a gallery entry.
+ */
+export function loeweLargestDeclared(html,gallery,page){
+  const origin=new URL(page).origin,file=u=>{const x=new URL(u);return x.origin+x.pathname;};
+  const files=new Map(gallery.map(u=>[file(u),{base:u,declared:new Map()}]));
+  for(const array of declaredGalleryArrays(html))for(const item of array){
+    if(typeof item?.src!=='string')continue;
+    const u=canonical(new URL(item.src,page).href),entry=files.get(file(u)),width=Number(new URL(u).searchParams.get('sw'));
+    if(!entry||new URL(u).origin!==origin||!Number.isInteger(width)||width<1)continue;
+    entry.declared.set(width,u);
+  }
+  const chosen=[...files.values()].map(f=>{const widths=[...f.declared.keys()].sort((a,b)=>a-b);return {f,widths,url:widths.length?f.declared.get(widths.at(-1)):f.base};});
+  return {images:chosen.map(c=>c.url),renditions:chosen.map(c=>({file:new URL(c.f.base).pathname.split('/').at(-1),declared_widths:c.widths,kept_width:c.widths.at(-1)??null}))};
+}
+
 export function extractBagPage(html,{brand,source_id,page_url}){
   if(!['prada','bottega-veneta','loewe'].includes(brand))throw Error('Unsupported bag source');
   const page=canonical(page_url),data=structured(html);let raw,evidence;
@@ -232,8 +267,9 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     if(!product?.id||!product.name||!a||!(Array.isArray(a.c_LW_collection)&&a.c_LW_collection.length===1)&&!plain(a.c_LW_lineTXTDescription))throw Error('Missing LOEWE variant/collection');
     const leaf=decodeURIComponent(new URL(page).pathname.split('/').at(-1));
     if(leaf.endsWith('.html')&&leaf.slice(0,-5)!==product.id)throw Error('LOEWE page/variant reference mismatch');
-    const images=a.c_allImages?.map(i=>canonical(new URL(i.src,page).href));
-    if(!images?.length||images.some(u=>!decodeURIComponent(u).includes(product.id)))throw Error('LOEWE image/reference mismatch');
+    const gallery=a.c_allImages?.map(i=>canonical(new URL(i.src,page).href));
+    if(!gallery?.length||gallery.some(u=>!decodeURIComponent(u).includes(product.id)))throw Error('LOEWE image/reference mismatch');
+    const {images,renditions}=loeweLargestDeclared(html,gallery,page);
     const hasCollection=Array.isArray(a.c_LW_collection)&&a.c_LW_collection.length===1;
     const family=hasCollection?a.c_LW_collection[0]:plain(a.c_LW_lineTXTDescription),facts=[];
     if(a.c_LW_materialDescription)facts.push({key:'material',value:plain(a.c_LW_materialDescription)});
@@ -241,7 +277,8 @@ export function extractBagPage(html,{brand,source_id,page_url}){
     if(a.c_LW_colorLabel)facts.push({key:'color',value:plain(a.c_LW_colorLabel)});if(a.c_LW_measures)facts.push({key:'dimensions',value:plain(a.c_LW_measures)});
     raw={source_id,external_id:product.id,source_url:page,brand:'LOEWE',collection:family,product_name:product.name,name_ar:arabicBagName(product.name,family,{brand:'LOEWE',source_url:page}),name_en:product.name,image_urls:images,source_description:plain(product.shortDescription),facts,provenance:{method:'structured-page',language:'en'}};
     if(/^(?:Others|Baskets)$/i.test(family))raw.collection_kind='source_group';
-    evidence={reference:product.id,grouping_kind:hasCollection?'explicit_collection_field':'explicit_product_line_field',grouping:family,breadcrumbs:a.c_pdpBreadcrumbs?.map(b=>b.name)??[],image_binding:'Exact selected variant c_allImages; no alternative colors'};
+    evidence={reference:product.id,grouping_kind:hasCollection?'explicit_collection_field':'explicit_product_line_field',grouping:family,breadcrumbs:a.c_pdpBreadcrumbs?.map(b=>b.name)??[],
+      image_binding:'Exact selected variant c_allImages; no alternative colors; each file at the largest width the page itself declares for it on the official origin',image_renditions:renditions};
   }
   const productCategory=classifyBagProductCategory(raw,evidence);
   if(productCategory)evidence.product_category=productCategory;

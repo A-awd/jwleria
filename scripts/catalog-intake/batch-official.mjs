@@ -41,9 +41,14 @@ export async function acquireAndTile({manifest,urls,out,grant=longchampOwnerDire
         byUrl.set(asset_url,original);
       }
     }catch(error){
-      results[item.key]={ref:item.ref,asset_url,quarantine:'source_refused',error:error.message};
+      // One file that is gone (404/410) is that item's problem, not a refusal by the source: it is quarantined and the
+      // run continues. Anything else (robots, 401/403/429, a challenge, a network failure) stops the source.
+      const missing=/^Source media unavailable \((404|410)\)$/.test(error.message);
+      const reason=missing?'source_file_missing':'source_refused';
+      results[item.key]={ref:item.ref,asset_url,quarantine:reason,error:error.message};
       await save(root,results);
-      await record(ledger,{key:item.key,to:'quarantined',reason:'source_refused',evidence:{asset_url,error:error.message},run_id},limits);
+      await record(ledger,{key:item.key,to:'quarantined',reason,evidence:{asset_url,error:error.message},run_id},limits);
+      continue;
     }
     if(ledger.state.get(item.key).to==='rights_ready')await record(ledger,{key:item.key,to:'acquired',evidence:{original_sha256:original.sha256,asset_url,bytes:original.bytes,width:original.width,height:original.height,has_alpha:original.has_alpha??null},run_id},limits);
     await processItem({root,ledger,results,key:item.key,base:{ref:item.ref,model:item.model,colour:item.colour,size:item.size,asset_url,original:{...original}},mask_tool,sharp,run_id,limits});
@@ -185,14 +190,25 @@ export async function contactSheets({out,per_sheet=12,cell=360,sharp=installedIm
   const results=Object.entries(JSON.parse(await readFile(join(root,'results.json'),'utf8'))).filter(([,r])=>r.tile).sort(([,a],[,b])=>a.ref<b.ref?-1:1);
   await mkdir(join(root,'sheets'),{recursive:true,mode:0o700});
   const index=[];
+  // A cutout item also shows its master over a checkerboard and its alpha silhouette (white is opaque), so the
+  // reviewer judges the extraction itself; a native-alpha item keeps its two cells (original, tile).
+  const square=Math.max(6,Math.round(cell/30)),checker=Buffer.alloc(cell*cell*3);
+  for(let y=0;y<cell;y++)for(let x=0;x<cell;x++)checker.fill(((Math.floor(x/square)+Math.floor(y/square))&1)?204:255,(y*cell+x)*3,(y*cell+x)*3+3);
+  const cellsOf=r=>r.cutout?[['original',r.original.sha256,async()=>sharp(r.original.path).resize(cell,cell,{fit:'contain',background:'#ffffff'}).png().toBuffer()],
+      ['cutout',r.cutout.sha256,async()=>sharp(checker,{raw:{width:cell,height:cell,channels:3}}).composite([{input:await sharp(r.cutout.path).resize(cell,cell,{fit:'contain',background:{r:0,g:0,b:0,alpha:0}}).png().toBuffer()}]).png().toBuffer()],
+      ['alpha',r.cutout.sha256,async()=>sharp(r.cutout.path).ensureAlpha().extractChannel(3).resize(cell,cell,{fit:'contain',background:'#000000'}).png().toBuffer()],
+      ['tile',r.tile.sha256,async()=>sharp(r.tile.path).resize(cell,cell,{fit:'contain',background:'#ffffff'}).png().toBuffer()]]
+    :[['original',r.original.sha256,async()=>sharp(r.original.path).resize(cell,cell,{fit:'contain',background:'#ffffff'}).png().toBuffer()],
+      ['tile',r.tile.sha256,async()=>sharp(r.tile.path).resize(cell,cell,{fit:'contain',background:'#ffffff'}).png().toBuffer()]];
   for(let s=0;s*per_sheet<results.length;s++){
-    const page=results.slice(s*per_sheet,(s+1)*per_sheet),cols=4,rows=Math.ceil(page.length*2/cols),label=40;
-    const layers=[];
-    for(const [i,[key,r]] of page.entries()){
-      for(const [j,file] of [r.original.path,r.tile.path].entries()){
-        const n=i*2+j,x=(n%cols)*cell,y=Math.floor(n/cols)*(cell+label);
-        layers.push({input:await sharp(file).resize(cell,cell,{fit:'contain',background:'#ffffff'}).png().toBuffer(),left:x,top:y});
-        const text=`${r.ref} ${j?'tile':'original'} ${(j?r.tile.sha256:r.original.sha256).slice(0,10)}`;
+    const page=results.slice(s*per_sheet,(s+1)*per_sheet),cols=4,label=40;
+    const rows=Math.ceil(page.reduce((n,[,r])=>n+cellsOf(r).length,0)/cols);
+    const layers=[];let n=0;
+    for(const [key,r] of page){
+      for(const [kind,hash,draw] of cellsOf(r)){
+        const x=(n%cols)*cell,y=Math.floor(n/cols)*(cell+label);n++;
+        layers.push({input:await draw(),left:x,top:y});
+        const text=`${r.ref} ${kind} ${hash.slice(0,10)}`;
         layers.push({input:Buffer.from(`<svg width="${cell}" height="${label}"><text x="6" y="26" font-family="Helvetica" font-size="17">${text}</text></svg>`),left:x,top:y+cell});
       }
       index.push({sheet:s+1,key,ref:r.ref,model:r.model,colour:r.colour,size:r.size,original_sha256:r.original.sha256,tile_sha256:r.tile.sha256,tile_path:r.tile.path,original_path:r.original.path,...(r.cutout?{cutout_sha256:r.cutout.sha256,cutout_path:r.cutout.path}:{})});
@@ -477,6 +493,6 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c,page_evidence:process.argv[6]||null,...(process.argv[7]?{source_id:process.argv[7]}:{})})));
   else if(command==='proofs'&&a)console.log(JSON.stringify(await proofSheets({out:a})));
   else if(command==='previews'&&a)console.log(JSON.stringify(await webpPreviews({out:a})));
-  else if(command==='sheets'&&a)console.log(JSON.stringify(await contactSheets({out:a})));
+  else if(command==='sheets'&&a)console.log(JSON.stringify(await contactSheets({out:a,...(b?{per_sheet:Number(b)}:{})})));
   else throw Error('Usage: node batch-official.mjs acquire MANIFEST.json URLS.json PRIVATE_OUT | sheets PRIVATE_OUT');
 }
