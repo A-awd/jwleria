@@ -1,3 +1,18 @@
+## Longchamp batch 1 privately prepared under decision 0025: 354 of 354 originals, tiles and WebP previews; identity determinations ready; 0 new public photos, 2026-11-09
+
+- **Acquisition** (private; `scripts/catalog-intake/batch-official.mjs`):
+  - 354 of 354 planned variants (100 models) were downloaded from their exact recorded gallery URLs, with robots, 2 s pacing and the application User-Agent.
+  - That is 354 unique originals with 0 refusals and 0 quarantined.
+  - The URL list was digest-checked against the live database.
+- **Processing:**
+  - 354 native-alpha flat `#f0f0f0` tiles, with 0 changed opaque product pixels.
+  - 1,416 private WebP previews (320, 640, 960 and 1600), made with the existing local encoder. All are within the byte budgets and the fidelity floor, and none needs a performance review.
+  - The previews are labelled private/prepared. They bind no publication flag, and the public bundle re-encodes and re-checks every file.
+  - `10166HSR001` reproduces its reviewed original, tile and four WebP hashes byte for byte.
+- **Identity:** 354 official-gallery identity determinations bind each original's sha256, its exact URL, its reference and the full current revision. The revisions were digest-verified against the live database. All 354 pass the pipeline's `requireVerification` identity route. Colour and variant remain a visual check.
+- **Visual review** (producer-reported by the operator, in progress): 148 originals and tiles reviewed so far, all passing. `exact_reference` is left "uncertain", pending these determinations.
+- **Unchanged:** the production approval is still pending (classifier denial, not retried). Live: Longchamp `publication_allowed=false`, 1 photographed product. **New public photographs: 0.**
+
 ## Decision 0025 route implemented and tested (prepared); its application was denied by the tool classifier and is waiting on the owner; 0 new public photos, 2026-11-09
 
 - **Prepared** (commit `7301098`, both branches):

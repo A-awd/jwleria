@@ -1,4 +1,22 @@
-## Current handoff: apply the decision 0025 migration (owner approval pending), then publish the Longchamp batch, 2026-11-09
+## Current handoff: owner approval to apply the decision 0025 migration, then record, upload and publish Longchamp batch 1, 2026-11-09
+
+There are 0 new public photographs. There is no brand contact (decision 0025).
+
+**The next production command** (owner approval pending; the classifier denied it once, so it is not retried without approval):
+- connector `apply_migration`, name `jwleria_owner_directed_official`;
+- the body is `apps/storefront/supabase/proposed/jwleria_owner_directed_official.sql` at commit `7301098`, without its `begin;`/`commit;` lines;
+- the file's sha256 is `065dbb84e305c92c59470dafd5bc7889aa599718afdc0bbe71a82e14d3e66a6f`;
+- the preflight is 14 migrations, the last `20261108072948`.
+
+**Then, in order:**
+1. **Readback:** the kind check, `jwl_owner_directed_official_check`, the grant `owner-directed-longchamp-0025`, and Longchamp `publication_allowed=true`. Move the file to `migrations/` and exclude it in the SQL test loaders.
+2. **Review:** the operator finishes the visual reviews (148 of 354 done) and adds each item's identity determination from the private batch, quoting it in `verification_reference`.
+3. **Bundle:** Claude bundles each reviewed variant through `media-run` (fresh revision check, flat tile by hash, approval SQL), with `prepared_by` named.
+4. **Operator:** records the approvals through the connector, uploads through the JWT upload function (caller token from the operator's environment), runs `jwl_publish_candidate` for each item, and reads the images back over HTTP.
+
+The visual smoke check is still pending: local browser use is disabled.
+
+## Previous handoff, 2026-11-09 (route prepared, application denied)
 
 There are 0 new public photographs. There is no brand contact (decision 0025).
 
@@ -11,7 +29,6 @@ There are 0 new public photographs. There is no brand contact (decision 0025).
 3. **After approval and review:** for each reviewed variant, the approval bundle, the database record, the approval-bound upload, `jwl_publish_candidate`, and an HTTP readback of the images.
 4. **The visual smoke check is still pending:** local browser use is disabled.
 
-## Previous handoff, 2026-11-09 (decision 0025 recorded)
 
 There are 0 new public photographs. There is no brand contact of any kind (decision 0025). Do not propose outreach, programme applications or waiting for a brand.
 
