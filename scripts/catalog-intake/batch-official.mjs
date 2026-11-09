@@ -139,9 +139,131 @@ export async function proofSheets({out,per_sheet=8,cell=300,sharp=installedImage
   return {sheets:Math.ceil(previews.length/per_sheet),files:index.length};
 }
 
+/**
+ * The bundle's verification for one original: the independent visual reviewer's record, unchanged in its checks and
+ * text, with the separate official-gallery identity determination attached and quoted after it, attributed to its own
+ * reviewer. Neither record speaks for the other; requireVerification still decides.
+ */
+export function mergedVerification(visual,determination){
+  if(!visual||!determination||visual.asset_sha256!==determination.asset_sha256||visual.verified_reference!==determination.reference)throw Error('Visual review and identity determination must name the same original and reference');
+  if(visual.identity_determination!==undefined)throw Error('The visual review already carries an identity determination');
+  const quote=` || Separate official-gallery identity determination by ${determination.reviewer} (quoted): ${determination.reason} | gallery ${determination.gallery_url} | original ${determination.asset_sha256}`;
+  return {...visual,verification_reference:visual.verification_reference+quote,identity_determination:determination};
+}
+/** The independent derivative review gate: every derivative the bundle produced must be listed by hash with pass true. */
+export function derivativeReviewProblem(review,{tile_sha256,files}){
+  const item=review?.items?.find(i=>i.tile_sha256===tile_sha256);
+  if(!item)return 'no derivative review for this tile';
+  if(!text(review.reviewer))return 'derivative review needs its reviewer';
+  const passed=new Set(item.derivatives.filter(d=>d.pass===true).map(d=>d.sha256));
+  const missing=files.filter(f=>!passed.has(f.sha256));
+  return missing.length?'derivatives not reviewed and passed: '+missing.map(f=>f.width+'w').join(','):null;
+}
+const text=value=>typeof value==='string'&&value.trim().length>0;
+/**
+ * Official-gallery identity determinations, one per processed original, by the implementation owner: the original was
+ * downloaded from a URL byte-identical to the candidate's recorded gallery file at its full current revision (checked
+ * against the live database by digest before the run). Colour and variant stay a separate visual check.
+ */
+export async function identityDeterminations({out,revisions,checked}){
+  const root=await privateOutputRoot(out),results=JSON.parse(await readFile(join(root,'results.json'),'utf8'));
+  const reviewer='Claude (implementation owner; database-bound gallery check, not the visual reviewer)';
+  const list=Object.entries(results).filter(([,x])=>x.tile).sort(([,a],[,b])=>a.ref<b.ref?-1:1).map(([key,x])=>{
+    if(!/^[a-f0-9]{64}$/.test(revisions[x.ref]??''))throw Error('Full current revision required: '+x.ref);
+    const o=x.original,reason=`The untouched original sha256 ${o.sha256} was downloaded at ${o.acquired_at} from ${x.asset_url}. That URL is byte-identical to image_urls[0] of the live candidate for reference ${x.ref} (source longchamp-official, revision ${revisions[x.ref]}), ${checked}; the file name names ${x.ref} exactly. This settles the reference only; colour and variant remain a separate visual check. Decision 0025 owner direction; no brand licence is claimed.`;
+    return {key,ref:x.ref,colour:x.colour??null,size:x.size??null,identity_determination:{basis:'official_gallery_listing',asset_sha256:o.sha256,identity_established:true,reference:x.ref,
+      revision_hash:revisions[x.ref],gallery_url:x.asset_url,reviewer,reason},verification_reference_must_quote:[reviewer,reason,x.asset_url,o.sha256]};
+  });
+  await writeFile(join(root,'identity-determinations.json'),JSON.stringify(list,null,1),{mode:0o600});
+  return {determinations:list.length};
+}
+
+/** Groups a flat per-file derivative review ({reviews:[{tile_sha256,width,sha256,reviewer,accepted}]}) by tile; values unchanged. */
+export function derivativeReviewByTile(flat){
+  if(!flat)return null;
+  if(Array.isArray(flat.items))return flat;
+  const items=new Map(),reviewers=new Set();
+  for(const r of flat.reviews??[]){reviewers.add(r.reviewer);if(!items.has(r.tile_sha256))items.set(r.tile_sha256,{tile_sha256:r.tile_sha256,derivatives:[]});
+    items.get(r.tile_sha256).derivatives.push({width:r.width,sha256:r.sha256,pass:r.accepted===true});}
+  if(reviewers.size>1)throw Error('One derivative review file per reviewer');
+  return {reviewer:[...reviewers][0]??null,items:[...items.values()]};
+}
+/** Whether a supplementary derivative review names this tile at all (it is optional; existing numeric gates always apply). */
+export const derivativeReviewed=(review,tile_sha256)=>Boolean(review?.items?.some(i=>i.tile_sha256===tile_sha256));
+
+/**
+ * Bundles each reviewed item through the existing pipeline into its own private directory (prepareGrantedMedia with
+ * the accepted tile, then approvalBundle and its connector statement). source must be the fresh database row with
+ * publication_allowed already true; nothing here sets or assumes it. Writes chunked approval SQL for the operator.
+ */
+export async function bundleReviewed({out,reviews,determinations,derivative_review,revisions,source,public_base_url,prepared_by,grant=longchampOwnerDirection,chunk=10,dry_run=null}){
+  const {prepareGrantedMedia,approvalBundle}=await import('./media-pipeline.mjs');
+  const {mediaApprovalSql}=await import('./supabase.mjs');
+  const {createHash}=await import('node:crypto');
+  if(source?.publication_allowed!==true||source.enabled!==true||source.id!==grant.source_id)throw Error('The fresh source row must already allow publication');
+  const root=await privateOutputRoot(out),results=JSON.parse(await readFile(join(root,'results.json'),'utf8'));
+  const previews=JSON.parse(await readFile(join(root,'previews.json'),'utf8'));
+  derivative_review=derivativeReviewByTile(derivative_review);
+  // A dry run is labelled and kept apart: it uses the expected post-migration source row, never the live one.
+  if(dry_run!==null&&!text(dry_run?.label))throw Error('A dry run needs its label');
+  const bundles=dry_run?'bundles-prepared-dryrun':'bundles';
+  const byKey=new Map(Object.entries(results)),det=new Map(determinations.map(d=>[d.key,d.identity_determination]));
+  const done=[],refused=[],sql=[];
+  for(const r of reviews){
+    const x=byKey.get(r.key);
+    try{
+      if(!x?.tile||x.ref!==r.ref)throw Error('unknown or unprocessed item');
+      if(r.tile_review?.tile_sha256!==x.tile.sha256||r.verification?.asset_sha256!==x.original.sha256)throw Error('reviews name other bytes');
+      const candidate={candidate_id:createHash('sha256').update(JSON.stringify([grant.source_id,x.ref])).digest('hex'),revision_hash:revisions[x.ref],source_id:grant.source_id,
+        external_id:x.ref,source_url:source.origin+'/',image_urls:[x.asset_url]};
+      const asset={path:x.original.path,source_url:x.asset_url,sha256:x.original.sha256};
+      const dir=join(root,bundles,x.ref);
+      const prepared=await prepareGrantedMedia({source,candidate,asset,grant,output_directory:dir,tile_sha256:x.tile.sha256});
+      const files=[...prepared.manifest.variants,prepared.manifest.detail];
+      // The bundle's derivatives must be byte-identical to the completed private previews, so every review of those
+      // previews binds the uploaded bytes. A supplementary derivative review, where one exists for this tile, must pass.
+      const preview=previews?.[x.tile.sha256];
+      if(!preview||files.some(f=>!preview.variants.some(v=>v.width===f.width&&v.sha256===f.sha256)))throw Error('bundle derivatives differ from the completed previews');
+      if(derivativeReviewed(derivative_review,x.tile.sha256)){const gate=derivativeReviewProblem(derivative_review,{tile_sha256:x.tile.sha256,files});if(gate)throw Error(gate);}
+      const bundle=approvalBundle({candidate,grant,items:[{asset,manifest:prepared.manifest,verification:mergedVerification(r.verification,det.get(r.key)),tile_review:r.tile_review}],public_base_url,prepared_by});
+      await writeFile(join(dir,'approval-bundle.json'),JSON.stringify(bundle,null,1),{mode:0o600});
+      sql.push(mediaApprovalSql(bundle));done.push({ref:x.ref,candidate_id:candidate.candidate_id,files:bundle.uploads.length});
+    }catch(error){refused.push({key:r.key,ref:r.ref,reason:error.message});}
+  }
+  await mkdir(join(root,bundles),{recursive:true,mode:0o700});
+  for(let i=0;i*chunk<sql.length;i++)await writeFile(join(root,bundles,`record-approvals-${String(i+1).padStart(3,'0')}.sql`),sql.slice(i*chunk,(i+1)*chunk).join('\n')+'\n',{mode:0o600});
+  await writeFile(join(root,bundles,'publish.sql'),batchPublishSql(done.map(d=>d.candidate_id))+'\n',{mode:0o600});
+  await writeFile(join(root,bundles,'bundle-report.json'),JSON.stringify({...(dry_run?{dry_run}:{}),prepared_by,bundled:done,refused},null,1),{mode:0o600});
+  return {bundled:done.length,files:done.reduce((n,d)=>n+d.files,0),refused:refused.length};
+}
+
+/**
+ * One connector statement that publishes each recorded approval onto its existing public facts row, server side: the
+ * product is the stored public row with the approval's own images, so nothing is retyped and the database re-checks
+ * the live grant, the source flag, the current revision and every displayed fact.
+ */
+export function batchPublishSql(candidate_ids){
+  if(!candidate_ids.length||candidate_ids.some(id=>!/^[a-f0-9]{64}$/.test(id)))throw Error('Exact candidate ids required');
+  return `select c.external_id, public.jwl_publish_candidate(c.candidate_id,c.revision_hash,to_jsonb(k)||jsonb_build_object('images',a.approved_images,'image_variants',a.approved_image_variants)) as published
+from jwl_internal.candidates c
+join public.jwl_catalog k on k.id=c.candidate_id and k.active
+join jwl_internal.publication_approvals a on a.candidate_id=c.candidate_id and a.revision_hash=c.revision_hash and a.image_verified and a.revoked_at is null
+where (exists(select 1 from jwl_internal.published_revisions p where p.catalog_id=c.candidate_id and p.revision_hash=c.revision_hash)
+  or exists(select 1 from jwl_internal.factual_publications f where f.catalog_id=c.candidate_id and f.candidate_id=c.candidate_id and f.revision_hash=c.revision_hash))
+  and c.candidate_id in (${candidate_ids.map(id=>`'${id}'`).join(',')}) order by c.external_id;`;
+}
+
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
   const [command,a,b,c]=process.argv.slice(2);
   if(command==='acquire'&&a&&b&&c)console.log(JSON.stringify(await acquireAndTile({manifest:JSON.parse(await readFile(a,'utf8')),urls:JSON.parse(await readFile(b,'utf8')),out:c,run_id:'decision-0025-'+new Date().toISOString().slice(0,10)})));
+  else if(command==='bundle'&&a){
+    // a: private input {out, review_files[], determinations_file, derivative_review_file, revisions_file, source, public_base_url, prepared_by}
+    const i=JSON.parse(await readFile(a,'utf8')),load=async p=>JSON.parse(await readFile(p,'utf8'));
+    const reviews=(await Promise.all(i.review_files.map(load))).flat();
+    console.log(JSON.stringify(await bundleReviewed({out:i.out,reviews,determinations:await load(i.determinations_file),derivative_review:i.derivative_review_file?await load(i.derivative_review_file):null,
+      revisions:await load(i.revisions_file),source:i.source,public_base_url:i.public_base_url,prepared_by:i.prepared_by,dry_run:i.dry_run??null})));
+  }
+  else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c})));
   else if(command==='proofs'&&a)console.log(JSON.stringify(await proofSheets({out:a})));
   else if(command==='previews'&&a)console.log(JSON.stringify(await webpPreviews({out:a})));
   else if(command==='sheets'&&a)console.log(JSON.stringify(await contactSheets({out:a})));

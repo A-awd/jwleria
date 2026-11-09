@@ -85,6 +85,23 @@ test('decision 0025: an exact official gallery file is approved as a native-alph
   }finally{await db.close();}
 });
 
+test('decision 0025: the batch publish statement puts each approval onto its existing facts row, server side',async()=>{
+  const {batchPublishSql}=await import('../../../scripts/catalog-intake/batch-official.mjs');
+  const db=await database();
+  try{
+    await db.exec(await readFile(FORWARD,'utf8'));
+    const c=await product(db);
+    await service(db,'select public.jwl_publish_factual_batch($1::jsonb,$2) r',[JSON.stringify([{candidate_id:c.candidate_id,revision_hash:c.revision_hash,slug:'test-'+c.external_id.toLowerCase(),reference:c.external_id,
+      brand_slug:'longchamp',brand_name:c.brand,brand_tier:'luxury',category_slug:'handbags',collection_slug:'test-bag',collection_ar:'مجموعة',collection_en:c.collection,name_ar:c.name_ar,name_en:c.name_en,
+      description_ar:c.description_ar,description_en:c.description_en,search_text:c.external_id.toLowerCase()}]),'synthetic facts-only instruction']);
+    const img=image(c,{chars:'ef1'});await approve(db,c,img);
+    const rows=(await service(db,batchPublishSql([c.candidate_id]))).rows;
+    assert.deepEqual(rows.map(r=>r.published),[c.candidate_id]);
+    const k=(await db.query('select images,image_variants,media_state,active,search_text from public.jwl_catalog where id=$1',[c.candidate_id])).rows[0];
+    assert.deepEqual(k.images,[img.entry.src]);assert.equal(k.media_state,'approved_media');assert.equal(k.active,true);assert.equal(k.search_text,c.external_id.toLowerCase());
+  }finally{await db.close();}
+});
+
 test('decision 0025: a cutout master needs the recorded background-only extraction',async()=>{
   const db=await database();
   try{
