@@ -1,3 +1,17 @@
+## Current continuation: preserve completed bundles, resume Claude Medium after usage reset, and honor the production boundary, 2026-11-09
+
+Read the top STATE entry first. The official Claude Code client hit the subscription usage limit; its actual display says **04:30 Asia/Riyadh, 2026-11-09**. The existing private continuation pointer identifies the same session. Do not start another chat, buy extra usage, switch account/model, or read the huge historical transcript. Use Opus 5.5 Medium, English, sequential, no agents.
+
+1. Preserve the 382 completed Longchamp bundles and their 1,528 files; do not regenerate unchanged originals, masters or proofs. Only 832 derivatives were actually visually viewed. No new photos are public.
+2. Read the private operator review records: Bottega 6 cutout/master pairs pass and `569041VMAA03715` is rejected for interior green material loss; Longchamp batch4 has 7 passing current source/master pairs blocked on a real candidate/gallery refresh. Do not manufacture reviewer names, current revisions or publication flags.
+3. Fix the actual green-mask defect and the grayscale codec/error-classification failure, with meaningful changed-path tests. The generic per-source/local-cutout driver at `2d4090e8ae29` is not yet regression-tested; the earlier native-alpha checkpoint `f11f0240f2f9` is tested. Do not treat a successful private run as a passed regression suite or production validation.
+4. Finish permitted private LOEWE re-collection and safe read-only preflight of the existing secured upload mechanism. No new credential, token disclosure, dummy write or permission expansion. Continue feasible source work; obey genuine robots/authentication/challenge/origin stops and do not infer a source-wide block from one missing file.
+5. Obtain the still-pending exact production approval before retrying the denied route migration. The prepared Longchamp route and grouping repair hashes are in STATE. Any consolidated publication approval must explicitly cover the 382 prepared variants and grouping repair; do not silently broaden the earlier first-batch request. Bottega source activation and the 8 Longchamp gallery updates are separate prepared/unfinished work, not automatically approved by that first-batch request.
+6. After the approved changes: verify fresh source/revision/grant state, bind the exact unchanged reviewed assets, record approvals, upload through the secured existing function, publish and read back actual public images. Apply the approved grouping repair and verify one card per design. Keep JWT/RLS/revocation and negative-review gates intact.
+7. Perform the phone-width visual check only after Codex in-app browser use is enabled. No external/headless browser. Save sanitized results and the next real action in the owning source, commit/push and verify the remote revision.
+
+No brand outreach. No WhatsApp, social, ads or 3D blockers. No new purchases, services, schedules or unrelated project changes. A quota or production block is not project completion.
+
 ## Current handoff: owner approval, then apply and publish the prepared Longchamp images, 2026-11-09
 
 There are 0 new public photographs. There is no brand contact (decision 0025). The production approval is pending: do not retry or bypass it.
