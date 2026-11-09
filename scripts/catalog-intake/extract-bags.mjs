@@ -195,12 +195,13 @@ export function repairPradaTechnicalFacts(input){
 }
 
 /** Parse one official product page. No script execution, guessed images, prices or public reuse grant. */
-// Every "c_allImages" array the page text declares (its product literal and its other page-state copies), parsed as
-// JSON data with a string-aware bracket scan; nothing is evaluated. An array that does not parse is skipped.
+// Every array of image objects the page text declares (its c_allImages copies and its responsive gallery sets such as
+// {"desktop":[...],"tablet":[...],"mobile":[...]}), parsed as JSON data with a string-aware bracket scan; nothing is
+// evaluated. An array that does not parse is skipped.
 function declaredGalleryArrays(html){
   const arrays=[];
-  for(const m of html.matchAll(/"c_allImages":\[/g)){
-    const start=m.index+m[0].length-1;let depth=0,quoted=false,escaped=false,end=-1;
+  for(const m of html.matchAll(/\[\{"(?:alt|title|src)":/g)){
+    const start=m.index;let depth=0,quoted=false,escaped=false,end=-1;
     for(let i=start;i<html.length&&i-start<500000;i++){
       const ch=html[i];
       if(quoted){if(escaped)escaped=false;else if(ch==='\\')escaped=true;else if(ch==='"')quoted=false;continue;}
@@ -213,7 +214,8 @@ function declaredGalleryArrays(html){
 }
 /**
  * LOEWE pages declare the same gallery files (same path, same content hash segment) at several widths (sw) in their
- * page-state copies of c_allImages. For each file of the selected variant's own gallery, the largest width the page
+ * page state: c_allImages copies and responsive desktop/tablet/mobile gallery sets. For each file of the selected
+ * variant's own gallery (c_allImages of the product literal), the largest width the page
  * itself declares on the official origin is kept; a URL is never constructed or enlarged, files outside the variant's
  * gallery and other hosts are ignored, and the social preview image (og:image) is not a gallery entry.
  */
@@ -222,8 +224,9 @@ export function loeweLargestDeclared(html,gallery,page){
   const files=new Map(gallery.map(u=>[file(u),{base:u,declared:new Map()}]));
   for(const array of declaredGalleryArrays(html))for(const item of array){
     if(typeof item?.src!=='string')continue;
-    const u=canonical(new URL(item.src,page).href),entry=files.get(file(u)),width=Number(new URL(u).searchParams.get('sw'));
-    if(!entry||new URL(u).origin!==origin||!Number.isInteger(width)||width<1)continue;
+    const u=canonical(new URL(item.src,page).href),entry=files.get(file(u)),query=new URL(u).searchParams,width=Number(query.get('sw'));
+    // A rendition that also fixes a height (sh) is a fitted crop, such as a social preview, not a gallery width.
+    if(!entry||new URL(u).origin!==origin||!Number.isInteger(width)||width<1||query.has('sh'))continue;
     entry.declared.set(width,u);
   }
   const chosen=[...files.values()].map(f=>{const widths=[...f.declared.keys()].sort((a,b)=>a-b);return {f,widths,url:widths.length?f.declared.get(widths.at(-1)):f.base};});

@@ -214,8 +214,10 @@ test('LOEWE keeps the largest width the page itself declares for each gallery fi
  const product={id:'SYNTH-500',name:'Small Puzzle bag',customAttributes:{c_LW_collection:['Puzzle'],c_allImages:[{alt:'a "quoted] alt',src:dw+'?sw=500&q=100'},{src:side+'?sw=500&q=100'}]}};
  // Other page-state copies of the same gallery at larger widths; a foreign host, a file outside the gallery and the
  // social preview crop must all be ignored.
- const state=JSON.stringify({x:{c_allImages:[{alt:'b ] [ \\" tricky',src:dw+'?sw=1000&q=90'},{src:side+'?sw=850&q=100'},{src:'/dw/image/v2/X/other/SYNTH-500_9Z.jpg?sw=1450&q=75'}]},
-   y:{c_allImages:[{src:'https://cdn.example.test'+dw+'?sw=2000&q=100'},{src:dw+'?sw=750&q=100'}]}});
+ // A responsive gallery set (desktop/tablet/mobile) declares the larger widths; a fitted crop (sh) is not a width.
+ const state=JSON.stringify({x:{c_allImages:[{alt:'b ] [ \\" tricky',src:dw+'?sw=750&q=100'},{src:'/dw/image/v2/X/other/SYNTH-500_9Z.jpg?sw=1450&q=75'}]},
+   g:{desktop:[{alt:'d',title:'d',src:dw+'?sw=1000&q=90'},{alt:'d',src:side+'?sw=850&q=100'}],mobile:[{alt:'m',src:dw+'?sw=1200&sh=630'}]},
+   y:{c_allImages:[{src:'https://cdn.example.test'+dw+'?sw=2000&q=100'}]}});
  const html=`<meta property="og:image" content="https://www.loewe.com${dw}?sw=1200&sh=630"/><script>window['__pid_SYNTH-500'] = ${JSON.stringify({data:product})};</script><script>window.__STATE__=${state}</script>`;
  const {candidate,evidence}=extractBagPage(html,{brand:'loewe',source_id:'synthetic',page_url:'https://www.loewe.com/int/en/women/bags/puzzle/SYNTH-500.html'});
  assert.deepEqual(candidate.image_urls,['https://www.loewe.com'+dw+'?sw=1000&q=90','https://www.loewe.com'+side+'?sw=850&q=100']);
