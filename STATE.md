@@ -1,3 +1,32 @@
+## Longchamp ready-to-publish privately: 382 reviewed images bundled in a dry run; grouping repair prepared; source findings; 0 new public photos, 2026-11-09
+
+- **Visual review** (producer-reported by the operator; each record bound to its full original and tile hashes):
+  - batch 1: 354 of 354 originals and tiles, for the selected 100 models;
+  - batch 2: 17, the eligible single-colour models beyond the first 100;
+  - batch 3: 11 shoe references.
+  - Total: **382 reviewed pairs**, all passing.
+  - The operator also viewed 832 of the 1,416 batch 1 derivatives as a supplementary record. No other derivative review is claimed.
+  - `exact_reference` stays "uncertain" from pixels. Claude's separate official-gallery identity determinations settle the reference.
+- **Prepared dry-run bundles** (private and explicitly labelled; nothing recorded, uploaded or published):
+  - every bundle uses the real `approvalBundle` gates, with the source row Longchamp will have only after the pending migration;
+  - batch 1: 354 bundled, 1,416 files, 0 refused;
+  - batch 2: 17 bundled, 68 files, 0 refused;
+  - batch 3: 11 bundled, 44 files, 0 refused.
+  - Every bundle derivative is byte-identical to its reviewed preview. The approval statements are chunked, and one server-side `publish.sql` is ready for each batch (`batchPublishSql`, SQL-tested).
+- **Shoe references** (19 that were unbound):
+  - Each official page of an exact `…380` reference, re-read once (HTTP 200), declares exactly one product image, named for its size-36, 37 or 40 sibling.
+  - On 11 pages the recorded file is still current. They are prepared as batch 3, and their determinations say so explicitly.
+  - On 8 pages the file version changed, so they are **held**: the candidate's recorded gallery needs a refresh, which is a production write.
+- **Grouping repair** (prepared, not applied; `proposed/jwleria_longchamp_material_option.sql` with its rollback and an SQL test):
+  - Longchamp's pages give two wordings of the material for colours of one design. Because material was a model-level fact, 16 variants in 2 designs (`L1621089`, 10 colours; `L1911089`, 6) became single-colour cards.
+  - The repair makes Longchamp's material a variant option, so each variant keeps its exact material, and the Arabic colour-tail name rule accepts that option set.
+  - It rebuilds only the derived variant tables. Candidate revisions, approvals and staged media are unchanged.
+  - Raw reference-fallback groups are not counted as verified models.
+- **Other sources** (one normal check each; no retry):
+  - **LOEWE:** HTTP 200, but the recorded files are 500 × 755 JPEGs, below the resolution floor, and the sampled product page now returns 404. A private re-collection of current pages is needed.
+  - **Bottega Veneta:** 1 recorded file returns 404 and its page redirects (301). The other 7 return HTTP 200 as 2717 × 3200 opaque JPEGs. They are eligible for the approved local background-only extraction (not yet run).
+- **Production:** still pending owner approval (classifier denial honored; nothing retried). **New public photographs: 0.**
+
 ## Longchamp batch 1 privately prepared under decision 0025: 354 of 354 originals, tiles and WebP previews; identity determinations ready; 0 new public photos, 2026-11-09
 
 - **Acquisition** (private; `scripts/catalog-intake/batch-official.mjs`):

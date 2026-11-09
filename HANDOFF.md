@@ -1,4 +1,23 @@
-## Current handoff: owner approval to apply the decision 0025 migration, then record, upload and publish Longchamp batch 1, 2026-11-09
+## Current handoff: owner approval, then apply and publish the prepared Longchamp images, 2026-11-09
+
+There are 0 new public photographs. There is no brand contact (decision 0025). The production approval is pending: do not retry or bypass it.
+
+**After owner approval, in order** (all payloads are prepared privately and hash-bound):
+1. **Migration:** `apply_migration` named `jwleria_owner_directed_official`, with the body of `proposed/jwleria_owner_directed_official.sql` (sha256 `065dbb84…6a6f`) without `begin;`/`commit;`. Then read it back: the grant `owner-directed-longchamp-0025`, and Longchamp `publication_allowed=true`.
+2. **Bundles:** re-run each batch's bundle with the fresh live source row, not the dry-run row. This is `batch-official.mjs bundle` with the private inputs, minus `dry_run`. The hashes must equal the dry run's.
+3. **Approvals:** the operator records the chunked approval statements: 36 for batch 1, 2 for batch 2, 2 for batch 3.
+4. **Upload:** through the JWT upload function per item directory (`media-run upload`), with the caller token from the operator's environment.
+5. **Publish:** the operator runs each batch's `publish.sql`, then reads the images back over HTTP.
+6. **Optional, owner-approved:** apply the grouping repair `proposed/jwleria_longchamp_material_option.sql` (it rebuilds only the derived variant tables) and read back that `L1621089` and `L1911089` are one model each.
+
+**Independent work remaining:**
+- Bottega Veneta: background-only extraction for its 7 available files, then visual review.
+- Refresh the 8 Longchamp shoe galleries (a production write, after approval).
+- LOEWE: a private re-collection of its current official pages.
+
+The visual smoke check is still pending: local browser use is disabled.
+
+## Previous handoff, 2026-11-09 (before the dry-run bundles)
 
 There are 0 new public photographs. There is no brand contact (decision 0025).
 

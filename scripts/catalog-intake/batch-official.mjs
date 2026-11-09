@@ -165,12 +165,14 @@ const text=value=>typeof value==='string'&&value.trim().length>0;
  * downloaded from a URL byte-identical to the candidate's recorded gallery file at its full current revision (checked
  * against the live database by digest before the run). Colour and variant stay a separate visual check.
  */
-export async function identityDeterminations({out,revisions,checked}){
+const fileName=url=>decodeURIComponent(new URL(url).pathname.split('/').pop());
+const namesRef=(url,ref)=>new RegExp('(^|[^a-z0-9])'+ref.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z0-9])').test(fileName(url).toLowerCase());
+export async function identityDeterminations({out,revisions,checked,page_evidence=null}){
   const root=await privateOutputRoot(out),results=JSON.parse(await readFile(join(root,'results.json'),'utf8'));
   const reviewer='Claude (implementation owner; database-bound gallery check, not the visual reviewer)';
   const list=Object.entries(results).filter(([,x])=>x.tile).sort(([,a],[,b])=>a.ref<b.ref?-1:1).map(([key,x])=>{
     if(!/^[a-f0-9]{64}$/.test(revisions[x.ref]??''))throw Error('Full current revision required: '+x.ref);
-    const o=x.original,reason=`The untouched original sha256 ${o.sha256} was downloaded at ${o.acquired_at} from ${x.asset_url}. That URL is byte-identical to image_urls[0] of the live candidate for reference ${x.ref} (source longchamp-official, revision ${revisions[x.ref]}), ${checked}; the file name names ${x.ref} exactly. This settles the reference only; colour and variant remain a separate visual check. Decision 0025 owner direction; no brand licence is claimed.`;
+    const o=x.original,reason=`The untouched original sha256 ${o.sha256} was downloaded at ${o.acquired_at} from ${x.asset_url}. That URL is byte-identical to image_urls[0] of the live candidate for reference ${x.ref} (source longchamp-official, revision ${revisions[x.ref]}), ${checked}; ${namesRef(x.asset_url,x.ref)?`the file name names ${x.ref} exactly`:`the file name names ${fileName(x.asset_url)}, not ${x.ref}: ${page_evidence??'no page evidence recorded'}`}. This settles the reference only; colour and variant remain a separate visual check. Decision 0025 owner direction; no brand licence is claimed.`;
     return {key,ref:x.ref,colour:x.colour??null,size:x.size??null,identity_determination:{basis:'official_gallery_listing',asset_sha256:o.sha256,identity_established:true,reference:x.ref,
       revision_hash:revisions[x.ref],gallery_url:x.asset_url,reviewer,reason},verification_reference_must_quote:[reviewer,reason,x.asset_url,o.sha256]};
   });
@@ -263,7 +265,7 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     console.log(JSON.stringify(await bundleReviewed({out:i.out,reviews,determinations:await load(i.determinations_file),derivative_review:i.derivative_review_file?await load(i.derivative_review_file):null,
       revisions:await load(i.revisions_file),source:i.source,public_base_url:i.public_base_url,prepared_by:i.prepared_by,dry_run:i.dry_run??null})));
   }
-  else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c})));
+  else if(command==='identity'&&a&&b&&c)console.log(JSON.stringify(await identityDeterminations({out:a,revisions:JSON.parse(await readFile(b,'utf8')),checked:c,page_evidence:process.argv[6]??null})));
   else if(command==='proofs'&&a)console.log(JSON.stringify(await proofSheets({out:a})));
   else if(command==='previews'&&a)console.log(JSON.stringify(await webpPreviews({out:a})));
   else if(command==='sheets'&&a)console.log(JSON.stringify(await contactSheets({out:a})));

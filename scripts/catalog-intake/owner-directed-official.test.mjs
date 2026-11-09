@@ -44,6 +44,19 @@ test('decision 0025 batch: the visual review keeps its checks and text; the iden
   assert.throws(()=>batchPublishSql(["x'; drop"]),/Exact candidate ids/);
 });
 
+test('decision 0025 batch: an identity determination says truthfully whether the file name names the reference',async()=>{
+  const {identityDeterminations}=await import('./batch-official.mjs');
+  const {mkdtemp,writeFile,readFile}=await import('node:fs/promises');const {tmpdir}=await import('node:os');const {join}=await import('node:path');
+  const dir=await mkdtemp(join(tmpdir(),'jwl-identity-'));
+  const o={sha256:'a'.repeat(64),acquired_at:'2026-11-09T00:00:00Z'};
+  await writeFile(join(dir,'results.json'),JSON.stringify({k1:{ref:'10166HSR001',asset_url:'https://www.longchamp.com/i/DIS/10166HSR001_0.png?sw=2000',original:o,tile:{}},
+    k2:{ref:'70347SJS002380',asset_url:'https://www.longchamp.com/i/DIS/70347SJS002360_0.png?sw=800',original:{...o,sha256:'b'.repeat(64)},tile:{}}}));
+  await identityDeterminations({out:dir,revisions:{'10166HSR001':'c'.repeat(64),'70347SJS002380':'d'.repeat(64)},checked:'checked',page_evidence:'the page declares it'});
+  const [a,b]=JSON.parse(await readFile(join(dir,'identity-determinations.json'),'utf8')).map(d=>d.identity_determination.reason);
+  assert.match(a,/the file name names 10166HSR001 exactly/);
+  assert.match(b,/the file name names 70347SJS002360_0\.png, not 70347SJS002380: the page declares it/);
+});
+
 test('decision 0025 batch: a flat per-file derivative review is grouped by tile unchanged, and is optional per tile',async()=>{
   const {derivativeReviewByTile,derivativeReviewed}=await import('./batch-official.mjs');
   const g=derivativeReviewByTile({reviews:[{tile_sha256:'t',width:320,sha256:'1',reviewer:'R',accepted:true},{tile_sha256:'t',width:640,sha256:'2',reviewer:'R',accepted:false}]});
