@@ -1,5 +1,19 @@
 # Continue Jwleria — compact receiving entry, 2026-11-12
 
+## Receiving task status — 2026-11-12
+
+The owner has now submitted the continuation in the existing local Codex task. Do not create another receiver. The pre-existing private source receipt describes historical draft preparation; no new supported receiver identifier was available.
+
+Remote connector reads confirmed both authorized implementation branches at `51fbe9e4b1329d9a14a69d16482837f1b4f5e15b`; the local worktree matched and was clean before this checkpoint. The approved foundation remains separate at `60cb5dda510681df2b1a2a37a0aa5ff25b18feb0`. Do not replace the implementation with it.
+
+Fresh integrity verification passed for the saved 121-row LOEWE review, all 363 referenced original/cutout/master files and all three pending SQL/rollback payloads. The 118 acceptances and three negative reviews remain intact. No new visual review or mask repair is claimed.
+
+The immediate execution dependency is now a responsive official Claude subscription continuation. The available client reports 2.1.116 and rejects the historical accessibility flag; an explicit same-session attempt with the remaining approved settings produced no response or verified receipt and was terminated by Codex (exit 130). No implementation process is left running by that attempt. The in-app browser is currently unavailable, and Desktop Commander has no online device. Quota/authentication are unknown; do not repeat the expired November 9 quota explanation or assume the English repair instructions reached Claude.
+
+Once that connection works, execute the three-mask repair in First actions below, then obtain actual new-hash proof for Codex operator review. Keep the exact unanswered Longchamp production boundary unchanged. No production call, release approval question, image acquisition, code change, new acceptance or publication occurred in this receiving checkpoint.
+
+Local Git metadata is currently read-only to this task: staging/commit failed creating `index.lock`. Local HEAD is therefore not a synchronized completion claim. Read back any authorized connector-saved documentation checkpoint, then reconcile the local branch with its verified remote before Claude writes implementation; preserve the local files and accepted media throughout.
+
 ## Goal and current truth
 
 Deliver faithful, lightweight product photos on the existing mobile-first Jwleria showcase. Claude implements, tests and technically reviews; Codex coordinates, operates authorized provider steps and performs genuine operator visual review. Do not create a second implementation effort or another general planning loop.
