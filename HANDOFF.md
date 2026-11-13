@@ -1,4 +1,14 @@
-# Continue Jwleria — compact receiving entry, 2026-11-12
+# Continue Jwleria — compact receiving entry, 2026-11-13
+
+## New-Mac transition, save-only request — 2026-11-13
+
+The owner will open the receiving local Codex conversation on the new Mac mini manually. This source handoff saves context and inventories files only; no new chat, implementation, Claude restart, image acquisition, transfer or production operation. No deletion/archive, bulk copy, overwriting newer files or Easy Life.
+
+Start with [MAC-MINI-HANDOFF-2026-11-13.md](docs/continuity/MAC-MINI-HANDOFF-2026-11-13.md) and the retained [project knowledge](docs/continuity/PROJECT-KNOWLEDGE-2026-11-12.md). The detailed new-Mac record names completed results/evidence, experiments, corrections, the two authorized branches and exact pending production payloads. The only apparent uncommitted STATE/HANDOFF edits at entry were already saved remotely; local HEAD remains older because worktree metadata is not writable. Do not copy the worktree's absolute `.git` pointer as a portable repository.
+
+The private transfer root is confirmed source-local (7,029 files / 5,960,118,253 bytes), with the current brief, operator review/proofs and original/bundle records. The existing iCloud project folder is now actually located; its 341 locally inventoried older files do not contain exact copies of 368 checked current critical files. This is a measured gap in that folder, not proof of absence on every backup or the new Mac. No transfer or remote synchronization is claimed. Use the exact private source paths in the owner's opening message, verify actual paths on the receiver and ask only for missing artifacts that it cannot read; do not copy everything automatically.
+
+First receiver action is actual-device/workdir/checkout/tool/file preflight. Then establish official Claude subscription continuity with supported current flags and verify receipt of the English instructions. Claude implements; Codex coordinates and reviews. Only after readiness and continued execution authority, repair the same three rejected LOEWE masks first, preserve 118 accepted masters and negatives, obtain new-hash proofs, then settle native-size behavior and saved refusal scope. The November 12 connection failure was not retried during this save-only request. The exact unanswered production boundary below remains unchanged.
 
 ## Receiving task status — 2026-11-12
 
