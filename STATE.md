@@ -1,4 +1,14 @@
-# Jwleria — current state, 2026-11-12
+# Jwleria — current state, 2026-11-13
+
+## Save-only transition to the new Mac mini — 2026-11-13
+
+The owner requests context preservation and one paste-ready opening message only. No receiving chat, Claude restart, implementation, acquisition, production operation or file transfer is authorized by this handoff. Do not delete/archive the source or run Easy Life. Read [the detailed new-Mac handoff](docs/continuity/MAC-MINI-HANDOFF-2026-11-13.md), which preserves the current objective, dated evidence, experiments, local Git discrepancy, file inventory, unchanged production boundary and exact receiver preflight/next action.
+
+Both authorized implementation branches were read at `2eed539f57c1fca8ec111e94b0089f9da86b48e8` before this documentation checkpoint. Local HEAD remains `51fbe9e`; the only tracked modifications, STATE/HANDOFF, exactly matched that remote checkpoint before these new edits. No unique unpushed application-code edit was found by Git status. Git metadata is outside the task's writable scope; no local synchronization is claimed.
+
+New read-only inventory: the source-private transfer root contains 7,029 files / 5,960,118,253 bytes. Its required brief/reviews/payloads remain readable and their recorded critical digests matched. An existing iCloud Jwleria folder is now located and locally readable, containing 341 files / 838,999,967 bytes, including older Ai-Work and media. None of 368 checked current continuity/review/image files had an exact copy in that inspected project folder. Current-batch cloud storage, actual cloud upload and new-device availability are unverified; no copy/move/overwrite occurred. Exact private paths remain outside this public repository.
+
+The November 12 Claude/CLI/browser connection failure is historical and was not retried during this save-only handoff. Next on the new device: verify actual hardware/location/checkout/tools and required private artifact readability, then establish official Claude continuity before the three LOEWE mask repairs. Preserve all accepted work and the unanswered exact Longchamp production boundary.
 
 ## Local receiving continuation checkpoint — 2026-11-12
 
