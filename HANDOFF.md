@@ -1,4 +1,18 @@
-# Continue Jwleria — compact receiving entry, 2026-11-13
+# Continue Jwleria — compact receiving entry, 2026-11-14
+
+## Receiver preflight completed; original Claude execution unavailable — 2026-11-14
+
+The owner continued in this receiving chat; do not create another conversation. Hardware/user/workdir were checked. An independent canonical clone on `claude/stage0-g1-g6-20261102` was clean and synchronized at `65693630e5880784e8cdf91e0bd07fa9e2d24f0d` before this documentation checkpoint; the other authorized branch matched, and the receiver's Git metadata write probe passed. Preserve the older synced worktree and its broken old-host absolute Git pointer.
+
+The private packet is available in the receiver's synced Documents tree, separately from the older business/project iCloud folder. Its 7,029-file / 5,960,118,253-byte collection inventory matches the source handoff. Required briefs/review digests, all 363 LOEWE reviewed original/cutout/master bytes and the three pending SQL/rollback digests were checked here. This is integrity evidence, not another visual approval or certification of every private byte. Keep all 118 accepted LOEWE sets, negatives, Longchamp bundles/refreshes, Bottega corrections and recovered owner attachments. No bulk transfer or reacquisition is needed.
+
+The exact original Remote Control session is visible in the signed-in official desktop application at Opus 5.5 / Max, but is offline. The source Mac is unavailable, as confirmed by the owner. The current official bundled client is 2.1.325 with supported resume/effort/accessibility options; its separate CLI authentication check did not establish a login, and the compact session's local transcript was not found on this receiver. Do not substitute the historical quota or flag error as today's diagnosis, create a replacement conversation, or claim that a queued brief reached Claude.
+
+The next dependency is only the original compact Claude transcript privately transferred from its source session storage, followed by existing-subscription local authentication and same-session resume. Exact paths, session identity, receiver mapping and a prepared English brief are retained privately. Do not copy the whole configuration/credential directory or the already available photo packet. The brief has not been delivered, and no implementation is running from this attempt.
+
+After explicit English receipt and input readiness, Claude repairs exactly the three masks in First actions below, using original pixels and preserving all accepted/negative hashes. Require new original/checker-cutout/alpha/master proof for Codex; then settle native cap/skip/no-upscaling and the saved robots refusal scope. No application or product-image change, new acceptance, production operation or photo publication occurred in this receiver preflight. The exact unanswered production request remains unchanged and must not be repeated or bypassed.
+
+The November 13 source save-only handoff remains below as dated history, not a prohibition against the receiver work now explicitly requested by the owner.
 
 ## New-Mac transition, save-only request — 2026-11-13
 
