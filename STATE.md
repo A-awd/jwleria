@@ -1,4 +1,42 @@
-# Jwleria — current state, 2026-11-14
+# Jwleria — current state, 2026-11-16
+
+## Three LOEWE mask repairs accepted; follow-on checks — 2026-11-16
+
+- **Producer-reported:** execution resumed on the receiver through the official Claude subscription client (Opus 5.5, max effort): one session, sequential, no extra agents, Ultracode off. Codex observed the subscription sign-in. The original remote session remains offline. According to Codex, the official client restored its retained state into a local execution copy. No claim is made that the old remote reconnected or that iCloud sync is independently confirmed.
+- **Observed live:** the storefront's locked dependencies were installed from the lockfile into the ignored `node_modules`. Before any repair, this machine reproduced the three rejected LOEWE cutouts and tiles byte-for-byte from their stored masks.
+- **Reviewed:** in its private operator review, Codex accepted a repaired cutout and flat tile for each of the three rejected cases, by exact hash.
+  - A510P60X96-1160: the background is cleared inside the handle opening and the clasp gaps.
+  - A120HPLX04-9003: the opening and both handle-end slots are cleared; the zip pull and the cut-off base are restored. This is version 2. Version 1 left a hard alpha step at a repair-box side; it was not accepted and is kept as negative evidence.
+  - A411NBPX40-1193: the hanging chain is restored from both attachments. This is version 2. Version 1 had a 1–2 px ridge along the bag edge, which Claude found while Codex's hold on link openings was open; version 1 is superseded and kept as evidence.
+  - Native link interiors are ambiguous between bright silver and floor. No opening could be established from the original's pixels, so the metal stays opaque and no hole was invented.
+- **Prepared:** a new opt-in module, `scripts/catalog-intake/scoped-mask-repair.mjs`, with `scoped-mask-repair.test.mjs`, documented in `scripts/catalog-intake/README.md`.
+  - It is not wired into the batch pipeline and adds no global gate. Existing modules are unchanged.
+  - The 118 accepted LOEWE masters were neither regenerated nor rejudged.
+  - Repair outputs, plans, crop images and masks, tool and module snapshots, proofs and diagnostics are private, outside Git.
+- **Tests (actual):** the new test file passed 7/7. The full `node --test scripts/catalog-intake/*.test.mjs` passed 161/161 (154 existing plus 7 new). The storefront suite was not rerun because the storefront did not change.
+- **Private regressions:**
+  - The final module reproduces each accepted mask, cutout and tile byte-for-byte, and the local mask tool reproduced all five crop masks.
+  - Outside the repair boxes, each new cutout equals its rejected cutout pixel for pixel. No opaque product pixel changed, the inputs matched their hashes, and the outputs are write-once and read-only.
+  - Through the existing gates only: the original negative rows are refused. Exact-hash binding stops the new acceptances from approving the original negatives, the two version-1 files or any unreviewed replacement.
+  - Once each item lists its rejected files, the bundler refuses them before preparing anything, even with fabricated all-true reviews. That integration into the private batch record is not done yet; until then, the original negatives are refused by their recorded negative reviews.
+- **Observed (native size, read-only):** nothing is upscaled.
+  - A flat tile places the product 1:1 on a square whose side is the product's largest extent divided by 0.68. A square larger than the source's short side is padding: for example, a 1200×1812 photograph with a 926 px product gives a 1362 px square, so a 1362 square is not a defect.
+  - Derivative widths are 320/640/960 plus one detail width capped at both the square's side and 1600. Across the 121 batch tiles, none would need enlargement.
+  - All 15 resolution holds remain, with product extents of 541–651 px against the 653 px minimum.
+- **Saved robots refusal (diagnosis complete within its limit):**
+  - The saved error for A538H13X03-1150 shows that the local robots gate stopped before the image request. It was a policy match, not a transport failure, an HTTP refusal or a redirect, and the run then stopped by design.
+  - The robots policy saved the same day by the page collections reproduces this refusal: a wildcard disallow rule matches letters inside the image's version path segment. The same saved policy allows all 136 completed downloads.
+  - The exact policy the media job used was not saved, so the matched rule is neither presented as captured at the failed request nor as the current live policy.
+  - Zero network requests were made. The source refusal and the 197 unreached planned entries stay as they are.
+- **Producer-reported (Codex receipts, 2026-11-16):**
+  - A filename and size inventory shows the private packet still holds 7,029 files and 5,960,118,253 bytes. This is an inventory, not a rehash of the whole packet. The Longchamp, refresh and Bottega collection counts match it.
+  - Separate hash checks matched all 363 reviewed LOEWE source, cutout and tile files, the three stored raw masks, and the review and SQL digests.
+- **Still held:**
+  - integrating the three accepted repairs into the private batch record;
+  - LOEWE derivatives (none encoded or reviewed);
+  - LOEWE bindings and activation;
+  - the robots hold and any remaining acquisition;
+  - the unchanged production boundary below.
 
 ## New-Mac receiver preflight — 2026-11-14
 

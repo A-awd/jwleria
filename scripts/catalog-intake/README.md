@@ -91,6 +91,21 @@ The credit text for a cutout is `background removed, resized and converted to We
 
 A bundle with cutout evidence is recorded through `jwl_record_cutout_approval` (`recordMediaApproval`, `mediaApprovalSql`). That function is created by migration `20261101104017_jwleria_cutout_media` (applied 2026-11-01); on a database without it, a cutout fails closed and nothing is stored. The migration's evidence trigger re-checks the rules: one master of one original per image, the grant's basis, and the exact credit. An original that is already transparent and eligible takes the ordinary path with no treatment.
 
+### Scoped repair of one rejected cutout (opt-in; private, local)
+
+`scoped-mask-repair.mjs` repairs the mask of one cutout master that an independent visual review rejected. It works only inside the boxes a private plan names around the reviewed failure, and it derives every changed alpha value from the original's own stored pixels. The batch pipeline never calls it, it adds no check to `validateCutoutMaster`, and its defaults never change: every option below is opt-in per operation and recorded.
+
+Two operations:
+- `clear_retained_backdrop`: an opening the mask filled, such as the space inside a handle. The photographed backdrop is fitted as a smooth surface to the pixels the mask already removed. Kept pixels that match it (within max(3, 6σ) levels), taken as a solid area, become transparent. A 4 px band at the edge takes its alpha from each pixel's own difference to the backdrop. Options: `open_min_pixels`; `hole_tolerance` (4..16) for small enclosed slots that show the backdrop through JPEG ringing; `band_reference: "median"` for a light material beside dark strands.
+- `restore_from_crop_masks`: a thin part the whole-image mask lost, such as a zip pull or a hanging chain. The local `foreground-mask` tool runs on lossless crops of the original, where its working resolution resolves the part. The stored mask is kept near the product's solid body, and the coarse stored outline of the thin part beyond it is replaced. Options: `protect_body` (a crop that also outlines the body never moves the body's own edge) and `feather` (1..64 px blend back to the stored mask at the box sides, so an edge never steps at a box boundary).
+
+`node scripts/catalog-intake/scoped-mask-repair.mjs run PRIVATE_PLAN.json` reads `{ref, out, original:{path,sha256}, mask:{path,sha256}, rejected:{cutout,tile}, operations, closeups, mask_tool?, version?, previous?}`.
+- Every input must match its recorded sha256. The original, the stored mask and the rejected files are only read.
+- Each output is written once, named by its sha256, outside the repository: the repaired mask, the master (through the unchanged `repairedCutoutMaster`), the existing check record, the flat tile, review proofs and a record. The proofs are an overview, the native master on checker, the native alpha, and native details of the original, the rejected and the new file. The record holds old-versus-new counts and the exact module source used.
+- A run refuses to overwrite an earlier one, to reproduce a rejected file, or to change a pixel outside its boxes.
+
+The result still needs the independent visual review by exact hash. No responsive derivatives are encoded; nothing is bound, recorded, uploaded or published. Tests: `scoped-mask-repair.test.mjs` (synthetic scenes only).
+
 ### Open-licence photos (prepared, not active)
 
 Decision 0013 accepts open-licence exact-product photographs of m126234-0015 only (narrowing 0011 for that reference and scope only), but the applied database still accepts only `owner_original` and `written_permission` grants, so no open-licence image can be recorded or published today. The path goes live only after, in order: the storefront showing the visible credit of every `attribution` entry wherever that image appears (see `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`); and the approved application of `apps/storefront/supabase/proposed/jwleria_open_license_media.sql`, whose approval request must name, as its own line, that its open-licence lane publishes such images without the source's `publication_allowed` flag (decisions 0011 and 0013). Its rollback (`.rollback.sql`) restores the applied definitions exactly and refuses while any open-licence grant or credit exists.
