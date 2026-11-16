@@ -2,6 +2,8 @@
 
 ## Three LOEWE mask repairs accepted; follow-on checks — 2026-11-16
 
+- **Saved and read back (Codex, 2026-11-16):** code checkpoint [`07174e0`](https://github.com/A-awd/jwleria/commit/07174e01a343e9e1e9a19ec8251bad4313f569fb) was saved to both authorized implementation branches. Codex verified their refs, the identical reviewed tree, the saved STATE content and a clean synchronized receiver checkout. This publication receipt changes documentation only; it grants no production action and does not require another repair or test run.
+
 - **Producer-reported:** execution resumed on the receiver through the official Claude subscription client (Opus 5.5, max effort): one session, sequential, no extra agents, Ultracode off. Codex observed the subscription sign-in. The original remote session remains offline. According to Codex, the official client restored its retained state into a local execution copy. No claim is made that the old remote reconnected or that iCloud sync is independently confirmed.
 - **Observed live:** the storefront's locked dependencies were installed from the lockfile into the ignored `node_modules`. Before any repair, this machine reproduced the three rejected LOEWE cutouts and tiles byte-for-byte from their stored masks.
 - **Reviewed:** in its private operator review, Codex accepted a repaired cutout and flat tile for each of the three rejected cases, by exact hash.
