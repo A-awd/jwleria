@@ -1,4 +1,38 @@
-# Jwleria — current state, 2026-11-16
+# Jwleria — current state, 2026-11-17
+
+## LOEWE independent batch, local derivatives and review — 2026-11-17
+
+- **Prepared (private, local):** a new independent private batch takes on the three accepted LOEWE repairs by exact hash.
+  - Each repaired item lists its rejected pre-repair cutout and tile files; the source photograph stays retained. A120HPLX04-9003 and A411NBPX40-1193 also list their superseded version-1 files.
+  - Carried over unchanged: the 118 accepted masters, the 15 resolution holds, the source refusal and the 197 unreached entries.
+  - The source batch was only read. Its ledger is a byte-identical prefix of the new one.
+- **Prepared (private, local):** 484 responsive WebP derivatives for the 121 eligible sets, made with the existing encoder.
+  - Widths are the 320/640/960 cards plus one detail width, capped at the tile's side and at 1600.
+  - All of them met the byte budgets and the fidelity floor without a performance exception. None is wider than its tile.
+- **Reviewed (Codex, private operator review):** after viewing all 31 comparison sheets, Codex accepted 472 derivative rows for the 118 unchanged sets.
+  - Codex's native-size region and width proofs of the three repairs showed no new derivative degradation.
+  - The 12 rows of the three repaired sets stay on hold. There is no final approval of all 121 sets.
+- **Open:** the owner reported that the three repaired images differ in product size or position within the frame.
+  - Read-only measurements against the same-family neighbours recorded Cala 038's body about 1 px wider than its neighbours' range and Puzzle 092's body centre about 1.8 px lower, at a 320 px card size. Flamenco 084's horizontal body centre differs from photographed peer 083 by about 2.4 px. These selected comparisons do not bound all variation within a family.
+  - Codex's finding is limited to this: the present native-320 comparison establishes no clear geometric defect. That is not an approval.
+  - No new frame was proposed. The feedback stays open, and the three sets stay on hold.
+  - A local comparison page in the owner's gallery shows the measured state.
+- **Public helpers in this checkpoint:** `scripts/catalog-intake/adopt-reviewed-repair.mjs` and `scripts/catalog-intake/derivative-review.mjs`, with synthetic tests, documented in `scripts/catalog-intake/README.md`. Neither is wired into the batch pipeline. Existing modules and defaults are unchanged. Claude's own technical review of the helpers, which is not an independent review, found no defect affecting this run. Their known limits are documented in that README.
+- **Tests (actual):** the full `node --test scripts/catalog-intake/*.test.mjs` passed 165/165 (161 earlier plus 4 new). The storefront did not change, so its suite was not rerun.
+- **Private regressions (actual):**
+  - Bounded preservation, with no broad walk: 389 files matched their recorded hashes and the pre-run snapshot. They are the control records, all 363 reviewed originals, cutouts and tiles, the 9 accepted repair files, the 4 superseded version-1 files and 6 adoption inputs.
+  - The actual bundler, on a scratch copy, bundled nothing in 157 cases:
+    - 14 explicit negative cutout or tile rejections, including fabricated all-true reviews and both version-1 pairs;
+    - 6 byte or cutout-master mismatches;
+    - 16 held or refused items;
+    - 121 stops at the source-bound revision gate: the 118 accepted rows as a control and the three repairs with no revision. These are not review refusals.
+  - Three further cases used a synthetic source-bound scratch fixture to reach the review gate for the exact accepted repair bytes. An absent reviewer, the negative review's failed checks and a single false check were each refused, with the exact reason recorded. Before refusing, the bundler's own preparation reproduced the frozen derivatives byte for byte.
+  - The local owner gallery's 484 images are byte-identical to the frozen derivatives. Its text now shows 118 accepted and 3 held, and its earlier page is kept unchanged.
+- **Still held:**
+  - the owner framing feedback (3 sets, 12 rows);
+  - LOEWE bindings and activation;
+  - the robots hold and any remaining acquisition;
+  - the unchanged production boundary below.
 
 ## Three LOEWE mask repairs accepted; follow-on checks — 2026-11-16
 

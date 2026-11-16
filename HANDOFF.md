@@ -1,4 +1,24 @@
-# Continue Jwleria — compact receiving entry, 2026-11-16
+# Continue Jwleria — compact receiving entry, 2026-11-17
+
+## LOEWE derivatives reviewed except three framing holds — 2026-11-17
+
+Read the top entry of [STATE](STATE.md). These are done:
+- the independent private batch;
+- the 484 local derivatives;
+- Codex's private review: 472 rows accepted, 12 held;
+- the bounded technical checks.
+
+The independent adoption, derivative preparation and recorded visual comparisons from steps 2 and 3 of the 2026-11-16 entry below are complete. Final acceptance of the three repaired sets remains held; there is no final approval of all 121 sets. The production boundary below is unchanged; do not repeat its approval question.
+
+Next safe actions, in order:
+1. Verify the latest checkpoint and both authorized branch refs before continuing; this checkpoint includes the two helpers and their tests, the intake README, STATE and HANDOFF. Future public saves use the connected GitHub account after Codex checks privacy and fresh refs; no main or foundation merge.
+2. The owner's framing feedback on A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160 stays open. If the owner still sees a difference on the local comparison page, an opt-in framing recipe can be prepared, as new versions only.
+   - Allowed: translation, padding or a non-enlarging resize.
+   - Never: a crop, an upscale, a mask change or a retouch.
+   - The 118 sets and every current file stay unchanged.
+   - Codex views any candidate before acceptance, derivative finalisation or gallery replacement.
+3. Keep the 15 resolution holds, the source refusal and the 197 unreached entries. No acquisition, retry, reroute or proxy.
+4. The production boundary is unchanged. No migration, upload, binding, activation, publication or deploy.
 
 ## Three LOEWE repairs accepted; follow-on checks done — 2026-11-16
 

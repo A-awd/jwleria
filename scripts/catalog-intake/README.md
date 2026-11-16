@@ -106,6 +106,45 @@ Two operations:
 
 The result still needs the independent visual review by exact hash. No responsive derivatives are encoded; nothing is bound, recorded, uploaded or published. Tests: `scoped-mask-repair.test.mjs` (synthetic scenes only).
 
+### Adopting an accepted repair into an independent batch (opt-in; private, local)
+
+`adopt-reviewed-repair.mjs` brings an independently accepted repair into a batch record. It never modifies the batch the repair came from.
+- `seed PLAN` starts a new, empty private batch from an existing one, which it only reads.
+  - Each result is checked against the source ledger, and every original, cutout and tile is hash-checked where it lies.
+  - Media are referenced, never copied, and the ledger is copied byte for byte. Old-host path prefixes are mapped in the new record only.
+- `adopt PLAN` makes one accepted repair current. It requires all of the following:
+  - the negative review naming the current files, with at least one failed check;
+  - the scoped repair record for the same original and the same rejected files;
+  - an independent acceptance naming the exact repaired cutout and tile, with every check literally true and a reviewer who is neither the batch writer nor the producer;
+  - evidence for each superseded version;
+  - the existing cutout check;
+  - the unchanged flat-tile step reproducing the accepted tile byte for byte.
+
+  It then walks the item through the existing ledger lifecycle and makes the accepted pair current. The negative and superseded files are listed as rejected, so the bundler refuses them before preparing anything. It never supplies identity, grant, source or revision data, or an approval.
+
+Limit: an adoption appends its ledger transitions before it rewrites `results.json`. With one writer this is safe, but an interrupted run needs manual reconciliation before a retry.
+
+Tests: `adopt-reviewed-repair.test.mjs` (synthetic).
+
+### Derivative review evidence (private, local)
+
+`derivative-review.mjs` works on a batch whose previews already exist (`webpPreviews`).
+- `freeze OUT` verifies every preview against its record: hash, bytes, WebP geometry, the supported widths, and no width above the tile's side. It then makes the files read-only and writes a write-once index.
+- Everything else reads only that index:
+  - `sheets OUT` writes review sheets of at most four sets per page. Each set shows the tile reduced to 320 px and every derivative width at 320 px, with an exact-hash index.
+  - `widths PLAN`, `regions PLAN` and `decodes PLAN` write native evidence for chosen tiles. Magnification is by a whole factor, nearest neighbour, only.
+  - `template OUT` writes a blank review template whose decisions stay null.
+
+Code never fills a decision.
+
+Limits:
+- A refused freeze leaves the files it had already verified read-only, and writes no index.
+- A set whose detail width is also a card width (a 320, 640 or 960 px tile) is labelled `card+detail` and counted under its width.
+- The sheet index takes its column names from the first set.
+- `decodes` writes the decodes for known tiles before it refuses an unknown one.
+
+Tests: `derivative-review.test.mjs` (synthetic).
+
 ### Open-licence photos (prepared, not active)
 
 Decision 0013 accepts open-licence exact-product photographs of m126234-0015 only (narrowing 0011 for that reference and scope only), but the applied database still accepts only `owner_original` and `written_permission` grants, so no open-licence image can be recorded or published today. The path goes live only after, in order: the storefront showing the visible credit of every `attribution` entry wherever that image appears (see `docs/WEBSITE-MODELS-AND-VARIANTS-CONTRACT.md`); and the approved application of `apps/storefront/supabase/proposed/jwleria_open_license_media.sql`, whose approval request must name, as its own line, that its open-licence lane publishes such images without the source's `publication_allowed` flag (decisions 0011 and 0013). Its rollback (`.rollback.sql`) restores the applied definitions exactly and refuses while any open-licence grant or credit exists.
