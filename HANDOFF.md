@@ -4,6 +4,32 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## LOEWE framing holds resolved; continue from actual results — 2026-11-17
+
+Read the top entry of [STATE](STATE.md). The three framed LOEWE sets (3 products, 12 files) are published through the live completion route and verified by Codex's final production read.
+- **Totals:** 518 newly photographed variants and 2,072 files; LOEWE 121 sets and 484 files.
+- **Unchanged:** every other catalog row is identical by digest.
+- **Route:** its own publication call works after the two-cast JSON binding fix.
+
+Next safe actions, in order:
+1. Verify this checkpoint and both authorized refs before continuing. It holds:
+   - the function files, exactly as deployed in its fourth version;
+   - `framed-flat-tile.mjs` and the `bind-frozen.mjs` opt-in;
+   - the intake README, the n8n guide, STATE and HANDOFF.
+
+   The function source in Git must stay byte-equal to the deployed version; redeploy after any edit. No main, foundation or Gembox merge.
+2. **Any future framed tile follows the same narrow path:**
+   - an explicit recorded frame of an accepted cutout;
+   - Codex's acceptance of the exact tile;
+   - a derivative review naming the tile.
+
+   Default tiles are unchanged.
+3. Keep these as they are, with no reacquisition, retry or proxy:
+   - the 15 resolution holds;
+   - the source/robots refusal;
+   - the 197 unreached entries;
+   - every negative and superseded record.
+
 ## Event-driven completion live; continue from actual results — 2026-11-17
 
 Read the top entry of [STATE](STATE.md). These are live:
@@ -21,10 +47,10 @@ Next safe actions, in order:
    - read the private activation receipt. A group is activated only when every candidate is `published` or `already_published`.
 
    To resume, use `activate`. As the fallback, run the group's publish statement.
-3. The first new product completed this way is the first time the function itself makes the publication call. If it answers `refused` with a permission error (`42501`), stop and report: no grant is prepared. Use the fallback statement.
+3. **Exercised later on 2026-11-17 (see above):** the three framed LOEWE sets were published through this call. The first new product completed this way is the first time the function itself makes the publication call. If it answers `refused` with a permission error (`42501`), stop and report: no grant is prepared. Use the fallback statement.
 4. Keep the webhook address private. Anyone holding it can start executions, though completion can only publish approvals that are already recorded and fully stored. If it is exposed, change the webhook path and republish. Never put the address, workflow identifiers, caller, receipts or runner in Git.
 5. Keep these exactly as they are:
-   - the three LOEWE framing holds, with no approval;
+   - the three LOEWE framing holds, with no approval (resolved later on 2026-11-17 by the accepted framed tiles; see above);
    - the 515 delivered variants, with no replay;
    - the resolution holds;
    - the source/robots refusal;
@@ -36,7 +62,7 @@ Read the top delivery entry of [STATE](STATE.md). Completed in production: Longc
 
 The four applied source/grant/grouping migrations now reside in the migration history under their real registered timestamps. Do not reapply them, re-ingest the completed gallery revisions, re-record completed batches, re-upload successful files, re-encode derivatives, collect completed pages again or re-review accepted images. The resumable uploader and frozen-file binder are saved. The transient 503 interruption was resolved through the same route.
 
-The three LOEWE framing-feedback sets remain held with empty public image lists: A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160. Preserve their 12 held derivatives, all 118 published accepted sets, originals and negative/superseded records. Keep the resolution holds, source/robots refusal and unreached entries; no retry, proxy or alternate acquisition route is authorized by delivery completion.
+(Resolved later on 2026-11-17 by accepted framed tiles; see above.) The three LOEWE framing-feedback sets remain held with empty public image lists: A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160. Preserve their 12 held derivatives, all 118 published accepted sets, originals and negative/superseded records. Keep the resolution holds, source/robots refusal and unreached entries; no retry, proxy or alternate acquisition route is authorized by delivery completion.
 
 **n8n access is now established:** the owner opened the existing Cloud account and completed workspace sign-in. Codex inspected the Jwleria project: six workflows, an empty credential list, the inactive manual four-file image replay, and the durable intake's two deactivated database nodes. The private connection receipt holds the instance/project identifiers and a bounded export of the image workflow. Do not ask again for the instance URL or name; inspect the current signed-in tab first. No workflow, schedule, credential, setting or other project was changed, and no completed image was replayed.
 

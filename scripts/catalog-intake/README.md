@@ -249,3 +249,24 @@ Limits:
 - Only cutout-based and native-alpha flat tiles are supported.
 - The manifest is rebuilt from recorded facts. Its cutout check is the batch's recorded result for that original, not a fresh decode.
 - Inputs and outputs contain private paths and project URLs and stay outside Git.
+
+## Opt-in framing of a flat tile (owner direction, 2026-11-17)
+
+`framed-flat-tile.mjs` re-frames one accepted cutout for named items only. It is wired into nothing, and `normalizeFlatTile` still makes every default tile.
+
+- **Recipe (`flat_tile_frame` v1):** the square's side (padding) and the product box's top-left corner (translation), in whole pixels. There is no scale, crop, mask change, retouch or generation.
+  - The side stays within the flat-tile limits, and the whole product box must lie inside the square.
+- **Composition:** the same as the default tile: same decoding, alpha box, `#f0f0f0` square, native scale and PNG settings. Every opaque product pixel is verified unchanged.
+- **Basis check:** given the accepted default tile as `basis`, that tile must be exactly what `normalizeFlatTile` makes of the cutout, and the framed product box must equal its product box byte for byte. Only the frame then differs.
+- **Adoption:** a framed tile is adopted into its own private batch row.
+  - The row's tile record carries the recipe and the frame acceptance.
+  - The previous tile is listed under `superseded_tiles`, never as a rejected cutout.
+  - The accepted cutout and every earlier rejection stay as recorded.
+  - Derivatives come from the existing `webpPreviews`, `freezePreviews` and `reviewSheets`.
+- **Binding:** `bind-frozen.mjs` takes an optional `frame_acceptance` file. A framed row binds only when all of these hold:
+  - the file names its exact ref, tile and cutout with every flat-tile check true;
+  - a derivative review names the tile.
+
+  That acceptance supplies the tile review. Its reviewer and checks are taken verbatim, the original is the batch row's, and its reference is the receipt's sha256. Rows without a frame bind exactly as before.
+
+The completion route of `jwl-media-upload` binds JSON parameters as text and parses them in SQL (`::text::jsonb`). postgres.js would otherwise serialize a `jsonb`-typed parameter a second time.

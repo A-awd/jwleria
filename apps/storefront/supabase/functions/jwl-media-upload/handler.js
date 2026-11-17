@@ -162,13 +162,16 @@ export const completionStateQuery=`select c.external_id,c.revision_hash,a.candid
  left join jwl_internal.publication_approvals a on a.candidate_id=c.candidate_id and a.revision_hash=c.revision_hash and a.image_verified and a.revoked_at is null
  left join public.jwl_catalog k on k.id=c.candidate_id
  where c.candidate_id=$1`;
-/** The stored objects among the given paths ($1 bucket, $2 JSON array of paths). */
-export const storedQuery='select o.name from storage.objects o where o.bucket_id=$1 and o.name in (select jsonb_array_elements_text($2::jsonb))';
+/**
+ * The stored objects among the given paths ($1 bucket, $2 JSON array of paths). JSON text is bound as text and cast
+ * in SQL: a parameter typed jsonb would be serialized again by postgres.js, arriving as a JSON string scalar.
+ */
+export const storedQuery='select o.name from storage.objects o where o.bucket_id=$1 and o.name in (select jsonb_array_elements_text($2::text::jsonb))';
 /**
  * The operator's publish statement (batchPublishSql in scripts/catalog-intake) for one candidate: the stored public
  * facts row with the live approval's own images, through jwl_publish_candidate, which re-checks the grant, source
  * flag, revision and every displayed fact. Guarded by the revision ($2) and exact variant list ($3) that completion
- * verified; no row means one of them changed in between.
+ * verified; no row means one of them changed in between. $3 is JSON text bound as text, as in storedQuery.
  */
 export const publishQuery=`select c.external_id,public.jwl_publish_candidate(c.candidate_id,c.revision_hash,to_jsonb(k)||jsonb_build_object('images',a.approved_images,'image_variants',a.approved_image_variants)) as published
 from jwl_internal.candidates c
@@ -176,7 +179,7 @@ join public.jwl_catalog k on k.id=c.candidate_id and k.active
 join jwl_internal.publication_approvals a on a.candidate_id=c.candidate_id and a.revision_hash=c.revision_hash and a.image_verified and a.revoked_at is null
 where (exists(select 1 from jwl_internal.published_revisions p where p.catalog_id=c.candidate_id and p.revision_hash=c.revision_hash)
   or exists(select 1 from jwl_internal.factual_publications f where f.catalog_id=c.candidate_id and f.candidate_id=c.candidate_id and f.revision_hash=c.revision_hash))
-  and c.candidate_id=$1 and c.revision_hash=$2 and a.approved_image_variants=$3::jsonb`;
+  and c.candidate_id=$1 and c.revision_hash=$2 and a.approved_image_variants=$3::text::jsonb`;
 
 /**
  * Browser and CDN lifetime of a public derivative. Names are content-addressed, so the bytes behind a URL never

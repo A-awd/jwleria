@@ -4,6 +4,48 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Three LOEWE framing holds resolved and published through the live completion route — 2026-11-17
+
+- **Owner direction:** the owner asked that A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160 be adjusted in size and position within the square frame, to match the other products. Allowed: translation, padding or non-enlarging uniform scale of the already accepted repaired cutouts only.
+- **Prepared (Claude):** three framed candidates, made by the new opt-in `scripts/catalog-intake/framed-flat-tile.mjs`.
+  - **How:** each accepted cutout is composed exactly as its default tile was, at a recorded frame: the square's side (padding) and the product's position (translation). No scale was needed or used. There was no crop, mask change, retouch or generation.
+  - **Targets:** the frame places the measured bag body on an explicit target. Cala and Puzzle take the mean of their three same-family neighbours. Flamenco takes its closest neighbour by measured geometry; no size or model identity is claimed.
+  - **Changes at a 320 px card:** Cala's body is 1.5 px narrower, Flamenco's sits 2.4 px further right, and Puzzle's sits 2.9 px higher.
+  - **Composition receipts:** no opaque product pixel changed, and each product box is byte-identical to its held tile's. At the default frame, the same composition reproduces each held tile exactly.
+- **Reviewed (Codex, operator):**
+  - Codex accepted the three framed tiles by exact hash, after viewing a native-320 comparison with the same-family neighbours and each full master.
+  - After viewing one review sheet, Codex accepted their 12 derivatives. They were made by the existing capped encoder: 320/640/960 px plus a detail width capped at the tile side, with no file flagged.
+  - This is Codex's operator acceptance, not an owner visual approval. The earlier held tiles were not retroactively accepted.
+- **Prepared (Claude): a narrow, opt-in adoption and binding.**
+  - **Adoption:** a private three-row batch. It reproduces each accepted framed tile from its cutout and recipe, and keeps each accepted cutout and every earlier rejection as recorded. Each held tile is recorded as superseded framing, never published, and not as a rejected cutout.
+  - **Binding:** `bind-frozen.mjs` gains an opt-in. A framed tile binds only when the frame acceptance names its exact ref, tile and cutout with every flat-tile check true, and a derivative review names the tile. Every other set binds exactly as before. The package held 3 products and 12 files, with none refused.
+- **Producer-reported (Codex):**
+  - all three re-bind operations returned `rebound`;
+  - the three approvals were recorded with the expected revisions;
+  - the 12 files were uploaded through the private runner.
+- **Actual failure:** the first real completions answered `unconfirmed` for all three.
+  - **Cause:** production logs show SQLSTATE 22023 on the completion's stored-file query. The JSON list of paths was passed as text to a parameter the server typed as `jsonb`, and postgres.js serialized it again, so it arrived as a JSON string scalar. The publication query had the same flaw.
+  - **Fix:** two casts that bind the JSON as text and parse it in SQL (`::text::jsonb`). No gate, grant, DDL, storage setting or security check changed.
+- **Producer-reported (Codex):** `jwl-media-upload` was redeployed (its fourth version), with JWT verification unchanged.
+  - **Retry:** an activate-only retry announced three groups and activated three. Each product's reply was `published` (HTTP 200).
+  - **Not used:** no upload replay, manual publish, fallback statement or new grant.
+  - **What this proves:** the completion route's own publication call has now run successfully.
+- **Observed live (Codex's final production read):**
+  - **Catalog:** all 4,097 catalog rows stay active.
+    - Photographed rows rose from 516 to 519: 518 newly delivered plus the pre-existing Rolex photograph.
+    - Stored files rose from 2,075 to 2,087: 2,072 newly delivered plus 15 earlier files.
+  - **The three rows:** each is active with `approved_media` and exactly its recorded images.
+  - **Everything else unchanged:** a digest of every other catalog row is identical before and after. The 515 earlier variants, including the 118 LOEWE sets, are therefore preserved.
+  - **Pages:** Codex opened the three live product pages (Cala, Flamenco, Puzzle) and viewed their photographs, which show the new frames.
+  - **n8n:** the execution list shows the three successful completions. The three failed first attempts are retained.
+- **Totals:** LOEWE 121 sets and 484 files; overall, 518 newly photographed variants and 2,072 derivative files.
+- **Retained:**
+  - originals, negatives and superseded versions, including the three held tiles;
+  - the 15 resolution holds;
+  - the source/robots refusal;
+  - the 197 unreached entries.
+- **Execution and scope:** same official Claude subscription conversation (Opus 5.5), sequential, no extra agents. No test suite ran. Claude's checks were only composition, encoding and hash receipts plus a read of public postgres.js source. Claude made no provider write.
+
 ## Event-driven completion after upload — live, 2026-11-17
 
 - **Producer-reported (Codex):** `jwl-media-upload` was redeployed (its third version) from this checkpoint's function files, with JWT verification unchanged.
@@ -42,7 +84,7 @@
 - **Uploaded, published and read back:** 515 newly photographed product variants and 2,060 reviewed WebP files: Longchamp 390 / 1,560 (382 prepared sets plus all eight saved shoe refreshes), LOEWE 118 / 472, and Bottega Veneta 7 / 28. Production has 516 photographed rows including the pre-existing Rolex photograph, with all 4,097 catalog rows active. Private per-file and publication receipts are retained; all upload workers finished.
 - **Observed on the live website:** Codex opened and viewed real photographs at [Longchamp 20032021215](https://jwleria.com/ar/products/longchamp-20032021215/) and [LOEWE 337.12.P57-1100](https://jwleria.com/ar/products/loewe-337-12-p57-1100/). No storefront or upload-function deployment was needed for these data deliveries.
 - **LOEWE and refresh binding:** the existing candidate-ingest/factual-publication route installed truthful gallery revisions derived from the saved official pages. Current facts, Arabic names and descriptions were preserved. All 118 LOEWE and eight Longchamp re-bind operations succeeded, then their exact evidence was recorded, their frozen files uploaded and their public rows activated. No completed page collection or original download was repeated, and no derivative was encoded or copied again.
-- **Still held:** A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160, with their 12 derivative rows. The final production read shows all three still have empty image lists. Their framing feedback stays open; every original, accepted master, negative, superseded version and source/robots hold remains retained.
+- **Still held (resolved later on 2026-11-17 by accepted framed tiles; see the top entry):** A120HPLX04-9003, A411NBPX40-1193 and A510P60X96-1160, with their 12 derivative rows. The final production read shows all three still have empty image lists. Their framing feedback stays open; every original, accepted master, negative, superseded version and source/robots hold remains retained.
 - **Applied migration history:** `20261117094617_jwleria_owner_directed_official.sql`, `20261117094629_jwleria_longchamp_material_option.sql`, `20261117100439_jwleria_owner_directed_bottega.sql` and `20261117102355_jwleria_owner_directed_loewe.sql`. Their bytes match the stored production migrations. The files are now in `apps/storefront/supabase/migrations/`; rollback proposals remain in `proposed/`. Do not apply the completed operations again.
 - **Reusable delivery:** `scripts/catalog-intake/bind-frozen.mjs` binds frozen, previously reviewed files without encoding or inventing reviews, preserving the existing grant/gallery/review gates. `deliver-ready.mjs` uploads with bounded concurrency, private append-only receipts and resume, emitting publish SQL for completed groups. Codex used the existing provider calls and existing caller credential; no new account, credential privilege, public local-file server or external image processor was added.
 - **Actual interruption:** three HTTP 503 replies interrupted Longchamp delivery. The same function and receipts were resumed at lower concurrency, completed the remaining files and retained the failed replies. No approval refusal was bypassed and no alternate writer was used.

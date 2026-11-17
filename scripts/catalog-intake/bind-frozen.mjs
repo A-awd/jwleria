@@ -166,7 +166,7 @@ select current_setting('jwl.rebind_result')::jsonb as result;`;
  * - re-bind statements, in the same product order and chunks as the record statements;
  * - a ready manifest for deliver-ready.mjs, whose upload files are the frozen files where they lie.
  */
-export async function bindFrozen({batch_dir,refs,records,reviews,derivative_review,live,grant,public_base_url,prepared_by,owner_instruction,collection_label,derived=false,refreshes=null,relocate=[],refused:prior=[],out,chunk=10}){
+export async function bindFrozen({batch_dir,refs,records,reviews,derivative_review,live,grant,public_base_url,prepared_by,owner_instruction,collection_label,derived=false,refreshes=null,frame_acceptance=null,relocate=[],refused:prior=[],out,chunk=10}){
   if(grant?.kind!=='owner_directed_official'||grant.evidence_reference!=='decision-0025'||!Array.isArray(grant.media_origins))throw Error('The exact owner-directed grant row is required');
   // Old-host paths are resolved in memory only; the batch's own records are never rewritten.
   const at=path=>{for(const r of relocate)if(path?.startsWith(r.from))return r.to+path.slice(r.from.length);return path;};
@@ -181,13 +181,26 @@ export async function bindFrozen({batch_dir,refs,records,reviews,derivative_revi
     files:previews[x.tile.sha256].variants.map(v=>({width:v.width,height:v.height,bytes:v.bytes,sha256:v.sha256,path:at(v.path)}))}]));
   const visual=new Map(reviews.map(r=>[r.ref,r])),liveRows=new Map(live.map(r=>[r.external_id,r]));
   const derivatives=derivativeReviewByTile(derivative_review);
+  // Opt-in, for framed tiles only (framed-flat-tile.mjs). A framed tile can bind only when all of these hold:
+  // - the batch row carries its frame recipe;
+  // - the frame acceptance names this ref, tile and cutout with every flat-tile check true;
+  // - a derivative review names the tile.
+  // The acceptance is that tile's review; the row's earlier tile review is not used. Every other set binds as before.
+  const framedTiles=new Map((frame_acceptance?.reviews??[]).filter(a=>a.accepted===true&&a.decision==='accepted'&&typeof a.reviewer==='string'&&a.reviewer.trim()
+    &&flatTileReviewChecks.every(k=>a.checks?.[k]===true)).map(a=>[a.tile_sha256,a]));
   await mkdir(join(out,'bundles'),{recursive:true,mode:0o700});await mkdir(join(out,'rebind'),{mode:0o700});
   const bound=[],refused=[...prior];
   for(const ref of refs){
     try{
       const row=rows.get(ref),entry=entries.get(ref),record=records.get(ref),review=visual.get(ref),now=liveRows.get(ref);
       if(!row||!entry||!record||!review||!now)throw Error('a batch row, frozen set, saved record, review or live row is missing');
-      if(entry.repaired!==false||entry.rejected?.length||entry.tile_sha256!==row.tile.sha256||entry.cutout_sha256!==(row.cutout?.sha256??null)||entry.original_sha256!==row.original.sha256)throw Error('the frozen set is not the accepted set');
+      const accepted=framedTiles.get(row.tile.sha256);
+      const framed=row.tile.frame?.recipe?.kind==='flat_tile_frame'&&accepted?.ref===ref&&accepted.cutout_sha256===(row.cutout?.sha256??null);
+      if((!framed&&(entry.repaired!==false||entry.rejected?.length))||entry.tile_sha256!==row.tile.sha256||entry.cutout_sha256!==(row.cutout?.sha256??null)||entry.original_sha256!==row.original.sha256)throw Error('the frozen set is not the accepted set');
+      if(framed&&(entry.rejected??[]).some(j=>j.cutout_sha256===entry.cutout_sha256||j.tile_sha256===entry.tile_sha256))throw Error('a framed set names a rejected file');
+      if(framed&&!derivativeReviewed(derivatives,row.tile.sha256))throw Error('a framed set binds only after a derivative review names its tile');
+      const tileReview=framed?{tile_sha256:accepted.tile_sha256,cutout_sha256:accepted.cutout_sha256,original_sha256:row.original.sha256,reviewer:accepted.reviewer,
+        review_reference:`${frame_acceptance.reference} (${ref})`,checks:Object.fromEntries(flatTileReviewChecks.map(k=>[k,accepted.checks[k]]))}:review.tile_review;
       if(record.external_id!==ref||record.source_id!==grant.source_id||record.candidate_id!==now.candidate_id)throw Error('the saved record names another product');
       const gallery=record.image_urls.indexOf(row.asset_url);
       if(gallery<0)throw Error('the downloaded file is not in the saved record gallery');
@@ -204,7 +217,7 @@ export async function bindFrozen({batch_dir,refs,records,reviews,derivative_revi
       const verification=mergedVerification(review.verification,{basis:'official_gallery_listing',asset_sha256:o.sha256,identity_established:true,reference:ref,
         revision_hash:record.revision_hash,gallery_url:row.asset_url,reviewer:identityReviewer,reason});
       const bundle=approvalBundle({candidate:record,grant,items:[{asset:{path:o.path,source_url:row.asset_url,sha256:o.sha256},manifest,verification,
-        ...(row.cutout?{cutout_review:review.cutout_review}:{}),tile_review:review.tile_review}],public_base_url,prepared_by});
+        ...(row.cutout?{cutout_review:review.cutout_review}:{}),tile_review:tileReview}],public_base_url,prepared_by});
       await mkdir(join(out,'bundles',ref),{mode:0o700});
       await writeFile(join(out,'bundles',ref,'approval-bundle.json'),JSON.stringify(bundle,null,1),once);
       const frozen=new Map(entry.files.map(f=>[f.sha256,f.path]));
@@ -257,7 +270,10 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     }catch(error){refused.push({ref,reason:error.message});}
   }
   const refs=i.refs.filter(ref=>!refused.some(r=>r.ref===ref));
+  // Opt-in: a frame acceptance file; its exact sha256 is the review reference of each framed tile it accepts.
+  const frameBytes=i.frame_acceptance?await readFile(i.frame_acceptance):null;
+  const frame_acceptance=frameBytes?{...JSON.parse(frameBytes),reference:`Frame acceptance receipt sha256 ${sha256(frameBytes)}`}:null;
   console.log(JSON.stringify(await bindFrozen({batch_dir:i.batch_dir,refs,records,reviews:visual,
     derivative_review:i.derivative_review?await load(i.derivative_review):null,live:current??await load(i.live_gallery),grant:i.grant,public_base_url:i.public_base_url,prepared_by:i.prepared_by,
-    owner_instruction:i.owner_instruction,collection_label:i.collection_label,derived:Boolean(current)&&!payload,refreshes:payload,relocate:i.relocate??[],refused,out:i.out})));
+    owner_instruction:i.owner_instruction,collection_label:i.collection_label,derived:Boolean(current)&&!payload,refreshes:payload,frame_acceptance,relocate:i.relocate??[],refused,out:i.out})));
 }
