@@ -4,15 +4,36 @@
 
 [Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Completion after upload — live, 2026-11-17
+
+A second private workflow in the Jwleria project, "Jwleria — Complete recorded approvals after upload (webhook)", is published (producer-reported by Codex). It is the integration for future ready bundles. The manual check below is unchanged.
+
+- **Flow:**
+  1. A POST webhook receives metadata only.
+  2. A Code node checks the exact ids: 1 to 25 ids of 64 hex characters.
+  3. One POST goes to `jwl-media-upload` with the existing public caller.
+  4. A Code node checks every candidate's result, then the workflow replies to the uploader.
+  5. The execution is marked failed unless every candidate is `published` or `already_published`.
+- **Bytes never pass through n8n:** files go directly from the operator's machine to the function. n8n Cloud cannot read local files, and receives only candidate ids.
+- **What the function does with the ids:** see "Completion after upload" in [`scripts/catalog-intake/README.md`](../../scripts/catalog-intake/README.md). It resolves each live recorded approval, verifies every stored file, then makes the existing publication call. It never records an approval or writes a file.
+- **No new privilege:** the existing public caller is reused inside the private workflow. There is no n8n credential, database node, storage access or schedule. Only Run If (where `$json` is `{body, headers, params, query}`) drops malformed requests with a 200 and no execution.
+- **Ignore Bots stays off on this workflow:**
+  - In n8n 2.48.4, this option checks `isbot(user-agent)` before authentication and before Only Run If.
+  - isbot 3.6.13 classifies every bare machine user agent as a bot (`node`, `curl`, or a custom `Name/1.0`) and the webhook answers 403 `Authorization data is wrong!`.
+  - The owner approved disabling it on this workflow only. Do not imitate a browser user agent instead.
+- **Observed (producer-reported by Codex):** after that correction, one call for already-published Longchamp 20032021215 returned 200 with `ok: true`, `already_published` and 4 files, and the execution succeeded. No file was downloaded, uploaded or replayed, and nothing was written. The publication call itself will first run for the next genuinely new ready product.
+- **Running it:** the uploader (`deliver-ready.mjs upload`, `activate`) reads the webhook address only from its environment at run time. An operator-only private runner loads that address and the existing caller from the private export.
+- **Kept private, outside Git:** the workflow's definition and export, its identifiers and webhook address, the caller values, the execution receipts, and the operator's run-time configuration and runner.
+
 ## Current delivery and connection status — 2026-11-17
 
 The ready-file route has delivered 515 newly photographed product variants / 2,060 derivative files through the existing Supabase function and catalog calls: Longchamp 390, LOEWE 118 and Bottega Veneta 7. `bind-frozen.mjs` and `deliver-ready.mjs` reuse the reviewed files without re-encoding; private receipts retain actual upload and publication outcomes. This completed production delivery did not run through n8n.
 
 The owner has now opened the existing Cloud account and completed workspace sign-in after its restart. Codex observed the Jwleria project directly: six workflows; its credential list is empty; the image workflow below is still inactive and still replays the same four public files. Its existing caller remains in its private header parameters. The durable intake has two deactivated database nodes. A bounded private export preserves the actual image-workflow definition. No workflow, schedule, credential or account setting was changed or executed. The instance name is no longer missing; do not ask for it again.
 
-The remaining implementation cannot currently be coordinated with the retained Claude client: tool policy rejects sending instructions because approval is required while the current session cannot request it. A text-only, no-execution request was also rejected. No alternate control route was used. The private English continuation records this and the exact capability inventory. No new automation is claimed.
+Resolved later the same day: the same retained Claude conversation received the continuation and prepared the completion route above. The earlier rejection of instructions, with no alternate control route used, is historical.
 
-The integration must handle future ready-file delivery and activation after legitimate recorded approval. The existing public caller can upload approved bytes, but cannot invoke database approval-recording or catalog-publication functions. Inspect and reuse existing server-side capabilities before proposing any new privilege. Do not create a new service, broad credential grant or paid dependency, expose local files publicly, make per-image model calls or replay completed delivery as a preflight. The current owner instruction remains immediate publication of ready work, with no repeated production-approval question or test suite.
+**Requirement (met by the completion route above):** the integration must handle future ready-file delivery and activation after legitimate recorded approval. The existing public caller can upload approved bytes and request bounded server-side completion; it cannot directly execute database approval-recording or catalog-publication functions. Inspect and reuse existing server-side capabilities before proposing any new privilege. Do not create a new service, broad credential grant or paid dependency, expose local files publicly, make per-image model calls or replay completed delivery as a preflight. The current owner instruction remains immediate publication of ready work, with no repeated production-approval question or test suite.
 
 **State (2026-11-01):**
 - **Ran once by hand, successfully** (observed live): four `already_present` replies with the expected sha256 and size.

@@ -4,6 +4,32 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Event-driven completion live; continue from actual results — 2026-11-17
+
+Read the top entry of [STATE](STATE.md). These are live:
+- the redeployed upload function's completion route;
+- the private n8n completion webhook, with Ignore Bots off on that workflow only.
+
+One already-published product was completed through them, with no write. The Claude control blocker below is resolved: this same retained conversation received the continuation and prepared the route.
+
+Next safe actions, in order:
+1. Verify the saved checkpoint and both authorized branch refs. The function source in Git must stay byte-equal to the deployed version; redeploy after any edit. No main, foundation or Gembox merge.
+2. For each future ready batch:
+   - prepare and bundle as before, with no re-encoding and no new reviews;
+   - the operator records the approvals;
+   - upload with the operator's private runner, which loads the existing caller and the webhook address at run time;
+   - read the private activation receipt. A group is activated only when every candidate is `published` or `already_published`.
+
+   To resume, use `activate`. As the fallback, run the group's publish statement.
+3. The first new product completed this way is the first time the function itself makes the publication call. If it answers `refused` with a permission error (`42501`), stop and report: no grant is prepared. Use the fallback statement.
+4. Keep the webhook address private. Anyone holding it can start executions, though completion can only publish approvals that are already recorded and fully stored. If it is exposed, change the webhook path and republish. Never put the address, workflow identifiers, caller, receipts or runner in Git.
+5. Keep these exactly as they are:
+   - the three LOEWE framing holds, with no approval;
+   - the 515 delivered variants, with no replay;
+   - the resolution holds;
+   - the source/robots refusal;
+   - the unreached entries.
+
 ## Ready-work delivered; continue from actual results — 2026-11-17
 
 Read the top delivery entry of [STATE](STATE.md). Completed in production: Longchamp 390 products / 1,560 files (including all eight saved shoe refreshes), LOEWE 118 / 472, and Bottega Veneta 7 / 28: 515 newly photographed variants / 2,060 derivative files. The unchanged prepared files were recorded, uploaded and bound to the live site. Codex viewed live Longchamp and LOEWE photographs. All upload workers finished; private receipts allow exact resumption without repeating successful work.
@@ -14,9 +40,9 @@ The three LOEWE framing-feedback sets remain held with empty public image lists:
 
 **n8n access is now established:** the owner opened the existing Cloud account and completed workspace sign-in. Codex inspected the Jwleria project: six workflows, an empty credential list, the inactive manual four-file image replay, and the durable intake's two deactivated database nodes. The private connection receipt holds the instance/project identifiers and a bounded export of the image workflow. Do not ask again for the instance URL or name; inspect the current signed-in tab first. No workflow, schedule, credential, setting or other project was changed, and no completed image was replayed.
 
-**Current execution blocker:** sending instructions to the retained Claude session is rejected by tool policy because approval is required but cannot be requested in the current session. Even a text-only request with no tools or implementation was rejected. Do not bypass this through another terminal, browser, process, session or writer. A private English continuation contains the actual capability inventory and concrete integration gap. Resume a supported authorized Claude control path before delegated implementation.
+**Execution blocker (resolved later on 2026-11-17; see above):** sending instructions to the retained Claude session is rejected by tool policy because approval is required but cannot be requested in the current session. Even a text-only request with no tools or implementation was rejected. Do not bypass this through another terminal, browser, process, session or writer. A private English continuation contains the actual capability inventory and concrete integration gap. Resume a supported authorized Claude control path before delegated implementation.
 
-The future route must connect genuinely new ready bundles to transfer and catalog activation, using the existing frozen-file helpers and approval-bound server-side route. The current public caller only uploads exact already-approved bytes; it does not record approvals or publish catalog rows. Do not present the four-file replay as automation, add broad database credentials, expose local files publicly or use per-image model calls. No new production approval question is pending: decision 0026 remains standing authority for ready work.
+**Requirement (met by the completion route above):** the future route must connect genuinely new ready bundles to transfer and catalog activation, using the existing frozen-file helpers and approval-bound server-side route. The public caller does not directly execute database recording or publication functions; the completion route above now invokes publication server-side after exact checks. Do not present the four-file replay as automation, add broad database credentials, expose local files publicly or use per-image model calls. No new production approval question is pending: decision 0026 remains standing authority for ready work.
 
 Continue in this same Codex chat and retained Claude subscription session. Keep English coordination, Arabic owner updates, no extra agents/Ultracode/spend, no tests or extra review loops, no secrets/private payloads in Git, and no merge into main, foundation or Gembox. Do not run Easy Life or delete/archive the original conversation.
 

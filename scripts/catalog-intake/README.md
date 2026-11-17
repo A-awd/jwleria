@@ -199,6 +199,27 @@ Outputs, inputs and `binding` evidence stay outside Git. Nothing is uploaded or 
 
 The operator runs the prepared record statements and the publish statements; this script runs neither. Manifests, receipts and publish statements contain private paths and project URLs, so they stay outside Git.
 
+### Completion after upload (optional)
+
+Completion publishes a recorded approval once all its files are stored. It does not record approvals: that stays the operator's step.
+
+- **The function:** a `POST` to `jwl-media-upload` with `{"candidate_ids":[...]}` (1 to 25 exact ids) completes recorded approvals. For each candidate it:
+  - resolves the live recorded approval of the current revision;
+  - checks that every file the approval cites is stored, hashes to its own name, and has the cited size and canvas;
+  - re-checks each file against the upload's own approval-bound query, for this candidate;
+  - then runs the operator's publish statement for that one product, guarded by the same revision and variant list.
+
+  It never writes a file or records an approval. Each product gets a state:
+  - `no_live_approval`: there is no live approval, so nothing is published;
+  - `waiting`: a file is not stored yet;
+  - `already_published`: the row already shows exactly the approval's images, and nothing is written;
+  - `refused`, with the reason.
+- **The uploader:** with `JWL_COMPLETION_HOOK` set at run time, `upload` also announces each publish group it writes to that webhook.
+  - The announcement is metadata only: the group's file name, refs and candidate ids. No file passes through it.
+  - Replies go to `publish/activation.ndjson`. A group counts as activated only when every candidate is `published` or `already_published`.
+  - `activate PRIVATE_DIR` re-announces the groups not yet activated. Publish statements are still written as the fallback.
+- **Where it runs:** the webhook is an n8n workflow kept privately, because it names the project's function URL. It relays the ids to the function with the existing public caller, so n8n holds no database or storage credential.
+
 ## Binding frozen derivatives to a current revision (decision 0026)
 
 `bind-frozen.mjs PRIVATE_INPUT.json` turns already-reviewed, frozen flat-tile derivatives into approval bundles without encoding, copying or re-acquiring anything.

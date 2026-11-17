@@ -9,6 +9,11 @@
 // a private receipt, so a stopped run resumes at the next unconfirmed file. A model group whose files are all
 // confirmed gets its publish statement while the other uploads continue. Any refusal stops new requests.
 // The upload credential comes only from the environment at run time and is never written anywhere.
+// Completion (optional): with JWL_COMPLETION_HOOK set, each written publish group is also announced, with metadata
+// only (its exact candidate ids), to the operator's n8n webhook, which asks the same function to complete those
+// recorded approvals. The function itself verifies every stored file before the existing publication call. Replies go
+// to publish/activation.ndjson; `activate` re-announces the groups not yet activated. The publish statements stay
+// written as the operator's fallback. Approval recording stays a separate operator step.
 import {readFile,writeFile,appendFile,mkdir} from 'node:fs/promises';
 import {existsSync} from 'node:fs';
 import {join,resolve} from 'node:path';
@@ -21,6 +26,42 @@ const uploadPath=/^v1\/[a-f0-9]{64}\/[a-f0-9]{64}\/\d+w-([a-f0-9]{64})\.webp$/;
 const sha256=bytes=>createHash('sha256').update(bytes).digest('hex');
 const accepted=r=>(r.status===201&&r.state==='uploaded')||(r.status===200&&r.state==='already_present');
 const sleep=ms=>new Promise(done=>setTimeout(done,ms));
+const completedState=s=>s==='published'||s==='already_published';
+const httpsHook=hook=>/^https:\/\/[^/@\s]+\/\S+$/.test(hook??'');
+
+/**
+ * Metadata-only notice of one written publish group to the completion webhook: the group's file name, refs and exact
+ * candidate ids, never a file, credential or local path. The reply is the function's own per-candidate result; the
+ * group counts as activated only when every one of its candidates is reported published or already published.
+ */
+export async function announce({hook,group,fetcher=fetch}){
+  const row={at:new Date().toISOString(),n:group.n,file:group.file,refs:group.refs,candidate_ids:group.candidate_ids};
+  try{
+    const response=await fetcher(hook,{method:'POST',signal:AbortSignal.timeout(120000),headers:{'content-type':'application/json'},
+      body:JSON.stringify({group:group.file,candidate_ids:group.candidate_ids,refs:group.refs})});
+    const text=await response.text();let body={};try{body=JSON.parse(text);}catch{body={raw:text.slice(0,200)};}
+    const results=(Array.isArray(body?.results)?body.results:[]).map(r=>({candidate_id:r.candidate_id,external_id:r.external_id??null,state:r.state??null,error:r.error??null}));
+    const done=new Set(results.filter(r=>completedState(r.state)).map(r=>r.candidate_id));
+    Object.assign(row,{status:response.status,activated:response.status===200&&group.candidate_ids.every(id=>done.has(id)),results,error:body?.error??body?.message??body?.raw??null});
+  }catch(error){Object.assign(row,{status:null,activated:false,results:[],error:'network: '+(error.name==='TimeoutError'?'timeout':error.message)});}
+  return row;
+}
+
+/** Re-announces, one at a time, each written publish group whose latest notice was not activated. No file is sent. */
+export async function activatePending({dir,hook,fetcher=fetch,log=m=>console.error(m)}){
+  if(!httpsHook(hook))throw Error('JWL_COMPLETION_HOOK (an https URL) is required in the environment');
+  const publishDir=join(dir,'publish'),activationLog=join(publishDir,'activation.ndjson');
+  const rows=async file=>existsSync(file)?(await readFile(file,'utf8')).split('\n').filter(Boolean).map(line=>JSON.parse(line)):[];
+  const done=new Set((await rows(activationLog)).filter(r=>r.activated).map(r=>r.n));
+  const counts={announced:0,activated:0,not_activated:0};
+  for(const group of (await rows(join(publishDir,'index.ndjson'))).filter(g=>!done.has(g.n))){
+    const row=await announce({hook,group,fetcher});
+    await appendFile(activationLog,JSON.stringify(row)+'\n',{mode:0o600});
+    counts.announced++;counts[row.activated?'activated':'not_activated']++;
+    log(`${row.activated?'activated':'not activated'}: ${group.file} (${row.status??row.error})`);
+  }
+  return counts;
+}
 
 /** Reads a reference list: a JSON array of strings or {external_id|ref|candidate_id} rows, or one reference per line. */
 export async function readRefs(file){
@@ -87,10 +128,12 @@ export async function buildManifest({batches,grant_reference,live=null,recorded=
  * a network failure or local bytes that differ from the manifest stops new requests; nothing is retried in the run.
  * Publish statements are written as model groups complete, and at the end for every other confirmed item.
  */
-export async function deliver({dir,manifest,jwt,recordedFile=null,concurrency=4,group=10,watch=0,idle_limit=900,fetcher=fetch,log=m=>console.error(m)}){
+export async function deliver({dir,manifest,jwt,recordedFile=null,concurrency=4,group=10,watch=0,idle_limit=900,hook=null,fetcher=fetch,log=m=>console.error(m)}){
   if(!jwt)throw Error('JWL_UPLOAD_JWT is required in the environment for an actual upload');
   if(!(concurrency>=1&&concurrency<=8))throw Error('Concurrency must be between 1 and 8');
-  const receipts=join(dir,'receipts.ndjson'),publishDir=join(dir,'publish'),publishIndex=join(publishDir,'index.ndjson');
+  if(hook&&!httpsHook(hook))throw Error('JWL_COMPLETION_HOOK must be an https URL');
+  if(hook&&!(group>=1&&group<=25))throw Error('A completion group holds 1 to 25 products');
+  const receipts=join(dir,'receipts.ndjson'),publishDir=join(dir,'publish'),publishIndex=join(publishDir,'index.ndjson'),activationLog=join(publishDir,'activation.ndjson');
   await mkdir(publishDir,{recursive:true,mode:0o700});
   const confirmed=new Set(),published=new Set();
   if(existsSync(receipts))for(const line of (await readFile(receipts,'utf8')).split('\n').filter(Boolean)){const r=JSON.parse(line);if(accepted(r))confirmed.add(r.x_jwl_path);}
@@ -101,7 +144,7 @@ export async function deliver({dir,manifest,jwt,recordedFile=null,concurrency=4,
   const items=manifest.items.filter(x=>x.state!=='delivered');
   const complete=x=>x.uploads.every(u=>confirmed.has(u.x_jwl_path));
   const byModel=new Map();for(const x of items){if(!byModel.has(x.model))byModel.set(x.model,[]);byModel.get(x.model).push(x);}
-  let pending=[];
+  let pending=[],notifying=Promise.resolve();const activation={announced:0,activated:0,not_activated:0};
   // A model is published together once all its listed variants are confirmed. `drain` also writes a short group (when
   // nothing is left to send); `all` adds every other confirmed item, whose model still waits for a recording.
   const flush=async({drain=false,all=false}={})=>{
@@ -116,6 +159,15 @@ export async function deliver({dir,manifest,jwt,recordedFile=null,concurrency=4,
       batch.forEach(x=>published.add(x.ref));
       await append(publishIndex,{n,file:name,refs:batch.map(x=>x.ref),candidate_ids:batch.map(x=>x.candidate_id),written_at:new Date().toISOString()});
       log(`publish ready: ${name} (${batch.length}: ${batch.map(x=>x.ref).join(' ')})`);
+      if(hook){
+        const written={n,file:name,refs:batch.map(x=>x.ref),candidate_ids:batch.map(x=>x.candidate_id)};
+        // Announced in order without holding up the uploads; the run waits for every reply before it ends.
+        notifying=notifying.then(async()=>{
+          const row=await announce({hook,group:written,fetcher});await append(activationLog,row);
+          activation.announced++;activation[row.activated?'activated':'not_activated']++;
+          log(`${row.activated?'activated':'not activated'}: ${name} (${row.status??row.error})`);
+        });
+      }
     }
   };
   let stopped=null;const counts={uploaded:0,already_present:0,items_confirmed:0};
@@ -157,9 +209,10 @@ export async function deliver({dir,manifest,jwt,recordedFile=null,concurrency=4,
     if(!waiting.length||!watch||idle>=idle_limit)break;
     await sleep(watch*1000);idle+=watch;
   }
-  await writing;await flush({drain:true,all:true});await writing;
+  await writing;await flush({drain:true,all:true});await notifying;await writing;
   const waiting=items.filter(x=>!complete(x)).map(x=>x.ref);
-  return {...counts,confirmed_items:items.filter(complete).length,publish_files:publishFiles,published_refs:published.size,waiting:waiting.length,waiting_refs:waiting.slice(0,20),stopped};
+  return {...counts,confirmed_items:items.filter(complete).length,publish_files:publishFiles,published_refs:published.size,waiting:waiting.length,waiting_refs:waiting.slice(0,20),stopped,
+    ...(hook?{activation}:{})};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
@@ -176,9 +229,14 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){
     console.log(JSON.stringify({...m.counts,refused:m.refused}));
   }else if(command==='upload'&&dir){
     const result=await deliver({dir,manifest:JSON.parse(await readFile(join(dir,'ready-manifest.json'),'utf8')),jwt:process.env.JWL_UPLOAD_JWT,
-      recordedFile:recorded,concurrency,group,watch});
+      recordedFile:recorded,concurrency,group,watch,hook:process.env.JWL_COMPLETION_HOOK||null});
     console.log(JSON.stringify(result));
-    if(result.stopped)process.exitCode=2;
+    if(result.stopped)process.exitCode=2;else if(result.activation?.not_activated)process.exitCode=3;
+  }else if(command==='activate'&&dir){
+    const result=await activatePending({dir,hook:process.env.JWL_COMPLETION_HOOK});
+    console.log(JSON.stringify(result));
+    if(result.not_activated)process.exitCode=3;
   }else throw Error('Usage: node deliver-ready.mjs manifest PRIVATE_DIR GRANT_REFERENCE BATCH_BUNDLE_DIR... [--live LIVE.json] [--delivered REFS]\n'+
-    '  | upload PRIVATE_DIR [--recorded REFS] [--concurrency 4] [--group 10] [--watch SECONDS]   (env JWL_UPLOAD_JWT)');
+    '  | upload PRIVATE_DIR [--recorded REFS] [--concurrency 4] [--group 10] [--watch SECONDS]   (env JWL_UPLOAD_JWT; optional JWL_COMPLETION_HOOK)\n'+
+    '  | activate PRIVATE_DIR   (env JWL_COMPLETION_HOOK)');
 }

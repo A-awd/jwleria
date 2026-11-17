@@ -4,6 +4,39 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Event-driven completion after upload — live, 2026-11-17
+
+- **Producer-reported (Codex):** `jwl-media-upload` was redeployed (its third version) from this checkpoint's function files, with JWT verification unchanged.
+  - `PUT` uploads are unchanged: the handler and the approval-bound query text are byte-identical to the previous source.
+  - The new `POST {"candidate_ids":[...]}` (1 to 25 exact ids) completes recorded approvals. For each candidate it resolves the live recorded approval of the current revision, then verifies every cited stored file: hash against the content-addressed name, size, canvas, and the upload's own approval query for that candidate.
+  - Only then does it make the completed SQL route's own call: `jwl_publish_candidate`, with the stored public row plus the approval's images, guarded by revision and variant list. Variant mapping is untouched.
+  - It never writes a file or records an approval. Approval recording stays a separate operator step.
+- **Producer-reported (Codex):** a new private n8n workflow in the Jwleria project is published.
+  - Its webhook takes metadata only: exact candidate ids. It checks them, calls the same function once with the existing public caller, checks every result and replies to the uploader.
+  - An execution fails unless every candidate is `published` or `already_published`.
+  - No n8n credential, database node, schedule or permission was added. Its definition, identifiers, address, caller values and receipts stay private.
+- **Actual correction:**
+  - **Symptom:** observation requests got HTTP 403 `Authorization data is wrong!` from the webhook, before any execution. They used default machine user agents and one truthful custom user agent.
+  - **Cause:** installed n8n 2.48.4 source shows that Ignore Bots, which Claude's definition set, runs isbot 3.6.13 before authentication and before Only Run If. That check classifies every bare machine user agent as a bot.
+  - **Fix:** with the owner's action-time approval, Codex disabled Ignore Bots on this new workflow only and republished. No user agent was faked, and no authentication, JWT or approval changed.
+- **Producer-reported (Codex's live readback after the correction):** one call for already-published Longchamp 20032021215 returned HTTP 200 with `ok: true`, `already_published` and 4 files, and the n8n execution succeeded.
+  - No file was downloaded, uploaded or replayed, and that branch wrote nothing.
+  - The publication call itself has not yet run through this route. The next genuinely new ready product will be its first real completion.
+- **Prepared (this checkpoint):** `deliver-ready.mjs` announces each written publish group to the completion webhook when its address is given at run time.
+  - Replies go to a private activation receipt, and `activate` re-announces any group not yet activated. Publish statements are still written as the fallback.
+  - An operator-only private runner, outside Git, loads the existing caller and the webhook address at run time and starts the uploader, so a ready batch cannot run without its completion notices. Claude has not read or run it.
+- **Control restored:** this continuation reached the same retained Claude conversation, which acknowledged receipt in English and prepared the change. The earlier rejection of input is historical. No replacement conversation, account, agent or payment route was used.
+- **Unchanged:**
+  - The 515 variants and 2,060 files stay published. Nothing was replayed, re-uploaded, re-encoded or re-reviewed.
+  - The three LOEWE framing holds and their 12 derivatives stay held, with no approval. A completion request for them would answer `no_live_approval`.
+  - The manual four-file workflow stays inactive and unchanged, and durable intake's database nodes stay deactivated.
+- **Execution and scope:** same official Claude subscription conversation (Opus 5.5), sequential, no extra agents. No test suite ran. Claude made no provider write; its own checks were limited to:
+  - syntax parses of the changed files;
+  - a text comparison confirming the upload path is unchanged;
+  - one read-only n8n node-schema read;
+  - reads of public n8n and isbot source;
+  - a local dummy-file check of environment loading, with no provider call.
+
 ## Actual ready-work delivery completed — 2026-11-17
 
 - **Uploaded, published and read back:** 515 newly photographed product variants and 2,060 reviewed WebP files: Longchamp 390 / 1,560 (382 prepared sets plus all eight saved shoe refreshes), LOEWE 118 / 472, and Bottega Veneta 7 / 28. Production has 516 photographed rows including the pre-existing Rolex photograph, with all 4,097 catalog rows active. Private per-file and publication receipts are retained; all upload workers finished.
@@ -14,7 +47,7 @@
 - **Reusable delivery:** `scripts/catalog-intake/bind-frozen.mjs` binds frozen, previously reviewed files without encoding or inventing reviews, preserving the existing grant/gallery/review gates. `deliver-ready.mjs` uploads with bounded concurrency, private append-only receipts and resume, emitting publish SQL for completed groups. Codex used the existing provider calls and existing caller credential; no new account, credential privilege, public local-file server or external image processor was added.
 - **Actual interruption:** three HTTP 503 replies interrupted Longchamp delivery. The same function and receipts were resumed at lower concurrency, completed the remaining files and retained the failed replies. No approval refusal was bypassed and no alternate writer was used.
 - **n8n workspace access established (2026-11-17):** the owner opened the existing Cloud account and completed workspace sign-in after its restart. Codex observed the six Jwleria workflows, the empty project credential list, the inactive manual four-file image replay, and the two deactivated database nodes in durable intake. The instance URL and a bounded workflow export are retained privately. Do not ask for the instance name again. No workflow or schedule was edited, run or activated, and no setting, credential, permission or other project changed. The manual replay does not implement future uploads and publication.
-- **Current integration blocker:** tool policy rejects instruction delivery to the retained Claude session because approval is required while the session cannot request approval. A reduced text-only, no-execution request was also rejected. No alternate control route was used. A private English continuation records the actual inventory and minimal integration gap. Resume the supported authorized Claude control path for implementation; this is not a pending production approval. Existing delivery remains complete.
+- **Integration blocker (resolved; see the entry above):** tool policy rejects instruction delivery to the retained Claude session because approval is required while the session cannot request approval. A reduced text-only, no-execution request was also rejected. No alternate control route was used. A private English continuation records the actual inventory and minimal integration gap. Resume the supported authorized Claude control path for implementation; this is not a pending production approval. Existing delivery remains complete.
 - **Execution and scope:** same official Claude subscription continuation, Opus 5.5 / max, sequential, no extra agents or API billing. No test suite or new visual-review loop ran for this delivery. Three historical test files only had migration paths/replay filters maintained after the exact applied files moved. No main/foundation/Gembox merge, brand contact, generative product changes or Easy Life. Private images, payloads, keys, provider/session IDs and detailed receipts remain outside Git.
 
 ## Ready-work publication authorized — owner, 2026-11-17
