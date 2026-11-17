@@ -1,5 +1,9 @@
 # n8n: approved image delivery check (decision 0022)
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 **State (2026-11-01):**
 - **Ran once by hand, successfully** (observed live): four `already_present` replies with the expected sha256 and size.
 - That run is an idempotent delivery replay, not a new upload and not cloud image processing.

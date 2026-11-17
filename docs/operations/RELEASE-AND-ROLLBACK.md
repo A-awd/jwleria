@@ -1,5 +1,9 @@
 # Release and rollback — website foundation (2026-10-27)
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 This is the operator package for the existing-site foundation release. It is written for whoever holds the authenticated Cloudflare Wrangler session. The cloud session that prepared it has no Cloudflare deploy credential and no deploy tool. Nothing here is a record of a completed deploy.
 
 ## What the release contains

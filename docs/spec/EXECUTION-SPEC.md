@@ -1,5 +1,9 @@
 # Execution spec — jwleria website
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 This spec turns the owner's brief into requirements that can be checked. It is sanitised for this public repository: it contains no provider identifiers, private bindings or raw instructions. The current state of each requirement is in [REQUIREMENTS-EVIDENCE-LEDGER.md](REQUIREMENTS-EVIDENCE-LEDGER.md). Decisions are cited by number (`decisions/00NN-*.md`).
 
 ## 1. Product definition

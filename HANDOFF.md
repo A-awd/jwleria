@@ -1,5 +1,13 @@
 # Continue Jwleria — compact receiving entry, 2026-11-17
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
+## Execute ready-work delivery — owner direction, 2026-11-17
+
+Read decision 0026 first. The previous production hold and unanswered approval request are superseded. Upload, bind, activate and publish ready work without asking again, without test suites and without waiting for unfinished items. Start with existing ready packages, including LOEWE's 118 accepted sets / 472 derivatives; the three unresolved framing sets do not delay them. Use the existing provider route and record actual results. Do not rerun completed preparation, acquisition, tests or proof generation. The dated instructions below are retained as history, not current release gates.
+
 ## LOEWE derivatives reviewed except three framing holds — 2026-11-17
 
 Read the top entry of [STATE](STATE.md). These are done:
@@ -99,9 +107,9 @@ The 2026-11-09 quota reset and disabled-browser report are historical. Check act
 
 7. Save meaningful sanitized progress in the owning STATE/HANDOFF, commit and push authorized implementation branches, and read back actual remote content once. Keep originals, raw history, provider IDs, session links and private media hashes/bindings in approved private storage.
 
-## Pending production approval — not supplied by Handoff
+## Historical pending production approval — superseded by decision 0026
 
-The earlier automatic Production Deploy denial must not be retried, bypassed through another writer or hidden by changed permission mode. The unchanged consolidated request is still unanswered and covers only:
+Historical snapshot before decision 0026: the earlier Production Deploy denial and unanswered owner request covered the following scope. Decision 0026 supersedes that owner-approval hold and scope restriction. Use the existing supported route under the new authorization; a current actual tool rejection must still never be bypassed:
 
 - Owner-route SQL: SHA256 065dbb84e305c92c59470dafd5bc7889aa599718afdc0bbe71a82e14d3e66a6f.
 - Required grouping repair: SHA256 dbab881e85d778b60e6259a1f7db6d9e57ff1677ff4e3680b6904a3c335a3ea9; rollback cc1f3581218a86f49ae6a0c0c13cf385050600b1c9b0974d8f29079372934188.

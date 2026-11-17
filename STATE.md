@@ -1,5 +1,16 @@
 # Jwleria — current state, 2026-11-17
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
+## Ready-work publication authorized — owner, 2026-11-17
+
+- **Accepted owner direction:** decision 0026 replaces the local-only production hold and unanswered approval request. Deliver each ready part through the existing Supabase/site route now; no new approval question, test suite or batch-wide wait.
+- **Ready LOEWE work:** 118 accepted sets / 472 derivatives. Do not wait for the three framing-feedback sets (12 derivatives), which stay separate and unresolved. Existing ready Longchamp/Bottega work is also covered by this standing authorization.
+- **Next action:** deliver ready work using the existing provider route and record actual public results. The following older entries describe what was prepared or held at their own checkpoint; they do not reinstate the revoked owner-approval hold.
+- **Evidence:** saving this direction does not itself claim a provider write or a new published photograph. No test suite was run for this instruction change.
+
 ## LOEWE independent batch, local derivatives and review — 2026-11-17
 
 - **Prepared (private, local):** a new independent private batch takes on the three accepted LOEWE repairs by exact hash.
@@ -136,9 +147,9 @@ The three rejected LOEWE cases are A120HPLX04-9003 (handle background and lower 
 
 Code checkpoints 748e6e7, afb6e4c and 77c0e1e contain the last fixes. Producer receipts: intake 154/154, final extractor 30/30, storefront 220 passes and five optional browser checks skipped; separate Bottega SQL proposal 3/3. These are dated receipts, not new tests or live delivery proof.
 
-## Exact production boundary
+## Historical production boundary — superseded by decision 0026
 
-No new photograph was published by the last implementation run. The earlier automatic Production Deploy denial remains in force; the consolidated question is still unanswered and limited to:
+Historical snapshot before decision 0026: no new photograph had been published, and the earlier Production Deploy denial/unanswered owner request held the following scope. Decision 0026 now supplies standing owner authorization; this old request is not a current publication hold:
 
 1. Longchamp owner-route SQL SHA256 065dbb84e305c92c59470dafd5bc7889aa599718afdc0bbe71a82e14d3e66a6f.
 2. Required grouping repair SHA256 dbab881e85d778b60e6259a1f7db6d9e57ff1677ff4e3680b6904a3c335a3ea9; rollback cc1f3581218a86f49ae6a0c0c13cf385050600b1c9b0974d8f29079372934188.

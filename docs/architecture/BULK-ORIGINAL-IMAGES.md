@@ -1,5 +1,9 @@
 # Bulk original product photos: architecture and rollout
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 - **Superseded rights rule (decision 0025, owner, 2026-11-09):** there is no communication with any brand. Wherever this document requires written permission or a permission request, read it as the owner-direction provenance route in decision 0025. That route claims no brand licence. Every other stage, gate and access stop stays.
 - **Status:** proposed architecture, written by Claude as implementation owner (decision 0010). It is not an owner approval. It authorizes no outreach, spending, production change, source-flag change or publication.
 - **Date:** 2026-11-02. Each fact carries its read time and an evidence label from `CLAUDE.md`. The vendor checks are listed in [section 15](#15-vendor-facts-checked-on-2026-11-02).

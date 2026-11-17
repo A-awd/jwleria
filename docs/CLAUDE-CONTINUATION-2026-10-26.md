@@ -1,5 +1,9 @@
 > Superseded on 2026-10-27 by the website-only owner priority: see the top entries of STATE.md and HANDOFF.md. The B1–B6 backlog below is historical.
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 # Claude continuation — 2026-10-26
 
 This is the handoff from the "Jwleria — full execution" conversation to the single next conversation. The checkpoint was requested by the owner so that current connector tool policies load from the start. Use the approved dedicated Jwleria environment (Full egress), Opus 5.5 Ultracode and Auto permissions, with the same existing connectors and scopes. A new conversation may load updated tool permissions. It does not guarantee that no approval prompts appear. No new credential, broader provider scope or security bypass is authorized.

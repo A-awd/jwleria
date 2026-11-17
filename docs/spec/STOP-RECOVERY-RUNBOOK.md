@@ -1,5 +1,9 @@
 # Stop and recovery runbook
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 These playbooks condense the project's failure cases into classes that can be acted on. Each one gives the signal, what to do right away, what never to do, and how to recover. They share some rules:
 
 - **No retry in the same turn.** A provider call that timed out, was refused or asked a question is not repeated in the same turn. Record it, then stop or change approach.

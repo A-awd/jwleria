@@ -1,5 +1,9 @@
 # Jwleria storefront
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 Astro 7.3.5 with a standalone Node server. Arabic/English, brand and collection browsing, server-side search and pagination, actual product galleries and direct WhatsApp inquiry. No prices, login, checkout or owner dashboard.
 
 The normal runtime reads the dedicated Supabase catalog using `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY`. Unconfigured development shows an empty catalog; it never presents fixtures as genuine products. `CATALOG_MODE=preview` explicitly enables synthetic development fixtures only. Database failures remain errors.

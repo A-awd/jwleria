@@ -1,5 +1,9 @@
 # Jwleria: Mac mini transition handoff, 2026-11-13
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 ## Authority and the owner's current instruction
 
 This checkpoint is preparation and preservation only. The owner will open the receiving local Codex conversation on the new Mac mini manually. Do not create a chat, resume Claude, implement, acquire images, migrate, upload, publish or deploy during this handoff. Do not move, bulk-copy, delete, archive or overwrite existing files, and do not run Easy Life. A later receiver verifies its actual device, working directory, readable artifacts and available tools before doing project work.

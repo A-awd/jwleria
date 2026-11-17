@@ -1,5 +1,9 @@
 # Coverage and source registry
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 The Totals table, the brand counts, the source flags and the source-to-photo inventory come from the read-only aggregate read of 2026-10-29 10:07:44Z (observed live, interactive session; no write of any kind). The category breakdown and the model split (283 grouped, 2,603 singles) come from earlier reads (2026-10-27 18:08:50Z baseline and the 2026-10-28 mapping) and were not re-read. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand. Rows dated 2026-11-02 come from that day's read-only read (observed live).
 
 ## Current source requirements (owner, 2026-11-01)

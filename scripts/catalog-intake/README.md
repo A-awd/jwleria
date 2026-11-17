@@ -1,5 +1,9 @@
 # Background catalog tools
 
+## Current owner delivery instruction — 2026-11-17
+
+[Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
 The owner does not need a catalog dashboard. These tools are for agents and background jobs.
 
 - `normalize.mjs`: allowlisted candidate facts, stable source/variant identity and revision hash, replay deduplication, conflict rejection. Never publishes.
