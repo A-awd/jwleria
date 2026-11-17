@@ -4,6 +4,14 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Ready-work delivered; continue from actual results — 2026-11-17
+
+Read the top delivery entry of [STATE](STATE.md). Completed in production: Longchamp 382 products / 1,528 files and Bottega Veneta 7 products / 28 files, including live catalog binding. The prepared source/grant migrations and required Longchamp grouping repair are applied. Do not run them again, re-record the completed batches, re-upload successful files or re-review their images. The resumable ready-bundle uploader and private per-file/publication receipts exist; the transient 503 interruption was resolved through the same route.
+
+Continue directly with Claude's current LOEWE work: bind the 118 accepted sets / 472 frozen derivatives to truthful saved official gallery records and current candidate revisions, activate through the existing route, upload and publish without another owner approval or test suite. Preserve exact gallery checks and all original bytes; do not re-encode, recollect pages, download completed originals again or invent provenance. Keep the three framing-feedback sets and all negatives separate. Then deliver the eight saved Longchamp shoe refreshes when their ready package is bound. Do not let either incomplete group delay another ready item.
+
+The existing n8n instance URL is still needed for its connection; the owner has been asked for the URL, not production approval. No live n8n automation is claimed. Continue available delivery work meanwhile. No new credential privilege, service, spending or extra agent is authorized by this handoff. Keep provider IDs, private file paths, credentials and detailed payload/receipt files out of Git. Do not merge into main, foundation or Gembox.
+
 ## Execute ready-work delivery — owner direction, 2026-11-17
 
 Read decision 0026 first. The previous production hold and unanswered approval request are superseded. Upload, bind, activate and publish ready work without asking again, without test suites and without waiting for unfinished items. Start with existing ready packages, including LOEWE's 118 accepted sets / 472 derivatives; the three unresolved framing sets do not delay them. Use the existing provider route and record actual results. Do not rerun completed preparation, acquisition, tests or proof generation. The dated instructions below are retained as history, not current release gates.

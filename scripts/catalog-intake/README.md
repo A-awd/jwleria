@@ -183,3 +183,18 @@ It refuses:
 The WebP files use the production quality ladder, byte budgets and fidelity floor. Validate the real outputs with `image-quality-gate.mjs`.
 
 Outputs, inputs and `binding` evidence stay outside Git. Nothing is uploaded or recorded: publication needs the photograph's own rights basis and the approval path above.
+
+## Delivering prepared bundles (decision 0026)
+
+`deliver-ready.mjs` delivers bundles that are already prepared, through the existing route. It rebuilds, re-encodes, copies and renames nothing.
+
+- `manifest PRIVATE_DIR GRANT BUNDLE_DIR... [--live LIVE.json] [--delivered REFS]` lists each bundled item where it already is: its prepared record statement (file, line, sha256) and its upload files.
+  - Optional `--live` takes the rows of a live read.
+  - An item is refused, with its reason, if it names another grant, product or revision, or if its revision differs from the live read.
+- `upload PRIVATE_DIR [--recorded REFS] [--concurrency 4] [--group 10] [--watch SECONDS]` sends each unconfirmed file of each recorded item to the existing `jwl-media-upload` function.
+  - The upload credential comes only from `JWL_UPLOAD_JWT` at run time.
+  - Only `201 uploaded` or `200 already_present` confirms a file. Every actual response goes to a private append-only receipt, so a rerun resumes.
+  - Any other answer, a network failure or bytes that differ from the manifest stop new requests, with no retry in the run.
+  - When all of a model's listed variants are confirmed, it writes their `batchPublishSql` statement while the other uploads continue.
+
+The operator runs the prepared record statements and the publish statements; this script runs neither. Manifests, receipts and publish statements contain private paths and project URLs, so they stay outside Git.
