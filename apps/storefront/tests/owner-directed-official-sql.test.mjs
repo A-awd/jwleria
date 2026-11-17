@@ -7,14 +7,14 @@ import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 // Synthetic fixtures only. Decision 0025: the owner_directed_official grant kind (proposed migration) runs in memory
 // after every applied migration; nothing reaches a real database.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const FORWARD=new URL('../supabase/proposed/jwleria_owner_directed_official.sql',import.meta.url);
+const FORWARD=new URL('../supabase/migrations/20261117094617_jwleria_owner_directed_official.sql',import.meta.url);
 const ROLLBACK=new URL('../supabase/proposed/jwleria_owner_directed_official.rollback.sql',import.meta.url);
 const OLD_REF='Owner instruction 2026-10-04 to collect official public product facts privately; robots checked 2026-10-04 allows these product paths. This is not a brand media license.';
 const sha=c=>c.repeat(64);
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_owner_directed_official.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!/_jwleria_owner_directed_(official|bottega|loewe)\.sql$/.test(f)).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('longchamp-official','https://www.longchamp.com','permitted-page',$1,true,false,true)",[OLD_REF]);
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('cartier-official','https://www.cartier.com','permitted-page','synthetic',false,false,true)");
   return db;

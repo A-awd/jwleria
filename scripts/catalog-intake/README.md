@@ -198,3 +198,33 @@ Outputs, inputs and `binding` evidence stay outside Git. Nothing is uploaded or 
   - When all of a model's listed variants are confirmed, it writes their `batchPublishSql` statement while the other uploads continue.
 
 The operator runs the prepared record statements and the publish statements; this script runs neither. Manifests, receipts and publish statements contain private paths and project URLs, so they stay outside Git.
+
+## Binding frozen derivatives to a current revision (decision 0026)
+
+`bind-frozen.mjs PRIVATE_INPUT.json` turns already-reviewed, frozen flat-tile derivatives into approval bundles without encoding, copying or re-acquiring anything.
+- **Manifest:** it rebuilds the private manifest that `prepareResponsiveMedia` would record, from the batch's own records: the tile, the cutout check when the alpha came from a cutout, and the frozen derivative index or preview record. Each frozen file is hashed again where it lies.
+- **Gates:** the manifest passes through the unchanged `mergedVerification`, `approvalBundle` and review gates. A supplementary derivative review applies under the bundler's own rule.
+
+A candidate revision comes from one of three sources:
+- a saved official record, used as it is;
+- with `live_inputs`, a revision derived from the live one, where only `image_urls` and `image_reference_checks` are taken from a saved official record that lists the same files in the same order;
+- with `refresh_payload`, a revision derived from the live one, where only the one gallery file the official page replaced is updated, from its stale recorded URL to the URL the page declared for its current version.
+
+For a derived revision, the existing `normalizeBatch` must first reproduce the live revision hash from the live content. The derived content must then equal the live content in every other field, and its names and descriptions must equal the stored public row. Anything else is refused with its reason.
+
+The output is:
+- bundles in the bundler's layout;
+- `rebind-NNN.sql`, in the same chunks as the record statements;
+- a ready manifest for `deliver-ready.mjs upload` whose files are the frozen files.
+
+Each re-bind statement does the following for each product, in a subtransaction:
+- it checks that the live revision is the compared one and that the stored names and descriptions are equal;
+- it installs the revision with `jwl_ingest_batch`;
+- it re-publishes the stored public row onto it with `jwl_publish_factual_batch`, so the row the revision change deactivates is active again before the statement ends.
+
+It then re-maps variants once with `apply_product_variants()`. A product that fails a check stays unchanged, with its reason.
+
+Limits:
+- Only cutout-based and native-alpha flat tiles are supported.
+- The manifest is rebuilt from recorded facts. Its cutout check is the batch's recorded result for that original, not a fresh decode.
+- Inputs and outputs contain private paths and project URLs and stay outside Git.

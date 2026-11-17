@@ -7,7 +7,7 @@ import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 // Synthetic rows shaped like the captured Longchamp data: one design whose colours carry two official material
 // wordings (the proposed grouping repair), a design with other dimensions, and a LOEWE control that must not change.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const FORWARD=new URL('../supabase/proposed/jwleria_longchamp_material_option.sql',import.meta.url);
+const FORWARD=new URL('../supabase/migrations/20261117094629_jwleria_longchamp_material_option.sql',import.meta.url);
 const ROLLBACK=new URL('../supabase/proposed/jwleria_longchamp_material_option.rollback.sql',import.meta.url);
 const A='Recycled polyamide canvas with inside coating',B='Polyamide fabric with a minimum of 70% recycled fibers, with interior coating';
 const lc=(ref,color,colourAr,material,dims='23 x 22 x 14 cm')=>({source:'longchamp-official',origin:'https://www.longchamp.com',brand:'Longchamp',ref,collection:'Le Pliage Original',

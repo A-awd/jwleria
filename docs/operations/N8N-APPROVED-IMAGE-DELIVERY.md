@@ -4,6 +4,12 @@
 
 [Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+## Current delivery and connection status — 2026-11-17
+
+The ready-file route has delivered 515 newly photographed product variants / 2,060 derivative files through the existing Supabase function and catalog calls: Longchamp 390, LOEWE 118 and Bottega Veneta 7. `bind-frozen.mjs` and `deliver-ready.mjs` reuse the reviewed files without re-encoding; private receipts retain actual upload and publication outcomes. This completed production delivery did not run through n8n.
+
+The receiving browser's official n8n account page asks for the existing instance name. The owner has been asked for that URL/name. No current n8n connection, new workflow or automatic schedule is claimed; do not infer present credential or workflow state from the historical account inspection below. Continue from the actual delivery receipts when connecting the existing Jwleria workflows. Do not create a new service, broad credential grant or paid dependency, expose local files publicly, make per-image model calls or replay completed delivery as a preflight. The current owner instruction remains immediate publication of ready work, with no repeated production-approval question or test suite.
+
 **State (2026-11-01):**
 - **Ran once by hand, successfully** (observed live): four `already_present` replies with the expected sha256 and size.
 - That run is an idempotent delivery replay, not a new upload and not cloud image processing.

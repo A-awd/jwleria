@@ -7,8 +7,8 @@ import {normalizeBatch} from '../../../scripts/catalog-intake/normalize.mjs';
 // Synthetic fixtures only. The proposed, not approved, Bottega activation under decision 0025 runs in memory after
 // every applied migration and the proposed base owner_directed_official migration; nothing reaches a real database.
 const migrations=new URL('../supabase/migrations/',import.meta.url);
-const BASE=new URL('../supabase/proposed/jwleria_owner_directed_official.sql',import.meta.url);
-const FORWARD=new URL('../supabase/proposed/jwleria_owner_directed_bottega.sql',import.meta.url);
+const BASE=new URL('../supabase/migrations/20261117094617_jwleria_owner_directed_official.sql',import.meta.url);
+const FORWARD=new URL('../supabase/migrations/20261117100439_jwleria_owner_directed_bottega.sql',import.meta.url);
 const ROLLBACK=new URL('../supabase/proposed/jwleria_owner_directed_bottega.rollback.sql',import.meta.url);
 const LONGCHAMP_REF='Owner instruction 2026-10-04 to collect official public product facts privately; robots checked 2026-10-04 allows these product paths. This is not a brand media license.';
 // The live Bottega row's text, read 2026-11-09; the migration refuses any other.
@@ -18,7 +18,8 @@ const sha=c=>c.repeat(64);
 async function database({base=true}={}){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  // The owner-directed migrations are applied by this test itself, after the source rows exist.
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!/_jwleria_owner_directed_(official|bottega|loewe)\.sql$/.test(f)).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('longchamp-official','https://www.longchamp.com','permitted-page',$1,true,false,true)",[LONGCHAMP_REF]);
   await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('bottega-veneta-official','https://www.bottegaveneta.com','permitted-page',$1,true,false,true)",[BOTTEGA_REF]);
   if(base)await db.exec(await readFile(BASE,'utf8'));
