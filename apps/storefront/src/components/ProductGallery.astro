@@ -18,10 +18,11 @@ const { product, locale, representative, variants = [] } = Astro.props;
 const s = t(locale);
 const view = galleryView(product, representative, variants);
 // Decision 0027: an exact official original without a canvas (no white square, no flat tile) is shown whole in a frame of
-// its own proportions, as large as the screen allows, instead of the short frame sized for square tiles.
+// its own proportions, as large as the screen allows, instead of the short frame sized for square tiles. Its stored width
+// and height go to CSS as two plain numbers (--w, --h), never as a ratio inside one property.
 const sceneRatio = (i: number) => {
   const m = product.imageVariants?.[i];
-  return m && !m.canvas && m.width > 0 && m.height > 0 ? `${m.width} / ${m.height}` : undefined;
+  return m && !m.canvas && m.width > 0 && m.height > 0 ? `--w: ${m.width}; --h: ${m.height}` : undefined;
 };
 const views = view.mode === 'own' ? product.images.slice(0, LIMIT).map((src, i) => ({ src, i, label: s.product.views[i] ?? s.product.details, credit: product.imageVariants?.[i]?.attribution ?? product.imageVariants?.[i]?.permissionCredit, full: fullSizeImage(product, i), white: product.imageVariants?.[i]?.canvas === 'white_square', clipped: product.imageVariants?.[i]?.sourceClipped === true, flat: product.imageVariants?.[i]?.canvas === 'flat_tile', scene: sceneRatio(i) })) : [];
 const many = views.length > 1;
@@ -39,7 +40,7 @@ const repFull = repMedia && fullSizeImage(repMedia, 0);
   <div class="carousel__track" data-carousel-track>
   {views.map((v) => (
     <figure>
-      <div class:list={['media', { 'media--white': v.white, 'media--flat': v.flat, 'media--scene': Boolean(v.scene) }]} style={v.scene ? `--ar: ${v.scene}` : undefined}>
+      <div class:list={['media', { 'media--white': v.white, 'media--flat': v.flat, 'media--scene': Boolean(v.scene) }]} style={v.scene}>
         <img class={v.i === 0 ? artClass(v.src, product.categorySlug, product.reference) : 'art'} {...productMedia(product, v.i, many ? 'detail' : 'single')} alt={product.name[locale]} loading={v.i === 0 ? 'eager' : 'lazy'} fetchpriority={v.i === 0 ? 'high' : undefined} decoding="async" />
         {product.isPreview && v.i === 0 && <span class="badge">{s.preview}</span>}
       </div>

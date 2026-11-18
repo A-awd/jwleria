@@ -189,9 +189,12 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 .pdp__gallery { grid-area: gallery; position: relative; display: grid; gap: .75rem; min-width: 0; }
 /* The whole product, contained, in a frame sized by the screen's height rather than a tall 4:5 column. */
 .pdp__gallery .media { aspect-ratio: auto; height: clamp(10rem, 30svh, 20rem); }
-/* Decision 0027: an exact official original (no canvas) keeps its own proportions, contained whole, as wide as the
-   column allows and at most min(75svh, 46rem) tall; nothing is cropped or stretched. */
-.pdp__gallery .media--scene { aspect-ratio: var(--ar); height: auto; width: min(100%, calc(min(75svh, 46rem) * (var(--ar)))); margin-inline: auto; }
+/* Decision 0027: an exact official original (no canvas) is a frame of exactly its own proportions (numeric --w and --h,
+   its stored width and height), shown whole, as wide as the column allows and at most min(75svh, 46rem) tall; nothing
+   is cropped or stretched. The doubled class outranks every .pdp__gallery .media rule, including the desktop 4:5 one
+   below, which used to letterbox a portrait in the sand ground. The frame has no ground of its own, so no tinted strip
+   can show beside the photograph's own background (owner, 2026-11-18). */
+.pdp__gallery .media.media--scene { aspect-ratio: var(--w) / var(--h); height: auto; width: min(100%, calc(min(75svh, 46rem) * var(--w) / var(--h))); margin-inline: auto; background: none; }
 /* Decision 0028: the photographs sit in a track inside the gallery, so the controls below it never scroll away. */
 .pdp__gallery--many > .carousel__track { display: grid; gap: .75rem; grid-auto-flow: column; grid-auto-columns: 86%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
 .pdp__gallery--many > .carousel__track::-webkit-scrollbar { display: none; }
