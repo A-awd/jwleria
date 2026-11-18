@@ -8,6 +8,7 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0028 — Product photograph first; a gentle, swipeable gallery](decisions/0028-product-first-gallery-and-gentle-carousel.md): the standalone product on its light or plain background always comes first, in-use photographs after; a native scroll-snap carousel with dots, count, previous/next, pause/play and a 5 s advance only when two or more photographs are on screen and motion is welcome.
 - [0027 — Official originals when a cutout fails, in-use photographs and the official page link](decisions/0027-official-originals-in-use-photos-and-official-links.md): an exact official original replaces a failed or rejected cutout (no upscaling, resolution holds kept); one review of exact final bytes; up to two verified in-use photographs; a verified official page link; breadth-first brand rotation.
 - [0026 — Ready work publishes immediately](decisions/0026-ready-work-publishes-immediately.md): standing owner authorization; deliver each ready part now, no repeated release approval, test suites or batch-wide waiting. Supersedes the prior production hold.
 
@@ -70,6 +71,6 @@ Only durable, public-safe decisions may be indexed here.
 
 - [0003 — Inquiry-led luxury catalog architecture](decisions/0003-inquiry-led-luxury-catalog-architecture.md)
 
-Decision 0003 records owner-confirmed public behavior. Technical review is complete; architecture adoption and public publication remain pending. It resolves the older price-display question, not the migration or repository-reconciliation gates.
+Decision 0003 records owner-confirmed public behavior. Technical review is complete; architecture adoption and public publication remain pending. (History only: the pending publication gate is superseded for delivery by decisions 0026 and 0027.) It resolves the older price-display question, not the migration or repository-reconciliation gates.
 
 The duplicate consolidation and repository visibility decision remains open and must not be implied by this foundation decision.

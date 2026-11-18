@@ -39,16 +39,20 @@ const category = getCategory(product.categorySlug);
 
 <script>
   import { fragmentPath, variantPath, variantSwapper } from '../../../components/variant-swap.mjs';
+  import { initCarousel } from '../../../components/gallery-carousel.mjs';
 
   // Progressive enhancement (decision 0019): every choice is a real variant page, so it works without JavaScript.
   // With JavaScript:
   // - a choice shows at once, and the gallery never keeps another variant's photograph as this one;
   // - only that variant's product block is fetched, cached and prefetched on intent, and updated in place;
   // - the latest choice wins.
-  // No touch, wheel or scroll listener is added, so native scrolling is never intercepted.
+  // Native scrolling is never intercepted: the gallery carousel (decision 0028) listens passively only to stop its own
+  // automatic advance, and prevents no default.
   type Choice = { link?: HTMLAnchorElement; kind?: string; key?: string; also?: string; ref?: string; photo?: string; keyboard?: boolean; history?: boolean };
   type State = { key: string; value: string; lang: string; label: string };
   const block = () => document.querySelector<HTMLElement>('[data-variant-root]');
+  // One carousel at a time: the page's own gallery now, and each swapped-in variant's gallery after its swap.
+  let carousel = initCarousel(document.querySelector<HTMLElement>('[data-variant-root] .pdp__gallery[data-carousel]'));
   const pathOf = (link: HTMLAnchorElement) => new URL(link.href).pathname;
   const imageKey = (img: HTMLImageElement) => img.getAttribute('srcset') || img.getAttribute('src') || '';
   const states = (root: ParentNode) => new Map([...root.querySelectorAll<HTMLElement>('[data-control]')].map((c): [string, State] =>
@@ -126,7 +130,10 @@ const category = getCategory(product.categorySlug);
       const same = shown.get(imageKey(img));
       if (same) { same.className = img.className; same.alt = img.alt; img.replaceWith(same); }
     });
+    // The previous gallery's timer, observers and listeners end before the new variant's gallery starts at its primary.
+    carousel.destroy();
     root.replaceWith(fresh);
+    carousel = initCarousel(fresh.querySelector<HTMLElement>('.pdp__gallery[data-carousel]'));
     document.title = fresh.dataset.title ?? document.title;
     const target = variantPath(path);
     if (target) document.querySelectorAll<HTMLAnchorElement>('a[hreflang]').forEach((a) => {

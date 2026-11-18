@@ -9,17 +9,23 @@
 Read the top entry of [STATE](STATE.md). Work through `scripts/catalog-intake/media-runner.mjs` (README: "Decision 0027 runner"); Codex reviews the exact final bytes once and performs every provider write.
 
 Next actions, in order (none waits on another):
-1. **In-use append for A538HHBX07-0018:** record and upload its prepared package. It holds the primary unchanged and first, plus 8 new files. Then read the page back.
-2. **Cached LOEWE refs (138, in 9 chunks):**
-   - Codex reviews each chunk's combined sheet and picks tile or original per product.
-   - Claude binds the accepted files with Codex's cached live rows; this includes a re-bind to the saved-record revision.
-   - Then record and upload.
-   - The 46 + 15 low-resolution holds, the 4 `cutout_failed`, the 73 stale rows, the 25 new pages and the two robots exclusions stay as recorded.
-3. **Worker release:** deploy the prepared storefront release (77 files) when the owner has signed in to Cloudflare. Then check a product page for the official link and the whole-image original frame.
+1. **In-use append for A538HHBX07-0018 is published:** the primary is unchanged and first, followed by two exact official in-use photographs (8 new files). Do not record or upload it again. The first failed append is retained; only the corrected new-evidence-only append succeeded.
+2. **Cached LOEWE refs (138, in 9 chunks):** c001-c003 are published (48 products); do not replay them. Production at 13:13Z is 4,097 active, 583 photographed (LOEWE 179) and 2,349 media files.
+   - 131 rows were prepared; 7 revision-normalization holds remain separate. The remaining 83 prepared rows in c004-c009 have NOT been visually reviewed or accepted.
+   - Codex views each remaining chunk's combined sheet once and picks tile or original per product. The originals-only sheets are already rendered from frozen bytes; do not re-encode or acquire again.
+   - Operate Claude's existing binder with the exact accepted hashes and cached live rows, then re-bind, record and upload. Keep actual operator receipts private.
+   - Of the 4 greyscale `cutout_failed` originals, q001 published 2 unmodified originals. C510302X16-1100 and C510302X23-1100 remain held because their different leather descriptions share identical source bytes. The 46 + 15 low-resolution holds, the 73 stale rows, the 25 new pages and the two robots exclusions stay as recorded.
+3. **Worker release:** when the owner has signed in to Cloudflare, deploy the prepared decision 0028 package. It contains the 0027 changes too; deploy it instead of the 0027 package. Then on a phone check:
+   - a multi-photograph product: swipe, dots, auto-advance and pause, with the product photograph first;
+   - a single-photograph product;
+   - the official link.
 4. **Breadth rotation** from the source matrix in [COVERAGE-AND-SOURCE-REGISTRY](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md):
    - the next reachable brands first, up to 10 distinct models each, then 25;
-   - Prada only after a later robots read answers within its timeout;
-   - closed sources stay closed.
+   - Prada is held: the 2026-11-01 owner access rule excludes automated Prada access (its terms exclude crawling). The owner must resolve that scope; one robots request made on 2026-11-18 timed out and is recorded;
+   - Rolex and IWC stay read-only until a refusal-scope review covers their separate media hosts;
+   - closed sources stay closed; Tissot and Louis Vuitton profile pilots also stopped (challenge and 403 respectively), before any sitemap/product/image acquisition.
+
+**Storefront handoff:** the owner is away and will complete Cloudflare sign-in on return; do not repeat the login or production-approval question. The 77-file decision 0028 package is checksummed and not deployed. Claude's same retained subscription session reached its actual usage limit on 2026-11-18, resetting at 17:20 Asia/Riyadh; no model change, extra session, agent or spending. Before release, the producer has one queued visibility correction: the carousel's first observer callback must require an intersection ratio of at least 0.5, rather than `isIntersecting` alone. If changed, prepare a new immutable package; preserve 0028 and do not run new test suites.
 
 ## LOEWE framing holds resolved; continue from actual results — 2026-11-17
 

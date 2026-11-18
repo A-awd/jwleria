@@ -4,6 +4,8 @@
 
 [Decision 0026](../../decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+[Decision 0027](../../decisions/0027-official-originals-in-use-photos-and-official-links.md) (owner, 2026-11-18) adds: the exact official original when a cutout fails or is rejected (no upscaling; low-resolution holds kept), one review of the exact final bytes, up to two verified in-use photographs, the verified official page link, and breadth-first brand rotation.
+
 The owner does not need a catalog dashboard. These tools are for agents and background jobs.
 
 - `normalize.mjs`: allowlisted candidate facts, stable source/variant identity and revision hash, replay deduplication, conflict rejection. Never publishes.
@@ -296,3 +298,23 @@ The completion route of `jwl-media-upload` binds JSON parameters as text and par
 - **Greyscale originals:** an exact official original without treatment may be an 8-bit greyscale photograph (`responsive-media.mjs`). It is read losslessly as R=G=B, and the manifest records `greyscale_source`. Treated paths still require sRGB.
   - A detail close-up is not an in-use photograph.
 - **Byte budgets:** a file over its budget needs the reviewer's exception record for that exact file. The fidelity floor is never waived.
+
+## Source profiles for directory brands without a catalogue source (decision 0027; private queue)
+
+`source-profile.mjs` is a resumable, read-only queue: `node scripts/catalog-intake/source-profile.mjs run PRIVATE_QUEUE.json PRIVATE_OUT_DIR [brand-slug]`.
+
+**What it reads:**
+- It profiles one brand at a time, and only one whose queue entry records an official origin and the basis for it. A brand without one is refused, and no domain is guessed.
+- On that origin, once each and at least 5 s apart: `robots.txt`, only the sitemaps robots declares, one product sitemap named by the index, and one product page robots allows.
+- From that page: its JSON-LD (Product, brand name, an identifier, image count; prices are not read). Then the robots of the image origin. No image is downloaded.
+
+**Stops:** a 401/403, a 429, a challenge, a redirect or a timeout stops the brand. The stop is recorded, and a stopped or profiled brand is never re-read by the queue.
+
+**Records:** every response is kept raw and write-once, and the journal is append-only. The result says whether the site names itself as the brand and whether an adapter entry on the existing JSON-LD extractor is the next step.
+
+**Bounded facts pass (opt-in, `collect-official-brands.mjs`).** Three options in the private source config:
+- `known_external_ids`: references already held are skipped without a request.
+- `one_per_collection`: at most one product per collection not yet represented.
+- `max_new_products`: the run stops after that many new products.
+
+The run records these bounds in `progress.bounded` and never claims a complete inventory. Without the options, every inventory URL is processed as before, with the same robots, pacing, refusal, redirect and challenge stops.

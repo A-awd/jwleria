@@ -4,6 +4,8 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+[Decision 0027](decisions/0027-official-originals-in-use-photos-and-official-links.md) (owner, 2026-11-18) adds: the exact official original when a cutout fails or is rejected (no upscaling; low-resolution holds kept), one review of the exact final bytes, up to two verified in-use photographs, the verified official page link, and breadth-first brand rotation.
+
 Canonical project repository for the public-safe documentation and code of the Jwleria jewelry commerce project.
 
 ## One Brain status

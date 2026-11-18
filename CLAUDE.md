@@ -11,6 +11,8 @@
 - **Link:** a product page links to the verified official page of the selected variant.
 - **Rotation:** brands rotate breadth first.
 
+[Decision 0028](decisions/0028-product-first-gallery-and-gentle-carousel.md) (owner, 2026-11-18): the standalone product photograph on its light or plain background always comes first, with in-use photographs after. With two or more photographs, the product gallery is a native swipeable carousel. Its 5 s advance runs only when the gallery is on screen and motion is welcome, and stops on any visitor interaction.
+
 This file is the entry point for Claude sessions in this repository. It holds the durable rules and points to where the current facts live. It does not repeat `STATE.md` or `HANDOFF.md`; read those for what is live today and what to do next.
 
 ## Project identity

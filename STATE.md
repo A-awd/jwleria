@@ -11,6 +11,20 @@
 - the verified official page link;
 - breadth-first brand rotation.
 
+## Latest operator checkpoint — 2026-11-18, 13:13Z
+
+This entry supersedes earlier prepared/pending counts below; the older evidence stays as history.
+
+- **Observed production:** all 4,097 catalogue rows remain active; 583 have photographs (Longchamp 390, LOEWE 179, Bottega Veneta 7, Audemars Piguet 3, Jaeger-LeCoultre 3, Rolex 1). There are 2,349 media files and 4,097 verified official page links in the database.
+- **c002 and c003:** Codex actually viewed every originals-only proof, accepted the exact derivative hashes, operated Claude's existing binder, recorded the approvals once, then uploaded through n8n. Each adds 16 products and 64 files; c002 is 4,671,216 bytes and c003 is 3,172,172 bytes. The live c003 images and image variants equal their recorded approval. Failed completion acknowledgments are retained separately; activation-only reconciliation sends no image again.
+- **Cached LOEWE:** c001-c003 are published (48 products). Of the original 138 rows, 131 were prepared successfully; 7 revision-normalization holds remain separate. The remaining 83 prepared rows in c004-c009 have NOT been visually reviewed or accepted. Do not mark them accepted from a template or re-run completed chunks.
+- **q001:** 2 unmodified greyscale originals are published. The 2 references with different leather descriptions but byte-identical source images remain held.
+- **In-use append:** A538HHBX07-0018 has three approved images, with its unchanged standalone original first, then the two in-use photographs. The corrected append is published; do not replay the failed first append.
+- **Owner gallery instruction:** [decision 0028](decisions/0028-product-first-gallery-and-gentle-carousel.md) keeps the standalone product on its agreed light/plain background first and adds a gentle 5 s carousel, dots, count and left/right swipe. Claude built a new 77-file immutable Worker package; Codex verified all package hashes. It is NOT deployed. The owner is away and will sign in to Cloudflare on return; do not repeat the question. A small producer visibility correction is queued in the same retained Claude session before release (require the initial intersection ratio to be at least 0.5). A changed package must get a new version.
+- **Source profile stops:** Tissot served a challenge and Louis Vuitton returned 403 at the home-page policy step, before any sitemap/product/image read. Both stops are saved; no retry or alternate-origin/tool bypass. AP/JLC bounded collection is implemented but has not run; it first needs the saved reviewed source configurations.
+- **Actual Claude limit:** the retained subscription session reached its usage limit on this date, resetting at 17:20 Asia/Riyadh. No new session, model, agent, API or spending. Independent operator publication continued.
+- No new test suite, brand contact, generative product edit, source re-collection, or main/foundation/Gembox merge was performed.
+
 ## Originals fallback, new brands and the official page link — 2026-11-18
 
 **Totals (producer-reported by Codex, fresh read 12:22Z):**
@@ -40,7 +54,7 @@
 - **Migration (applied, producer-reported):** `20261118121216_jwleria_owner_directed_ap_jlc` gives Audemars Piguet and Jaeger-LeCoultre owner-direction grants for their observed media origins.
 - **Published (producer-reported):** 6 products and 18 files: AP 3 at native width 568 with their own transparency, and JLC 3 at 2,400 px wide.
 - **Not acquired, recorded and not retried:**
-  - Prada: its robots read timed out at 20 s, so no image request was made.
+  - Prada: one robots.txt request was made and timed out at 20 s; no page or image was requested. That request should not have been made: the 2026-11-01 owner access rule excludes automated Prada access (its terms exclude crawling). Prada is held, with the policy unresolved, until the owner resolves that scope.
   - The remaining Bottega product: its declared file returns 404.
 
 **In-use photographs**
@@ -51,6 +65,13 @@
 **Official page link**
 - **Migration (applied, producer-reported):** `20261118122046_jwleria_official_page_link`. The verified `official_url` is filled for all 4,097 rows, and `jwl_product_model_v2` projects it.
 - **Storefront build (prepared):** the release adds the link and the whole-image frame for originals. It is 77 files with a private checksum list, and is not deployed: the owner will sign in to Cloudflare later.
+- **Decision 0028 (prepared):** the gallery carousel (product first; dots, count, previous/next, pause/play; a gentle 5 s advance only when on screen and motion is welcome). It is built once as a new private package: 77 files that also contain the 0027 changes, replacing the 0027 package for deployment while keeping it. Not deployed.
+
+**Later on 2026-11-18 (producer-reported by Codex)**
+- **Totals:** 549 photographed, LOEWE 145, 4,097 active; after q001 (2 greyscale originals published) 551 and LOEWE 147.
+- **c001:** all 16 published (7 tiles, 9 originals; 64 files). Two n8n notifications answered 500 after publication; an activation-only retry returned `already_published` for both. The failed receipts are kept.
+- **A538HHBX07-0018:** its in-use append (s002-v2, which submitted only the 8 new evidence rows) is published. The page shows the primary first and then the two in-use photographs. The first s002 statement had failed atomically, because it re-submitted the 4 recorded primary rows.
+- **q001 (prepared):** two greyscale originals (A685B60X01-1100, ACHBCHKX02-1100) are bound for recording. C510302X16-1100 and C510302X23-1100 are held: one byte-identical file is declared by two references of different leathers.
 
 **Runner and work in progress (prepared)**
 - `scripts/catalog-intake/media-runner.mjs` covers prepare (tile and/or original), the combined review sheet, accepted-only binding, same-revision replacement and supplemental appends.

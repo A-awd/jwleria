@@ -29,9 +29,9 @@ Counts are producer-reported by Codex (fresh read 2026-11-18 12:22Z): 4,097 acti
 | Bottega Veneta | 8 | 7 | owner-directed grant | 1 declared file 404 (2026-11-18) | The 8th waits for a new declared file from a later official page read |
 | Audemars Piguet | 3 | 3 | grant since `20261118121216` | media robots 404 (allowed) | Extend catalogue facts through the existing AP adapter (first pass 10 models) |
 | Jaeger-LeCoultre | 3 | 3 | grant since `20261118121216` | media robots 200 | Extend catalogue facts through the existing JLC adapter (first pass 10 models) |
-| Rolex | 1,465 | 1 (open licence) | acquisition allowed; publication off; no owner-direction grant | sitemap refusal recorded (403, 2026-10-26; never replayed) | One fresh read of the gallery media origin; if permitted, a scoped grant and the first 10 distinct models |
-| Prada | 851 | 0 | acquisition allowed; publication off; no grant | robots read timed out at 20 s (2026-11-18) | In a later run, one fresh robots read; if it answers, a scoped grant and the 10-model selection already prepared |
-| IWC Schaffhausen | 3 | 0 | acquisition allowed; publication off; adapter exists | not yet read | Next reachable candidate: fresh media read, then a scoped grant and originals |
+| Rolex | 1,465 | 1 (open licence) | acquisition allowed; publication off; no owner-direction grant | sitemap refusal recorded on the page origin (403, 2026-10-26; never replayed). The galleries use a separate media host; a 10-model selection was read from the database. | Read-only until a recorded refusal-scope review decides whether the refusal covers the media host; no request meanwhile |
+| Prada | 851 | 0 | acquisition allowed in the database; publication off; no grant | **Held: policy unresolved.** The 2026-11-01 owner access rule says "no automated Prada access (its terms exclude crawling)". On 2026-11-18 one robots.txt request was nevertheless made for the first wave; it timed out at 20 s, and no page or image was requested. | No further request. The owner must resolve the saved terms scope against the 2026-11-18 first-wave instruction. The 10-model selection is kept as reference only. |
+| IWC Schaffhausen | 3 | 0 | acquisition allowed in the database; publication off; adapter exists | robots refusal recorded on the page origin (403 from the CDN, 2026-10-26; never replayed). The 3 galleries use a separate image host (12 URLs). | Stopped until a recorded refusal-scope review decides whether the refusal covers the image host; no request meanwhile |
 | Panerai | 3 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
 | Piaget | 3 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
 | Cartier | 463 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
@@ -47,8 +47,10 @@ LOEWE's held items:
 
 None has a source row or an adapter yet.
 
+**Recorded profile outcomes, 2026-11-18 (operator continuity):** Tissot's robots answered 200, then its home page served a challenge. Louis Vuitton's robots answered 200 and declared four sitemaps, then its home page answered 403. Both queues stopped before terms, sitemap or product reads; no photographs were acquired. Keep the stops and do not retry through another tool or origin.
+
 **Onboarding path, one brand at a time, in rotation:**
-1. Verify the official origin from the private source inventory; never a guessed domain.
+1. Record the verified official origin and its basis in the private profile queue (`source-profile.mjs`). No saved inventory holds these origins yet (checked 2026-11-18), so none is profiled until one is recorded. Never a guessed domain.
 2. Make one access check: robots and published terms. A refusal or challenge is recorded and stops that brand.
 3. Add an adapter entry on the existing JSON-LD extractor (`extract-official-brands.mjs` / `extract-bags.mjs`).
 4. Run the paced product-sitemap collection, then factual publication, then photographs under decision 0027.
