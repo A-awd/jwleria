@@ -4,6 +4,13 @@
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
 
+[Decision 0027](decisions/0027-official-originals-in-use-photos-and-official-links.md) (owner, 2026-11-18) adds:
+- **Fallback:** when a background-only cutout fails or is rejected, publish the exact, complete official original without treatment (`scripts/catalog-intake/media-runner.mjs`). No upscaling; low-resolution holds stay held.
+- **Review:** one independent review of the exact final bytes.
+- **In-use photographs:** up to two, of the same exact product, after the primary.
+- **Link:** a product page links to the verified official page of the selected variant.
+- **Rotation:** brands rotate breadth first.
+
 This file is the entry point for Claude sessions in this repository. It holds the durable rules and points to where the current facts live. It does not repeat `STATE.md` or `HANDOFF.md`; read those for what is live today and what to do next.
 
 ## Project identity
@@ -22,7 +29,12 @@ This file is the entry point for Claude sessions in this repository. It holds th
 
 A fast, phone-first, bilingual (Arabic and English) showcase of products and brands, with genuine photographs of the exact product. Visitors enquire about a piece on WhatsApp.
 
-Photographs are 2D. An exact-product cutout over the current product frame colour is preferred, and background-only removal is the only alteration allowed (decision 0015). Interactive 3D is deferred.
+Photographs are 2D. An exact-product cutout over the current product frame colour is preferred, and background-only removal is the only alteration allowed (decision 0015).
+- **Without an accepted cutout or tile,** the exact complete official original is published as photographed, background included (decision 0027). This overrides the older same-background wording.
+- **In-use photographs** of the same exact variant may follow the primary, whole and never cut out.
+- **Product pages** link to the brand's verified page for the selected reference.
+
+Interactive 3D is deferred.
 
 **No communication with any brand (decision 0025, owner, 2026-11-09).** That means no outreach, permission requests, messages or programme applications, and none is ever the next action. Photographs come from publicly available official exact-product images, through the route in decision 0025, with a truthful provenance record. That record never claims a brand licence. Recorded access refusals still stop a source.
 

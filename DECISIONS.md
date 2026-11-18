@@ -8,6 +8,7 @@ Only durable, public-safe decisions may be indexed here.
 
 ## Accepted
 
+- [0027 — Official originals when a cutout fails, in-use photographs and the official page link](decisions/0027-official-originals-in-use-photos-and-official-links.md): an exact official original replaces a failed or rejected cutout (no upscaling, resolution holds kept); one review of exact final bytes; up to two verified in-use photographs; a verified official page link; breadth-first brand rotation.
 - [0026 — Ready work publishes immediately](decisions/0026-ready-work-publishes-immediately.md): standing owner authorization; deliver each ready part now, no repeated release approval, test suites or batch-wide waiting. Supersedes the prior production hold.
 
 - [0025 — Official product images without brand contact](decisions/0025-official-images-without-brand-contact.md): no communication with any brand. This supersedes every earlier brand-permission prerequisite for official photographs.

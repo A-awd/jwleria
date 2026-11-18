@@ -18,6 +18,20 @@ export function normalizeSearch(s = '') {
   return String(s).normalize('NFKC').toLowerCase().replace(/[\u064b-\u065f\u0670\u0640]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/[٠-٩]/g, d => String(d.charCodeAt(0) - 0x0660)).trim().slice(0, 200);
 }
 
+/**
+ * Decision 0027: the brand's own page for exactly this reference, as the database projects it (official_url), shown only
+ * when it is an https URL with no credentials, port, query or fragment (so no tracking parameter) whose path names the
+ * reference. Anything else, or no value (a database without the column), shows no link.
+ */
+export function officialPage(value, reference) {
+  if (typeof value !== 'string' || typeof reference !== 'string' || !reference.trim() || value.length > 2000) return undefined;
+  try {
+    const u = new URL(value);
+    if (u.protocol !== 'https:' || u.username || u.password || u.port || u.search || u.hash || value.includes('?') || value.includes('#')) return undefined;
+    return decodeURIComponent(u.pathname).toLowerCase().includes(reference.toLowerCase()) ? u.href : undefined;
+  } catch { return undefined; }
+}
+
 /** @returns {import('../contracts/catalog').PublicProduct} */
 export function publicProduct(row) {
   if (!row || !slugPattern.test(row.slug) || !slugPattern.test(row.brand_slug) || !slugPattern.test(row.category_slug) || !slugPattern.test(row.collection_slug)) throw new Error('Invalid published catalog identity');
@@ -31,7 +45,9 @@ export function publicProduct(row) {
   for (const field of ['id','reference','name_ar','name_en','collection_ar','collection_en','published_at']) {
     if (typeof row[field] !== 'string' || !row[field].trim()) throw new Error('Incomplete published catalog');
   }
+  const officialUrl = officialPage(row.official_url, row.reference);
   return {
+    ...(officialUrl ? { officialUrl } : {}),
     id: row.id, slug: row.slug, reference: row.reference,
     brandSlug: row.brand_slug, categorySlug: row.category_slug,
     collectionSlug: row.collection_slug,

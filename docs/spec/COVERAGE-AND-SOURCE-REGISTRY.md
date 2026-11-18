@@ -6,6 +6,61 @@
 
 The Totals table, the brand counts, the source flags and the source-to-photo inventory come from the read-only aggregate read of 2026-10-29 10:07:44Z (observed live, interactive session; no write of any kind). The category breakdown and the model split (283 grouped, 2,603 singles) come from earlier reads (2026-10-27 18:08:50Z baseline and the 2026-10-28 mapping) and were not re-read. Historical baselines (7 migrations, zero media) appear only in dated `STATE.md` entries. Refresh this file from a new read; never edit counts by hand. Rows dated 2026-11-02 come from that day's read-only read (observed live).
 
+## Source matrix for the curated directory (41 brands) — 2026-11-18
+
+Decision 0027 rotation:
+- **First pass:** up to 10 distinct models per reachable brand.
+- **Second pass:** 25 per brand.
+- **Order:** brands rotate, and a brand that cannot be reached does not stop the others.
+
+Counts are producer-reported by Codex (fresh read 2026-11-18 12:22Z): 4,097 active products, 533 photographed, 12 brands with catalogue rows.
+
+**Access rules:**
+- "Reachable" means a fresh robots read of the media origin answered and allowed the declared files.
+- A refusal, challenge, rate limit or timeout stops that origin for the run, and refused URLs are never replayed.
+- Closed sources are code-level stops (`recordedSourceStops`) and stay closed.
+
+### Brands with catalogue rows (12)
+
+| Brand | Rows | Photographed | Source and grant | Latest access | Next action |
+|---|---|---|---|---|---|
+| Longchamp | 390 | 390 | owner-directed grant | — | Complete for current rows; in-use photographs later |
+| LOEWE | 407 | 129 | owner-directed grant | robots read 2026-11-18; 2 URLs excluded by `Disallow: /*ddc*` | 138 cached refs in review chunks (tile or original); see the hold list below |
+| Bottega Veneta | 8 | 7 | owner-directed grant | 1 declared file 404 (2026-11-18) | The 8th waits for a new declared file from a later official page read |
+| Audemars Piguet | 3 | 3 | grant since `20261118121216` | media robots 404 (allowed) | Extend catalogue facts through the existing AP adapter (first pass 10 models) |
+| Jaeger-LeCoultre | 3 | 3 | grant since `20261118121216` | media robots 200 | Extend catalogue facts through the existing JLC adapter (first pass 10 models) |
+| Rolex | 1,465 | 1 (open licence) | acquisition allowed; publication off; no owner-direction grant | sitemap refusal recorded (403, 2026-10-26; never replayed) | One fresh read of the gallery media origin; if permitted, a scoped grant and the first 10 distinct models |
+| Prada | 851 | 0 | acquisition allowed; publication off; no grant | robots read timed out at 20 s (2026-11-18) | In a later run, one fresh robots read; if it answers, a scoped grant and the 10-model selection already prepared |
+| IWC Schaffhausen | 3 | 0 | acquisition allowed; publication off; adapter exists | not yet read | Next reachable candidate: fresh media read, then a scoped grant and originals |
+| Panerai | 3 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
+| Piaget | 3 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
+| Cartier | 463 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
+| Van Cleef & Arpels | 498 | 0 | closed (`acquisition_permission_restricted`) | — | Stays closed |
+
+LOEWE's held items:
+- **Low resolution:** 15 + 46, kept as holds; the floor is not lowered.
+- **`cutout_failed`:** 4. Their failure reads `original_unsupported`, so each needs an original-path check before any fallback.
+- **Stale rows:** 73, with no current page.
+- **New pages:** 25 without a catalogue row.
+
+### Directory brands without catalogue rows (29)
+
+None has a source row or an adapter yet.
+
+**Onboarding path, one brand at a time, in rotation:**
+1. Verify the official origin from the private source inventory; never a guessed domain.
+2. Make one access check: robots and published terms. A refusal or challenge is recorded and stops that brand.
+3. Add an adapter entry on the existing JSON-LD extractor (`extract-official-brands.mjs` / `extract-bags.mjs`).
+4. Run the paced product-sitemap collection, then factual publication, then photographs under decision 0027.
+
+| Group | Brands | Order |
+|---|---|---|
+| Watches | OMEGA, TAG Heuer, Tissot, Seiko, Patek Philippe, Vacheron Constantin | 1st |
+| Handbags and accessories | Gucci, Burberry, Coach, Michael Kors, Tory Burch, kate spade new york, Furla, Fendi, Saint Laurent, Balenciaga, Valentino | 2nd |
+| Jewellery | Swarovski, Tiffany & Co., Bvlgari, Chopard, Boucheron, Graff, Harry Winston | 3rd |
+| Houses that commonly gate automated access | Hermès, CHANEL, Louis Vuitton, Dior | last, and only if the access check answers |
+| Closed | CELINE (`source_challenge_recorded`) | Stays closed |
+
 ## Current source requirements (owner, 2026-11-01)
 
 - **Rejected:** wrist, lifestyle and amateur photographs (Commons included) as substitutes for a product photograph. The owner rejected the `m126200-0006` Commons square, and it is withdrawn from display.

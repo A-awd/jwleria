@@ -270,3 +270,29 @@ Limits:
   That acceptance supplies the tile review. Its reviewer and checks are taken verbatim, the original is the batch row's, and its reference is the receipt's sha256. Rows without a frame bind exactly as before.
 
 The completion route of `jwl-media-upload` binds JSON parameters as text and parses them in SQL (`::text::jsonb`). postgres.js would otherwise serialize a `jsonb`-typed parameter a second time.
+
+## Decision 0027 runner (exact originals, tile-or-original review, in-use photographs; private, local)
+
+`media-runner.mjs` is one resumable path for any official source whose exact original is already held. It never acquires, reviews, records or uploads. Plans and outputs stay private, and an append-only `journal.ndjson` makes every step resumable.
+
+**Commands:**
+- `node scripts/catalog-intake/media-runner.mjs prepare PRIVATE_PLAN.json`
+  - Each planned option is prepared once, write-once, through `prepareResponsiveMedia`:
+    - **`original`:** the exact official original with no treatment. No crop, enlargement or colour change; widths are capped at the file's own width.
+    - **`tile`:** a held flat tile through the existing flat-tile treatment, which re-derives the tile from its checked cutout and requires the accepted hash.
+  - It then draws one review sheet of the exact final bytes, at most four products per page. Each option gets one row:
+    - for a tile: the cutout on a checkerboard, its alpha, the tile and every derivative;
+    - for an original: the original and every derivative.
+  - It writes an exact-hash index and a blank template whose decisions stay null.
+- `node scripts/catalog-intake/media-runner.mjs bind PRIVATE_BIND.json` binds only products whose independent review accepts the chosen option's exact files.
+  - **Tile:** the cutout and tile reviews must also be literally true.
+  - **Revision:** each product is bound to its live revision when that already lists the held file. Otherwise it is bound to `derivedRecord` of the live row and the saved official record, which then needs the existing `rebindSql` statement.
+  - **Files:** a set prepared for that exact revision reuses its frozen files, re-hashed where they lie; anything else must re-derive identical bytes.
+  - **Output:** the existing approval bundle and record statement, chunked re-bind statements, `publish.sql` and a `deliver-ready.mjs` ready manifest.
+- **Same-revision replacement:** a plan item marked `replaces_approval` is recorded through `jwl_record_presentation_approval`, which replaces a kept approval at the same revision. The plain `jwl_record_media_approval` never replaces.
+- **Supplemental (in-use) photographs:** a plan with `primary` names the published product's plan and key.
+  - The approval lists the primary's exact files first, unchanged, then each accepted supplemental. It is recorded as a same-revision replacement.
+  - Only the new files are uploaded and only their new evidence rows are submitted; re-submitting recorded primary rows is refused. The completion route verifies every cited file.
+- **Greyscale originals:** an exact official original without treatment may be an 8-bit greyscale photograph (`responsive-media.mjs`). It is read losslessly as R=G=B, and the manifest records `greyscale_source`. Treated paths still require sRGB.
+  - A detail close-up is not an in-use photograph.
+- **Byte budgets:** a file over its budget needs the reviewer's exception record for that exact file. The fidelity floor is never waived.

@@ -50,6 +50,9 @@ const pictured = galleryView(product, model.representative, model.variants).mode
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M4 19.5l1.3-3.9A8 8 0 1 1 8.4 18.7z" /></svg>
         {s.cta}
       </a> : <button class="cta cta--solid" type="button" disabled title={s.whatsapp.pendingDescription}>{s.cta} — {s.whatsapp.pending}</button>}
+      {/* Decision 0027: the selected variant's own official page, only when the database verified one. The variant
+          fragment re-renders this block, so the link always follows the selected reference. */}
+      {product.officialUrl && <a class="cta" href={product.officialUrl} target="_blank" rel="noopener noreferrer">{s.product.officialPage}</a>}
       {/* A grouped page's variant links put other product URLs in this block, so its preview CTA carries its own label. */}
       <p class="note">{grouped && product.isPreview && `${s.preview} — `}{s.product.confirm}</p>
     </div>

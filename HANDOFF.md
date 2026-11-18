@@ -1,8 +1,25 @@
-# Continue Jwleria — compact receiving entry, 2026-11-17
+# Continue Jwleria — compact receiving entry, 2026-11-18
 
 ## Current owner delivery instruction — 2026-11-17
 
-[Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+[Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items. [Decision 0027](decisions/0027-official-originals-in-use-photos-and-official-links.md) (2026-11-18) adds the official-original fallback, one review of exact bytes, in-use photographs, the official page link and breadth-first rotation.
+
+## Breadth-first delivery under decision 0027 — 2026-11-18
+
+Read the top entry of [STATE](STATE.md). Work through `scripts/catalog-intake/media-runner.mjs` (README: "Decision 0027 runner"); Codex reviews the exact final bytes once and performs every provider write.
+
+Next actions, in order (none waits on another):
+1. **In-use append for A538HHBX07-0018:** record and upload its prepared package. It holds the primary unchanged and first, plus 8 new files. Then read the page back.
+2. **Cached LOEWE refs (138, in 9 chunks):**
+   - Codex reviews each chunk's combined sheet and picks tile or original per product.
+   - Claude binds the accepted files with Codex's cached live rows; this includes a re-bind to the saved-record revision.
+   - Then record and upload.
+   - The 46 + 15 low-resolution holds, the 4 `cutout_failed`, the 73 stale rows, the 25 new pages and the two robots exclusions stay as recorded.
+3. **Worker release:** deploy the prepared storefront release (77 files) when the owner has signed in to Cloudflare. Then check a product page for the official link and the whole-image original frame.
+4. **Breadth rotation** from the source matrix in [COVERAGE-AND-SOURCE-REGISTRY](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md):
+   - the next reachable brands first, up to 10 distinct models each, then 25;
+   - Prada only after a later robots read answers within its timeout;
+   - closed sources stay closed.
 
 ## LOEWE framing holds resolved; continue from actual results — 2026-11-17
 

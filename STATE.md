@@ -1,8 +1,60 @@
-# Jwleria — current state, 2026-11-17
+# Jwleria — current state, 2026-11-18
 
 ## Current owner delivery instruction — 2026-11-17
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items.
+
+[Decision 0027](decisions/0027-official-originals-in-use-photos-and-official-links.md) (owner, 2026-11-18) adds:
+- the exact official original as the fallback for a failed or rejected cutout;
+- one review of the exact final bytes;
+- up to two verified in-use photographs;
+- the verified official page link;
+- breadth-first brand rotation.
+
+## Originals fallback, new brands and the official page link — 2026-11-18
+
+**Totals (producer-reported by Codex, fresh read 12:22Z):**
+- 4,097 active products, 533 with photographs, across 6 brands: Longchamp 390, LOEWE 129, Bottega Veneta 7, Audemars Piguet 3, Jaeger-LeCoultre 3, Rolex 1.
+- Newly photographed today: 8 LOEWE products (121 → 129) and 6 new-brand products, with no replays. One of the 8, A538HHBX07-0018, was later replaced by its original.
+
+**LOEWE continuation**
+- **Robots (observed live):** one fresh robots read, byte-identical to the saved 2026-11-09 policy.
+  - The earlier refusal was URL-specific: `Disallow: /*ddc*` matched the version segment of A538H13X03-1150.
+  - The 197 unreached entries were the run stopping by design. 196 were allowed; the 1 matching the same rule is excluded append-only and was never requested.
+- **Acquisition (prepared):** all 196 were attempted in 41 groups of 4, reusing the read for an hour.
+  - 146 masters were made.
+  - 46 are held as `low_resolution` (438–650 px against 653; nothing upscaled).
+  - 4 are held as `cutout_failed`.
+- **Kept separate, with no page re-collection:**
+  - the 73 catalogue rows outside the 2026-11-09 plan: 72 absent from both product-sitemap passes, plus 1 "redirect requires review";
+  - the 25 new pages that have no catalogue row.
+- **g001 (published, producer-reported):** Codex accepted it in two passes; 4 products and 16 files were published through n8n.
+- **Correction: A538HHBX07-0018.**
+  - Codex then found the right outer-wing gold zip pull missing from that master. The initial sheet review had missed it.
+  - The photo was withdrawn to facts-only with the existing factual function. The approval was kept, not revoked.
+  - It was replaced at the same revision by the exact original, through `jwl_record_presentation_approval`.
+- **g002 (rejected masters):** zip pull tips were clipped in all four. They were published as exact originals instead (r001: 5 products, 20 files, published).
+- **Preserved:** every negative, repair attempt and superseded file. The scoped mask repairs were stopped by the owner's plan, and no repair was offered.
+
+**New brands (first wave)**
+- **Migration (applied, producer-reported):** `20261118121216_jwleria_owner_directed_ap_jlc` gives Audemars Piguet and Jaeger-LeCoultre owner-direction grants for their observed media origins.
+- **Published (producer-reported):** 6 products and 18 files: AP 3 at native width 568 with their own transparency, and JLC 3 at 2,400 px wide.
+- **Not acquired, recorded and not retried:**
+  - Prada: its robots read timed out at 20 s, so no image request was made.
+  - The remaining Bottega product: its declared file returns 404.
+
+**In-use photographs**
+- **Accepted (Codex):** for A538HHBX07-0018, the declared `_1O` (carried) and `_2O` (worn) were inspected and accepted, with one byte-budget exception for a single file.
+- **Not in-use:** `_1W`/`_2W` are logo and buckle close-ups. They are kept as detail evidence only.
+- **Prepared:** an append package (primary unchanged and first; 8 new files) is ready for recording.
+
+**Official page link**
+- **Migration (applied, producer-reported):** `20261118122046_jwleria_official_page_link`. The verified `official_url` is filled for all 4,097 rows, and `jwl_product_model_v2` projects it.
+- **Storefront build (prepared):** the release adds the link and the whole-image frame for originals. It is 77 files with a private checksum list, and is not deployed: the owner will sign in to Cloudflare later.
+
+**Runner and work in progress (prepared)**
+- `scripts/catalog-intake/media-runner.mjs` covers prepare (tile and/or original), the combined review sheet, accepted-only binding, same-revision replacement and supplemental appends.
+- In progress: the 138 cached LOEWE refs, in 9 chunks of up to 16, prepared as tile or original from Codex's cached live rows, with no source request.
 
 ## Three LOEWE framing holds resolved and published through the live completion route — 2026-11-17
 

@@ -78,6 +78,8 @@ export interface PublicProduct {
   mediaKind: 'synthetic-preview' | 'verified-product' | 'facts-only';
   isPreview: boolean;
   addedAt: string;
+  /** Decision 0027: the brand's own page for exactly this reference, when the database verified one; never guessed. */
+  officialUrl?: string;
   /** Present on listing rows read from the model projection. */
   model?: ModelSummary;
 }

@@ -151,8 +151,11 @@ export async function prepareResponsiveMedia(input){
   // A flat tile may start from an untagged 8-bit greyscale PNG: normalizeFlatTile and the cutout check read it losslessly
   // as R=G=B=grey (standard-channels.mjs), and refuse any other greyscale. Every other derivative needs 8-bit sRGB.
   const greyTile=binding.treatment?.kind===flatTileTreatment.kind&&metadata.space==='b-w';
+  // Decision 0027: an exact official original shown without treatment may be an 8-bit greyscale photograph; it is read
+  // losslessly as R=G=B and encoded as is (no colour change), and the manifest records it. Treated paths are unchanged.
+  const greyOriginal=binding.treatment===undefined&&metadata.space==='b-w'&&metadata.depth==='uchar'&&metadata.channels===1;
   if(greyTile)await standardChannels(original,sharp);
-  else if(metadata.space!=='srgb'||metadata.depth!=='uchar')throw new Error('Unsupported original color space or depth');
+  else if(!greyOriginal&&(metadata.space!=='srgb'||metadata.depth!=='uchar'))throw new Error('Unsupported original color space or depth');
   const orientation=metadata.orientation??1;
   if(!Number.isInteger(orientation)||orientation<1||orientation>8)throw new Error('Unsupported original EXIF orientation');
   const visualWidth=orientation>=5?metadata.height:metadata.width;
@@ -278,7 +281,7 @@ export async function prepareResponsiveMedia(input){
       byte_budgets:byteBudgets,fidelity_floor:fidelityFloor,detail_target:detailTarget,
       selection:'highest ladder step within the byte budget and at or above the fidelity floor; a card size, and a detail file that is also a card size, carries the card budget',
       fidelity_metric:'luma (BT.601) SSIM, 11x11 Gaussian window sigma 1.5, and RGB PSNR, against an in-memory Lanczos3 resize of the same pipeline at the same width',
-      crop:false,upscale:false,color_adjustments:false,
+      crop:false,upscale:false,color_adjustments:false,...(greyOriginal?{greyscale_source:'8-bit greyscale original, read losslessly as R=G=B'}:{}),
       // A cutout master is already upright (its check requires it), so the pipeline applies no orientation of its own to it.
       orientation_applied:cutout||tile?1:orientation,orientation_normalized:!cutout&&!tile&&orientation!==1,icc_profile:'retained-if-present',metadata:'private EXIF and GPS not copied',
       ...(hasAlpha?{alpha:'kept, encoded losslessly',metric_background:frameBackground}:{}),...(cutout?{background_removed:true}:{}),
