@@ -11,6 +11,26 @@
 - the verified official page link;
 - breadth-first brand rotation.
 
+## Frame release 0028.1 and the multi-brand preview — 2026-11-18, 19:30Z
+
+This entry supersedes the release and c004 lines of the 13:13Z checkpoint below; the rest of that checkpoint stands.
+
+- **Frame release 0028.1 (deployed):** after the owner was shown the multi-brand preview, Codex deployed Claude's checksummed, immutable frame-only package to 100% of production traffic. The deployment and rollback references stay in the private operator receipt.
+  - **What changed:** an exact official original without a canvas (the decision 0027 frame) now sits in a frame of exactly its own proportions at every width. Its stored width and height reach CSS as plain numbers. The rule outranks the desktop 4:5 gallery rule, which used to show the photograph between sand strips. The frame has no ground of its own, so no tinted strip appears beside a photograph's own background.
+  - **Unchanged:** the phone layout (already exact), white squares, `#f0f0f0` flat and listing tiles, the carousel, the official link, all data and all photographs.
+- **Frame release check (observed live, Claude, read-only, 19:30Z):** the Arabic A538HHBX07-0018 and English Jaeger-LeCoultre Q3858520 pages return 200 with the new stylesheet and the unchanged page script. Their photographs carry numeric frame sizes: 1200×1812, 1200×1812 and 1450×2189 on A538HHBX07-0018; 1600×840 on Q3858520.
+- **Multi-brand preview (prepared, local only):** Codex showed the owner four real product pages. Claude's storefront code rendered them locally from exported public model payloads. Nothing in the preview is published or approved.
+  - **LOEWE A538HHBX07-0018:** a decision 0022 white-square candidate first, then its two approved in-use photographs. The candidate keeps the right zip pull whole: v1's mask was raised from the original's own pixels inside one 6×21 px box, nothing was generated, and every opaque product pixel matches the original. It still needs review before any publication.
+  - **Longchamp 70203PVC001380 and Bottega Veneta 568401VMAH21988:** white-square examples, made by the existing decision 0022 tool from each product's accepted master (the packshot's own accepted alpha, and the accepted cutout).
+  - **Jaeger-LeCoultre Q3858520:** its exact published original, because no accepted mask exists.
+- **Operator read at 2026-11-18T19:40+00:00:** 624 active catalog rows have photos. c004 (14 products, 56 files) and c005 (16 products, 64 files) are fully published and match their exact current approvals. c006 (16 products, 64 files) is fully uploaded; 11 were confirmed live and its n8n completion was still running. No completed file needs upload again.
+- **c007-c009 (prepared):** 37 references still need visual review. The 7 revision-normalization holds and the 2 q001 wallet holds stay held.
+- **OMEGA source profile (blocked):** Claude observed this live at 19:37Z.
+  - **Origin:** Codex verified it from the Swatch Group's official OMEGA brand page, which links "Omega website" to https://www.omegawatches.com. It is recorded with that basis.
+  - **Run:** one existing-policy profile. robots.txt answered 200 and declared 12 sitemaps. The home page was then flagged as a challenge, and the profile stopped before any terms, sitemap, product or image read. There was no retry.
+  - **Saved bytes:** they show the full home page (HTTP 200, real title, product JSON-LD). The flag came from an empty form reCAPTCHA container (`am-recaptcha-container`), which the challenge pattern `captcha-container` also matches. Tissot's recorded stop has the same cause (`.recaptcha-container` on its full `/en-sa` home page).
+  - **Next:** both stay stopped until a recorded refusal-scope review of the saved responses decides. No request goes to either origin meanwhile.
+
 ## Latest operator checkpoint — 2026-11-18, 13:13Z
 
 This entry supersedes earlier prepared/pending counts below; the older evidence stays as history.

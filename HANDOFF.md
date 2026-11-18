@@ -11,13 +11,27 @@ Read the top entry of [STATE](STATE.md). Work through `scripts/catalog-intake/me
 Next actions, in order (none waits on another):
 1. **In-use append for A538HHBX07-0018 is published:** the primary is unchanged and first, followed by two exact official in-use photographs (8 new files). Do not record or upload it again. The first failed append is retained; only the corrected new-evidence-only append succeeded.
 2. **Cached LOEWE refs (138, in 9 chunks):** c001-c003 are published (48 products); do not replay them. Production at 13:13Z is 4,097 active, 583 photographed (LOEWE 179) and 2,349 media files.
-   - 131 rows were prepared; 7 revision-normalization holds remain separate. The remaining 83 prepared rows in c004-c009 have NOT been visually reviewed or accepted.
+   - 131 rows were prepared; 7 revision-normalization holds remain separate.
+   - **c004 and c005:** 30 products are published and match their recorded approvals. Continue from the preserved receipts.
+   - **c006:** 64 files are uploaded and 11 of 16 products are confirmed live. Reconcile the remaining five with the existing completion runner after its current execution ends.
+   - **c007-c009:** 37 prepared references await visual review.
    - Codex views each remaining chunk's combined sheet once and picks tile or original per product. The originals-only sheets are already rendered from frozen bytes; do not re-encode or acquire again.
    - Operate Claude's existing binder with the exact accepted hashes and cached live rows, then re-bind, record and upload. Keep actual operator receipts private.
    - Of the 4 greyscale `cutout_failed` originals, q001 published 2 unmodified originals. C510302X16-1100 and C510302X23-1100 remain held because their different leather descriptions share identical source bytes. The 46 + 15 low-resolution holds, the 73 stale rows, the 25 new pages and the two robots exclusions stay as recorded.
-3. **Worker release is live.** Decision 0028 reached 100% production traffic at 15:36Z on 2026-11-18, with the decision 0027 official variant link included. Codex verified the standalone first photograph, automatic advance, both directions of horizontal navigation and the official link on the Arabic Hammock page. Continue from the deployed release and use the private operator receipt if a rollback is necessary.
-4. **Breadth rotation** from the source matrix in [COVERAGE-AND-SOURCE-REGISTRY](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md):
+3. **Both Worker releases are live.** Continue from the deployed release; the private operator receipts hold the rollback references.
+   - **0028** reached 100% production traffic at 15:36Z on 2026-11-18, with the decision 0027 official variant link included. Codex verified the standalone first photograph, automatic advance, both directions of horizontal navigation and the official link on the Arabic Hammock page.
+   - **0028.1, frame only,** followed after the owner saw the multi-brand preview. Claude observed it live at 19:30Z: exact own-proportion frames, no sand strips.
+4. **White primaries (decision 0022 on product pages):** the A538HHBX07-0018 white candidate and the Longchamp and Bottega Veneta white-square examples exist only in the private local preview.
+   - **A538HHBX07-0018:** Codex reviews the candidate's proofs once. If accepted, the existing white-square treatment, bundle, record and n8n upload apply as a presentation replacement.
+   - **Tile products:** their product pages still show the `#f0f0f0` tile. A white square for each, made from its accepted master, is a separate photo batch that needs its own go-ahead.
+5. **Breadth rotation** from the source matrix in [COVERAGE-AND-SOURCE-REGISTRY](docs/spec/COVERAGE-AND-SOURCE-REGISTRY.md):
    - the next reachable brands first, up to 10 distinct models each, then 25;
+   - **sources with verified origins come first:**
+     - LOEWE c007-c009 through n8n incremental deliveries, one chunk at a time;
+     - the Audemars Piguet and Jaeger-LeCoultre bounded facts pass through the existing adapters, once their reviewed source configurations are saved (none is saved locally);
+     - Bottega Veneta's 8th row waits for a new declared file;
+     - Longchamp in-use photographs come later;
+   - **directory brands are profiled only after their official origin is verified and recorded with its basis, never guessed.** OMEGA's origin was verified by Codex from the Swatch Group's official brand page. Its one existing-policy profile stopped at the home step on a challenge flag (19:37Z), with no retry. Its saved bytes, like Tissot's, show the full home page; the flag matched an empty form reCAPTCHA container. A recorded refusal-scope review of the saved responses decides whether the `captcha-container` pattern should exclude such form widgets. Until then no request goes to either origin. The other 25 pending brands still need a verified origin;
    - Prada is held: the 2026-11-01 owner access rule excludes automated Prada access (its terms exclude crawling). The owner must resolve that scope; one robots request made on 2026-11-18 timed out and is recorded;
    - Rolex and IWC stay read-only until a refusal-scope review covers their separate media hosts;
    - closed sources stay closed; Tissot and Louis Vuitton profile pilots also stopped (challenge and 403 respectively), before any sitemap/product/image acquisition.
