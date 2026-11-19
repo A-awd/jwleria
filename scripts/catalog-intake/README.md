@@ -288,12 +288,14 @@ The completion route of `jwl-media-upload` binds JSON parameters as text and par
   - It writes an exact-hash index and a blank template whose decisions stay null.
 - `node scripts/catalog-intake/media-runner.mjs bind PRIVATE_BIND.json` binds only products whose independent review accepts the chosen option's exact files.
   - **Tile:** the cutout and tile reviews must also be literally true.
+  - **LOEWE original after a low-resolution tile hold:** the runner pins the known exact references and also reads a new item's `low_resolution` reason. The independent review must complete `foreground_measurement` for the same reference and original SHA-256. Measure the complete product in the oriented original at native resolution, excluding the backdrop and shadow, and record `box: {left, top, width, height}` in pixels along with the reviewer and review evidence reference. The runner checks that the box lies inside the verified original and reaches 653 px on its longest side. This check also applies when binding prepared files from a previous run.
   - **Revision:** each product is bound to its live revision when that already lists the held file. Otherwise it is bound to `derivedRecord` of the live row and the saved official record, which then needs the existing `rebindSql` statement.
   - **Files:** a set prepared for that exact revision reuses its frozen files, re-hashed where they lie; anything else must re-derive identical bytes.
   - **Output:** the existing approval bundle and record statement, chunked re-bind statements, `publish.sql` and a `deliver-ready.mjs` ready manifest.
 - **Same-revision replacement:** a plan item marked `replaces_approval` is recorded through `jwl_record_presentation_approval`, which replaces a kept approval at the same revision. The plain `jwl_record_media_approval` never replaces.
 - **Supplemental (in-use) photographs:** a plan with `primary` names the published product's plan and key.
   - The approval lists the primary's exact files first, unchanged, then each accepted supplemental. It is recorded as a same-revision replacement.
+  - For a LOEWE reference with a low-resolution tile hold, the current catalogue readback can confirm that the exact already-approved primary is being kept. Only an original primary subject to the hold requires a foreground measurement.
   - Only the new files are uploaded and only their new evidence rows are submitted; re-submitting recorded primary rows is refused. The completion route verifies every cited file.
 - **Greyscale originals:** an exact official original without treatment may be an 8-bit greyscale photograph (`responsive-media.mjs`). It is read losslessly as R=G=B, and the manifest records `greyscale_source`. Treated paths still require sRGB.
   - A detail close-up is not an in-use photograph.

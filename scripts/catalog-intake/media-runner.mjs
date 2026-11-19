@@ -2,6 +2,7 @@ import {readFile,writeFile,appendFile,mkdir} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 import {join} from 'node:path';
 import {pathToFileURL} from 'node:url';
+import {isDeepStrictEqual} from 'node:util';
 import {prepareResponsiveMedia,installedImageEngine,privateOutputRoot} from './responsive-media.mjs';
 import {approvalBundle} from './media-pipeline.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
@@ -9,6 +10,7 @@ import {derivedRecord,rebindSql} from './bind-frozen.mjs';
 import {mergedVerification,batchPublishSql} from './batch-official.mjs';
 import {cutoutReviewChecks} from './cutout.mjs';
 import {flatTileReviewChecks} from './flat-tile.mjs';
+import {resolutionProblem} from './background-composite.mjs';
 
 // Decision 0027 runner: one resumable path for any official source whose exact original is already held. A product whose
 // background-only cutout failed or was rejected is published as its exact, complete official original: no treatment, no
@@ -22,6 +24,50 @@ const load=async p=>JSON.parse(await readFile(p,'utf8'));
 const once={flag:'wx',mode:0o600};
 const verificationChecks=['exact_reference','color_and_variant','authentic_product_photo','not_generated_or_altered','clear_product_view'];
 const identityReviewer='Claude (implementation owner; database-bound gallery check, not the visual reviewer)';
+// Decision 0027: exact public references held after foreground measurement in the retained LOEWE ledgers and reviews.
+// Pin the reference, not the rejected file hash, so a different original cannot silently clear the hold.
+const loeweLowResolutionRefs=new Set(`
+A510P88X26-3969 A510P88X41-5544 A510P88X43-1160 A510P88X43-8130 A510P88X49-1100
+A510P88X49-2530 A510P88X60-0018 A510P88X60-1100 A510P88X60-1769 A510P88X60-3170
+A510P88X60-5541 A510PLIX04-1100 A510PLIX04-8160 A510PLIX04-9190 A510PLIX18-0018
+AN01NSBX01-1102 AORGSEMX02-0094 AORGSEMX06-1100 C039U96X01-1100 C039U96X02-6423
+C510302X16-1220 C510302X23-0362 C510302X23-3606 C510501X14-1100 C510501X14-1220
+C510501X15-0623 C510501X18-0362 C510501X18-1100 C510501X18-1220 C510501X18-3606
+C510501X20-1220 C510W73X16-1100 C510W73X16-3606 C565501X05-1100 C565R41X04-1220 C565R41X04-4160
+C565R41X05-1100 C643302X37-0095 C643501X23-0095 C643501X23-0692 C643W73X11-1100
+C660302X05-1100 C660302X05-1110 C660501X03-1100 C660501X03-1110 C660R41X02-0362
+C660R41X02-1100 C660R41X02-1110 C660R41X02-4160 C660R41X02-5544 C660TR2X04-1110
+C779302X02-1100 C779302X02-1220 C779302X02-6579 C779501X01-1100 C779501X01-1220
+C779501X01-3969 C779501X01-6579 C779W73X01-1100 C779W73X01-3969 CPBPR12X01-2586
+CPBPR12X02-1100
+`.trim().split(/\s+/));
+
+function hasLowResolutionHold(plan,item){
+  if(plan.source.id!=='loewe-official')return false;
+  return loeweLowResolutionRefs.has(item.candidate.external_id?.toUpperCase())||
+    loeweLowResolutionRefs.has(item.ref?.toUpperCase())||item.quarantine==='low_resolution'||
+    /\blow_resolution\b|insufficient source resolution/i.test(item.reason??'');
+}
+
+async function requireReviewedForeground(plan,item,review,prepared){
+  if(!hasLowResolutionHold(plan,item))return;
+  const measurement=review?.foreground_measurement,box=measurement?.box;
+  if(measurement?.reference!==item.ref||item.ref!==item.candidate.external_id||
+    measurement?.original_sha256!==item.asset.sha256||prepared.original_sha256!==item.asset.sha256||
+    measurement?.reviewer!==review.reviewer||!measurement?.review_reference?.trim()||
+    !box||![box.left,box.top,box.width,box.height].every(Number.isSafeInteger)||
+    box.left<0||box.top<0||box.width<1||box.height<1){
+    throw Error('LOEWE low-resolution hold requires this reviewer’s exact original native product foreground box');
+  }
+  const original=await readFile(item.asset.path);
+  if(sha256(original)!==item.asset.sha256)throw Error('The measured original bytes differ');
+  const metadata=await installedImageEngine()(original,{failOn:'warning',limitInputPixels:60000000}).metadata();
+  const rotated=metadata.orientation>=5&&metadata.orientation<=8;
+  const width=rotated?metadata.height:metadata.width,height=rotated?metadata.width:metadata.height;
+  if(box.left+box.width>width||box.top+box.height>height)throw Error('The reviewed foreground box is outside the native original');
+  const problem=resolutionProblem(box);
+  if(problem)throw Error(problem);
+}
 const filesOf=manifest=>[...manifest.variants,manifest.detail].filter((f,i,all)=>all.findIndex(o=>o.width===f.width)===i).sort((a,b)=>a.width-b.width);
 
 /** The exact-asset derivative input prepareResponsiveMedia binds, from a plan item and the source's grant row. A tile option
@@ -115,6 +161,10 @@ export async function reviewSheet({plan,prepared,name='sheet',per_sheet=4,cell=3
     return {key,ref:item.ref,options:sets.map(p=>p.option),decision:null,accepted:null,reviewer:null,reviewed_at:null,files:null,
       files_by_option:Object.fromEntries(sets.map(p=>[p.option,p.files.map(f=>({width:f.width,sha256:f.sha256}))])),
       verification:{asset_sha256:item.asset.sha256,verified_reference:item.ref,reviewer:null,verification_reference:null,checks:blank(verificationChecks)},
+      ...(!plan.primary&&sets.some(p=>p.option==='original')&&hasLowResolutionHold(plan,item)?{
+        foreground_measurement:{reference:item.ref,original_sha256:item.asset.sha256,reviewer:null,review_reference:null,
+          box:blank(['left','top','width','height'])},
+      }:{}),
       ...(tile?{cutout_review:{cutout_sha256:item.tile.cutout_sha256,original_sha256:item.asset.sha256,reviewer:null,review_reference:null,checks:blank(cutoutReviewChecks)},
         tile_review:{tile_sha256:item.tile.tile_sha256,cutout_sha256:item.tile.cutout_sha256,original_sha256:item.asset.sha256,reviewer:null,review_reference:null,checks:blank(flatTileReviewChecks)}}:{})};}),null,1),{mode:0o600});
   return sheets;
@@ -157,6 +207,7 @@ export async function bindOriginals({plan,reviews,live,saved=new Map(),public_ba
       const prepared=journal.find(e=>e.key===item.key&&e.option===option);
       if(!prepared||!now)throw Error(review?'a prepared set or live row is missing':'no review');
       const problem=acceptanceProblem(review,prepared);if(problem)throw Error(problem);
+      if(option==='original')await requireReviewedForeground(plan,item,review,prepared);
       const current=now.revision_hash===item.candidate.revision_hash&&now.content?.image_urls?.includes(item.asset.source_url);
       const record=current?{...now.content,candidate_id:now.candidate_id,revision_hash:now.revision_hash,source_id:now.source_id,external_id:now.external_id}
         :derivedRecord({live:now,saved:saved.get(item.ref)??(()=>{throw Error('no saved record');})()});
@@ -239,6 +290,13 @@ export async function bindSupplements({plan,reviews,live,public_base_url,prepare
       verification:mergedVerification(review.verification,{basis:'official_gallery_listing',asset_sha256:o.sha256,identity_established:true,reference:item.ref,revision_hash:record.revision_hash,gallery_url:o.source_url,reviewer:identityReviewer,reason})});
   }
   const bundle=approvalBundle({candidate:record,grant:plan.grant,items:bundleItems,public_base_url,prepared_by,performance_exception});
+  if(hasLowResolutionHold(primaryPlan,pItem)){
+    const livePrimary=now.catalog?.image_variants?.[0];
+    const keepsPrimary=now.catalog?.active&&livePrimary&&
+      now.catalog.images?.[0]===bundle.approval.approved_images[0]&&
+      isDeepStrictEqual(livePrimary,bundle.approval.approved_image_variants[0]);
+    if(!keepsPrimary)await requireReviewedForeground(primaryPlan,pItem,pReview,pJournal);
+  }
   const plain='select public.jwl_record_media_approval(',kept='select public.jwl_record_presentation_approval(';
   // The primary's evidence rows are already recorded: the statement submits only the new rows, and the existing evidence
   // checks find the recorded ones (re-submitting them is refused as "Stored media evidence differs from this approval").
