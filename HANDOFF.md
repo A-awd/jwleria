@@ -1,5 +1,14 @@
 # Continue Jwleria — compact receiving entry, 2026-11-18
 
+## Resume from the current production checkpoint
+
+Use the first production section in [STATE](STATE.md) and the corresponding delivery receipts before taking an older next action below. The full Longchamp white batch, seven photographed Bottega whites, both LOEWE historical white batches, corrected LOEWE gallery, and AP/JLC waves 2–4 are already public. The older in-flight counts and proposed release actions in this file are historical.
+
+- Production delivery uses the existing n8n route. Read back each exact current approval and image array after activation. If n8n returns an error, check the affected public rows before retrying the existing activation. Leave completed uploads and approvals alone.
+- Continue work on independent eligible batches in parallel. For LOEWE, start with the exact already-declared alternate views that can show the complete variant. Preserve rejected originals, low-resolution evidence, wallet interior holds and source-specific access stops.
+- The next Rolex and Prada photo references remain staged for exact images with a documented commercial publication basis. Keep the saved source limits and rejected images in force. Existing Rolex Reference selectors and the translated Longchamp/LOEWE controls are already live.
+- The owner deferred the WhatsApp number. Resume contact configuration when the approved business number is supplied.
+
 ## Current owner delivery instruction — 2026-11-17
 
 [Decision 0026](decisions/0026-ready-work-publishes-immediately.md) governs: upload and publish each ready part immediately on the existing Jwleria website, including the necessary Supabase recording/binding/activation and deployment. No new owner approval, test suites, extra review loops or waiting for the rest of a batch. Earlier local-only/no-upload/pending-production and test-gate wording below is superseded history. Preserve unfinished/rejected items and all other scope/privacy/source-access limits; they do not hold up ready items. [Decision 0027](decisions/0027-official-originals-in-use-photos-and-official-links.md) (2026-11-18) adds the official-original fallback, one review of exact bytes, in-use photographs, the official page link and breadth-first rotation.
