@@ -126,7 +126,7 @@ export async function mediaRun(phase,input,{fetcher=fetch,pacer}={}){
       const cut=cutouts.get(original.sha256),tile=tiles.get(original.sha256),square=nativeSquares.get(original.sha256);
       const prepared=await prepareGrantedMedia({source:input.source,candidate,asset,grant,output_directory:out,
         ...(cut?{cutout:{path:cut.path,sha256:cut.sha256,producer:cut.producer},...(cut.square_sha256!==undefined?{square_sha256:cut.square_sha256}:{}),...(cut.tile_sha256!==undefined?{tile_sha256:cut.tile_sha256}:{})}:{}),
-        ...(tile?{tile_sha256:tile.tile_sha256}:{}),...(square?{square_sha256:square.square_sha256}:{})});
+        ...(tile?{tile_sha256:tile.tile_sha256}:{}),...(square?{square_sha256:square.square_sha256,card_960_retry:square.card_960_retry}:{})});
       items.push({asset,manifest:prepared.manifest,verification,...(cut?{cutout_review:cut.review,...(cut.square_review!==undefined?{square_review:cut.square_review}:{}),...(cut.tile_review!==undefined?{tile_review:cut.tile_review}:{})}:{}),
         ...(tile?{tile_review:tile.review}:{}),...(square?{square_review:square.review}:{})});
     }

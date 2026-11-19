@@ -401,7 +401,7 @@ export async function keepOpenLicenseFile({candidate,grant,file_url,local_path,e
  * ({path, sha256, producer}), the derivatives are made from that background-only cutout master after it passes its
  * check against this original (decision 0015); approvalBundle then also needs the cutout's independent review.
  */
-export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout,square_sha256,tile_sha256}){
+export async function prepareGrantedMedia({source,candidate,asset,grant,output_directory,cutout,square_sha256,tile_sha256,card_960_retry}){
   const decision=evaluateMediaGrant(grant,{candidate,asset_url:asset.source_url});
   if(decision.state!=='permitted')throw Error('Media grant not permitted: '+decision.reasons.join(','));
   if(tile_sha256!==undefined){
@@ -410,7 +410,7 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
     if(grant.kind==='open_license')throw Error('A flat tile is not offered for open-licence images: its credit wording is not reviewed');
     const basis=cutout===undefined?null:cutoutBasisProblem(grant);
     if(basis)throw Error('Background removal is not covered: '+basis);
-    return prepareResponsiveMedia({purpose:'catalog',source:{...source,media_permission_reference:grant.grant_reference,media_origins:grant.media_origins??[]},candidate,asset,output_directory,
+    return prepareResponsiveMedia({purpose:'catalog',source:{...source,media_permission_reference:grant.grant_reference,media_origins:grant.media_origins??[]},candidate,asset,output_directory,card_960_retry,
       treatment:{kind:flatTileTreatment.kind,tile_sha256,...(cutout===undefined?{}:{cutout})},
       grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
         revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
@@ -422,7 +422,7 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
   // An open-licence file is outside the brand gallery: the binding sees only the one granted file being prepared.
   const open=grant.kind==='open_license';
   const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(asset.source_url).origin]:grant.media_origins??[]};
-  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,
+  return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,card_960_retry,
     // The accepted square binds either the cutout or the original's own alpha (decision 0022).
     ...(square_sha256!==undefined?{treatment:{kind:whiteSquareTreatment.kind,cutout,square_sha256}}
       :cutout===undefined?{}:{treatment:{kind:cutoutTreatment.kind,cutout}}),

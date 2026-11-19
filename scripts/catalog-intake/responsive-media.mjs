@@ -142,6 +142,12 @@ async function immutableFile(path,bytes){
 /** Prepare private files only. No fetch, upload, approval or public publication occurs. */
 export async function prepareResponsiveMedia(input){
   const binding=bindingOf(input);
+  const cardRetry=input.card_960_retry;
+  if(cardRetry!==undefined&&(input.purpose!=='catalog'||binding.source_id!=='longchamp-official'
+    ||input.grant.kind!=='owner_directed_official'||binding.treatment?.kind!==whiteSquareTreatment.kind
+    ||binding.treatment.cutout_sha256!==null||cardRetry?.asset_sha256!==binding.asset_sha256
+    ||!Number.isInteger(cardRetry.minimum_quality)||cardRetry.minimum_quality<58||cardRetry.minimum_quality>74))
+    throw new Error('A 960px card retry must name the exact Longchamp native-alpha original and a quality floor from 58 through 74');
   const outputRoot=await privateOutputRoot(input.output_directory);
   const originalPath=await realpath(input.asset.path);
   const stat=await lstat(originalPath);
@@ -151,13 +157,14 @@ export async function prepareResponsiveMedia(input){
   const sharp=installedImageEngine();
   const metadata=await sharp(original,{failOn:'warning',limitInputPixels:60000000}).metadata();
   if(!['jpeg','png','webp','avif','heif'].includes(metadata.format)||!metadata.width||!metadata.height||(metadata.pages??1)!==1)throw new Error('Unsupported or animated original image');
-  // A flat tile may start from an untagged 8-bit greyscale PNG: normalizeFlatTile and the cutout check read it losslessly
-  // as R=G=B=grey (standard-channels.mjs), and refuse any other greyscale. Every other derivative needs 8-bit sRGB.
-  const greyTile=binding.treatment?.kind===flatTileTreatment.kind&&metadata.space==='b-w';
+  // A flat tile or a white square from an exact checked cutout may start from an untagged 8-bit greyscale PNG.
+  // The original is read losslessly as R=G=B=grey for validation; a cutout-based derivative uses its checked master.
+  const greyTreated=metadata.space==='b-w'&&(binding.treatment?.kind===flatTileTreatment.kind
+    ||(binding.treatment?.kind===whiteSquareTreatment.kind&&binding.treatment.cutout_sha256!==null));
   // Decision 0027: an exact official original shown without treatment may be an 8-bit greyscale photograph; it is read
-  // losslessly as R=G=B and encoded as is (no colour change), and the manifest records it. Treated paths are unchanged.
+  // losslessly as R=G=B and encoded as is (no colour change), and the manifest records it.
   const greyOriginal=binding.treatment===undefined&&metadata.space==='b-w'&&metadata.depth==='uchar'&&metadata.channels===1;
-  if(greyTile)await standardChannels(original,sharp);
+  if(greyTreated)await standardChannels(original,sharp);
   else if(!greyOriginal&&(metadata.space!=='srgb'||metadata.depth!=='uchar'))throw new Error('Unsupported original color space or depth');
   const orientation=metadata.orientation??1;
   if(!Number.isInteger(orientation)||orientation<1||orientation>8)throw new Error('Unsupported original EXIF orientation');
@@ -203,6 +210,7 @@ export async function prepareResponsiveMedia(input){
   // The derivatives' own source frame: the upright original or cutout, or the square made from the cutout.
   const side=square?square.record.geometry.side:tile?tile.record.geometry.side:null;
   const frameWidth=side??visualWidth,frameHeight=side??visualHeight;
+  if(cardRetry!==undefined&&frameWidth<=960)throw new Error('A 960px card retry must have a separate larger detail image');
   const hasAlpha=!square&&!tile&&(cutout!==null||metadata.hasAlpha===true);
   const targetWidths=[...widths.filter(width=>width<=frameWidth),Math.min(frameWidth,1600)];
   if(targetWidths.some(width=>width>4096||Math.round(frameHeight*width/frameWidth)>8192))throw new Error('Derivative geometry exceeds public manifest limits');
@@ -240,7 +248,11 @@ export async function prepareResponsiveMedia(input){
     const lossless=await pipeline(width).webp({lossless:true,effort:0}).toBuffer();
     const reference=await pixels(lossless);
     const tried=[];let chosen;
-    for(const quality of webpQualityLadder){
+    // An explicit retry extends only the 960px card's candidates. The standard ladder, byte cap and fidelity floor stay in force.
+    const qualities=width===960&&cardRetry!==undefined
+      ?[...webpQualityLadder,...Array.from({length:75-cardRetry.minimum_quality},(_,i)=>74-i)]
+      :webpQualityLadder;
+    for(const quality of qualities){
       const bytes=await pipeline(width).webp({...webpEncoder,quality}).toBuffer();
       const decoded=await pixels(bytes);
       if(decoded.info.width!==reference.info.width||decoded.info.height!==reference.info.height)throw new Error('Derivative geometry differs from its fidelity reference');
@@ -286,6 +298,7 @@ export async function prepareResponsiveMedia(input){
       cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},
       cutout_review_required:[...cutoutReviewChecks]}:{}),
     processing:{engine:'sharp',version:sharp.versions.sharp,libvips_version:sharp.versions.vips,kernel:'lanczos3',webp_lossless:false,webp_encoder:webpEncoder,webp_quality_ladder:webpQualityLadder,
+      ...(cardRetry===undefined?{}:{card_960_retry:{asset_sha256:binding.asset_sha256,minimum_quality:cardRetry.minimum_quality}}),
       byte_budgets:byteBudgets,fidelity_floor:fidelityFloor,detail_target:detailTarget,
       selection:'highest ladder step within the byte budget and at or above the fidelity floor; a card size, and a detail file that is also a card size, carries the card budget',
       fidelity_metric:'luma (BT.601) SSIM, 11x11 Gaussian window sigma 1.5, and RGB PSNR, against an in-memory Lanczos3 resize of the same pipeline at the same width',
