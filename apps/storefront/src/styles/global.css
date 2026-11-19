@@ -198,16 +198,16 @@ input, select, textarea { font: inherit; color: inherit; background: var(--paper
 /* Decision 0028: the photographs sit in a track inside the gallery, so the controls below it never scroll away. */
 .pdp__gallery--many > .carousel__track { display: grid; gap: .75rem; grid-auto-flow: column; grid-auto-columns: 86%; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); scrollbar-width: none; }
 .pdp__gallery--many > .carousel__track::-webkit-scrollbar { display: none; }
-.carousel__controls { display: flex; align-items: center; justify-content: center; gap: .35rem; }
+.carousel__controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .35rem; }
 .carousel__controls[hidden] { display: none; }
-.carousel__btn { display: inline-grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
+.carousel__btn { display: inline-grid; place-items: center; flex: none; width: max(44px, 2.75rem); height: max(44px, 2.75rem); padding: 0; border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent); border-radius: 50%; background: none; color: var(--ink); cursor: pointer; }
 .carousel__btn svg { width: 1rem; height: 1rem; }
 [dir="rtl"] .carousel__btn--prev svg, [dir="rtl"] .carousel__btn--next svg { transform: scaleX(-1); }
 .carousel__btn--toggle .carousel__play { display: none; }
 .carousel__btn--toggle[aria-pressed="true"] .carousel__play { display: block; }
 .carousel__btn--toggle[aria-pressed="true"] .carousel__pause { display: none; }
-.carousel__dots { display: inline-flex; }
-.carousel__dot { display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; padding: 0; border: 0; background: none; cursor: pointer; }
+.carousel__dots { display: inline-flex; flex-wrap: wrap; justify-content: center; max-inline-size: 100%; }
+.carousel__dot { display: inline-grid; place-items: center; flex: none; width: max(44px, 2.75rem); height: max(44px, 2.75rem); padding: 0; border: 0; background: none; cursor: pointer; }
 .carousel__dot::before { content: ''; width: .5rem; height: .5rem; border-radius: 50%; border: 1px solid var(--ink-soft); }
 .carousel__dot[aria-current="true"]::before { background: var(--ink); border-color: var(--ink); }
 .carousel__count { min-width: 3.2em; text-align: center; font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
