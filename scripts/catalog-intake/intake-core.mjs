@@ -17,7 +17,8 @@ const hash=/^[a-f0-9]{64}$/;
 // Invalid numeric config must never disable a bound; it falls back to the safe default.
 const number=(value,fallback,min,max)=>{if(value==null)return fallback;const n=Number(value);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):fallback;};
 
-export const sourceChallenge=html=>/<title[^>]*>[^<]*(?:captcha|access denied|just a moment|robot check)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container|verify you are (?:a )?human/i.test(html);
+// A reCAPTCHA widget's container is not a page-level challenge signal by itself.
+export const sourceChallenge=html=>/<title[^>]*>[^<]*(?:captcha|access denied|just a moment|robot check)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|(?<!re)captcha-container|verify you are (?:a )?human/i.test(html);
 /** A refusal written by the runner's egress proxy rather than the origin (observed body for denied hosts). */
 export const environmentDenial=body=>/^\s*Blocked by egress policy\s*$/i.test(String(body).slice(0,200));
 export function sitemapLocations(xml){return [...new Set([...xml.matchAll(/<loc\b[^>]*>\s*(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?\s*<\/loc>/g)].map(m=>m[1].trim().replace(/&amp;/g,'&')))];}

@@ -71,7 +71,10 @@ export function initCarousel(gallery, { interval = 5000 } = {}) {
     for (const entry of entries) if (entry.isIntersecting && entry.intersectionRatio >= 0.6) { current = slides.indexOf(entry.target); render(); }
   }, { root: track, threshold: [0.6] });
   slides.forEach((slide) => shown.observe(slide));
-  const onScreen = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; schedule(); }, { threshold: 0.5 });
+  const onScreen = new IntersectionObserver(([entry]) => {
+    visible = entry.isIntersecting && entry.intersectionRatio >= 0.5;
+    schedule();
+  }, { threshold: 0.5 });
   onScreen.observe(gallery);
 
   on(controls.querySelector('[data-carousel-prev]'), 'click', () => { stop(); go(current - 1); });

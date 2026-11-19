@@ -14,7 +14,7 @@ const sha=c=>c.repeat(64);
 async function database(){
   const db=new PGlite();
   await db.exec('create role anon; create role authenticated; create role service_role bypassrls;');
-  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!/_jwleria_owner_directed_(official|bottega|loewe)\.sql$/.test(f)).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
+  for(const name of (await readdir(migrations)).filter(f=>f.endsWith('.sql')&&!f.endsWith('_jwleria_native_alpha_white_square.sql')&&!/_jwleria_owner_directed_(official|bottega|loewe)\.sql$/.test(f)).sort())await db.exec(await readFile(new URL(name,migrations),'utf8'));
   await db.query("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('longchamp-official','https://www.longchamp.com','permitted-page',$1,true,false,true)",[OLD_REF]);
   await db.exec("insert into jwl_internal.sources(id,origin,acquisition_method,permission_reference,acquisition_allowed,publication_allowed,enabled) values('cartier-official','https://www.cartier.com','permitted-page','synthetic',false,false,true)");
   return db;

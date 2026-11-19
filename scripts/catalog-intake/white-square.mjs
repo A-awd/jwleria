@@ -21,6 +21,7 @@ export const whiteSquareTreatment=Object.freeze({kind:'white_square',version:whi
  * master whose own cutout review (cutoutReviewChecks) is already recorded. Code never records these as passed.
  */
 export const whiteSquareReviewChecks=Object.freeze(['cutout_master_accepted','square_accepted_by_exact_hash','photographed_material_preserved','presentation_opaque_white']);
+export const nativeAlphaWhiteReviewChecks=Object.freeze(['source_alpha_accepted',...whiteSquareReviewChecks.slice(1)]);
 
 /** Bounding box of the pixels whose alpha is at least `threshold`, in an RGBA buffer. Undefined when there are none. */
 export function foregroundBox(rgba,width,height,threshold=whiteSquare.alphaThreshold){

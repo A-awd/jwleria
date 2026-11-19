@@ -1,4 +1,14 @@
-# Jwleria — current state, 2026-11-18
+# Jwleria — current state, 2026-11-19
+
+## Production checkpoint — 2026-11-19
+
+- The gallery now auto-advances only while at least half of it is visible. The deployed Worker version `4c82a877-a2c0-4074-8c02-6e563aa1a05c` has 100% traffic and retains the frame and runtime bindings from version `9f46e215-e55f-4968-90f9-01d2337b647a`.
+- The white-square primaries for LOEWE `A538HHBX07-0018` and Bottega Veneta `568401VMAH21988` were independently reviewed, recorded, and published through n8n. Both public pages show the exact reviewed detail image. The two LOEWE in-use images remain in the approved order and retain their original proportions.
+- Before AP/JLC wave 2, the catalogue had 4,097 active variants, 673 with photographs, and 3,424 without photographs. The seven final cached LOEWE rows in batch c010 are public with unchanged names, descriptions, and search text. The c004–c009 batches are also verified public.
+- AP/JLC wave 2: four Audemars Piguet and four Jaeger-LeCoultre references published from exact official records with explicit Arabic copy. Three AP photos and four JLC photos are verified public after n8n completion. AP `75150PT.OO.01` has a saved visual hold covering both official renditions.
+- The next LOEWE intake added 25 references with 25 matching photos. All 25 match their current n8n approvals and official links. The production count is 4,130 active variants, all with official product URLs, 705 with photographs and 3,425 without photographs. Migration `20261119114905` resolved six exact LOEWE style-group label mismatches, affecting 29 mapping rows under an exact production-snapshot guard. All public product rows were preserved. The Arabic Puzzle Mini page shows four exact colour options and its official link. Two wallet variants remain held after the second distinct pair of official URLs also returned identical bytes.
+- Native-alpha white square support is live (migration `20261119112004`). Longchamp `70203PVC001380` and all LC011–LC027 items match their exact white-primary approvals in production (205 active variants). New private batches continue through n8n. The underlying source photographs already had transparency.
+- The owner deferred the business WhatsApp number. The contact action and indexable release remain pending that input. Existing public catalogue and gallery delivery continue.
 
 ## Current owner delivery instruction — 2026-11-17
 

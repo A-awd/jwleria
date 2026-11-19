@@ -19,15 +19,20 @@ const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
  * An untagged 8-bit greyscale PNG is read losslessly as R=G=B=grey with its own alpha (standard-channels.mjs); any other
  * non-sRGB source is refused as an unsupported format.
  */
-export async function normalizeFlatTile(source,sharp=installedImageEngine(),settings=flatTile){
+export async function transparentCanvasSource(source,sharp,minimum,description){
   const {bytes:pixels,decoding}=await standardChannels(source,sharp);
   const meta=await sharp(pixels,{failOn:'warning'}).metadata();
-  if(meta.hasAlpha!==true)throw Error('A flat tile needs a source with its own transparency');
-  if((meta.orientation??1)!==1)throw Error('A flat tile source must be upright (EXIF orientation 1)');
-  if(meta.space!=='srgb'||meta.depth!=='uchar')throw Error('A flat tile source must be 8-bit sRGB');
+  if(meta.hasAlpha!==true)throw Error(description+' needs a source with its own transparency');
+  if((meta.orientation??1)!==1)throw Error(description+' source must be upright (EXIF orientation 1)');
+  if(meta.space!=='srgb'||meta.depth!=='uchar')throw Error(description+' source must be 8-bit sRGB');
   const alpha=await sharp(pixels).ensureAlpha().extractChannel(3).raw().toBuffer();
   let clear=0;for(const a of alpha)if(a===0)clear++;
-  if(clear/alpha.length<settings.minTransparentFraction)throw Error('A flat tile source has too little transparency to be a cutout');
+  if(clear/alpha.length<minimum)throw Error(description+' source has too little transparency to be a cutout');
+  return {pixels,decoding};
+}
+
+export async function normalizeFlatTile(source,sharp=installedImageEngine(),settings=flatTile){
+  const {pixels,decoding}=await transparentCanvasSource(source,sharp,settings.minTransparentFraction,'A flat tile');
   const {png,record}=await composeOnBackground(pixels,settings.background,sharp,{...backgroundComposite,fill:settings.fill,minSide:settings.minSide});
   if(record.clipped_by_source)throw Error('The product touches its source frame: a flat tile shows the whole product only');
   if(record.geometry.side>settings.maxSide)throw Error('The flat tile would exceed the derivative pixel limit');

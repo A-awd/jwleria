@@ -6,7 +6,7 @@ import {pathToFileURL} from 'node:url';
 import {privateRoot,recordedSourceStops,agent} from './source-queue.mjs';
 import {prepareResponsiveMedia,installedImageEngine} from './responsive-media.mjs';
 import {cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
-import {whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
+import {whiteSquareTreatment,whiteSquareReviewChecks,nativeAlphaWhiteReviewChecks} from './white-square.mjs';
 import {flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
 
 const require=createRequire(new URL('../../apps/storefront/package.json',import.meta.url));
@@ -423,11 +423,13 @@ export async function prepareGrantedMedia({source,candidate,asset,grant,output_d
   const open=grant.kind==='open_license';
   const view={...source,media_permission_reference:grant.grant_reference,media_origins:open?[new URL(asset.source_url).origin]:grant.media_origins??[]};
   return prepareResponsiveMedia({purpose:'catalog',source:view,candidate:open?{...candidate,image_urls:[asset.source_url]}:candidate,asset,output_directory,
-    // With square_sha256 the cutout becomes the white square accepted by that exact hash (decision 0022).
-    ...(cutout===undefined?{}:{treatment:square_sha256===undefined?{kind:cutoutTreatment.kind,cutout}:{kind:whiteSquareTreatment.kind,cutout,square_sha256}}),
+    // The accepted square binds either the cutout or the original's own alpha (decision 0022).
+    ...(square_sha256!==undefined?{treatment:{kind:whiteSquareTreatment.kind,cutout,square_sha256}}
+      :cutout===undefined?{}:{treatment:{kind:cutoutTreatment.kind,cutout}}),
     grant:{kind:grant.kind,media_permission_reference:grant.grant_reference,source_id:source.id,candidate_id:candidate.candidate_id,
       revision_hash:candidate.revision_hash,asset_source_url:asset.source_url,asset_sha256:asset.sha256,
-      website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode,...(cutout===undefined?{}:{background_removal:true})}});
+      website_publication:grant.website_publication,resize:grant.resize,webp_encode:grant.webp_encode,
+      ...(cutout===undefined&&square_sha256===undefined?{}:{background_removal:cutout!==undefined||grant.background_removal===true})}});
 }
 
 // A verification record quotes its reviewers' reasons unabridged, so it may be longer than a short text field.
@@ -626,8 +628,27 @@ function requireWhiteSquareReview(review,square,{manifest,asset,grant,prepared_b
   const t=manifest.treatment,b=manifest.binding?.treatment,m=manifest.cutout_master,w=manifest.white_square;
   const allowed=m?.check?.failures?.every(f=>f==='product_touches_canvas_edge');
   if(t?.kind!==whiteSquareTreatment.kind||t.version!==whiteSquareTreatment.version||b?.kind!==t.kind||b.version!==t.version||b.cutout_sha256!==t.cutout_sha256||b.square_sha256!==t.square_sha256
-    ||m?.sha256!==t.cutout_sha256||allowed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256||w?.sha256!==t.square_sha256
-    ||typeof t.source_clipped!=='boolean'||w.record?.clipped_by_source!==t.source_clipped||manifest.pixel_source!=='white_square'||manifest.processing?.background_removed!==true||manifest.processing?.canvas?.kind!=='white_square')
+    ||w?.sha256!==t.square_sha256||typeof t.source_clipped!=='boolean'||w.record?.clipped_by_source!==t.source_clipped
+    ||manifest.pixel_source!=='white_square'||manifest.processing?.canvas?.kind!=='white_square')
+    throw Error('Prepared derivatives are not a checked white square of this original');
+  if(t.cutout_sha256===null){
+    if(grant.kind!=='owner_directed_official')throw Error('A native-alpha white square needs an owner-directed official grant');
+    if(grant.background_removal!==true)throw Error('The owner direction must authorize the white presentation');
+    if(review!==undefined||m!==undefined||t.producer!==null||t.source_clipped!==false||manifest.processing.background_removed!==undefined
+      ||manifest.processing.canvas.opaque!==true||manifest.original?.format!=='png'||manifest.original?.orientation!==1
+      ||w.record.master_sha256!==asset.sha256||w.record.square_sha256!==w.sha256)
+      throw Error('A native-alpha white square must use this original without a cutout');
+    if(!square||square.square_sha256!==t.square_sha256||square.cutout_sha256!==null||square.original_sha256!==asset.sha256)
+      throw Error('White square review must name this exact square and native-alpha original');
+    if(!text(prepared_by)||!text(square.reviewer)||!record(square.review_reference)||sameName(square.reviewer,prepared_by))
+      throw Error('A native-alpha white square needs an independent reviewer and private record');
+    const failed=nativeAlphaWhiteReviewChecks.filter(check=>square.checks?.[check]!==true);
+    if(failed.length)throw Error('White square review incomplete: '+failed.join(','));
+    const reference=`Native-alpha white square review of square ${t.square_sha256}: ${square.review_reference}`;
+    if(!record(reference))throw Error('The white square review record is longer than 8000 characters');
+    return {treatment:t.kind,treatment_version:t.version,cutout_master_sha256:null,treatment_reference:reference,square_sha256:t.square_sha256,source_clipped:false};
+  }
+  if(m?.sha256!==t.cutout_sha256||allowed!==true||m.check.original?.sha256!==asset.sha256||m.check.cutout?.sha256!==t.cutout_sha256||manifest.processing.background_removed!==true)
     throw Error('Prepared derivatives are not a checked white square of a background-only cutout of this original');
   if(!text(t.producer))throw Error('A cutout needs its producer named, so that its review can be checked against it');
   const basis=cutoutBasisProblem(grant);

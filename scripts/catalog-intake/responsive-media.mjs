@@ -6,8 +6,8 @@ import {homedir} from 'node:os';
 import {fileURLToPath,pathToFileURL} from 'node:url';
 import {lumaSsim,rgbPsnr} from './image-fidelity.mjs';
 import {validateCutoutMaster,frameBackground,cutoutTreatment,cutoutReviewChecks} from './cutout.mjs';
-import {normalizeWhiteSquare,whiteSquare,whiteSquareTreatment,whiteSquareReviewChecks} from './white-square.mjs';
-import {normalizeFlatTile,flatTile,flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
+import {normalizeWhiteSquare,whiteSquare,whiteSquareTreatment,whiteSquareReviewChecks,nativeAlphaWhiteReviewChecks} from './white-square.mjs';
+import {normalizeFlatTile,transparentCanvasSource,flatTile,flatTileTreatment,flatTileReviewChecks} from './flat-tile.mjs';
 import {standardChannels} from './standard-channels.mjs';
 
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
@@ -116,12 +116,15 @@ function bindingOf(input){
     binding.treatment={kind:flatTileTreatment.kind,version:flatTileTreatment.version,cutout_sha256:cutout?.sha256??null,tile_sha256};
   }else if(input.treatment!==undefined){
     const {kind,cutout,square_sha256}=input.treatment??{};
-    // A white square (decision 0022) is a cutout placed on a white square: it binds its master and the accepted square.
+    // A white square binds its accepted rendering and its checked master, or the original's own alpha.
     const white=kind===whiteSquareTreatment.kind;
-    if((kind!==cutoutTreatment.kind&&!white)||!isAbsolute(cutout?.path??'')||!hashPattern.test(cutout?.sha256??''))throw new Error('A background-removal treatment needs its cutout master path and sha256');
+    const nativeWhite=white&&cutout===undefined;
+    if(nativeWhite&&grant.kind!=='owner_directed_official')throw new Error('A native-alpha white square needs an owner-directed official grant');
+    if(nativeWhite&&grant.background_removal!==true)throw new Error('The owner direction must authorize the white presentation');
+    if(!nativeWhite&&((kind!==cutoutTreatment.kind&&!white)||!isAbsolute(cutout?.path??'')||!hashPattern.test(cutout?.sha256??'')))throw new Error('A background-removal treatment needs its cutout master path and sha256');
     if(white&&!hashPattern.test(square_sha256??''))throw new Error('A white square treatment needs the sha256 of its accepted square');
-    if(grant.background_removal!==true)throw new Error('Background removal is not covered by the grant');
-    binding.treatment=white?{kind,version:whiteSquareTreatment.version,cutout_sha256:cutout.sha256,square_sha256}:{kind,version:cutoutTreatment.version,cutout_sha256:cutout.sha256};
+    if(!nativeWhite&&grant.background_removal!==true)throw new Error('Background removal is not covered by the grant');
+    binding.treatment=white?{kind,version:whiteSquareTreatment.version,cutout_sha256:cutout?.sha256??null,square_sha256}:{kind,version:cutoutTreatment.version,cutout_sha256:cutout.sha256};
   }
   return binding;
 }
@@ -164,6 +167,7 @@ export async function prepareResponsiveMedia(input){
   // never from the original directly; the untouched original stays identified by its own sha256.
   let pixelSource=original,cutout=null,square=null,tile=null;
   const white=binding.treatment?.kind===whiteSquareTreatment.kind,tiled=binding.treatment?.kind===flatTileTreatment.kind;
+  const nativeWhite=white&&binding.treatment.cutout_sha256===null;
   if(tiled){
     // Every cutout check failure blocks a tile (the whole product must be shown); a native-alpha original is checked by
     // normalizeFlatTile itself (transparency, upright, sRGB, not clipped).
@@ -177,6 +181,9 @@ export async function prepareResponsiveMedia(input){
     const {png,record}=await normalizeFlatTile(pixelSource,sharp);
     if(record.tile_sha256!==binding.treatment.tile_sha256)throw new Error('The flat tile differs from the accepted tile');
     tile={png,record};pixelSource=png;
+  }else if(nativeWhite){
+    if(metadata.format!=='png')throw new Error('A native-alpha white square needs the original PNG');
+    await transparentCanvasSource(original,sharp,flatTile.minTransparentFraction,'A native-alpha white square');
   }else if(input.treatment!==undefined){
     const check=await validateCutoutMaster({original:{path:originalPath,sha256:binding.asset_sha256},cutout:input.treatment.cutout},sharp);
     // A white square may start from a master that its source photograph cuts off: that contact is recorded as
@@ -186,11 +193,12 @@ export async function prepareResponsiveMedia(input){
     pixelSource=await readFile(input.treatment.cutout.path);
     if(digest(pixelSource)!==binding.treatment.cutout_sha256)throw new Error('Cutout master changed after its check');
     cutout={sha256:binding.treatment.cutout_sha256,bytes:pixelSource.length,check};
-    if(white){
-      const {png,record}=await normalizeWhiteSquare(pixelSource,sharp);
-      if(record.square_sha256!==binding.treatment.square_sha256)throw new Error('The normalized square differs from the accepted square');
-      square={png,record};pixelSource=png;
-    }
+  }
+  if(white){
+    const {png,record}=await normalizeWhiteSquare(pixelSource,sharp);
+    if(nativeWhite&&record.clipped_by_source)throw new Error('The product touches its source frame: a native-alpha white square shows the whole product only');
+    if(record.square_sha256!==binding.treatment.square_sha256)throw new Error('The normalized square differs from the accepted square');
+    square={png,record};pixelSource=png;
   }
   // The derivatives' own source frame: the upright original or cutout, or the square made from the cutout.
   const side=square?square.record.geometry.side:tile?tile.record.geometry.side:null;
@@ -270,10 +278,10 @@ export async function prepareResponsiveMedia(input){
       ...(cutout?{cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},cutout_review_required:[...cutoutReviewChecks]}:{}),
       flat_tile:{local_path:join(outputRoot,tilePath),sha256:tile.record.tile_sha256,bytes:tile.png.length,side:frameWidth,record:tile.record},
       flat_tile_review_required:[...flatTileReviewChecks]}
-    :square?{treatment:{...whiteSquareTreatment,cutout_sha256:cutout.sha256,square_sha256:square.record.square_sha256,producer:cutout.check.cutout.producer,source_clipped:square.record.clipped_by_source},pixel_source:'white_square',
-      cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},
+    :square?{treatment:{...whiteSquareTreatment,cutout_sha256:cutout?.sha256??null,square_sha256:square.record.square_sha256,producer:cutout?.check.cutout.producer??null,source_clipped:square.record.clipped_by_source},pixel_source:'white_square',
+      ...(cutout?{cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},cutout_review_required:[...cutoutReviewChecks]}:{}),
       white_square:{local_path:join(outputRoot,squarePath),sha256:square.record.square_sha256,bytes:square.png.length,side:frameWidth,record:square.record},
-      cutout_review_required:[...cutoutReviewChecks],white_square_review_required:[...whiteSquareReviewChecks]}
+      white_square_review_required:[...(nativeWhite?nativeAlphaWhiteReviewChecks:whiteSquareReviewChecks)]}
     :cutout?{treatment:{...cutoutTreatment,cutout_sha256:cutout.sha256,producer:cutout.check.cutout.producer},pixel_source:'cutout_master',
       cutout_master:{local_path:input.treatment.cutout.path,sha256:cutout.sha256,bytes:cutout.bytes,width:cutout.check.cutout.width,height:cutout.check.cutout.height,check:cutout.check},
       cutout_review_required:[...cutoutReviewChecks]}:{}),

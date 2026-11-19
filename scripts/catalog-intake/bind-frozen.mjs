@@ -40,14 +40,24 @@ const recordOnly=['candidate_id','revision_hash','source_id','external_id','publ
  */
 export function derivedRecord({live,saved}){
   const row=c=>({...c,source_id:live.source_id,external_id:live.external_id});
-  const [again]=normalizeBatch([row(live.content)]);
+  const k=live.catalog;
+  const preserveArabicDescription=record=>{
+    if(record.description_ar===live.content.description_ar)return record;
+    if(typeof k?.description_ar!=='string'||k.description_ar!==live.content.description_ar)
+      throw Error('the candidate Arabic description differs from the stored public text');
+    // Reuse canonical field order, then verify the restored live hash below.
+    const restored={...record,description_ar:k.description_ar};
+    return {...restored,revision_hash:sha256(JSON.stringify(without(restored,recordOnly)))};
+  };
+  const [normalized]=normalizeBatch([row(live.content)]);
+  const again=preserveArabicDescription(normalized);
   if(again.candidate_id!==live.candidate_id||again.revision_hash!==live.revision_hash)throw Error('the normalizer does not reproduce the live revision');
   if(saved.external_id!==live.external_id||saved.image_urls.length!==live.content.image_urls.length||saved.image_urls.some((u,i)=>file(u)!==file(live.content.image_urls[i])))
     throw Error('the saved gallery does not list the same files in the same order');
-  const [next]=normalizeBatch([row({...live.content,image_urls:saved.image_urls,image_reference_checks:saved.image_reference_checks})]);
+  const [normalizedNext]=normalizeBatch([row({...live.content,image_urls:saved.image_urls,image_reference_checks:saved.image_reference_checks})]);
+  const next=preserveArabicDescription(normalizedNext);
   if(!same(without(next,[...recordOnly,...galleryFields]),without(live.content,galleryFields)))throw Error('the derived revision changes more than the gallery fields');
   if(!same(next.image_urls,saved.image_urls))throw Error('the derived gallery differs from the saved gallery');
-  const k=live.catalog;
   if(!k||k.active!==true||k.reference!==live.external_id||['name_ar','name_en','description_ar','description_en'].some(f=>k[f]!==next[f])||k.brand_name!==next.brand||k.collection_en!==next.collection)
     throw Error('the stored public names or descriptions differ from the current content');
   return next;

@@ -20,7 +20,35 @@ export async function collectOfficialBrand(config,{fetcher=fetch,sleep=wait,now=
  const records=new Map();if(existsSync(journal))for(const line of readFileSync(journal,'utf8').split('\n').filter(Boolean)){const row=JSON.parse(line);if(row.source_id!==config.source_id)throw Error('Private journal belongs to another source');row.category_slug=officialCategory(row.product_name,row.source_url);row.category_mapping_state=row.category_slug?'source_path':'requires_review';records.set(row.candidate_id,row);}const completed=new Set(previous?.processed_urls||[]);const failures=[...(previous?.failures||[])];
  const progress={source_id:config.source_id,pid:process.pid,status:'running',started_at:new Date(now()).toISOString(),total_discovered:0,validated_candidates:records.size,processed_urls:[...completed],failures,reviewed_path_exclusions:[...exclusions.values()],excluded_source_urls:[],blocked:null,image_downloads:0,published:0,inventory_processed:false,inventory_complete:false};
  const save=full=>{progress.updated_at=new Date(now()).toISOString();progress.validated_candidates=records.size;progress.processed_urls=[...completed];atomic(progressFile,progress);if(full)atomic(snapshot,[...records.values()]);};let nextRequest=0;let robots;
- const request=async(url,limit)=>{const parsed=new URL(url);if(parsed.origin!==adapter.origin||parsed.username||parsed.password)throw Error('Unexpected acquisition origin');if(robots&&robots.isAllowed(url,ua)!==true)throw Error('Source robots refused path');await sleep(Math.max(0,nextRequest-now()));const response=await fetcher(url,{headers:{'User-Agent':ua},redirect:'manual',signal:AbortSignal.timeout(20000)});nextRequest=now()+Math.max(2,Number(config.delay_seconds)||2,robots?.getCrawlDelay(ua)||0)*1000;if([401,403,429].includes(response.status)||response.status>=300&&response.status<400){progress.status='blocked';progress.blocked={url,http_status:response.status,retry_after:response.headers.get('retry-after'),redirect_location:response.headers.get('location'),reason:response.status>=300&&response.status<400?'redirect_requires_review':'source_refused_access'};save(true);throw Error(progress.blocked.reason);}if(!response.ok)throw Error('Source HTTP '+response.status);const body=await limitedText(response,limit);if(/<title[^>]*>[^<]*(?:captcha|access denied|just a moment)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container/i.test(body)){progress.status='blocked';progress.blocked={url,reason:'source_challenge'};save(true);throw Error('Source challenge requires review');}return body;};
+ const request=async(url,limit)=>{
+  const parsed=new URL(url);
+  if(parsed.origin!==adapter.origin||parsed.username||parsed.password)throw Error('Unexpected acquisition origin');
+  if(robots&&robots.isAllowed(url,ua)!==true)throw Error('Source robots refused path');
+  await sleep(Math.max(0,nextRequest-now()));
+  const signal=AbortSignal.timeout(20000);
+  try{
+   const response=await fetcher(url,{headers:{'User-Agent':ua},redirect:'manual',signal});
+   nextRequest=now()+Math.max(2,Number(config.delay_seconds)||2,robots?.getCrawlDelay(ua)||0)*1000;
+   if([401,403,429].includes(response.status)||response.status>=300&&response.status<400){
+    progress.status='blocked';
+    progress.blocked={url,http_status:response.status,retry_after:response.headers.get('retry-after'),redirect_location:response.headers.get('location'),reason:response.status>=300&&response.status<400?'redirect_requires_review':'source_refused_access'};
+    save(true);throw Error(progress.blocked.reason);
+   }
+   if(!response.ok)throw Error('Source HTTP '+response.status);
+   const body=await limitedText(response,limit);
+   if(/<title[^>]*>[^<]*(?:captcha|access denied|just a moment)|sec-if-cpt-container|sec-bc-tile|akamai-protected-by|captcha-container/i.test(body)){
+    progress.status='blocked';progress.blocked={url,reason:'source_challenge'};
+    save(true);throw Error('Source challenge requires review');
+   }
+   return body;
+  }catch(error){
+   if(signal.aborted){
+    progress.status='blocked';progress.blocked={url,reason:'source_timeout'};
+    save(true);
+   }
+   throw error;
+  }
+ };
  try{const robotsUrl=adapter.origin+'/robots.txt';robots=robotsParser(robotsUrl,await request(robotsUrl,512*1024));const urls=new Set();const queue=[...config.sitemap_urls.map(url=>({url,depth:0}))];const visited=new Set();let maps=0;while(queue.length){const{url,depth}=queue.shift();if(visited.has(url))continue;if(depth>3||++maps>30)throw Error('Sitemap discovery exceeds reviewed bound');visited.add(url);const xml=await request(url,32*1024*1024);const locs=sitemapLocations(xml);if(/<sitemapindex\b/.test(xml)){let children=locs;if(config.sitemap_child_selector){const pattern=new RegExp(config.sitemap_child_selector);children=children.filter(child=>pattern.test(child));}for(const child of children)queue.push({url:child,depth:depth+1});}else if(/<urlset\b/.test(xml)){for(const loc of locs)if(officialVariantIdentity(config.source_id,loc))urls.add(loc);}else throw Error('Official sitemap changed format');}
  const all=[...urls];progress.total_discovered=all.length;progress.excluded_source_urls=all.filter(url=>exclusions.has(url));atomic(manifestFile,{checked_at:new Date(now()).toISOString(),source_id:config.source_id,origin:adapter.origin,sitemap_urls:config.sitemap_urls,urls:all,scope:'Filtered official sitemap variant URLs; requires actual product-page validation'});save(true);if(!all.length)throw Error('Official sitemap has no supported product variants');
  // Opt-in bounded pass (decision 0027 first pass): skip references already held (known_external_ids) without a request,
