@@ -6,6 +6,7 @@ import {isDeepStrictEqual} from 'node:util';
 import {prepareResponsiveMedia,installedImageEngine,privateOutputRoot} from './responsive-media.mjs';
 import {approvalBundle} from './media-pipeline.mjs';
 import {mediaApprovalSql} from './supabase.mjs';
+import {dollarQuote} from './factual-publication.mjs';
 import {derivedRecord,rebindSql} from './bind-frozen.mjs';
 import {mergedVerification,batchPublishSql} from './batch-official.mjs';
 import {cutoutReviewChecks} from './cutout.mjs';
@@ -268,6 +269,7 @@ export async function bindOriginals({plan,reviews,live,saved=new Map(),public_ba
  * must equal its journal. Only the supplemental files are listed for upload; the primary's files are already stored.
  */
 export async function bindSupplements({plan,reviews,live,public_base_url,prepared_by,performance_exception=null,out}){
+  if(plan.primary?.live_white_square===true)return bindLiveWhiteSquareSupplements({plan,reviews,live,public_base_url,prepared_by,performance_exception,out});
   const primaryPlan=await load(plan.primary.plan);
   const pItem=primaryPlan.items.find(i=>i.key===plan.primary.key);
   const pJournal=(await readFile(join(primaryPlan.out,'journal.ndjson'),'utf8')).split('\n').filter(Boolean).map(l=>JSON.parse(l)).find(e=>e.key===pItem.key&&e.state==='prepared');
@@ -313,6 +315,116 @@ export async function bindSupplements({plan,reviews,live,public_base_url,prepare
       record_sql:{file:recordFile,line:1,sha256:sha256(sql)},rebind_sql:null,state:'prepared',uploads}],refused:[],skipped};
   await writeFile(join(out,'ready-manifest.json'),JSON.stringify(manifest,null,1),once);
   return {...manifest.counts,skipped};
+}
+
+function requireLiveWhiteSquare(now,grant){
+  const {catalog,approval,media_evidence:evidence}=now??{};
+  if(catalog?.active!==true||!Array.isArray(catalog.images)||!Array.isArray(catalog.image_variants)||
+    !catalog.images.length||catalog.images.length>=3||catalog.image_variants.length!==catalog.images.length||
+    catalog.image_variants[0]?.canvas!=='white_square'||!Array.isArray(evidence)||
+    approval?.candidate_id!==now.candidate_id||approval?.revision_hash!==now.revision_hash||
+    approval?.media_reference!==grant.grant_reference||approval.image_verified!==true||approval.revoked_at!==null||
+    !isDeepStrictEqual(catalog.images,approval.approved_images)||!isDeepStrictEqual(catalog.image_variants,approval.approved_image_variants)){
+    throw Error('A live white-square gallery and its exact current unrevoked approval are required');
+  }
+  const originalHashes=new Set(),originalUrls=new Set(),stored=new Set();
+  for(const [index,entry] of catalog.image_variants.entries()){
+    if(entry.src!==catalog.images[index]||!Array.isArray(entry.variants)||!entry.variants.some(v=>v.src===entry.src))throw Error('Live approval gallery is incomplete');
+    for(const variant of entry.variants){
+      const rows=evidence.filter(row=>row.public_url===variant.src);
+      const [row]=rows;
+      if(rows.length!==1||row.candidate_id!==now.candidate_id||row.revision_hash!==now.revision_hash||
+        row.grant_reference!==grant.grant_reference||row.verified_reference!==now.external_id||
+        row.width!==variant.width||row.height!==variant.height||
+        (row.treatment??null)!==(entry.canvas??null)||
+        !/^[a-f0-9]{64}$/.test(row.original_sha256??'')||!row.original_source){
+        throw Error('Live gallery lacks exact current asset evidence');
+      }
+      stored.add(variant.src);originalHashes.add(row.original_sha256);originalUrls.add(row.original_source);
+    }
+  }
+  return {catalog,approval,originalHashes,originalUrls,stored};
+}
+
+function guardedSupplementRecordSql(bundle,prior){
+  const {candidate_id,revision_hash,media_reference}=bundle.approval;
+  const q=value=>`${dollarQuote(JSON.stringify(value))}::jsonb`;
+  const t=value=>dollarQuote(value);
+  // Lock the exact visible row, candidate, approval and grant through the record call. A stale read produces no receipt.
+  const guard=[
+    'with retained as materialized (select p.id from public.jwl_catalog p',
+    'join jwl_internal.candidates c on c.candidate_id=p.id',
+    'join jwl_internal.published_revisions r on r.catalog_id=p.id and r.candidate_id=c.candidate_id and r.revision_hash=c.revision_hash',
+    'join jwl_internal.publication_approvals a on a.candidate_id=c.candidate_id and a.revision_hash=c.revision_hash',
+    'join jwl_internal.media_grants g on g.grant_reference=a.media_reference and g.source_id=c.source_id',
+    `where p.id=${t(candidate_id)} and p.active and c.revision_hash=${t(revision_hash)}`,
+    `and a.media_reference=${t(media_reference)} and a.image_verified and a.revoked_at is null`,
+    'and g.website_publication and g.resize and g.webp_encode and g.revoked_at is null and (g.expires_at is null or g.expires_at>now())',
+    `and p.images=${q(prior.catalog.images)} and p.image_variants=${q(prior.catalog.image_variants)}`,
+    `and a.approved_images=${q(prior.approval.approved_images)} and a.approved_image_variants=${q(prior.approval.approved_image_variants)}`,
+    'for update of p,c,a for share of r,g)',
+  ];
+  return `${guard.join(' ')} ${mediaApprovalSql({...bundle,replace:true}).replace(/;$/,'')} from retained;`;
+}
+
+async function bindLiveWhiteSquareSupplements({plan,reviews,live,public_base_url,prepared_by,performance_exception,out}){
+  const ref=plan.primary.ref,now=live.find(row=>row.external_id===ref);
+  if(typeof ref!=='string'||!ref||!now||now.source_id!==plan.source.id||plan.items.some(item=>item.ref!==ref||
+    item.candidate.external_id!==ref||item.candidate.candidate_id!==now.candidate_id||item.candidate.revision_hash!==now.revision_hash)){
+    throw Error('Supplement plans must name one exact live candidate revision');
+  }
+  const prior=requireLiveWhiteSquare(now,plan.grant);
+  const candidate={...now.content,candidate_id:now.candidate_id,revision_hash:now.revision_hash,source_id:now.source_id,external_id:ref};
+  const prepared=new Map((await journalOf(plan.out)).filter(row=>row.option==='original'&&row.revision_hash===candidate.revision_hash).map(row=>[row.key,row]));
+  const reviewed=new Map(reviews.map(review=>[review.key??review.ref,review]));
+  const items=[],skipped=[],files=new Map();
+  for(const item of plan.items){
+    const review=reviewed.get(item.key),journal=prepared.get(item.key);
+    const problem=acceptanceProblem(review,journal??{files:[]});
+    if(problem||!journal){skipped.push({key:item.key,reason:problem??'not prepared'});continue;}
+    const asset=item.asset,position=candidate.image_urls?.indexOf(asset.source_url)??-1;
+    if(position<0||prior.originalHashes.has(asset.sha256)||prior.originalUrls.has(asset.source_url)||journal.original_sha256!==asset.sha256||
+      journal.ref!==ref||journal.candidate_id!==candidate.candidate_id||sha256(await readFile(asset.path))!==asset.sha256){
+      throw Error('Supplement is not a new exact original in the current gallery: '+item.key);
+    }
+    prior.originalHashes.add(asset.sha256);prior.originalUrls.add(asset.source_url);
+    const manifest=await load(journal.manifest_path),derivatives=filesOf(manifest);
+    if(derivatives.length!==journal.files.length)throw Error('Reviewed supplemental derivatives differ from the manifest');
+    for(const [index,file] of derivatives.entries()){
+      const reviewedFile=journal.files[index],path=join(plan.out,'media',file.path),bytes=await readFile(path);
+      if(file.width!==reviewedFile.width||file.height!==reviewedFile.height||file.sha256!==reviewedFile.sha256||
+        file.bytes!==reviewedFile.bytes||file.bytes!==bytes.length||sha256(bytes)!==file.sha256)throw Error('Reviewed supplemental derivative changed: '+file.width+'w');
+      files.set(file.path,path);
+    }
+    items.push({asset,manifest,verification:mergedVerification(review.verification,{basis:'official_gallery_listing',asset_sha256:asset.sha256,
+      identity_established:true,reference:ref,revision_hash:candidate.revision_hash,gallery_url:asset.source_url,reviewer:identityReviewer,
+      reason:`Untouched original ${asset.sha256} is image_urls[${position}] of the exact live revision ${candidate.revision_hash} for ${ref}. Decision 0027: supplemental official original.`})});
+  }
+  if(!items.length)return {items:0,skipped};
+  if(prior.catalog.images.length+items.length>3)throw Error('A gallery may contain one primary and at most two supplemental photographs');
+  const bundle=approvalBundle({candidate,grant:plan.grant,items,public_base_url,prepared_by,performance_exception});
+  if(bundle.approval.approved_image_variants.some(entry=>entry.canvas!==undefined)||
+    bundle.evidence.some(row=>prior.stored.has(row.public_url)))throw Error('Only new, untreated originals may supplement the live white square');
+  bundle.approval.approved_images=[...prior.catalog.images,...bundle.approval.approved_images];
+  bundle.approval.approved_image_variants=[...prior.catalog.image_variants,...bundle.approval.approved_image_variants];
+  const sql=guardedSupplementRecordSql(bundle,prior),batch_dir=join(out,'bundles'),recordFile=join(batch_dir,'record-approvals-001.sql');
+  await mkdir(join(batch_dir,ref),{recursive:true,mode:0o700});
+  await writeFile(join(batch_dir,ref,'approval-bundle.json'),JSON.stringify(bundle,null,1),once);
+  await writeFile(recordFile,sql+'\n',once);
+  const byUrl=new Map(bundle.evidence.map(row=>[row.public_url,row]));
+  const base=new URL(public_base_url.replace(/\/?$/,'/'));
+  const uploads=bundle.uploads.map(upload=>{
+    const public_url=new URL(upload.path,base).href,row=byUrl.get(public_url);
+    return {x_jwl_path:upload.path,file:files.get(upload.path),sha256:upload.sha256,bytes:upload.bytes,width:row.width,height:row.height,public_url};
+  });
+  const counts={items:1,files:uploads.length,bytes:uploads.reduce((n,u)=>n+u.bytes,0),already_stored:prior.stored.size,
+    images:bundle.approval.approved_images.length,refused:0,delivered:0,recorded:0};
+  const manifest={generated_at:new Date().toISOString(),grant_reference:plan.grant.grant_reference,public_base:base.href,
+    upload_endpoint:new URL('/functions/v1/jwl-media-upload',base).href,counts,
+    items:[{ref,model:ref.replace(/-[0-9]{4}$/,''),batch_dir,candidate_id:candidate.candidate_id,revision_hash:candidate.revision_hash,
+      record_sql:{file:recordFile,line:1,sha256:sha256(sql)},rebind_sql:null,state:'prepared',uploads}],refused:[],skipped};
+  await writeFile(join(out,'ready-manifest.json'),JSON.stringify(manifest,null,1),once);
+  return {...counts,skipped};
 }
 
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href){

@@ -297,6 +297,7 @@ The completion route of `jwl-media-upload` binds JSON parameters as text and par
   - The approval lists the primary's exact files first, unchanged, then each accepted supplemental. It is recorded as a same-revision replacement.
   - For a LOEWE reference with a low-resolution tile hold, the current catalogue readback can confirm that the exact already-approved primary is being kept. Only an original primary subject to the hold requires a foreground measurement.
   - Only the new files are uploaded and only their new evidence rows are submitted; re-submitting recorded primary rows is refused. The completion route verifies every cited file.
+  - Use `primary: {live_white_square: true, ref}` to keep a live white-square primary. Supply the current candidate, catalogue, approval and matching media evidence in the private live snapshot. The generated record SQL locks and compares the current visible gallery and unrevoked approval before appending reviewed originals. Only the newly approved images are sent as uploads.
 - **Greyscale originals:** an exact official original without treatment may be an 8-bit greyscale photograph (`responsive-media.mjs`). It is read losslessly as R=G=B, and the manifest records `greyscale_source`. Treated paths still require sRGB.
   - A detail close-up is not an in-use photograph.
 - **Byte budgets:** a file over its budget needs the reviewer's exception record for that exact file. The fidelity floor is never waived.
